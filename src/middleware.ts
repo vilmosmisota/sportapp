@@ -18,6 +18,10 @@ export default async function middleware(req: NextRequest) {
 
   const hostname = req.headers.get("host")?.split(".").at(0);
 
+  if (hostname === "localhost:3000") {
+    return;
+  }
+
   const searchParams = req.nextUrl.searchParams.toString();
   const path = `${url.pathname}${
     searchParams.length > 0 ? `?${searchParams}` : ""

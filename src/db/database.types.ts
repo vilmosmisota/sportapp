@@ -11,24 +11,36 @@ export type Database = {
     Tables: {
       divisions: {
         Row: {
+          age: string | null;
           created_at: string;
-          division: string | null;
+          end_date: string | null;
           gender: string | null;
           id: number;
+          level: string | null;
+          name: string | null;
+          start_date: string | null;
           tenant_id: number | null;
         };
         Insert: {
+          age?: string | null;
           created_at?: string;
-          division?: string | null;
+          end_date?: string | null;
           gender?: string | null;
           id?: number;
+          level?: string | null;
+          name?: string | null;
+          start_date?: string | null;
           tenant_id?: number | null;
         };
         Update: {
+          age?: string | null;
           created_at?: string;
-          division?: string | null;
+          end_date?: string | null;
           gender?: string | null;
           id?: number;
+          level?: string | null;
+          name?: string | null;
+          start_date?: string | null;
           tenant_id?: number | null;
         };
         Relationships: [
@@ -41,83 +53,42 @@ export type Database = {
           }
         ];
       };
-      fixtures: {
-        Row: {
-          description: string | null;
-          division_id: number | null;
-          end_date: string | null;
-          id: number;
-          name: string | null;
-          start_date: string | null;
-          type: string | null;
-        };
-        Insert: {
-          description?: string | null;
-          division_id?: number | null;
-          end_date?: string | null;
-          id?: number;
-          name?: string | null;
-          start_date?: string | null;
-          type?: string | null;
-        };
-        Update: {
-          description?: string | null;
-          division_id?: number | null;
-          end_date?: string | null;
-          id?: number;
-          name?: string | null;
-          start_date?: string | null;
-          type?: string | null;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "public_fixtures_division_id_fkey";
-            columns: ["division_id"];
-            isOneToOne: false;
-            referencedRelation: "divisions";
-            referencedColumns: ["id"];
-          }
-        ];
-      };
       games: {
         Row: {
           away_team_confirmation: boolean | null;
           away_team_id: number | null;
           away_team_score: string | null;
           date: string | null;
-          fixture_id: number | null;
+          division_id: number | null;
           home_team_confirmation: boolean | null;
           home_team_id: number | null;
           home_team_score: string | null;
           id: number;
           start_time: string | null;
-          winner_id: number | null;
         };
         Insert: {
           away_team_confirmation?: boolean | null;
           away_team_id?: number | null;
           away_team_score?: string | null;
           date?: string | null;
-          fixture_id?: number | null;
+          division_id?: number | null;
           home_team_confirmation?: boolean | null;
           home_team_id?: number | null;
           home_team_score?: string | null;
           id?: number;
           start_time?: string | null;
-          winner_id?: number | null;
         };
         Update: {
           away_team_confirmation?: boolean | null;
           away_team_id?: number | null;
           away_team_score?: string | null;
           date?: string | null;
-          fixture_id?: number | null;
+          division_id?: number | null;
           home_team_confirmation?: boolean | null;
           home_team_id?: number | null;
           home_team_score?: string | null;
           id?: number;
           start_time?: string | null;
-          winner_id?: number | null;
         };
         Relationships: [
           {
@@ -128,22 +99,15 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "public_games_fixture_id_fkey";
-            columns: ["fixture_id"];
+            foreignKeyName: "public_games_division_id_fkey";
+            columns: ["division_id"];
             isOneToOne: false;
-            referencedRelation: "fixtures";
+            referencedRelation: "divisions";
             referencedColumns: ["id"];
           },
           {
             foreignKeyName: "public_games_home_team_id_fkey";
             columns: ["home_team_id"];
-            isOneToOne: false;
-            referencedRelation: "teams";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "public_games_winner_id_fkey";
-            columns: ["winner_id"];
             isOneToOne: false;
             referencedRelation: "teams";
             referencedColumns: ["id"];
@@ -158,6 +122,7 @@ export type Database = {
           id: number;
           location: string | null;
           name: string | null;
+          short_name: string | null;
           sport: string | null;
           tenant_id: number | null;
         };
@@ -168,6 +133,7 @@ export type Database = {
           id?: number;
           location?: string | null;
           name?: string | null;
+          short_name?: string | null;
           sport?: string | null;
           tenant_id?: number | null;
         };
@@ -178,6 +144,7 @@ export type Database = {
           id?: number;
           location?: string | null;
           name?: string | null;
+          short_name?: string | null;
           sport?: string | null;
           tenant_id?: number | null;
         };
@@ -187,6 +154,60 @@ export type Database = {
             columns: ["tenant_id"];
             isOneToOne: false;
             referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      team_statistics: {
+        Row: {
+          division_id: number | null;
+          draws: number | null;
+          goals_against: number | null;
+          goals_for: number | null;
+          id: number;
+          losses: number | null;
+          points: number | null;
+          streak: string | null;
+          team_id: number | null;
+          wins: number | null;
+        };
+        Insert: {
+          division_id?: number | null;
+          draws?: number | null;
+          goals_against?: number | null;
+          goals_for?: number | null;
+          id?: number;
+          losses?: number | null;
+          points?: number | null;
+          streak?: string | null;
+          team_id?: number | null;
+          wins?: number | null;
+        };
+        Update: {
+          division_id?: number | null;
+          draws?: number | null;
+          goals_against?: number | null;
+          goals_for?: number | null;
+          id?: number;
+          losses?: number | null;
+          points?: number | null;
+          streak?: string | null;
+          team_id?: number | null;
+          wins?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "public_team_statistics_division_id_fkey";
+            columns: ["division_id"];
+            isOneToOne: false;
+            referencedRelation: "divisions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "public_team_statistics_team_id_fkey";
+            columns: ["team_id"];
+            isOneToOne: false;
+            referencedRelation: "teams";
             referencedColumns: ["id"];
           }
         ];
@@ -305,6 +326,33 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      get_featured_games: {
+        Args: {
+          domain_param: string;
+        };
+        Returns: {
+          id: number;
+          date: string;
+          start_time: string;
+          home_team_id: number;
+          away_team_id: number;
+          home_team_score: string;
+          away_team_score: string;
+          home_team_confirmation: boolean;
+          away_team_confirmation: boolean;
+          division_id: number;
+          division_name: string;
+          home_team_name: string;
+          away_team_name: string;
+          home_team_organization_name: string;
+          away_team_organization_name: string;
+          home_team_organization_short_name: string;
+          away_team_organization_short_name: string;
+          division_age: string;
+          division_level: string;
+          division_gender: string;
+        }[];
+      };
       is_coach: {
         Args: {
           userid: string;
@@ -327,9 +375,11 @@ export type Database = {
   };
 };
 
+type PublicSchema = Database[Extract<keyof Database, "public">];
+
 export type Tables<
   PublicTableNameOrOptions extends
-    | keyof (Database["public"]["Tables"] & Database["public"]["Views"])
+    | keyof (PublicSchema["Tables"] & PublicSchema["Views"])
     | { schema: keyof Database },
   TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
     ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
@@ -342,10 +392,10 @@ export type Tables<
     }
     ? R
     : never
-  : PublicTableNameOrOptions extends keyof (Database["public"]["Tables"] &
-      Database["public"]["Views"])
-  ? (Database["public"]["Tables"] &
-      Database["public"]["Views"])[PublicTableNameOrOptions] extends {
+  : PublicTableNameOrOptions extends keyof (PublicSchema["Tables"] &
+      PublicSchema["Views"])
+  ? (PublicSchema["Tables"] &
+      PublicSchema["Views"])[PublicTableNameOrOptions] extends {
       Row: infer R;
     }
     ? R
@@ -354,7 +404,7 @@ export type Tables<
 
 export type TablesInsert<
   PublicTableNameOrOptions extends
-    | keyof Database["public"]["Tables"]
+    | keyof PublicSchema["Tables"]
     | { schema: keyof Database },
   TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
     ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
@@ -365,8 +415,8 @@ export type TablesInsert<
     }
     ? I
     : never
-  : PublicTableNameOrOptions extends keyof Database["public"]["Tables"]
-  ? Database["public"]["Tables"][PublicTableNameOrOptions] extends {
+  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
+  ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
       Insert: infer I;
     }
     ? I
@@ -375,7 +425,7 @@ export type TablesInsert<
 
 export type TablesUpdate<
   PublicTableNameOrOptions extends
-    | keyof Database["public"]["Tables"]
+    | keyof PublicSchema["Tables"]
     | { schema: keyof Database },
   TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
     ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
@@ -386,8 +436,8 @@ export type TablesUpdate<
     }
     ? U
     : never
-  : PublicTableNameOrOptions extends keyof Database["public"]["Tables"]
-  ? Database["public"]["Tables"][PublicTableNameOrOptions] extends {
+  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
+  ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
       Update: infer U;
     }
     ? U
@@ -396,13 +446,13 @@ export type TablesUpdate<
 
 export type Enums<
   PublicEnumNameOrOptions extends
-    | keyof Database["public"]["Enums"]
+    | keyof PublicSchema["Enums"]
     | { schema: keyof Database },
   EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
     ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
     : never = never
 > = PublicEnumNameOrOptions extends { schema: keyof Database }
   ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : PublicEnumNameOrOptions extends keyof Database["public"]["Enums"]
-  ? Database["public"]["Enums"][PublicEnumNameOrOptions]
+  : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
+  ? PublicSchema["Enums"][PublicEnumNameOrOptions]
   : never;

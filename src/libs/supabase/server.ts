@@ -1,16 +1,15 @@
-import { Database } from "@/db/database.types.ts";
+import { Database } from "@/db/database.types";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { SupabaseClient } from "@supabase/supabase-js";
+import { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 import { cookies } from "next/headers";
 
 let client: SupabaseClient<Database> | undefined;
 
-export function getServerClient() {
+export function getServerClient(cookieStore: ReadonlyRequestCookies) {
   if (client) {
     return client;
   }
-
-  const cookieStore = cookies();
 
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

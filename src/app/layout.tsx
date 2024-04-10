@@ -1,4 +1,5 @@
 import { GeistSans } from "geist/font/sans";
+import { MainMenu } from "./components/menu/MainMenu";
 
 import "../styles/globals.css";
 
@@ -20,7 +21,8 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${GeistSans.variable}`}>
       <body className={"min-h-screen bg-background antialiased"}>
-        {children}
+        <MainMenu />
+        <div className="mx-auto max-w-screen-2xl my-5  px-5">{children}</div>
       </body>
     </html>
   );
