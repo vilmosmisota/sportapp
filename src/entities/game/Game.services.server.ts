@@ -8,7 +8,7 @@ export const getFeaturedGames = async (domain: string) => {
   const cookieStore = cookies();
   const serverClient = getServerClient(cookieStore);
 
-  const { data, error } = await serverClient.rpc("get_featured_games", {
+  const { data, error } = await serverClient.rpc("get_featured_game_results", {
     domain_param: domain,
   });
 

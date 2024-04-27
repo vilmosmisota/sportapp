@@ -1,4 +1,6 @@
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/libs/tailwind/utils";
+
 import Link from "next/link";
 
 export function MainMenu({
@@ -6,8 +8,13 @@ export function MainMenu({
   ...props
 }: React.HTMLAttributes<HTMLElement>) {
   return (
-    <div className="max-w-screen-2xl flex h-9 items-center space-x-1 rounded-md border bg-background p-1 px-5 shadow-sm">
-      <div className=" text-center mr-5">Logo </div>
+    <div className="max-w-screen-2xl bg-bar flex  items-center space-x-1  p-1 px-5 shadow-sm">
+      <div className=" text-center mr-5">
+        <Avatar>
+          <AvatarImage src="/lwpl.png" />
+          <AvatarFallback>LWPC</AvatarFallback>
+        </Avatar>
+      </div>
       <nav
         className={cn("flex items-center space-x-4 lg:space-x-6", className)}
         {...props}

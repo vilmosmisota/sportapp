@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const TeamStatisticsBaseSchema = z
+export const TeamTableSchema = z
   .object({
     division_id: z.number().nullable(),
     draws: z.number().nullable(),
@@ -36,22 +36,24 @@ export const TeamStatisticsBaseSchema = z
     organizationId: value.teams.organization_id,
   }));
 
-export const TeamStatisticsSchema = z
+export const DivisionsSchema = z
   .object({
     id: z.number(),
-    divisions: z.array(
-      z
-        .object({
-          id: z.number(),
-          name: z.string().nullable(),
-          team_statistics: z.array(TeamStatisticsBaseSchema),
-        })
-        .transform((value) => ({
-          id: value.id,
-          name: value.name,
-          teamStatistics: value.team_statistics,
-        }))
-    ),
+    name: z.string().nullable(),
+    age: z.string().nullable(),
+    level: z.string().nullable(),
+    gender: z.string().nullable(),
+    team_statistics: z.array(TeamTableSchema),
+  })
+  .transform((value) => ({
+    teamStatistics: value.team_statistics,
+    ...value,
+  }));
+
+export const TeamTableOnDivisionsSchema = z
+  .object({
+    id: z.number(),
+    divisions: z.array(DivisionsSchema),
   })
   .transform(({ id, ...rest }) => ({
     tenantId: id,

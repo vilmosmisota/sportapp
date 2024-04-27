@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { AddressSchema } from "../common/Address.schema";
 
 export const GameSchema = z
   .object({
@@ -7,21 +8,25 @@ export const GameSchema = z
     start_time: z.string(),
     home_team_id: z.number(),
     away_team_id: z.number(),
-    home_team_score: z.string().nullable(),
-    away_team_score: z.string().nullable(),
-    home_team_confirmation: z.boolean(),
-    away_team_confirmation: z.boolean(),
-    division_id: z.number(),
-    division_name: z.string().nullable(),
-    division_age: z.string().nullable(),
-    division_level: z.string().nullable(),
-    division_gender: z.string().nullable(),
+    home_team_score: z.string().optional(),
+    away_team_score: z.string().optional(),
+    home_team_confirmation: z.boolean().optional(),
+    away_team_confirmation: z.boolean().optional(),
+    division_id: z.number().optional(),
+    division_name: z.string().optional(),
+    division_age: z.string().optional(),
+    division_level: z.string().optional(),
+    division_gender: z.string().optional(),
     home_team_name: z.string(),
     away_team_name: z.string(),
     home_team_organization_name: z.string(),
     away_team_organization_name: z.string(),
-    home_team_organization_short_name: z.string().nullable(),
-    away_team_organization_short_name: z.string().nullable(),
+    home_team_organization_short_name: z.string().optional(),
+    away_team_organization_short_name: z.string().optional(),
+    postal_code: z.string().optional(),
+    street_address: z.string().optional(),
+    city: z.string().optional(),
+    country_code: z.string().optional(),
   })
   .transform((item) => {
     return {
@@ -45,5 +50,51 @@ export const GameSchema = z
       awayTeamOrganizationName: item.away_team_organization_name,
       homeTeamOrgShortName: item.home_team_organization_short_name,
       awayTeamOrgShortName: item.away_team_organization_short_name,
+      postalCode: item.postal_code,
+      streetAddress: item.street_address,
+      city: item.city,
+      countryCode: item.country_code,
     };
   });
+
+export const GameWithAddressSchema = z
+  .object({
+    address_id: z.number().optional(),
+    away_team_id: z.number().optional(),
+    away_team_name: z.string().optional(),
+    away_team_organization_name: z.string().optional(),
+    away_team_organization_short_name: z.string().optional(),
+    city: z.string().optional(),
+    country_code: z.string().optional(),
+    date: z.string(), // Marked as required
+    home_team_id: z.number(), // Marked as required
+    home_team_name: z.string().optional(),
+    home_team_organization_name: z.string().optional(),
+    home_team_organization_short_name: z.string().optional(),
+    id: z.number().optional(),
+    map_link: z.string().optional(),
+    postal_code: z.string().optional(),
+    start_time: z.string().optional(),
+    state: z.string().optional(),
+    street_address: z.string().optional(),
+  })
+  .transform((item) => ({
+    id: item.id,
+    date: item.date,
+    startTime: item.start_time,
+    homeTeamId: item.home_team_id,
+    awayTeamId: item.away_team_id,
+    homeTeamName: item.home_team_name,
+    awayTeamName: item.away_team_name,
+    homeTeamOrganizationName: item.home_team_organization_name,
+    awayTeamOrganizationName: item.away_team_organization_name,
+    homeTeamOrgShortName: item.home_team_organization_short_name,
+    awayTeamOrgShortName: item.away_team_organization_short_name,
+    streetAddress: item.street_address,
+    postalCode: item.postal_code,
+    countryCode: item.country_code,
+    mapLink: item.map_link,
+    city: item.city,
+    state: item.state,
+  }))
+  .array();

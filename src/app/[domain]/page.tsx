@@ -1,6 +1,6 @@
-import { getFeaturedGames } from "@/entities/game/Game.services";
-import FeaturedGames from "./components/FeaturedGames";
-import Standing from "../components/menu/standing/Standing";
+import FeaturedGamesBlock from "./FeaturedGameResultsBlock";
+import DivisionTableBloc from "./DivisionTableBlock";
+import FeaturedUpcomingGamesBlock from "./FeaturedUpcomingGamesBlock";
 
 export default async function DomainPage({
   params,
@@ -9,11 +9,18 @@ export default async function DomainPage({
 }) {
   return (
     <div>
-      <FeaturedGames domain={params.domain} />
+      <div className="mx-auto mb-5 ">
+        <FeaturedGamesBlock domain={params.domain} />
+      </div>
 
-      <div className="grid grid-cols-3 ">
-        <Standing domain={params.domain} />
-        <div className="col-span-1">Some other stuff</div>
+      <div className="flex gap-4 items-stretch">
+        <div className="w-8/12">
+          <DivisionTableBloc domain={params.domain} />
+        </div>
+
+        <div className="w-4/12">
+          <FeaturedUpcomingGamesBlock domain={params.domain} />
+        </div>
       </div>
     </div>
   );
