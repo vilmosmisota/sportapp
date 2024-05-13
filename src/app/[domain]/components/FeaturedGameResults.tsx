@@ -28,8 +28,8 @@ export default function FeaturedGameResults({
   });
 
   return (
-    <div className="flex gap-4 w-full">
-      <div className=" bg-muted   w-2/12 flex items-center border flex-col justify-center gap-2 p-2 rounded-lg ">
+    <div className="flex gap-4 w-full flex-col md:flex-row">
+      <div className=" bg-muted   md:w-2/12 flex items-center border flex-col justify-center gap-2 p-2 rounded-lg ">
         <div className="font-semibold text-balance">Results</div>
         <Button
           className="w-full"

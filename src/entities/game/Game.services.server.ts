@@ -5,8 +5,7 @@ import { cookies } from "next/headers";
 import { GameSchema } from "./Game.schema";
 
 export const getFeaturedGames = async (domain: string) => {
-  const cookieStore = cookies();
-  const serverClient = getServerClient(cookieStore);
+  const serverClient = getServerClient();
 
   const { data, error } = await serverClient.rpc("get_featured_game_results", {
     domain_param: domain,

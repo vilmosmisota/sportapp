@@ -6,11 +6,13 @@ export const TeamTableSchema = z
     draws: z.number().nullable(),
     goals_against: z.number().nullable(),
     goals_for: z.number().nullable(),
+    goal_difference: z.number().optional(),
     id: z.number(),
     losses: z.number().nullable(),
     points: z.number().nullable(),
     streak: z.string().nullable(),
     team_id: z.number().nullable(),
+
     wins: z.number().nullable(),
     teams: z.object({
       organization_id: z.number(),
@@ -25,6 +27,7 @@ export const TeamTableSchema = z
     draws: value.draws,
     goalsAgainst: value.goals_against,
     goalsFor: value.goals_for,
+    goalDifference: value.goal_difference,
     id: value.id,
     losses: value.losses,
     points: value.points,

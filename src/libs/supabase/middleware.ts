@@ -1,12 +1,12 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
+
 import { NextResponse, type NextRequest } from "next/server";
 
-export async function updateSession(request: NextRequest) {
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  });
+export async function updateSession(
+  request: NextRequest,
+  urlToRewrite: string
+) {
+  let response = getWrittenResWithSetHeaders(request, urlToRewrite);
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -22,11 +22,7 @@ export async function updateSession(request: NextRequest) {
             value,
             ...options,
           });
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          });
+          response = getWrittenResWithSetHeaders(request, urlToRewrite);
           response.cookies.set({
             name,
             value,
@@ -39,11 +35,7 @@ export async function updateSession(request: NextRequest) {
             value: "",
             ...options,
           });
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          });
+          response = getWrittenResWithSetHeaders(request, urlToRewrite);
           response.cookies.set({
             name,
             value: "",
@@ -54,7 +46,13 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  await supabase.auth.getUser();
+  return { supabase, response };
+}
 
-  return response;
+function getWrittenResWithSetHeaders(req: NextRequest, urlToRewrite: string) {
+  return NextResponse.rewrite(new URL(`/${urlToRewrite}`, req.url), {
+    request: {
+      headers: req.headers,
+    },
+  });
 }

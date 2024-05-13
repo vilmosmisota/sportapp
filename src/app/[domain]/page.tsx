@@ -13,12 +13,12 @@ export default async function DomainPage({
         <FeaturedGamesBlock domain={params.domain} />
       </div>
 
-      <div className="flex gap-4 items-stretch">
-        <div className="w-8/12">
+      <div className="flex md:flex-row flex-col-reverse gap-4 items-stretch">
+        <div className="md:w-8/12">
           <DivisionTableBloc domain={params.domain} />
         </div>
 
-        <div className="w-4/12">
+        <div className="md:w-4/12">
           <FeaturedUpcomingGamesBlock domain={params.domain} />
         </div>
       </div>

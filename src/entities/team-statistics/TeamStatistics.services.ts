@@ -5,8 +5,7 @@ import { cookies } from "next/headers";
 import { TeamTableOnDivisionsSchema } from "./TeamStatistics.schema";
 
 export const getTeamStatisticsOnDivisions = async (domain: string) => {
-  const cookieStore = cookies();
-  const serverClient = getServerClient(cookieStore);
+  const serverClient = getServerClient();
 
   const { data, error } = await serverClient
     .from("tenants")
@@ -18,6 +17,7 @@ export const getTeamStatisticsOnDivisions = async (domain: string) => {
       ascending: false,
       referencedTable: "divisions.team_statistics",
     })
+
     .single();
 
   if (error) {

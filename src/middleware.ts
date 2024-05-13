@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { updateSession } from "./libs/supabase/middleware";
 
 export const config = {
   matcher: [
@@ -14,18 +15,38 @@ export const config = {
 };
 
 export default async function middleware(req: NextRequest) {
-  const url = req.nextUrl;
-
   const hostname = req.headers.get("host")?.split(".").at(0);
 
+  // base url should come here
   if (hostname === "localhost:3000") {
     return;
   }
 
+  const urlToRewrite = getUrlToRewrite(req);
+
+  const { supabase, response } = await updateSession(req, urlToRewrite);
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user && req.nextUrl.pathname.startsWith("/dashboard")) {
+    return NextResponse.redirect(
+      new URL(`/login`, `http://lwpl.localhost:3000/`)
+    );
+  }
+
+  return response;
+}
+
+function getUrlToRewrite(req: NextRequest) {
+  const url = req.nextUrl;
+
+  const hostname = req.headers.get("host")?.split(".").at(0);
   const searchParams = req.nextUrl.searchParams.toString();
   const path = `${url.pathname}${
     searchParams.length > 0 ? `?${searchParams}` : ""
   }`;
 
-  return NextResponse.rewrite(new URL(`/${hostname}${path}`, req.url));
+  return `${hostname}${path}`;
 }

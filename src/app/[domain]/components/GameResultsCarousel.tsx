@@ -26,7 +26,7 @@ export default function GameResultsCarousel({
 
   return (
     <Carousel
-      className=" w-10/12"
+      className=" md:w-10/12"
       opts={{
         loop: true,
       }}
@@ -46,7 +46,7 @@ export default function GameResultsCarousel({
         ) : (
           games.map((game) => {
             return (
-              <CarouselItem key={game.id} className="basis-1/5 ">
+              <CarouselItem key={game.id} className="basis-1/2 md:basis-1/5 ">
                 <SmallGameCard game={game} />
               </CarouselItem>
             );

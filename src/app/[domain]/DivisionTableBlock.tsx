@@ -6,6 +6,10 @@ type DTBProps = {
 };
 
 export default async function DivisionTableBloc({ domain }: DTBProps) {
+  if (domain === "workbox-588899ac.js" || domain === "sw.js") {
+    return null;
+  }
+
   const data = await getTeamStatisticsOnDivisions(domain);
 
   return (

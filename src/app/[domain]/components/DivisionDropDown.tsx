@@ -17,6 +17,7 @@ export default function DivisionDropDown({
       label="Select division..."
       list={selectionItems}
       onSelect={onSelect}
+      width="md:w-[200px] w-full"
     />
   );
 }

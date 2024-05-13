@@ -3,9 +3,11 @@ export default function RootStyleLoader() {
     <style>
       {`
           :root {
-            --primary:  34, 9%, 69%;
-            --secondary: 33, 82%, 82%;
-            --bar: 193, 67%, 85%;
+            --primary:  204, 94%, 15%;
+            --secondary:  43, 100%, 51%;
+            --secondary-muted: 43, 70%, 80%;
+            --bar: 198, 64%, 75%;
+            --bar-foreground: 0, 0%, 0%;
 
            
           }

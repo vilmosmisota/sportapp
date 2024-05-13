@@ -31,16 +31,23 @@ export default function FeaturedUpcomingGames({ domain }: { domain: string }) {
     <div className="border rounded-lg h-full">
       <header className="w-full  font-semibold   rounded-t-lg bg-muted p-2 border-b">
         <div className="text-center mb-2 ">Upcoming games</div>
-        <div className="flex items-center mb-2 w-full justify-stretch gap-2 ">
-          <Combobox label="Select division..." list={[]} onSelect={() => {}} />
-          <Button className="w-full" variant={"outline"}>
-            7 days
-          </Button>
-          <Button className="w-full" variant={"secondary"}>
-            14 days
-          </Button>
+        <div className="flex items-center mb-2 w-full md:flex-row flex-col-reverse justify-stretch gap-2 ">
+          <Combobox
+            label="Select division..."
+            list={[]}
+            onSelect={() => {}}
+            width="w-full"
+          />
+          <div className="flex w-full md:flex-row flex-col  justify-stretch gap-2">
+            <Button className="w-full md:w-[200px]" variant={"outline"}>
+              7 days
+            </Button>
+            <Button className="w-full" variant={"secondary"}>
+              14 days
+            </Button>
+          </div>
         </div>
-        <div className="h-8 border-t pt-2 text-center text-sm text-muted-foreground capitalize">
+        <div className="h-8 md:border-t pt-2 text-center text-sm text-muted-foreground capitalize">
           division 2 - u16 - male
         </div>
       </header>

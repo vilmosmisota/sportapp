@@ -23,9 +23,10 @@ export type ComboboxProps = {
     label: string;
   }[];
   onSelect: (id: string) => void;
+  width?: string;
 };
 
-export function Combobox({ list, onSelect, label }: ComboboxProps) {
+export function Combobox({ list, onSelect, label, width }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [value, setValue] = React.useState("");
 
@@ -36,7 +37,7 @@ export function Combobox({ list, onSelect, label }: ComboboxProps) {
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-[200px] justify-between"
+          className={`${width ? width : "w-[200px]"} justify-between`}
         >
           {value
             ? list.find((listItem) => listItem.value === value)?.label

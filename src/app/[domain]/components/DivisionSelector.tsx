@@ -46,7 +46,7 @@ export default function DivisionSelector({ teamTable }: DivisionSelectorProps) {
     <div className="">
       <div className="w-full  flex flex-wrap gap-2 items-center justify-center  rounded-t-lg bg-bar p-2">
         <div className="text-center w-full font-semibold">Standing</div>
-        <div className="flex gap-4 w-full justify-center">
+        <div className="flex gap-4 flex-col md:flex-row w-full items-center justify-center">
           <DivisionDropDown
             selectionItems={selectionItems}
             onSelect={handleSelect}
@@ -70,6 +70,9 @@ export default function DivisionSelector({ teamTable }: DivisionSelectorProps) {
               <TableHead>Draws</TableHead>
               <TableHead>Losses</TableHead>
               <TableHead>Streak</TableHead>
+              <TableHead>GF</TableHead>
+              <TableHead>GA</TableHead>
+              <TableHead>GD</TableHead>
               <TableHead>Points</TableHead>
             </TableRow>
           </TableHeader>
@@ -81,7 +84,7 @@ export default function DivisionSelector({ teamTable }: DivisionSelectorProps) {
                     <div>{`${i + 1}.`}</div>
                     <Avatar>
                       <AvatarImage src="" />
-                      <AvatarFallback className="bg-secondary text-xs">
+                      <AvatarFallback className="bg-secondary-muted text-xs">
                         {team.organizationShortName}
                       </AvatarFallback>
                     </Avatar>
@@ -91,6 +94,9 @@ export default function DivisionSelector({ teamTable }: DivisionSelectorProps) {
                   <TableCell>{team.draws}</TableCell>
                   <TableCell>{team.losses}</TableCell>
                   <TableCell>{team.streak}</TableCell>
+                  <TableCell>{team.goalsFor}</TableCell>
+                  <TableCell>{team.goalsAgainst}</TableCell>
+                  <TableCell>{team.goalDifference}</TableCell>
                   <TableCell>{team.points}</TableCell>
                 </TableRow>
               );
