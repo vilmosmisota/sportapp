@@ -14,7 +14,7 @@ export const config = {
   ],
 };
 
-const ROOT_DOMAIN = "sportwise.net";
+const ROOT_DOMAIN = "sportwise";
 const LOCAL_DOMAIN = "localhost:3000";
 const ALLOWED_SUBDOMAINS = ["develop", "lwpl"];
 
