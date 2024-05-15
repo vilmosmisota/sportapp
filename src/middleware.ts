@@ -33,8 +33,6 @@ export default async function middleware(req: NextRequest) {
   const rootDomain = domainParts?.at(1) ?? "";
   let protocol = rootDomain === LOCAL_DOMAIN ? "http" : "https";
 
-  console.log("domain parts", domainParts);
-
   // if (!ALLOWED_SUBDOMAINS.includes(subDomain)) {
   //   return NextResponse.redirect(new URL(`/`, `${protocol}://${rootDomain}/`));
   // }
@@ -64,5 +62,5 @@ function getUrlToRewrite(req: NextRequest) {
     searchParams.length > 0 ? `?${searchParams}` : ""
   }`;
 
-  return `${hostname}${path}`;
+  return `${"lwpl"}${path}`;
 }
