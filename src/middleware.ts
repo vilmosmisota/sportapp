@@ -37,20 +37,26 @@ export default async function middleware(req: NextRequest) {
   //   return NextResponse.redirect(new URL(`/`, `${protocol}://${rootDomain}/`));
   // }
 
-  const urlToRewrite = getUrlToRewrite(req);
-  const { supabase, response } = await updateSession(req, urlToRewrite);
+  return NextResponse.rewrite(new URL(`/lwpl`, req.url), {
+    request: {
+      headers: req.headers,
+    },
+  });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // const urlToRewrite = getUrlToRewrite(req);
+  // const { supabase, response } = await updateSession(req, urlToRewrite);
 
-  if (!user && req.nextUrl.pathname.startsWith("/dashboard")) {
-    return NextResponse.redirect(
-      new URL(`/login`, `${protocol}://${subDomain}.${rootDomain}/`)
-    );
-  }
+  // const {
+  //   data: { user },
+  // } = await supabase.auth.getUser();
 
-  return response;
+  // if (!user && req.nextUrl.pathname.startsWith("/dashboard")) {
+  //   return NextResponse.redirect(
+  //     new URL(`/login`, `${protocol}://${subDomain}.${rootDomain}/`)
+  //   );
+  // }
+
+  // return response;
 }
 
 function getUrlToRewrite(req: NextRequest) {
@@ -62,5 +68,7 @@ function getUrlToRewrite(req: NextRequest) {
     searchParams.length > 0 ? `?${searchParams}` : ""
   }`;
 
-  return `${"lwpl"}${path}`;
+  console.log("hostname", hostname);
+  console.log("path", path);
+  return `${hostname}${path}`;
 }
