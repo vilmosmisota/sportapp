@@ -33,30 +33,24 @@ export default async function middleware(req: NextRequest) {
   const rootDomain = domainParts?.at(1) ?? "";
   let protocol = rootDomain === LOCAL_DOMAIN ? "http" : "https";
 
-  // if (!ALLOWED_SUBDOMAINS.includes(subDomain)) {
-  //   return NextResponse.redirect(new URL(`/`, `${protocol}://${rootDomain}/`));
-  // }
+  if (!ALLOWED_SUBDOMAINS.includes(subDomain)) {
+    return NextResponse.redirect(new URL(`/`, `${protocol}://${rootDomain}/`));
+  }
 
-  return NextResponse.rewrite(new URL(`/lwpl`, req.url), {
-    request: {
-      headers: req.headers,
-    },
-  });
+  const urlToRewrite = getUrlToRewrite(req);
+  const { supabase, response } = await updateSession(req, urlToRewrite);
 
-  // const urlToRewrite = getUrlToRewrite(req);
-  // const { supabase, response } = await updateSession(req, urlToRewrite);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  // const {
-  //   data: { user },
-  // } = await supabase.auth.getUser();
+  if (!user && req.nextUrl.pathname.startsWith("/dashboard")) {
+    return NextResponse.redirect(
+      new URL(`/login`, `${protocol}://${subDomain}.${rootDomain}/`)
+    );
+  }
 
-  // if (!user && req.nextUrl.pathname.startsWith("/dashboard")) {
-  //   return NextResponse.redirect(
-  //     new URL(`/login`, `${protocol}://${subDomain}.${rootDomain}/`)
-  //   );
-  // }
-
-  // return response;
+  return response;
 }
 
 function getUrlToRewrite(req: NextRequest) {
@@ -68,7 +62,5 @@ function getUrlToRewrite(req: NextRequest) {
     searchParams.length > 0 ? `?${searchParams}` : ""
   }`;
 
-  console.log("hostname", hostname);
-  console.log("path", path);
   return `${hostname}${path}`;
 }
