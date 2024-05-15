@@ -22,8 +22,6 @@ export default async function middleware(req: NextRequest) {
   const tenantDomain = req.headers.get("host");
 
   if (tenantDomain === LOCAL_DOMAIN || tenantDomain === ROOT_DOMAIN) {
-    console.log("tenantDomain");
-    console.log("CAAALLD from 1st check");
     return NextResponse.next();
   }
 
