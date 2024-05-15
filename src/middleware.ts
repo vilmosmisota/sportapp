@@ -19,7 +19,7 @@ export default async function middleware(req: NextRequest) {
   const LOCAL_DOMAIN = "localhost:3000";
   const ALLOWED_SUBDOMAINS = ["develop", "lwpl"];
 
-  const tenantDomain = req.headers.get("host")?.split(".").at(0);
+  const tenantDomain = req.headers.get("host");
 
   if (tenantDomain === LOCAL_DOMAIN || tenantDomain === ROOT_DOMAIN) {
     console.log("tenantDomain");
