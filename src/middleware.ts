@@ -22,18 +22,18 @@ export default async function middleware(req: NextRequest) {
   const tenantDomain = req.headers.get("host")?.split(".").at(0);
 
   // base url should come here
-  if (tenantDomain === LOCAL_DOMAIN || tenantDomain === ROOT_DOMAIN) {
-    return NextResponse.next();
-  }
+  // if (tenantDomain === LOCAL_DOMAIN || tenantDomain === ROOT_DOMAIN) {
+  //   return NextResponse.next();
+  // }
 
   const domainParts = req.headers.get("host")?.split(".");
   const subDomain = domainParts?.at(0) ?? "";
   const rootDomain = domainParts?.at(1) ?? "";
   let protocol = rootDomain === LOCAL_DOMAIN ? "http" : "https";
 
-  if (!ALLOWED_SUBDOMAINS.includes(subDomain)) {
-    return NextResponse.redirect(new URL(`/`, `${protocol}://${rootDomain}/`));
-  }
+  // if (!ALLOWED_SUBDOMAINS.includes(subDomain)) {
+  //   return NextResponse.redirect(new URL(`/`, `${protocol}://${rootDomain}/`));
+  // }
 
   const urlToRewrite = getUrlToRewrite(req);
   const { supabase, response } = await updateSession(req, urlToRewrite);
