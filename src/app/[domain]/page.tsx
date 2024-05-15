@@ -8,7 +8,7 @@ export default async function DomainPage({
   params: { domain: string };
 }) {
   return (
-    <div>
+    <div className="my-5 px-5">
       <div className="mx-auto mb-5 ">
         <FeaturedGamesBlock domain={params.domain} />
       </div>

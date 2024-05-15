@@ -239,6 +239,7 @@ export type Database = {
           points: number | null;
           streak: string | null;
           team_id: number | null;
+          tenant_id: number | null;
           wins: number | null;
         };
         Insert: {
@@ -252,6 +253,7 @@ export type Database = {
           points?: number | null;
           streak?: string | null;
           team_id?: number | null;
+          tenant_id?: number | null;
           wins?: number | null;
         };
         Update: {
@@ -265,6 +267,7 @@ export type Database = {
           points?: number | null;
           streak?: string | null;
           team_id?: number | null;
+          tenant_id?: number | null;
           wins?: number | null;
         };
         Relationships: [
@@ -281,6 +284,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "teams";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "team_statistics_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
           }
         ];
       };
@@ -292,6 +302,7 @@ export type Database = {
           name: string | null;
           organization_id: number | null;
           skill: string | null;
+          tenant_id: number | null;
         };
         Insert: {
           age?: string | null;
@@ -300,6 +311,7 @@ export type Database = {
           name?: string | null;
           organization_id?: number | null;
           skill?: string | null;
+          tenant_id?: number | null;
         };
         Update: {
           age?: string | null;
@@ -308,6 +320,7 @@ export type Database = {
           name?: string | null;
           organization_id?: number | null;
           skill?: string | null;
+          tenant_id?: number | null;
         };
         Relationships: [
           {
@@ -315,6 +328,13 @@ export type Database = {
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "teams_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
             referencedColumns: ["id"];
           }
         ];

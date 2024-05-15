@@ -14,16 +14,28 @@ export const config = {
   ],
 };
 
+const ROOT_DOMAIN = "sportwise.net";
+const LOCAL_DOMAIN = "localhost:3000";
+const ALLOWED_SUBDOMAINS = ["develop", "lwpl"];
+
 export default async function middleware(req: NextRequest) {
-  const hostname = req.headers.get("host")?.split(".").at(0);
+  const tenantDomain = req.headers.get("host")?.split(".").at(0);
 
   // base url should come here
-  if (hostname === "localhost:3000") {
-    return;
+  if (tenantDomain === LOCAL_DOMAIN || tenantDomain === ROOT_DOMAIN) {
+    return NextResponse.next();
+  }
+
+  const domainParts = req.headers.get("host")?.split(".");
+  const subDomain = domainParts?.at(0) ?? "";
+  const rootDomain = domainParts?.at(1) ?? "";
+  let protocol = rootDomain === LOCAL_DOMAIN ? "http" : "https";
+
+  if (!ALLOWED_SUBDOMAINS.includes(subDomain)) {
+    return NextResponse.redirect(new URL(`/`, `${protocol}://${rootDomain}/`));
   }
 
   const urlToRewrite = getUrlToRewrite(req);
-
   const { supabase, response } = await updateSession(req, urlToRewrite);
 
   const {
@@ -32,7 +44,7 @@ export default async function middleware(req: NextRequest) {
 
   if (!user && req.nextUrl.pathname.startsWith("/dashboard")) {
     return NextResponse.redirect(
-      new URL(`/login`, `http://lwpl.localhost:3000/`)
+      new URL(`/login`, `${protocol}://${subDomain}.${rootDomain}/`)
     );
   }
 
