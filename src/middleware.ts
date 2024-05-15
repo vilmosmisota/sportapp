@@ -22,13 +22,20 @@ export default async function middleware(req: NextRequest) {
   const tenantDomain = req.headers.get("host")?.split(".").at(0);
 
   if (tenantDomain === LOCAL_DOMAIN || tenantDomain === ROOT_DOMAIN) {
-    return;
+    console.log("tenantDomain");
+    console.log("CAAALLD from 1st check");
+    return NextResponse.next();
   }
+
+  console.log("called after 1st check");
+  console.log("tenantDomain", tenantDomain);
 
   const domainParts = req.headers.get("host")?.split(".");
   const subDomain = domainParts?.at(0) ?? "";
   const rootDomain = domainParts?.at(1) ?? "";
   let protocol = rootDomain === LOCAL_DOMAIN ? "http" : "https";
+
+  console.log("domain parts", domainParts);
 
   // if (!ALLOWED_SUBDOMAINS.includes(subDomain)) {
   //   return NextResponse.redirect(new URL(`/`, `${protocol}://${rootDomain}/`));
