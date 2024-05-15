@@ -22,7 +22,7 @@ export default async function middleware(req: NextRequest) {
   const tenantDomain = req.headers.get("host")?.split(".").at(0);
 
   if (tenantDomain === LOCAL_DOMAIN || tenantDomain === ROOT_DOMAIN) {
-    return NextResponse.next();
+    return;
   }
 
   const domainParts = req.headers.get("host")?.split(".");
