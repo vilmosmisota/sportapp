@@ -14,11 +14,11 @@ export const config = {
   ],
 };
 
-const ROOT_DOMAIN = "sportwise.net";
-const LOCAL_DOMAIN = "localhost:3000";
-const ALLOWED_SUBDOMAINS = ["develop", "lwpl"];
-
 export default async function middleware(req: NextRequest) {
+  const ROOT_DOMAIN = "sportwise.net";
+  const LOCAL_DOMAIN = "localhost:3000";
+  const ALLOWED_SUBDOMAINS = ["develop", "lwpl"];
+
   const tenantDomain = req.headers.get("host")?.split(".").at(0);
 
   if (tenantDomain === LOCAL_DOMAIN || tenantDomain === ROOT_DOMAIN) {
