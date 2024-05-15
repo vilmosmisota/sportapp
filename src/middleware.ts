@@ -14,17 +14,16 @@ export const config = {
   ],
 };
 
-const ROOT_DOMAIN = "sportwise";
+const ROOT_DOMAIN = "sportwise.net";
 const LOCAL_DOMAIN = "localhost:3000";
 const ALLOWED_SUBDOMAINS = ["develop", "lwpl"];
 
 export default async function middleware(req: NextRequest) {
   const tenantDomain = req.headers.get("host")?.split(".").at(0);
 
-  // base url should come here
-  // if (tenantDomain === LOCAL_DOMAIN || tenantDomain === ROOT_DOMAIN) {
-  //   return NextResponse.next();
-  // }
+  if (tenantDomain === LOCAL_DOMAIN || tenantDomain === ROOT_DOMAIN) {
+    return NextResponse.next();
+  }
 
   const domainParts = req.headers.get("host")?.split(".");
   const subDomain = domainParts?.at(0) ?? "";
