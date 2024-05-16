@@ -33,10 +33,6 @@ export default async function middleware(req: NextRequest) {
   const rootDomain = domainParts?.at(1) ?? "";
   let protocol = rootDomain === LOCAL_DOMAIN ? "http" : "https";
 
-  if (!ALLOWED_SUBDOMAINS.includes(subDomain)) {
-    return NextResponse.redirect(new URL(`/`, `${protocol}://${rootDomain}/`));
-  }
-
   const urlToRewrite = getUrlToRewrite(req);
   const { supabase, response } = await updateSession(req, urlToRewrite);
 

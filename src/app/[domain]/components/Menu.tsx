@@ -44,24 +44,24 @@ export function Menu({
             Home
           </Link>
           <Link
-            href="/examples/dashboard"
+            href="#"
             className="text-sm font-medium text-bar-foreground transition-colors hover:text-primary"
           >
             Standing
           </Link>
           <Link
-            href="/examples/dashboard"
+            href="#"
             className="text-sm font-medium text-bar-foreground transition-colors hover:text-primary"
           >
             Teams
           </Link>
         </nav>
       </div>
-      <div>
-        <AuthMenu />
-      </div>
 
-      <MobileMenu />
+      <div className="flex items-center justify-center gap-2">
+        <AuthMenu />
+        <MobileMenu />
+      </div>
     </div>
   );
 }

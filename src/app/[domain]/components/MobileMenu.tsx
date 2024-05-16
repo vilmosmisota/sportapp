@@ -28,7 +28,7 @@ export default function MobileMenu() {
 
         <nav
           className={cn(
-            "flex flex-col items-center space-x-4 lg:space-x-6 h-full"
+            "flex flex-col justify-center gap-4 text-center items-center  h-full"
           )}
         >
           <Link
@@ -56,13 +56,6 @@ export default function MobileMenu() {
             Players
           </Link>
         </nav>
-
-        <DrawerFooter>
-          <Button>Submit</Button>
-          <DrawerClose>
-            <Button variant="outline">Cancel</Button>
-          </DrawerClose>
-        </DrawerFooter>
       </DrawerContent>
     </Drawer>
   );

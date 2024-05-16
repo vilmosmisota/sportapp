@@ -15,7 +15,7 @@ import { useUpcomingGamesByDivisionId } from "@/entities/game/Game.queries";
 import { useState } from "react";
 
 export default function FeaturedUpcomingGames({ domain }: { domain: string }) {
-  const [divisionId, setDivisionId] = useState(1);
+  const [divisionId, setDivisionId] = useState(2);
   const {
     data: games,
     isLoading,
@@ -52,7 +52,17 @@ export default function FeaturedUpcomingGames({ domain }: { domain: string }) {
         </div>
       </header>
       <section className=" ">
-        <ScrollArea className="h-[500px] w-full  py-4 px-2">
+        <ScrollArea
+          className={`${
+            !games?.length ? "" : "h-[300px]"
+          } lg:h-[500px] w-full  py-4 px-2`}
+        >
+          {!games?.length && (
+            <div className="bg-muted h-full min-h-[180px] flex items-center text-center rounded-md`">
+              <div className="w-full">No games</div>
+            </div>
+          )}
+
           {games?.map((game) => {
             const [hours, minutes] = game.startTime
               ? game.startTime.split(":")
