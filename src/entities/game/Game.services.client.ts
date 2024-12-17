@@ -1,5 +1,5 @@
 import { TypedBrowserClient } from "@/libs/supabase/client";
-import { GameSchema, GameWithAddressSchema } from "./Game.schema";
+import { GameSchema } from "./Game.schema";
 
 export const getUpcomingGamesByDivisionId = async (
   browserClient: TypedBrowserClient,

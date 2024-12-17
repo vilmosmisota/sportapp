@@ -10,7 +10,7 @@ export const useUpcomingGamesByDivisionId = (
   const queryKey = [divisionId, domain];
   const queryFn = async () => {
     const data = await getUpcomingGamesByDivisionId(client, domain, divisionId);
-    console.log("data", data);
+
     return data;
   };
 

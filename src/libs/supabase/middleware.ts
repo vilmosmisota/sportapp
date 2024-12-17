@@ -1,6 +1,8 @@
+import { Database } from "@/db/database.types";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 
 import { NextResponse, type NextRequest } from "next/server";
+import { TypedClient } from "./type";
 
 export async function updateSession(
   request: NextRequest,
@@ -8,7 +10,7 @@ export async function updateSession(
 ) {
   let response = getWrittenResWithSetHeaders(request, urlToRewrite);
 
-  const supabase = createServerClient(
+  const supabase: TypedClient = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {

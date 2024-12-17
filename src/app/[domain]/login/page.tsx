@@ -8,7 +8,7 @@ import {
 
 import LoginForm from "./components/LoginForm";
 
-export default function LoginPage() {
+export default function LoginPage({ params }: { params: { domain: string } }) {
   return (
     <div className="flex items-center justify-center w-full h-full">
       <Card className="w-full max-w-sm">
@@ -19,7 +19,7 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <LoginForm />
+          <LoginForm domain={params.domain} />
         </CardContent>
       </Card>
     </div>

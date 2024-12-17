@@ -17,8 +17,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useLogIn } from "@/entities/user/User.actions.client";
 
-export default function LoginForm() {
-  const logInMutation = useLogIn();
+export default function LoginForm({ domain }: { domain: string }) {
+  const logInMutation = useLogIn(domain);
   const form = useForm<z.output<typeof UserLoginSchema>>({
     resolver: zodResolver(UserLoginSchema),
     defaultValues: {

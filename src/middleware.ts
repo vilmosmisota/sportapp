@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateSession } from "./libs/supabase/middleware";
+import { TenantType } from "./entities/tenant/Tenant.schema";
+import { getTenantUserCookieKey } from "./entities/user/User.utils";
+import { getTenantInfoByDomain } from "./entities/tenant/Tenant.services";
 
 export const config = {
   matcher: [
@@ -17,7 +20,6 @@ export const config = {
 export default async function middleware(req: NextRequest) {
   const ROOT_DOMAIN = "sportwise.net";
   const LOCAL_DOMAIN = "localhost:3000";
-  const ALLOWED_SUBDOMAINS = ["develop", "lwpl"];
 
   const tenantDomain = req.headers.get("host");
 
@@ -25,10 +27,7 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  console.log("called after 1st check");
-  console.log("tenantDomain", tenantDomain);
-
-  const domainParts = req.headers.get("host")?.split(".");
+  const domainParts = tenantDomain?.split(".");
   const subDomain = domainParts?.at(0) ?? "";
   const rootDomain = domainParts?.at(1) ?? "";
   let protocol = rootDomain === LOCAL_DOMAIN ? "http" : "https";
@@ -36,14 +35,106 @@ export default async function middleware(req: NextRequest) {
   const urlToRewrite = getUrlToRewrite(req);
   const { supabase, response } = await updateSession(req, urlToRewrite);
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Check if tenant type is in cookies
 
-  if (!user && req.nextUrl.pathname.startsWith("/dashboard")) {
-    return NextResponse.redirect(
-      new URL(`/login`, `${protocol}://${subDomain}.${rootDomain}/`)
+  const tenantInfoCookieKey = `${subDomain}-tenant-info`;
+  const tenantInfoCookie = req.cookies.get(tenantInfoCookieKey);
+
+  let tenantType: TenantType | null = null;
+  let tenantId: string | null = null;
+
+  if (tenantInfoCookie) {
+    const [id, type] = tenantInfoCookie.value.split(":");
+    tenantType = type as TenantType;
+    tenantId = id;
+  } else {
+    // If not in cookies, fetch from database using the supabase instance
+    const { tenantId: id, tenantType: type } = await getTenantInfoByDomain(
+      subDomain,
+      supabase
     );
+
+    tenantType = type;
+    tenantId = id.toString();
+  }
+
+  if (!tenantType || !tenantId) {
+    // If no tenant type or id found, redirect to root
+    return NextResponse.redirect(new URL(`${protocol}://${ROOT_DOMAIN}/`));
+  }
+
+  response.cookies.set(tenantInfoCookieKey, `${tenantId}:${tenantType}`, {
+    maxAge: 31536000, // 1 year in seconds
+    sameSite: "strict",
+  });
+
+  const orgTenantUrl = "/o/dashboard";
+  const leagueTenantUrl = "/l/dashboard";
+
+  if (
+    tenantType === TenantType.LEAGUE &&
+    req.nextUrl.pathname.startsWith(orgTenantUrl)
+  ) {
+    return NextResponse.redirect(
+      new URL(`/`, `${protocol}://${subDomain}.${rootDomain}/`)
+    );
+  }
+
+  if (
+    tenantType === TenantType.ORGANIZATION &&
+    req.nextUrl.pathname.startsWith(leagueTenantUrl)
+  ) {
+    return NextResponse.redirect(
+      new URL(`/`, `${protocol}://${subDomain}.${rootDomain}/`)
+    );
+  }
+
+  if (
+    req.nextUrl.pathname.startsWith(orgTenantUrl) ||
+    req.nextUrl.pathname.startsWith(leagueTenantUrl)
+  ) {
+    let isTenantUser = false;
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const tenantUserCookieKey = getTenantUserCookieKey(
+      user?.id ?? "",
+      tenantId
+    );
+    const tenantUserCookie = req.cookies.get(tenantUserCookieKey)?.value ?? "";
+
+    if (tenantUserCookie) {
+      isTenantUser = true;
+    } else {
+      const { data } = await supabase
+        .from("userEntities")
+        .select("tenantId")
+        .eq("userId", `${user?.id}`);
+
+      if (!data) {
+        isTenantUser = false;
+      }
+
+      const userTenantIds = data?.map((userEntity) =>
+        userEntity.tenantId?.toLocaleString()
+      );
+
+      if (userTenantIds?.includes(tenantId)) {
+        isTenantUser = true;
+        response.cookies.set(tenantUserCookieKey, "true", {
+          maxAge: 31536000, // 1 year in seconds
+          sameSite: "strict",
+        });
+      }
+    }
+
+    if (!isTenantUser) {
+      return NextResponse.redirect(
+        new URL(`/login`, `${protocol}://${subDomain}.${rootDomain}/`)
+      );
+    }
   }
 
   return response;

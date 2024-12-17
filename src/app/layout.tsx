@@ -20,7 +20,7 @@ export default function RootLayout({
     <ReactQueryClientProvider>
       <html lang="en" className={`${GeistSans.variable}`}>
         <body className={"min-h-screen bg-background antialiased"}>
-          <RootStyleLoader />
+          {/* <RootStyleLoader /> */}
 
           <>{children}</>
           <Toaster />

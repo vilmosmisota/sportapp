@@ -1,27 +1,29 @@
-import FeaturedGamesBlock from "./FeaturedGameResultsBlock";
-import DivisionTableBloc from "./DivisionTableBlock";
-import FeaturedUpcomingGamesBlock from "./FeaturedUpcomingGamesBlock";
+import LeagueLandingPage from "./(league)/Landing.page";
+import { TenantType } from "@/entities/tenant/Tenant.schema";
+import OrganizationLandingPage from "./(organization)/OrganizationLanding.page";
+import { getTenantByDomain } from "@/entities/tenant/Tenant.services";
+import { getServerClient } from "@/libs/supabase/server";
 
-export default async function DomainPage({
+export default async function TenantLandingPage({
   params,
 }: {
   params: { domain: string };
 }) {
+  const serverClient = getServerClient();
+  const tenant = await getTenantByDomain(params.domain, serverClient);
+
+  if (!tenant) {
+    return null;
+  }
+
+  const { type: tenantType } = tenant;
+
   return (
     <div className="my-5 px-5">
-      <div className="mx-auto mb-5 ">
-        <FeaturedGamesBlock domain={params.domain} />
-      </div>
-
-      <div className="flex md:flex-row flex-col-reverse gap-4 items-stretch">
-        <div className="md:w-8/12">
-          <DivisionTableBloc domain={params.domain} />
-        </div>
-
-        <div className="md:w-4/12">
-          <FeaturedUpcomingGamesBlock domain={params.domain} />
-        </div>
-      </div>
+      {tenantType === TenantType.LEAGUE && (
+        <LeagueLandingPage params={params} />
+      )}
+      {tenantType === TenantType.ORGANIZATION && <OrganizationLandingPage />}
     </div>
   );
 }

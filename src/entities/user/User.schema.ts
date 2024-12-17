@@ -1,6 +1,11 @@
 import { z } from "zod";
 
-export const UserSchema = z.object({});
+export const UserSchema = z.object({
+  id: z.string(),
+  email: z.string().trim().email({ message: "Invalid email address " }),
+  firstName: z.string().trim().min(1, { message: "First name is required" }),
+  lastName: z.string().trim().min(1, { message: "Last name is required" }),
+});
 
 // firstName: z.string().trim().min(1, { message: "First name is required" }),
 // lastName: z.string().trim().min(1, { message: "Last name is required" }),
@@ -10,4 +15,4 @@ export const UserLoginSchema = z.object({
   password: z.string().trim().min(1, { message: "Password is required" }),
 });
 
-export type UserLogin = z.infer<typeof UserSchema>;
+export type UserLogin = z.infer<typeof UserLoginSchema>;

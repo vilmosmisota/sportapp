@@ -10,12 +10,12 @@ export const getTeamStatisticsOnDivisions = async (domain: string) => {
   const { data, error } = await serverClient
     .from("tenants")
     .select(
-      `id, divisions ( id, name, age, level, gender, team_statistics (*, teams (organization_id, organizations (name, short_name))) )`
+      `id, divisions ( id, name, age, level, gender, teamStatistics (*, teams (clubId, clubs (name, shortName))) )`
     )
     .eq("domain", `${domain}`)
     .order(`points`, {
       ascending: false,
-      referencedTable: "divisions.team_statistics",
+      referencedTable: "divisions.teamStatistics",
     })
 
     .single();
