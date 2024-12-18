@@ -11,6 +11,8 @@ import UsersTableFilters from "./tables/UsersTableFilters";
 import { UserRole } from "@/entities/user/User.schema";
 import UsersTable from "./tables/UsersTable";
 import AddUserForm from "./forms/AddUserForm";
+import { useUserRoles } from "@/hooks/useUserRoles";
+import { Permissions } from "@/libs/permissions/permissions";
 
 export default function UsersPage({ params }: { params: { domain: string } }) {
   const { data: tenant } = useTenantByDomain(params.domain);
@@ -18,6 +20,8 @@ export default function UsersPage({ params }: { params: { domain: string } }) {
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const userRoles = useUserRoles();
+  const canManageUsers = Permissions.Users.manage(userRoles);
 
   if (error) return <div>{error.message}</div>;
 
@@ -36,29 +40,31 @@ export default function UsersPage({ params }: { params: { domain: string } }) {
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg">Users</h3>
-        <Button
-          size="sm"
-          onClick={() => setIsAddUserOpen(true)}
-          className="gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Add User
-        </Button>
-      </div>
+      <h3 className="text-lg mb-6">Users</h3>
 
-      <UsersTableFilters
-        roleFilter={roleFilter}
-        setRoleFilter={setRoleFilter}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-      />
+      <div className="flex items-center space-x-4 mb-6">
+        {canManageUsers && (
+          <Button
+            onClick={() => setIsAddUserOpen(true)}
+            className="shrink-0 gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Add User
+          </Button>
+        )}
+        <UsersTableFilters
+          roleFilter={roleFilter}
+          setRoleFilter={setRoleFilter}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+        />
+      </div>
 
       <div className="mt-4">
         <UsersTable
           users={filteredUsers}
           tenantId={tenant?.id.toString() ?? ""}
+          canManageUsers={canManageUsers}
         />
       </div>
 

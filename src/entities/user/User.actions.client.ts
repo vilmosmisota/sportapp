@@ -5,7 +5,13 @@ import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { getTenantInfoFromClientCookie } from "../tenant/Tenant.helpers.client";
 import { getTenantInfoByDomain } from "../tenant/Tenant.services";
-import { checkTenantUserByIds, getUsersByEmail, createUser, deleteUser, updateUser } from "./User.services";
+import {
+  checkTenantUserByIds,
+  getUsersByEmail,
+  createUser,
+  deleteUser,
+  updateUser,
+} from "./User.services";
 import { TenantType } from "../tenant/Tenant.schema";
 import { queryKeys } from "@/cacheKeys/cacheKeys";
 import { useSupabase } from "@/libs/supabase/useSupabase";
@@ -20,12 +26,22 @@ export async function logIn(formData: UserLogin, domain: string) {
 
   const supabase = getBrowserClient();
 
-  const user = await getUsersByEmail(supabase, parsedData.data.email);
+  // First attempt to sign in
+  const { data: authData, error: authError } =
+    await supabase.auth.signInWithPassword({
+      email: parsedData.data.email,
+      password: parsedData.data.password,
+    });
 
-  if (!user) {
-    throw new Error("User not found");
+  if (authError) {
+    throw authError;
   }
 
+  if (!authData.user) {
+    throw new Error("No user found");
+  }
+
+  // Then get tenant info
   let tenantId: string;
   let tenantType: string;
 
@@ -33,40 +49,30 @@ export async function logIn(formData: UserLogin, domain: string) {
 
   if (!tenantUserInfo) {
     const tenantInfo = await getTenantInfoByDomain(domain, supabase);
-
-    console.log("tenantInfo", tenantInfo);
-
     if (!tenantInfo) {
       throw new Error("Tenant not found");
-    } else {
-      tenantId = tenantInfo.tenantId.toString();
-      tenantType = tenantInfo.tenantType;
     }
+    tenantId = tenantInfo.tenantId.toString();
+    tenantType = tenantInfo.tenantType;
   } else {
     tenantId = tenantUserInfo.tenantId;
     tenantType = tenantUserInfo.tenantType;
   }
 
+  // Verify user has access to this tenant
   const checkedTenantUser = await checkTenantUserByIds(
     supabase,
     tenantId,
-    user.id
+    authData.user.id
   );
 
   if (!checkedTenantUser) {
-    throw new Error("Tenant user not found");
+    // If user doesn't have access, sign them out
+    await supabase.auth.signOut();
+    throw new Error("You don't have access to this tenant");
   }
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: parsedData.data.email,
-    password: parsedData.data.password,
-  });
-
-  if (error) {
-    throw error;
-  }
-
-  return { user: data.user, tenantType, tenantId };
+  return { user: authData.user, tenantType, tenantId };
 }
 
 export function useLogIn(domain: string) {
@@ -126,28 +132,26 @@ export const useAddUser = (tenantId: string) => {
   const queryKey = [queryKeys.users.all];
 
   return useMutation({
-    mutationFn: ({
-      userData,
-    }: {
-      userData: UserForm;
-    }) => createUser(client, userData, tenantId),
+    mutationFn: ({ userData }: { userData: UserForm }) =>
+      createUser(client, userData, tenantId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
     },
   });
 };
 
-export const useUpdateUser = (userId: string, entityId: number, tenantId: string) => {
+export const useUpdateUser = (
+  userId: string,
+  entityIds: number[],
+  tenantId: string
+) => {
   const client = useSupabase();
   const queryClient = useQueryClient();
-  const queryKey = [queryKeys.users.all];
+  const queryKey = [queryKeys.user.list, tenantId];
 
   return useMutation({
-    mutationFn: ({
-      userData,
-    }: {
-      userData: UserForm;
-    }) => updateUser(client, userId, userData, entityId),
+    mutationFn: ({ userData }: { userData: UserForm }) =>
+      updateUser(client, userId, userData, entityIds, tenantId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
     },

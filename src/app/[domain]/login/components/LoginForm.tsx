@@ -26,12 +26,19 @@ export default function LoginForm({ domain }: { domain: string }) {
       password: "",
     },
   });
+
   return (
     <Form {...form}>
       <form
         className="flex flex-col gap-4"
         onSubmit={form.handleSubmit((data) => logInMutation.mutate(data))}
       >
+        {logInMutation.error && (
+          <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md">
+            {logInMutation.error.message}
+          </div>
+        )}
+
         <div className="grid gap-2">
           <FormField
             control={form.control}
@@ -65,8 +72,12 @@ export default function LoginForm({ domain }: { domain: string }) {
             )}
           />
         </div>
-        <Button type="submit" className="w-full">
-          Sign in
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={logInMutation.isPending}
+        >
+          {logInMutation.isPending ? "Signing in..." : "Sign in"}
         </Button>
       </form>
     </Form>

@@ -51,11 +51,11 @@ export const createUser = async (
   userData: UserForm,
   tenantId: string
 ) => {
-  // First create the auth user
+  // First create the auth user with admin API
   const { data: authData, error: authError } =
     await client.auth.admin.createUser({
       email: userData.email,
-      password: Math.random().toString(36).slice(-8), // Generate random password
+      password: userData.password,
       email_confirm: true,
     });
 
@@ -71,20 +71,17 @@ export const createUser = async (
 
   if (userError) throw new Error(userError.message);
 
-  // Create user entity
-  const { data: entity, error: entityError } = await client
+  // Create user entities
+  const { data: entities, error: entityError } = await client
     .from("userEntities")
-    .insert({
-      userId: authData.user.id,
-      tenantId: Number(tenantId),
-      role: userData.role,
-      entityName: userData.entityName,
-      clubId: userData.clubId,
-      divisionId: userData.divisionId,
-      teamId: userData.teamId,
-    })
-    .select()
-    .single();
+    .insert(
+      userData.entities.map((entity) => ({
+        ...entity,
+        userId: authData.user.id,
+        tenantId: Number(tenantId),
+      }))
+    )
+    .select();
 
   if (entityError) throw new Error(entityError.message);
 
@@ -93,16 +90,17 @@ export const createUser = async (
     email: userData.email,
     firstName: userData.firstName,
     lastName: userData.lastName,
-    entities: [entity],
+    entities,
   };
 };
 
-// Update user and their entity
+// Update user and their entities
 export const updateUser = async (
   client: TypedClient,
   userId: string,
   userData: UserForm,
-  entityId: number
+  entityIds: number[],
+  tenantId: string
 ) => {
   // Update user profile
   const { error: userError } = await client
@@ -116,19 +114,25 @@ export const updateUser = async (
 
   if (userError) throw new Error(userError.message);
 
-  // Update user entity
-  const { data: entity, error: entityError } = await client
+  // Delete existing entities
+  const { error: deleteError } = await client
     .from("userEntities")
-    .update({
-      role: userData.role,
-      entityName: userData.entityName,
-      clubId: userData.clubId,
-      divisionId: userData.divisionId,
-      teamId: userData.teamId,
-    })
-    .eq("id", entityId)
-    .select()
-    .single();
+    .delete()
+    .in("id", entityIds);
+
+  if (deleteError) throw new Error(deleteError.message);
+
+  // Create new entities
+  const { data: entities, error: entityError } = await client
+    .from("userEntities")
+    .insert(
+      userData.entities.map((entity) => ({
+        ...entity,
+        userId,
+        tenantId: Number(tenantId),
+      }))
+    )
+    .select();
 
   if (entityError) throw new Error(entityError.message);
 
@@ -137,7 +141,7 @@ export const updateUser = async (
     email: userData.email,
     firstName: userData.firstName,
     lastName: userData.lastName,
-    entities: [entity],
+    entities,
   };
 };
 
@@ -154,14 +158,18 @@ export const checkTenantUserByIds = async (
   tenantId: string,
   userId: string
 ) => {
-  const { data: tenantData } = await client
+  const { data, error } = await client
     .from("userEntities")
-    .select("tenantId")
+    .select("*")
     .eq("userId", userId)
-    .eq("tenantId", tenantId)
-    .single();
+    .eq("tenantId", tenantId);
 
-  return !!tenantData;
+  if (error) {
+    console.error("Error checking tenant user:", error);
+    return false;
+  }
+
+  return data && data.length > 0;
 };
 
 export const getUsersByEmail = async (client: TypedClient, email: string) => {

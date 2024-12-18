@@ -38,11 +38,8 @@ export const UserSchema = z.object({
     .optional(),
 });
 
-// Schema for creating/updating users
-export const UserFormSchema = z.object({
-  email: z.string().email(),
-  firstName: z.string().min(1),
-  lastName: z.string().min(1),
+// Schema for user entity
+export const UserEntitySchema = z.object({
   role: z.nativeEnum(UserRole),
   entityName: z.string().optional(),
   clubId: z.number().optional(),
@@ -50,5 +47,15 @@ export const UserFormSchema = z.object({
   teamId: z.number().optional(),
 });
 
+// Schema for creating/updating users
+export const UserFormSchema = z.object({
+  email: z.string().email(),
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  entities: z.array(UserEntitySchema).min(1, "At least one role is required"),
+});
+
 export type User = z.infer<typeof UserSchema>;
 export type UserForm = z.infer<typeof UserFormSchema>;
+export type UserEntity = z.infer<typeof UserEntitySchema>;

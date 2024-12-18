@@ -23,8 +23,8 @@ export default function UsersTableFilters({
   setSearchQuery,
 }: UsersTableFiltersProps) {
   return (
-    <div className="flex gap-4">
-      <div className="relative flex-1 max-w-sm">
+    <div className="flex gap-4 flex-1">
+      <div className="relative flex-1">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           placeholder="Search users..."
@@ -44,7 +44,7 @@ export default function UsersTableFilters({
           <SelectItem value="all">All Roles</SelectItem>
           {Object.values(UserRole).map((role) => (
             <SelectItem key={role} value={role}>
-              {role}
+              <span className="capitalize">{role.replace("-", " ")}</span>
             </SelectItem>
           ))}
         </SelectContent>
