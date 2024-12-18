@@ -2,34 +2,38 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn } from "@/libs/tailwind/utils";
-import { NavItem } from "./Dashboard";
-import * as Icons from "lucide-react";
 import { LucideIcon } from "lucide-react";
+import { cn } from "@/libs/tailwind/utils";
 
-export default function DashboardNav({ items }: { items: NavItem[] }) {
+type NavItem = {
+  name: string;
+  href: string;
+  iconName: string;
+};
+
+interface DashboardNavProps {
+  items: NavItem[];
+  icons: Record<string, LucideIcon>;
+}
+
+export default function DashboardNav({ items, icons }: DashboardNavProps) {
   const pathname = usePathname();
 
   return (
-    <nav className="grid items-start gap-2 px-2 text-sm font-medium lg:px-4 mt-6">
-      {items.map((item) => {
-        const isActive =
-          item.href === "/o/dashboard"
-            ? pathname === "/o/dashboard"
-            : pathname.includes(item.href);
-
-        const Icon = Icons[item.iconName as keyof typeof Icons] as LucideIcon;
+    <nav className="grid items-start gap-2 p-4">
+      {items.map((item, index) => {
+        const Icon = icons[item.iconName];
         return (
-          <Link
-            key={item.name}
-            href={item.href}
-            className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
-              isActive ? "bg-primary/10 text-primary" : "text-muted-foreground"
-            )}
-          >
-            <Icon className="h-4 w-4" />
-            {item.name}
+          <Link key={index} href={item.href}>
+            <span
+              className={cn(
+                "group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
+                pathname === item.href ? "bg-accent" : "transparent"
+              )}
+            >
+              <Icon className="mr-2 h-4 w-4" />
+              <span>{item.name}</span>
+            </span>
           </Link>
         );
       })}

@@ -1,4 +1,14 @@
 import Dashboard from "@/app/[domain]/(components)/Dashboard";
+import {
+  Building2,
+  Users2,
+  UserRound,
+  Dumbbell,
+  BarChart3,
+  GraduationCap,
+  Users,
+  LayoutDashboard,
+} from "lucide-react";
 
 const navItems = [
   {
@@ -12,6 +22,11 @@ const navItems = [
     iconName: "Building2",
   },
   {
+    name: "Users",
+    href: "/o/dashboard/users",
+    iconName: "Users",
+  },
+  {
     name: "Teams",
     href: "/o/dashboard/teams",
     iconName: "Users2",
@@ -20,6 +35,11 @@ const navItems = [
     name: "Players",
     href: "/o/dashboard/players",
     iconName: "UserRound",
+  },
+  {
+    name: "Coaches",
+    href: "/o/dashboard/coaches",
+    iconName: "GraduationCap",
   },
   {
     name: "Trainings",

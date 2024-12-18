@@ -1,6 +1,7 @@
 import { TypedClient } from "@/libs/supabase/type";
-import { UserSchema } from "./User.schema";
+import { User, UserForm, UserSchema } from "./User.schema";
 
+// Keep the original function for middleware
 export const getUserOnClient = async (typedClient: TypedClient) => {
   const {
     data: { user },
@@ -13,39 +14,166 @@ export const getUserOnClient = async (typedClient: TypedClient) => {
   return user;
 };
 
-export const getUsersByEmail = async (
-  typedClient: TypedClient,
-  email: string
-) => {
-  const { data, error } = await typedClient
+// Get all users for a tenant with their entities
+export const getUsersByTenantId = async (
+  client: TypedClient,
+  tenantId: string
+): Promise<User[]> => {
+  const { data, error } = await client
     .from("users")
-    .select("*")
-    .eq("email", `${email}`)
-    .single();
+    .select(
+      `
+      *,
+      entities:userEntities (
+        id,
+        createdAt,
+        entityName,
+        role,
+        tenantId,
+        clubId,
+        divisionId,
+        teamId
+      )
+    `
+    )
+    .eq("userEntities.tenantId", tenantId);
 
-  if (error || !data) {
+  if (error) {
     throw new Error(error.message);
   }
 
-  const validatedData = UserSchema.parse(data);
-
-  return validatedData;
+  return data.map((user) => UserSchema.parse(user));
 };
 
+// Create a new user with their entity
+export const createUser = async (
+  client: TypedClient,
+  userData: UserForm,
+  tenantId: string
+) => {
+  // First create the auth user
+  const { data: authData, error: authError } =
+    await client.auth.admin.createUser({
+      email: userData.email,
+      password: Math.random().toString(36).slice(-8), // Generate random password
+      email_confirm: true,
+    });
+
+  if (authError) throw new Error(authError.message);
+
+  // Create user profile
+  const { error: userError } = await client.from("users").insert({
+    id: authData.user.id,
+    email: userData.email,
+    firstName: userData.firstName,
+    lastName: userData.lastName,
+  });
+
+  if (userError) throw new Error(userError.message);
+
+  // Create user entity
+  const { data: entity, error: entityError } = await client
+    .from("userEntities")
+    .insert({
+      userId: authData.user.id,
+      tenantId: Number(tenantId),
+      role: userData.role,
+      entityName: userData.entityName,
+      clubId: userData.clubId,
+      divisionId: userData.divisionId,
+      teamId: userData.teamId,
+    })
+    .select()
+    .single();
+
+  if (entityError) throw new Error(entityError.message);
+
+  return {
+    id: authData.user.id,
+    email: userData.email,
+    firstName: userData.firstName,
+    lastName: userData.lastName,
+    entities: [entity],
+  };
+};
+
+// Update user and their entity
+export const updateUser = async (
+  client: TypedClient,
+  userId: string,
+  userData: UserForm,
+  entityId: number
+) => {
+  // Update user profile
+  const { error: userError } = await client
+    .from("users")
+    .update({
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      email: userData.email,
+    })
+    .eq("id", userId);
+
+  if (userError) throw new Error(userError.message);
+
+  // Update user entity
+  const { data: entity, error: entityError } = await client
+    .from("userEntities")
+    .update({
+      role: userData.role,
+      entityName: userData.entityName,
+      clubId: userData.clubId,
+      divisionId: userData.divisionId,
+      teamId: userData.teamId,
+    })
+    .eq("id", entityId)
+    .select()
+    .single();
+
+  if (entityError) throw new Error(entityError.message);
+
+  return {
+    id: userId,
+    email: userData.email,
+    firstName: userData.firstName,
+    lastName: userData.lastName,
+    entities: [entity],
+  };
+};
+
+// Delete user (this will cascade delete their entities)
+export const deleteUser = async (client: TypedClient, userId: string) => {
+  const { error } = await client.auth.admin.deleteUser(userId);
+  if (error) throw new Error(error.message);
+  return true;
+};
+
+// Add this function back to User.services.ts
 export const checkTenantUserByIds = async (
-  typedClient: TypedClient,
+  client: TypedClient,
   tenantId: string,
   userId: string
 ) => {
-  const { data: tenantData } = await typedClient
+  const { data: tenantData } = await client
     .from("userEntities")
     .select("tenantId")
-    .eq("userId", `${userId}`)
-    .eq("tenantId", `${tenantId}`)
+    .eq("userId", userId)
+    .eq("tenantId", tenantId)
     .single();
 
-  if (tenantData) {
-    return true;
+  return !!tenantData;
+};
+
+export const getUsersByEmail = async (client: TypedClient, email: string) => {
+  const { data, error } = await client
+    .from("users")
+    .select("*")
+    .eq("email", email)
+    .single();
+
+  if (error || !data) {
+    throw new Error(error?.message ?? "User not found");
   }
-  return false;
+
+  return UserSchema.parse(data);
 };

@@ -28,11 +28,16 @@ export enum Gender {
 
 export const TeamSchema = z.object({
   id: z.number(),
+  name: z.string().nullable().optional(),
   age: z.nativeEnum(AgeLevel).nullable(),
   skill: z.string(),
   gender: z.string(),
   tenantId: z.number(),
   clubId: z.number().nullable(),
+  playerCount: z.number().optional(),
+  coach: z.string().nullable().optional(),
+  createdAt: z.string().nullable().optional(),
+  updatedAt: z.string().nullable().optional(),
 });
 
 export type Team = z.infer<typeof TeamSchema>;
@@ -41,6 +46,9 @@ export const TeamFormSchema = TeamSchema.omit({
   id: true,
   tenantId: true,
   clubId: true,
+  playerCount: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
 export type TeamForm = z.infer<typeof TeamFormSchema>;

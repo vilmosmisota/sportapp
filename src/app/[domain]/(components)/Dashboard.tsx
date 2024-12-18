@@ -1,10 +1,41 @@
-import { LucideProps } from "lucide-react";
+"use client";
+
+import {
+  Building2,
+  Users2,
+  UserRound,
+  Dumbbell,
+  BarChart3,
+  GraduationCap,
+  Users,
+  LayoutDashboard,
+  LucideIcon,
+  Building,
+  Store,
+  Medal,
+  Shield,
+} from "lucide-react";
 import DashboardNav from "./DashboardNav";
 
-export type NavItem = {
+const iconMap: Record<string, LucideIcon> = {
+  LayoutDashboard,
+  Building2,
+  Users,
+  Users2,
+  UserRound,
+  GraduationCap,
+  Dumbbell,
+  BarChart3,
+  Building,
+  Store,
+  Medal,
+  Shield,
+};
+
+type NavItem = {
   name: string;
   href: string;
-  iconName: string;
+  iconName: keyof typeof iconMap;
 };
 
 type DashboardProps = {
@@ -18,7 +49,7 @@ export default function Dashboard({ items, children }: DashboardProps) {
       <div className="hidden border-r bg-muted/40 md:block">
         <div className="flex h-full max-h-screen flex-col gap-2">
           <div className="flex-1">
-            <DashboardNav items={items} />
+            <DashboardNav items={items} icons={iconMap} />
           </div>
         </div>
       </div>

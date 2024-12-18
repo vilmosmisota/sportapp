@@ -5,9 +5,11 @@ import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { getTenantInfoFromClientCookie } from "../tenant/Tenant.helpers.client";
 import { getTenantInfoByDomain } from "../tenant/Tenant.services";
-import { checkTenantUserByIds, getUsersByEmail } from "./User.services";
+import { checkTenantUserByIds, getUsersByEmail, createUser, deleteUser, updateUser } from "./User.services";
 import { TenantType } from "../tenant/Tenant.schema";
 import { queryKeys } from "@/cacheKeys/cacheKeys";
+import { useSupabase } from "@/libs/supabase/useSupabase";
+import { UserForm } from "./User.schema";
 
 export async function logIn(formData: UserLogin, domain: string) {
   const parsedData = UserLoginSchema.safeParse(formData);
@@ -117,3 +119,50 @@ export function useLogOut() {
     },
   });
 }
+
+export const useAddUser = (tenantId: string) => {
+  const client = useSupabase();
+  const queryClient = useQueryClient();
+  const queryKey = [queryKeys.users.all];
+
+  return useMutation({
+    mutationFn: ({
+      userData,
+    }: {
+      userData: UserForm;
+    }) => createUser(client, userData, tenantId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+    },
+  });
+};
+
+export const useUpdateUser = (userId: string, entityId: number, tenantId: string) => {
+  const client = useSupabase();
+  const queryClient = useQueryClient();
+  const queryKey = [queryKeys.users.all];
+
+  return useMutation({
+    mutationFn: ({
+      userData,
+    }: {
+      userData: UserForm;
+    }) => updateUser(client, userId, userData, entityId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+    },
+  });
+};
+
+export const useDeleteUser = () => {
+  const client = useSupabase();
+  const queryClient = useQueryClient();
+  const queryKey = [queryKeys.users.all];
+
+  return useMutation({
+    mutationFn: (userId: string) => deleteUser(client, userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+    },
+  });
+};

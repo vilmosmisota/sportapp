@@ -1,6 +1,8 @@
 export const queryKeys = {
   user: {
     all: ["user"] as const,
+    current: ["user", "current"] as const,
+    list: ["user", "list"] as const,
     login: (tenantId: string | undefined) =>
       [...queryKeys.user.all, "login", tenantId] as const,
     logout: () => [...queryKeys.user.all, "logout"] as const,
@@ -43,5 +45,11 @@ export const queryKeys = {
         tenantId,
         membershipCategoryId,
       ] as const,
+  },
+  coach: {
+    all: "coaches",
+  },
+  users: {
+    all: "users",
   },
 };
