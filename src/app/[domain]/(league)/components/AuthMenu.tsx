@@ -10,18 +10,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useLogOut } from "@/entities/user/User.actions.client";
-import { useGetTenantUser } from "@/entities/user/User.queries";
-
+import { useCurrentUser } from "@/entities/user/User.query";
 import { UserCircle } from "lucide-react";
 import Link from "next/link";
+import { useEffect } from "react";
 
 export default function AuthMenu({
   tenantId,
 }: {
   tenantId: string | undefined;
 }) {
-  const { data: user } = useGetTenantUser(tenantId);
+  const { data: user, isLoading, error } = useCurrentUser();
   const logOutMutation = useLogOut();
+
+  if (isLoading) return null;
 
   return user ? (
     <div className="flex items-center gap-3">
@@ -45,7 +47,7 @@ export default function AuthMenu({
           <DropdownMenuItem>Support</DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem>
-            <Button onClick={() => logOutMutation.mutate()}>Logout</Button>;
+            <Button onClick={() => logOutMutation.mutate()}>Logout</Button>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

@@ -37,18 +37,15 @@ export default function UsersTable({
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const deleteUser = useDeleteUser();
 
   const handleDelete = (userId: string) => {
     deleteUser.mutate(userId, {
       onSuccess: () => {
         toast.success("User deleted successfully");
-        setIsDeleteOpen(false);
       },
       onError: () => {
         toast.error("Failed to delete user");
-        setIsDeleteOpen(false);
       },
     });
   };
@@ -75,7 +72,8 @@ export default function UsersTable({
             <TableRow>
               <TableHead className="text-left p-6">Name</TableHead>
               <TableHead className="text-left p-6">Email</TableHead>
-              <TableHead className="text-left p-6">Roles</TableHead>
+              <TableHead className="text-left p-6">Admin Role</TableHead>
+              <TableHead className="text-left p-6">Domain Role</TableHead>
               {canManageUsers && (
                 <TableHead className="text-right p-6">Actions</TableHead>
               )}
@@ -89,17 +87,18 @@ export default function UsersTable({
                 </TableCell>
                 <TableCell className="p-6">{user.email}</TableCell>
                 <TableCell className="p-6">
-                  <div className="flex flex-wrap gap-2">
-                    {user.entities?.map((entity) => (
-                      <Badge
-                        key={entity.id}
-                        variant="secondary"
-                        className="capitalize"
-                      >
-                        {entity.role.replace("-", " ")}
-                      </Badge>
-                    ))}
-                  </div>
+                  {user.entity?.adminRole && (
+                    <Badge variant="secondary" className="capitalize">
+                      {user.entity.adminRole.replace("-", " ")}
+                    </Badge>
+                  )}
+                </TableCell>
+                <TableCell className="p-6">
+                  {user.entity?.domainRole && (
+                    <Badge variant="secondary" className="capitalize">
+                      {user.entity.domainRole.replace("-", " ")}
+                    </Badge>
+                  )}
                 </TableCell>
                 {canManageUsers && (
                   <TableCell className="text-right p-6">
@@ -114,34 +113,24 @@ export default function UsersTable({
                             <span className="sr-only">Open menu</span>
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                          align="end"
-                          className="w-[160px] z-50"
-                        >
-                          <DropdownMenuItem className="group flex w-full items-center justify-between text-left p-0 text-sm font-medium text-neutral-700">
-                            <button
-                              onClick={() => {
-                                setSelectedUser(user);
-                                setIsEditOpen(true);
-                              }}
-                              className="w-full justify-start items-center gap-2 flex rounded-md p-2 transition-all duration-75 hover:bg-gray-100"
-                            >
-                              <SquarePen className="h-4 w-4" />
-                              Edit
-                            </button>
+                        <DropdownMenuContent align="end" className="w-[160px]">
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setIsEditOpen(true);
+                            }}
+                            className="cursor-pointer"
+                          >
+                            <SquarePen className="h-4 w-4 mr-2" />
+                            Edit
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="group flex w-full items-center justify-between text-left p-0 text-sm font-medium text-neutral-700">
-                            <button
-                              onClick={() => {
-                                setSelectedUser(user);
-                                setIsDeleteOpen(true);
-                              }}
-                              className="w-full justify-start items-center gap-2 flex text-red-500 rounded-md p-2 transition-all duration-75 hover:bg-gray-100"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              Delete
-                            </button>
+                          <DropdownMenuItem
+                            onClick={() => handleDelete(user.id)}
+                            className="cursor-pointer text-red-500"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

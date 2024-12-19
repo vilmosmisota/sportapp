@@ -6,12 +6,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { UserRole } from "@/entities/user/User.schema";
+import { AdminRole, DomainRole } from "@/entities/user/User.schema";
 import { Search } from "lucide-react";
 
+type RoleFilter = {
+  type: "admin" | "domain";
+  role: AdminRole | DomainRole | "all";
+};
+
 type UsersTableFiltersProps = {
-  roleFilter: UserRole | "all";
-  setRoleFilter: (role: UserRole | "all") => void;
+  roleFilter: RoleFilter;
+  setRoleFilter: (filter: RoleFilter) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
 };
@@ -34,17 +39,33 @@ export default function UsersTableFilters({
         />
       </div>
       <Select
-        value={roleFilter}
-        onValueChange={(value) => setRoleFilter(value as UserRole | "all")}
+        value={`${roleFilter.type}:${roleFilter.role}`}
+        onValueChange={(value) => {
+          const [type, role] = value.split(":") as [
+            "admin" | "domain",
+            AdminRole | DomainRole | "all"
+          ];
+          setRoleFilter({ type, role });
+        }}
       >
         <SelectTrigger className="w-[180px]">
           <SelectValue placeholder="Filter by role" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All Roles</SelectItem>
-          {Object.values(UserRole).map((role) => (
-            <SelectItem key={role} value={role}>
-              <span className="capitalize">{role.replace("-", " ")}</span>
+          <SelectItem value="admin:all">All Admin Roles</SelectItem>
+          {Object.values(AdminRole).map((role) => (
+            <SelectItem key={role} value={`admin:${role}`}>
+              <span className="capitalize">
+                Admin: {role.replace("-", " ")}
+              </span>
+            </SelectItem>
+          ))}
+          <SelectItem value="domain:all">All Domain Roles</SelectItem>
+          {Object.values(DomainRole).map((role) => (
+            <SelectItem key={role} value={`domain:${role}`}>
+              <span className="capitalize">
+                Domain: {role.replace("-", " ")}
+              </span>
             </SelectItem>
           ))}
         </SelectContent>

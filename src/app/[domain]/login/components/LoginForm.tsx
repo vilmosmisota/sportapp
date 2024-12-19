@@ -16,8 +16,10 @@ import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useLogIn } from "@/entities/user/User.actions.client";
+import { useRouter } from "next/navigation";
 
 export default function LoginForm({ domain }: { domain: string }) {
+  const router = useRouter();
   const logInMutation = useLogIn(domain);
   const form = useForm<z.output<typeof UserLoginSchema>>({
     resolver: zodResolver(UserLoginSchema),
@@ -27,11 +29,15 @@ export default function LoginForm({ domain }: { domain: string }) {
     },
   });
 
+  const onSubmit = (data: z.output<typeof UserLoginSchema>) => {
+    logInMutation.mutate(data);
+  };
+
   return (
     <Form {...form}>
       <form
         className="flex flex-col gap-4"
-        onSubmit={form.handleSubmit((data) => logInMutation.mutate(data))}
+        onSubmit={form.handleSubmit(onSubmit)}
       >
         {logInMutation.error && (
           <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md">

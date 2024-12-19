@@ -1,15 +1,14 @@
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import FormButtons from "@/components/ui/form-buttons";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -21,13 +20,12 @@ import { useAddUser } from "@/entities/user/User.actions.client";
 import {
   UserForm,
   UserFormSchema,
-  UserRole,
-  UserEntity,
+  AdminRole,
+  DomainRole,
 } from "@/entities/user/User.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { Plus, X } from "lucide-react";
 
 type AddUserFormProps = {
   tenantId: string;
@@ -47,13 +45,9 @@ export default function AddUserForm({
       firstName: "",
       lastName: "",
       password: "",
-      entities: [{ role: UserRole.PLAYER, entityName: "" }],
+      adminRole: null,
+      domainRole: null,
     },
-  });
-
-  const { fields, append, remove } = useFieldArray({
-    name: "entities",
-    control: form.control,
   });
 
   const { handleSubmit } = form;
@@ -150,63 +144,65 @@ export default function AddUserForm({
           />
 
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <FormLabel>Roles</FormLabel>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => append({ role: UserRole.COACH, entityName: "" })}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Role
-              </Button>
-            </div>
-
-            {fields.map((field, index) => (
-              <div key={field.id} className="flex gap-4 items-start">
-                <div className="flex-1">
-                  <FormField
-                    control={form.control}
-                    name={`entities.${index}.role`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a role" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {Object.values(UserRole).map((role) => (
-                              <SelectItem key={role} value={role}>
-                                <span className="capitalize">
-                                  {role.replace("-", " ")}
-                                </span>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                {fields.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => remove(index)}
+            <FormField
+              control={form.control}
+              name="adminRole"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Admin Role</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value ?? undefined}
                   >
-                    <X className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            ))}
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select admin role" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {Object.values(AdminRole).map((role) => (
+                        <SelectItem key={role} value={role}>
+                          <span className="capitalize">
+                            {role.replace("-", " ")}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="domainRole"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Domain Role</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value ?? undefined}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select domain role" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {Object.values(DomainRole).map((role) => (
+                        <SelectItem key={role} value={role}>
+                          <span className="capitalize">
+                            {role.replace("-", " ")}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
         </div>
 

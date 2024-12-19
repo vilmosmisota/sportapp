@@ -14,7 +14,7 @@ export const getUserOnClient = async (typedClient: TypedClient) => {
   return user;
 };
 
-// Get all users for a tenant with their entities
+// Get all users for a tenant with their entity
 export const getUsersByTenantId = async (
   client: TypedClient,
   tenantId: string
@@ -24,11 +24,11 @@ export const getUsersByTenantId = async (
     .select(
       `
       *,
-      entities:userEntities (
+      entity:userEntities!inner (
         id,
         createdAt,
-        entityName,
-        role,
+        adminRole,
+        domainRole,
         tenantId,
         clubId,
         divisionId,
@@ -38,11 +38,15 @@ export const getUsersByTenantId = async (
     )
     .eq("userEntities.tenantId", tenantId);
 
-  if (error) {
-    throw new Error(error.message);
-  }
+  if (error) throw new Error(error.message);
 
-  return data.map((user) => UserSchema.parse(user));
+  return data.map((user) => {
+    const entity = Array.isArray(user.entity) ? user.entity[0] : user.entity;
+    return UserSchema.parse({
+      ...user,
+      entity: entity || null,
+    });
+  });
 };
 
 // Create a new user with their entity
@@ -71,17 +75,20 @@ export const createUser = async (
 
   if (userError) throw new Error(userError.message);
 
-  // Create user entities
-  const { data: entities, error: entityError } = await client
+  // Create user entity
+  const { data: entity, error: entityError } = await client
     .from("userEntities")
-    .insert(
-      userData.entities.map((entity) => ({
-        ...entity,
-        userId: authData.user.id,
-        tenantId: Number(tenantId),
-      }))
-    )
-    .select();
+    .insert({
+      userId: authData.user.id,
+      tenantId: Number(tenantId),
+      adminRole: userData.adminRole,
+      domainRole: userData.domainRole,
+      clubId: userData.clubId,
+      divisionId: userData.divisionId,
+      teamId: userData.teamId,
+    })
+    .select()
+    .single();
 
   if (entityError) throw new Error(entityError.message);
 
@@ -90,16 +97,16 @@ export const createUser = async (
     email: userData.email,
     firstName: userData.firstName,
     lastName: userData.lastName,
-    entities,
+    entity,
   };
 };
 
-// Update user and their entities
+// Update user and their entity
 export const updateUser = async (
   client: TypedClient,
   userId: string,
   userData: UserForm,
-  entityIds: number[],
+  entityId: number,
   tenantId: string
 ) => {
   // Update user profile
@@ -114,25 +121,19 @@ export const updateUser = async (
 
   if (userError) throw new Error(userError.message);
 
-  // Delete existing entities
-  const { error: deleteError } = await client
+  // Update entity
+  const { data: entity, error: entityError } = await client
     .from("userEntities")
-    .delete()
-    .in("id", entityIds);
-
-  if (deleteError) throw new Error(deleteError.message);
-
-  // Create new entities
-  const { data: entities, error: entityError } = await client
-    .from("userEntities")
-    .insert(
-      userData.entities.map((entity) => ({
-        ...entity,
-        userId,
-        tenantId: Number(tenantId),
-      }))
-    )
-    .select();
+    .update({
+      adminRole: userData.adminRole,
+      domainRole: userData.domainRole,
+      clubId: userData.clubId,
+      divisionId: userData.divisionId,
+      teamId: userData.teamId,
+    })
+    .eq("id", entityId)
+    .select()
+    .single();
 
   if (entityError) throw new Error(entityError.message);
 
@@ -141,18 +142,11 @@ export const updateUser = async (
     email: userData.email,
     firstName: userData.firstName,
     lastName: userData.lastName,
-    entities,
+    entity,
   };
 };
 
-// Delete user (this will cascade delete their entities)
-export const deleteUser = async (client: TypedClient, userId: string) => {
-  const { error } = await client.auth.admin.deleteUser(userId);
-  if (error) throw new Error(error.message);
-  return true;
-};
-
-// Add this function back to User.services.ts
+// Check if user has access to tenant
 export const checkTenantUserByIds = async (
   client: TypedClient,
   tenantId: string,
@@ -162,14 +156,22 @@ export const checkTenantUserByIds = async (
     .from("userEntities")
     .select("*")
     .eq("userId", userId)
-    .eq("tenantId", tenantId);
+    .eq("tenantId", tenantId)
+    .single();
 
   if (error) {
     console.error("Error checking tenant user:", error);
     return false;
   }
 
-  return data && data.length > 0;
+  return !!data;
+};
+
+// Delete user (this will cascade delete their entities)
+export const deleteUser = async (client: TypedClient, userId: string) => {
+  const { error } = await client.auth.admin.deleteUser(userId);
+  if (error) throw new Error(error.message);
+  return true;
 };
 
 export const getUsersByEmail = async (client: TypedClient, email: string) => {

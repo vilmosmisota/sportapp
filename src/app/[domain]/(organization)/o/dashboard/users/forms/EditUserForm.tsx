@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/form";
 import FormButtons from "@/components/ui/form-buttons";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -21,12 +20,12 @@ import {
   User,
   UserForm,
   UserFormSchema,
-  UserRole,
+  AdminRole,
+  DomainRole,
 } from "@/entities/user/User.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { Plus, X } from "lucide-react";
 
 type EditUserFormProps = {
   user: User;
@@ -39,8 +38,7 @@ export default function EditUserForm({
   tenantId,
   setIsParentModalOpen,
 }: EditUserFormProps) {
-  const entityIds = user.entities?.map((entity) => entity.id) ?? [];
-  const updateUser = useUpdateUser(user.id, entityIds, tenantId);
+  const updateUser = useUpdateUser(user.id, user.entity?.id ?? 0, tenantId);
 
   const form = useForm<UserForm>({
     resolver: zodResolver(UserFormSchema),
@@ -48,19 +46,13 @@ export default function EditUserForm({
       email: user.email ?? "",
       firstName: user.firstName ?? "",
       lastName: user.lastName ?? "",
-      entities: user.entities?.map((entity) => ({
-        role: entity.role,
-        entityName: entity.entityName ?? "",
-        clubId: entity.clubId ?? undefined,
-        divisionId: entity.divisionId ?? undefined,
-        teamId: entity.teamId ?? undefined,
-      })) ?? [{ role: UserRole.PLAYER, entityName: "" }],
+      password: "", // Not showing existing password
+      adminRole: user.entity?.adminRole ?? null,
+      domainRole: user.entity?.domainRole ?? null,
+      clubId: user.entity?.clubId ?? undefined,
+      divisionId: user.entity?.divisionId ?? undefined,
+      teamId: user.entity?.teamId ?? undefined,
     },
-  });
-
-  const { fields, append, remove } = useFieldArray({
-    name: "entities",
-    control: form.control,
   });
 
   const { handleSubmit } = form;
@@ -137,65 +129,65 @@ export default function EditUserForm({
           />
 
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <FormLabel>Roles</FormLabel>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  append({ role: UserRole.PLAYER, entityName: "" })
-                }
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Role
-              </Button>
-            </div>
-
-            {fields.map((field, index) => (
-              <div key={field.id} className="flex gap-4 items-start">
-                <div className="flex-1">
-                  <FormField
-                    control={form.control}
-                    name={`entities.${index}.role`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a role" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {Object.values(UserRole).map((role) => (
-                              <SelectItem key={role} value={role}>
-                                <span className="capitalize">
-                                  {role.replace("-", " ")}
-                                </span>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                {fields.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => remove(index)}
+            <FormField
+              control={form.control}
+              name="adminRole"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Admin Role</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value ?? undefined}
                   >
-                    <X className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            ))}
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select admin role" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {Object.values(AdminRole).map((role) => (
+                        <SelectItem key={role} value={role}>
+                          <span className="capitalize">
+                            {role.replace("-", " ")}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="domainRole"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Domain Role</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value ?? undefined}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select domain role" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {Object.values(DomainRole).map((role) => (
+                        <SelectItem key={role} value={role}>
+                          <span className="capitalize">
+                            {role.replace("-", " ")}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
         </div>
 

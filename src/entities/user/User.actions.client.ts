@@ -7,7 +7,6 @@ import { getTenantInfoFromClientCookie } from "../tenant/Tenant.helpers.client";
 import { getTenantInfoByDomain } from "../tenant/Tenant.services";
 import {
   checkTenantUserByIds,
-  getUsersByEmail,
   createUser,
   deleteUser,
   updateUser,
@@ -75,57 +74,6 @@ export async function logIn(formData: UserLogin, domain: string) {
   return { user: authData.user, tenantType, tenantId };
 }
 
-export function useLogIn(domain: string) {
-  const queryClient = useQueryClient();
-  const router = useRouter();
-  return useMutation({
-    mutationFn: (formData: UserLogin) => logIn(formData, domain),
-    onSuccess: (data) => {
-      toast.success(`Logged in as ${data?.user.email}`);
-
-      if (data?.tenantType === TenantType.ORGANIZATION) {
-        router.push("/o/dashboard");
-      } else if (data?.tenantType === TenantType.LEAGUE) {
-        router.push("/l/dashboard");
-      }
-
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.user.login(data.tenantId),
-      });
-    },
-    onError: (error) => {
-      toast.error("Oops, something went wrong");
-      console.warn(error.message);
-    },
-  });
-}
-
-export async function logOut() {
-  const supabase = getBrowserClient();
-  const { error } = await supabase.auth.signOut();
-
-  if (error) {
-    throw error;
-  }
-}
-
-export function useLogOut() {
-  const queryClient = useQueryClient();
-  const router = useRouter();
-  return useMutation({
-    mutationFn: logOut,
-    onSuccess: () => {
-      queryClient.removeQueries();
-      toast.success("Logged out, see you soon");
-      router.push("/");
-    },
-    onError: (error) => {
-      toast.error("Oops, something went wrong");
-      console.warn(error.message);
-    },
-  });
-}
-
 export const useAddUser = (tenantId: string) => {
   const client = useSupabase();
   const queryClient = useQueryClient();
@@ -142,7 +90,7 @@ export const useAddUser = (tenantId: string) => {
 
 export const useUpdateUser = (
   userId: string,
-  entityIds: number[],
+  entityId: number,
   tenantId: string
 ) => {
   const client = useSupabase();
@@ -151,7 +99,7 @@ export const useUpdateUser = (
 
   return useMutation({
     mutationFn: ({ userData }: { userData: UserForm }) =>
-      updateUser(client, userId, userData, entityIds, tenantId),
+      updateUser(client, userId, userData, entityId, tenantId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
     },
@@ -167,6 +115,40 @@ export const useDeleteUser = () => {
     mutationFn: (userId: string) => deleteUser(client, userId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
+    },
+  });
+};
+
+export const useLogOut = () => {
+  const client = useSupabase();
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: async () => {
+      await client.auth.signOut();
+      router.refresh();
+    },
+  });
+};
+
+export const useLogIn = (domain: string) => {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (formData: UserLogin) => logIn(formData, domain),
+    onSuccess: ({ tenantType }) => {
+      // Redirect based on tenant type
+      if (tenantType === TenantType.ORGANIZATION) {
+        router.push("/o/dashboard");
+      } else if (tenantType === TenantType.LEAGUE) {
+        router.push("/l/dashboard");
+      }
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.current });
+      router.refresh();
+    },
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 };

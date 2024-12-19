@@ -1,11 +1,15 @@
 import { z } from "zod";
 
-export enum UserRole {
-  SUPER_ADMIN = "super-admin",
+export enum AdminRole {
   ADMIN = "admin",
-  PARENT = "parent",
+  EDITOR = "editor",
+  MEMBER = "member",
+}
+
+export enum DomainRole {
   COACH = "coach",
   PLAYER = "player",
+  PARENT = "parent",
 }
 
 // Original schemas for login
@@ -16,35 +20,25 @@ export const UserLoginSchema = z.object({
 
 export type UserLogin = z.infer<typeof UserLoginSchema>;
 
+// Schema for user entity (single entity per user)
+export const UserEntitySchema = z.object({
+  id: z.number(),
+  createdAt: z.string(),
+  adminRole: z.nativeEnum(AdminRole).nullable(),
+  domainRole: z.nativeEnum(DomainRole).nullable(),
+  tenantId: z.number().nullable(),
+  clubId: z.number().nullable(),
+  divisionId: z.number().nullable(),
+  teamId: z.number().nullable(),
+});
+
 // Base user schema
 export const UserSchema = z.object({
   id: z.string().uuid(),
   email: z.string().email().nullable(),
   firstName: z.string().nullable(),
   lastName: z.string().nullable(),
-  entities: z
-    .array(
-      z.object({
-        id: z.number(),
-        createdAt: z.string(),
-        entityName: z.string().nullable(),
-        role: z.nativeEnum(UserRole),
-        tenantId: z.number().nullable(),
-        clubId: z.number().nullable(),
-        divisionId: z.number().nullable(),
-        teamId: z.number().nullable(),
-      })
-    )
-    .optional(),
-});
-
-// Schema for user entity
-export const UserEntitySchema = z.object({
-  role: z.nativeEnum(UserRole),
-  entityName: z.string().optional(),
-  clubId: z.number().optional(),
-  divisionId: z.number().optional(),
-  teamId: z.number().optional(),
+  entity: UserEntitySchema.nullable(), // Changed from entities array to single entity
 });
 
 // Schema for creating/updating users
@@ -53,7 +47,11 @@ export const UserFormSchema = z.object({
   firstName: z.string().min(1),
   lastName: z.string().min(1),
   password: z.string().min(8, "Password must be at least 8 characters"),
-  entities: z.array(UserEntitySchema).min(1, "At least one role is required"),
+  adminRole: z.nativeEnum(AdminRole).nullable(),
+  domainRole: z.nativeEnum(DomainRole).nullable(),
+  clubId: z.number().optional(),
+  divisionId: z.number().optional(),
+  teamId: z.number().optional(),
 });
 
 export type User = z.infer<typeof UserSchema>;

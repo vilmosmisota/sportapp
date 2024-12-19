@@ -15,21 +15,18 @@ export const useCurrentUser = () => {
       const {
         data: { user },
       } = await client.auth.getUser();
-
-      if (!user) {
-        throw new Error("No user found");
-      }
+      if (!user) return null;
 
       const { data, error } = await client
         .from("users")
         .select(
           `
           *,
-          entities:userEntities (
+          entity:userEntities!inner (
             id,
             createdAt,
-            entityName,
-            role,
+            adminRole,
+            domainRole,
             tenantId,
             clubId,
             divisionId,
@@ -40,8 +37,14 @@ export const useCurrentUser = () => {
         .eq("id", user.id)
         .single();
 
-      if (error) throw error;
-      return UserSchema.parse(data);
+      if (error || !data) return null;
+
+      const entity = Array.isArray(data.entity) ? data.entity[0] : data.entity;
+
+      return UserSchema.parse({
+        ...data,
+        entity: entity || null,
+      });
     },
   });
 };
