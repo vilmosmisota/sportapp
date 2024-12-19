@@ -54,6 +54,24 @@ export const UserFormSchema = z.object({
   teamId: z.number().optional(),
 });
 
+// Add a separate schema for updates
+export const UserUpdateFormSchema = z.object({
+  email: z.string().email(),
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
+  // Password is optional for updates
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .optional(),
+  adminRole: z.nativeEnum(AdminRole).nullable(),
+  domainRole: z.nativeEnum(DomainRole).nullable(),
+  clubId: z.number().optional(),
+  divisionId: z.number().optional(),
+  teamId: z.number().optional(),
+});
+
 export type User = z.infer<typeof UserSchema>;
 export type UserForm = z.infer<typeof UserFormSchema>;
 export type UserEntity = z.infer<typeof UserEntitySchema>;
+export type UserUpdateForm = z.infer<typeof UserUpdateFormSchema>;

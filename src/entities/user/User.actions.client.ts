@@ -1,6 +1,11 @@
 import { getBrowserClient } from "@/libs/supabase/client";
 import { useRouter } from "next/navigation";
-import { UserLogin, UserLoginSchema } from "./User.schema";
+import {
+  UserLogin,
+  UserLoginSchema,
+  UserForm,
+  UserUpdateForm,
+} from "./User.schema";
 import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { getTenantInfoFromClientCookie } from "../tenant/Tenant.helpers.client";
@@ -14,7 +19,6 @@ import {
 import { TenantType } from "../tenant/Tenant.schema";
 import { queryKeys } from "@/cacheKeys/cacheKeys";
 import { useSupabase } from "@/libs/supabase/useSupabase";
-import { UserForm } from "./User.schema";
 
 export async function logIn(formData: UserLogin, domain: string) {
   const parsedData = UserLoginSchema.safeParse(formData);
@@ -98,10 +102,13 @@ export const useUpdateUser = (
   const queryKey = [queryKeys.user.list, tenantId];
 
   return useMutation({
-    mutationFn: ({ userData }: { userData: UserForm }) =>
+    mutationFn: ({ userData }: { userData: UserUpdateForm }) =>
       updateUser(client, userId, userData, entityId, tenantId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.current });
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.user.list, tenantId],
+      });
     },
   });
 };

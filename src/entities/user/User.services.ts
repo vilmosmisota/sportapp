@@ -1,5 +1,5 @@
 import { TypedClient } from "@/libs/supabase/type";
-import { User, UserForm, UserSchema } from "./User.schema";
+import { User, UserForm, UserSchema, UserUpdateForm } from "./User.schema";
 
 // Keep the original function for middleware
 export const getUserOnClient = async (typedClient: TypedClient) => {
@@ -105,7 +105,7 @@ export const createUser = async (
 export const updateUser = async (
   client: TypedClient,
   userId: string,
-  userData: UserForm,
+  userData: UserUpdateForm,
   entityId: number,
   tenantId: string
 ) => {

@@ -22,10 +22,12 @@ import {
   UserFormSchema,
   AdminRole,
   DomainRole,
+  UserUpdateFormSchema,
 } from "@/entities/user/User.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { z } from "zod";
 
 type EditUserFormProps = {
   user: User;
@@ -40,13 +42,12 @@ export default function EditUserForm({
 }: EditUserFormProps) {
   const updateUser = useUpdateUser(user.id, user.entity?.id ?? 0, tenantId);
 
-  const form = useForm<UserForm>({
-    resolver: zodResolver(UserFormSchema),
+  const form = useForm<z.infer<typeof UserUpdateFormSchema>>({
+    resolver: zodResolver(UserUpdateFormSchema),
     defaultValues: {
       email: user.email ?? "",
       firstName: user.firstName ?? "",
       lastName: user.lastName ?? "",
-      password: "", // Not showing existing password
       adminRole: user.entity?.adminRole ?? null,
       domainRole: user.entity?.domainRole ?? null,
       clubId: user.entity?.clubId ?? undefined,
@@ -58,7 +59,7 @@ export default function EditUserForm({
   const { handleSubmit } = form;
   const { isDirty, isLoading } = form.formState;
 
-  const onSubmit = (data: UserForm) => {
+  const onSubmit = (data: z.infer<typeof UserUpdateFormSchema>) => {
     updateUser.mutate(
       { userData: data },
       {
