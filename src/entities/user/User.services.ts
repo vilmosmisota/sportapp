@@ -1,5 +1,6 @@
 import { TypedClient } from "@/libs/supabase/type";
 import { User, UserForm, UserSchema, UserUpdateForm } from "./User.schema";
+import { getAdminClient } from "@/libs/supabase/admin";
 
 // Keep the original function for middleware
 export const getUserOnClient = async (typedClient: TypedClient) => {
@@ -55,9 +56,11 @@ export const createUser = async (
   userData: UserForm,
   tenantId: string
 ) => {
-  // First create the auth user with admin API
+  const adminClient = getAdminClient();
+
+  // Use admin client to create user
   const { data: authData, error: authError } =
-    await client.auth.admin.createUser({
+    await adminClient.auth.admin.createUser({
       email: userData.email,
       password: userData.password,
       email_confirm: true,
@@ -65,7 +68,7 @@ export const createUser = async (
 
   if (authError) throw new Error(authError.message);
 
-  // Create user profile
+  // Create user profile using regular client
   const { error: userError } = await client.from("users").insert({
     id: authData.user.id,
     email: userData.email,
@@ -109,6 +112,17 @@ export const updateUser = async (
   entityId: number,
   tenantId: string
 ) => {
+  const adminClient = getAdminClient();
+
+  // Update auth email if changed using admin client
+  if (userData.email) {
+    const { error: authError } = await adminClient.auth.admin.updateUserById(
+      userId,
+      { email: userData.email }
+    );
+    if (authError) throw new Error(authError.message);
+  }
+
   // Update user profile
   const { error: userError } = await client
     .from("users")
@@ -169,7 +183,9 @@ export const checkTenantUserByIds = async (
 
 // Delete user (this will cascade delete their entities)
 export const deleteUser = async (client: TypedClient, userId: string) => {
-  const { error } = await client.auth.admin.deleteUser(userId);
+  const adminClient = getAdminClient();
+
+  const { error } = await adminClient.auth.admin.deleteUser(userId);
   if (error) throw new Error(error.message);
   return true;
 };

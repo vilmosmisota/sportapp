@@ -79,15 +79,30 @@ export async function logIn(formData: UserLogin, domain: string) {
 }
 
 export const useAddUser = (tenantId: string) => {
-  const client = useSupabase();
   const queryClient = useQueryClient();
-  const queryKey = [queryKeys.users.all];
 
   return useMutation({
-    mutationFn: ({ userData }: { userData: UserForm }) =>
-      createUser(client, userData, tenantId),
+    mutationFn: async ({ userData }: { userData: UserForm }) => {
+      const response = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userData, tenantId }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message);
+      }
+
+      return response.json();
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey });
+      // Invalidate multiple related queries
+      queryClient.invalidateQueries({ queryKey: [queryKeys.users.all] });
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.user.list, tenantId],
+      });
+      queryClient.invalidateQueries({ queryKey: [queryKeys.user.current] });
     },
   });
 };
@@ -97,31 +112,56 @@ export const useUpdateUser = (
   entityId: number,
   tenantId: string
 ) => {
-  const client = useSupabase();
   const queryClient = useQueryClient();
   const queryKey = [queryKeys.user.list, tenantId];
 
   return useMutation({
-    mutationFn: ({ userData }: { userData: UserUpdateForm }) =>
-      updateUser(client, userId, userData, entityId, tenantId),
+    mutationFn: async ({ userData }: { userData: UserUpdateForm }) => {
+      const response = await fetch("/api/users", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, userData, entityId, tenantId }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message);
+      }
+
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.user.current });
-      queryClient.invalidateQueries({
-        queryKey: [queryKeys.user.list, tenantId],
-      });
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 };
 
-export const useDeleteUser = () => {
-  const client = useSupabase();
+export const useDeleteUser = (tenantId: string) => {
   const queryClient = useQueryClient();
-  const queryKey = [queryKeys.users.all];
 
   return useMutation({
-    mutationFn: (userId: string) => deleteUser(client, userId),
+    mutationFn: async (userId: string) => {
+      const response = await fetch("/api/users", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message);
+      }
+
+      return response.json();
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey });
+      // Invalidate multiple related queries
+      queryClient.invalidateQueries({ queryKey: [queryKeys.users.all] });
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.user.list, tenantId],
+      });
+      queryClient.invalidateQueries({ queryKey: [queryKeys.user.current] });
     },
   });
 };

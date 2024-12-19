@@ -11,7 +11,7 @@ import {
 } from "./alert-dialog";
 
 type ConfirmAlertProps = {
-  categoryId: number;
+  categoryId: string | number;
   text: string;
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
