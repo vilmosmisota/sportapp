@@ -89,51 +89,43 @@ export default async function middleware(req: NextRequest) {
     );
   }
 
+  // Protected routes check
   if (
+    req.nextUrl.pathname.startsWith("/settings") ||
+    req.nextUrl.pathname.startsWith("/profile") ||
+    req.nextUrl.pathname.startsWith("/notifications") ||
+    req.nextUrl.pathname.startsWith("/help") ||
     req.nextUrl.pathname.startsWith(orgTenantUrl) ||
     req.nextUrl.pathname.startsWith(leagueTenantUrl)
   ) {
-    let isTenantUser = false;
-
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
-    const tenantUserCookieKey = getTenantUserCookieKey(
-      user?.id ?? "",
-      tenantId
-    );
-    const tenantUserCookie = req.cookies.get(tenantUserCookieKey)?.value ?? "";
-
-    if (tenantUserCookie) {
-      isTenantUser = true;
-    } else {
-      const { data } = await supabase
-        .from("userEntities")
-        .select("tenantId")
-        .eq("userId", `${user?.id}`);
-
-      if (!data) {
-        isTenantUser = false;
-      }
-
-      const userTenantIds = data?.map((userEntity) =>
-        userEntity.tenantId?.toLocaleString()
-      );
-
-      if (userTenantIds?.includes(tenantId)) {
-        isTenantUser = true;
-        response.cookies.set(tenantUserCookieKey, "true", {
-          maxAge: 31536000, // 1 year in seconds
-          sameSite: "strict",
-        });
-      }
-    }
-
-    if (!isTenantUser) {
+    if (!user) {
       return NextResponse.redirect(
         new URL(`/login`, `${protocol}://${subDomain}.${rootDomain}/`)
       );
+    }
+
+    // If it's a settings, profile, or notifications route, check if user belongs to this tenant
+    if (
+      req.nextUrl.pathname.startsWith("/settings") ||
+      req.nextUrl.pathname.startsWith("/profile") ||
+      req.nextUrl.pathname.startsWith("/notifications") ||
+      req.nextUrl.pathname.startsWith("/help")
+    ) {
+      const { data } = await supabase
+        .from("userEntities")
+        .select("tenantId")
+        .eq("userId", user.id)
+        .single();
+
+      if (!data || !data.tenantId || data.tenantId.toString() !== tenantId) {
+        return NextResponse.redirect(
+          new URL(`/`, `${protocol}://${subDomain}.${rootDomain}/`)
+        );
+      }
     }
   }
 

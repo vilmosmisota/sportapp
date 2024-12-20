@@ -1,4 +1,4 @@
-import { Menu } from "./(league)/components/Menu";
+import { Menu } from "./(components)/Menu";
 
 export default function Layout({
   children,
@@ -10,7 +10,7 @@ export default function Layout({
   return (
     <>
       <Menu domain={params.domain} />
-      <div className="mx-auto max-w-screen-2xl   ">{children}</div>
+      <div className="mx-auto max-w-screen-2xl">{children}</div>
     </>
   );
 }
