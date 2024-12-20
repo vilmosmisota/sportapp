@@ -52,135 +52,116 @@ export default function SeasonItem({ season, currency }: SeasonItemProps) {
         />
       </ResponsiveSheet>
 
-      <Card key={season.id} className="">
-        <CardHeader className="bg-secondary rounded-t-lg overflow-hidden ">
+      <Card key={season.id}>
+        <CardHeader className="bg-secondary/50 rounded-t-lg">
           <div className="flex justify-between items-center">
-            <CardTitle className="text-base font-medium">
-              <span className="text-muted-foreground mr-3">
-                {season.customName ? season.customName : "Season: "}
+            <div className="flex flex-col gap-1">
+              <span className="text-sm text-muted-foreground">
+                {season.customName || "Season"}
               </span>
-              {format(season.startDate, "dd MMM yy")} -{" "}
-              {format(season.endDate, "dd MMM yy")}
-            </CardTitle>
-            <div>
-              <DropdownMenu onOpenChange={setIsDropdownOpen}>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="flex h-8 w-8 p-0 data-[state=open]:bg-gray-200"
-                  >
-                    <MoreVertical className="h-4 w-4" />
-                    <span className="sr-only">Open menu</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-[160px] z-50">
-                  <DropdownMenuItem className="group flex w-full items-center justify-between text-left p-0 text-sm font-medium text-neutral-700">
-                    <button
-                      onClick={() => {
-                        setIsEditOpen(true);
-                      }}
-                      className="w-full justify-start items-center gap-2 flex rounded-md p-2 transition-all duration-75 hover:bg-gray-100"
-                    >
-                      <SquarePen className="h-4 w-4" />
-                      Edit
-                    </button>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="group flex w-full items-center justify-between text-left p-0 text-sm font-medium text-neutral-700">
-                    <button
-                      onClick={() => {
-                        setIsDeleteOpen(true);
-                      }}
-                      className="w-full justify-start items-center gap-2 flex text-red-500 rounded-md p-2 transition-all duration-75 hover:bg-gray-100"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      Delete
-                    </button>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <CardTitle className="text-base font-semibold">
+                {format(season.startDate, "dd MMM yyyy")} -{" "}
+                {format(season.endDate, "dd MMM yyyy")}
+              </CardTitle>
             </div>
+            <DropdownMenu onOpenChange={setIsDropdownOpen}>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="h-8 w-8 p-0 hover:bg-background/20 data-[state=open]:bg-background/20"
+                  size="sm"
+                >
+                  <MoreVertical className="h-4 w-4" />
+                  <span className="sr-only">Open menu</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[160px] z-50">
+                <DropdownMenuItem className="group flex w-full items-center justify-between text-left p-0 text-sm font-medium text-neutral-700">
+                  <button
+                    onClick={() => {
+                      setIsEditOpen(true);
+                    }}
+                    className="w-full justify-start items-center gap-2 flex rounded-md p-2 transition-all duration-75 hover:bg-gray-100"
+                  >
+                    <SquarePen className="h-4 w-4" />
+                    Edit
+                  </button>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="group flex w-full items-center justify-between text-left p-0 text-sm font-medium text-neutral-700">
+                  <button
+                    onClick={() => {
+                      setIsDeleteOpen(true);
+                    }}
+                    className="w-full justify-start items-center gap-2 flex text-red-500 rounded-md p-2 transition-all duration-75 hover:bg-gray-100"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete
+                  </button>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </CardHeader>
-        <CardContent className="space-y-3 mt-3">
-          <div>
-            <p className="text-sm text-muted-foreground font-semibold mb-2">
-              Membership Prices:
-            </p>
-            {season.membershipPrices.length ? (
-              <Table className="w-full rounded-lg border">
-                <TableHeader className="bg-secondary  rounded-t-lg ">
-                  <TableRow>
-                    <TableHead className="font-medium">Category</TableHead>
-                    <TableHead className="font-medium">Price</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {season.membershipPrices.map((membershipPrice) => (
-                    <TableRow key={membershipPrice.id}>
-                      <TableCell>
-                        <p className="text-sm text-neutral-600">
-                          {membershipPrice.membershipCategory.name}
-                        </p>
-                      </TableCell>
-                      <TableCell>
-                        <p className="text-sm text-neutral-600">
-                          {getCurrencySymbol(currency)}
-                          {membershipPrice.price}
-                        </p>
-                      </TableCell>
-                    </TableRow>
+        <CardContent className="pt-6">
+          <div className="space-y-6">
+            <div>
+              <div className="pb-4">
+                <h3 className="font-semibold text-sm text-foreground">
+                  Membership Fees
+                </h3>
+              </div>
+              {season.membershipPrices.length > 0 ? (
+                <div className="space-y-2">
+                  {season.membershipPrices.map((price) => (
+                    <div key={price.id} className="flex justify-between py-2">
+                      <span className="text-sm text-muted-foreground">
+                        {price.membershipCategory.name}
+                      </span>
+                      <span className="text-sm font-medium">
+                        {getCurrencySymbol(currency)}
+                        {price.price}
+                      </span>
+                    </div>
                   ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <p className="text-sm text-neutral-600">No membership prices</p>
-            )}
-          </div>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No membership prices set
+                </p>
+              )}
+            </div>
 
-          <div>
-            <p className="text-sm text-muted-foreground font-semibold mb-2">
-              Breaks:
-            </p>
-            <Table className="w-full border">
-              <TableHeader className="bg-secondary rounded-t-lg ">
-                <TableRow>
-                  <TableHead className="font-medium">Date Range</TableHead>
-                  <TableHead className="font-medium">Duration</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {season.breaks.map((brk, i) => (
-                  <TableRow key={i} className="even:bg-inherit">
-                    <TableCell>
-                      <p className="text-sm text-neutral-600">
-                        {format(brk.from, "MMM dd, yyyy")} -{" "}
-                        {format(brk.to, "MMM dd, yyyy")}
-                      </p>
-                    </TableCell>
-                    <TableCell>
-                      <p className="text-sm text-neutral-600">
+            <div>
+              <div className="pb-4">
+                <h3 className="font-semibold text-sm text-foreground">
+                  Season Breaks
+                </h3>
+              </div>
+              {season.breaks.length > 0 ? (
+                <div className="space-y-2">
+                  {season.breaks.map((brk, i) => (
+                    <div key={i} className="flex justify-between py-2">
+                      <span className="text-sm text-muted-foreground">
+                        {format(brk.from, "dd MMM yyyy")} -{" "}
+                        {format(brk.to, "dd MMM yyyy")}
+                      </span>
+                      <span className="text-sm font-medium">
                         {Math.ceil(
                           (brk.to.getTime() - brk.from.getTime()) /
                             (1000 * 60 * 60 * 24)
                         )}{" "}
                         days
-                      </p>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {season.breaks.length === 0 && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={2}
-                      className="text-center h-24 text-neutral-600"
-                    >
-                      No breaks added
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No breaks scheduled
+                </p>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>

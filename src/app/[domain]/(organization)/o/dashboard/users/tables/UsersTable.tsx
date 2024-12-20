@@ -37,7 +37,7 @@ export default function UsersTable({
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const deleteUser = useDeleteUser();
+  const deleteUser = useDeleteUser(tenantId);
 
   const handleDelete = (userId: string) => {
     deleteUser.mutate(userId, {
@@ -68,14 +68,16 @@ export default function UsersTable({
 
       <div className="border rounded-lg overflow-hidden">
         <Table>
-          <TableHeader className="bg-secondary">
+          <TableHeader className="bg-secondary/50">
             <TableRow>
               <TableHead className="text-left p-6">Name</TableHead>
               <TableHead className="text-left p-6">Email</TableHead>
               <TableHead className="text-left p-6">Admin Role</TableHead>
               <TableHead className="text-left p-6">Domain Role</TableHead>
               {canManageUsers && (
-                <TableHead className="text-right p-6">Actions</TableHead>
+                <TableHead className="text-right p-6 w-[100px]">
+                  Actions
+                </TableHead>
               )}
             </TableRow>
           </TableHeader>
@@ -83,7 +85,15 @@ export default function UsersTable({
             {users?.map((user) => (
               <TableRow key={user.id}>
                 <TableCell className="p-6 font-medium">
-                  {user.firstName} {user.lastName}
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+                      <span className="text-xs font-medium">
+                        {user.firstName?.[0]}
+                        {user.lastName?.[0]}
+                      </span>
+                    </div>
+                    {user.firstName} {user.lastName}
+                  </div>
                 </TableCell>
                 <TableCell className="p-6">{user.email}</TableCell>
                 <TableCell className="p-6">

@@ -63,18 +63,16 @@ export async function Menu({ domain }: { domain: string }) {
 
   return (
     <div className="max-w-screen-2xl bg-muted/40 flex items-center justify-between space-x-1 h-12 px-5 border-b shadow-sm">
-      <div className="flex">
+      <div className="flex items-center gap-2">
         <TenantLogo logoUrl={tenant?.logo} />
-        <nav
-          className={cn("md:flex items-center space-x-4 lg:space-x-6 hidden")}
-        >
+        <nav className={cn("md:flex items-center gap-6 hidden")}>
           {navItems.map((item) => (
             <NavLink
               key={item.href}
               href={item.href}
               className="text-sm font-medium transition-colors hover:text-primary"
-              activeClassName="text-muted-foreground"
-              nonActiveClassName="text-bar-foreground"
+              activeClassName="text-primary font-semibold"
+              nonActiveClassName="text-muted-foreground hover:text-foreground"
             >
               {item.name}
             </NavLink>
@@ -82,8 +80,11 @@ export async function Menu({ domain }: { domain: string }) {
         </nav>
       </div>
 
-      <div className="flex items-center justify-center gap-2">
-        <AuthMenu tenantId={tenant?.id.toString()} />
+      <div className="flex items-center gap-4">
+        <AuthMenu
+          tenantId={tenant?.id.toString()}
+          tenantType={tenant?.type ?? TenantType.ORGANIZATION}
+        />
         <MobileMenu navItems={navItems} />
       </div>
     </div>

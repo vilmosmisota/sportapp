@@ -148,103 +148,126 @@ export default function SeasonEditForm({
   return (
     <Form {...form}>
       <form
-        className="flex flex-col gap-4 relative "
+        className="flex flex-col gap-6 relative"
         onSubmit={handleSubmit(onSubmit)}
       >
-        <div className="space-y-3">
-          <div className="grid gap-2">
-            <FormField
-              control={form.control}
-              name="startDate"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Start date</FormLabel>
-                  <Popover modal>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-[240px] pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, "PPP")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormDescription></FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
+        <div className="space-y-6">
+          {/* Season Period */}
+          <div className="space-y-4">
+            <div className="border-b pb-2">
+              <h4 className="text-sm font-medium text-muted-foreground">
+                Season Period
+              </h4>
+            </div>
+
+            <div className="grid gap-2">
+              <FormField
+                control={form.control}
+                name="startDate"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Start date</FormLabel>
+                    <Popover modal>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn("w-full pl-3 text-left font-normal", {
+                              "text-muted-foreground": !field.value,
+                            })}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormDescription></FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <FormField
+                control={form.control}
+                name="endDate"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>End date</FormLabel>
+                    <Popover modal>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn("w-full pl-3 text-left font-normal", {
+                              "text-muted-foreground": !field.value,
+                            })}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          initialFocus
+                          defaultMonth={field.value || undefined}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormDescription></FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+
+          {/* Membership Fees */}
+          <div className="space-y-4">
+            <div className="border-b pb-2">
+              <h4 className="text-sm font-medium text-muted-foreground">
+                Membership Fees
+              </h4>
+            </div>
+            <MembershipFeeEditor
+              tenantId={season.tenantId.toString()}
+              initialMembershipFees={membershipFees}
+              onUpdate={setMembershipFees}
+              currency={currency}
             />
           </div>
 
-          <div className="grid gap-2">
-            <FormField
-              control={form.control}
-              name="endDate"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>End date</FormLabel>
-                  <Popover modal>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-[240px] pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, "PPP")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        initialFocus
-                        defaultMonth={field.value || undefined}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormDescription></FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          {/* Season Breaks */}
+          <div className="space-y-4">
+            <div className="border-b pb-2">
+              <h4 className="text-sm font-medium text-muted-foreground">
+                Season Breaks
+              </h4>
+            </div>
+            <BreaksEditor breaks={breaks} onUpdate={setBreaks} />
           </div>
-
-          <MembershipFeeEditor
-            tenantId={season.tenantId.toString()}
-            initialMembershipFees={membershipFees}
-            onUpdate={setMembershipFees}
-            currency={currency}
-          />
-
-          <BreaksEditor breaks={breaks} onUpdate={setBreaks} />
         </div>
 
         <div className="bg-white sticky h-[100px] flex items-center justify-end bottom-0 left-0 right-0 border-t">

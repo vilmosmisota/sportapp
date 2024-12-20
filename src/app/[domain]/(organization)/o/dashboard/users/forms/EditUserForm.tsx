@@ -83,53 +83,78 @@ export default function EditUserForm({
   return (
     <Form {...form}>
       <form
-        className="flex flex-col gap-4 relative"
+        className="flex flex-col gap-6 relative"
         onSubmit={handleSubmit(onSubmit)}
       >
-        <div className="space-y-4">
-          <FormField
-            control={form.control}
-            name="firstName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>First Name</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="lastName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Last Name</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input {...field} type="email" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
+        <div className="space-y-6">
+          {/* Personal Information */}
           <div className="space-y-4">
+            <div className="border-b pb-2">
+              <h4 className="text-sm font-medium text-muted-foreground">
+                Personal Information
+              </h4>
+            </div>
+
+            <FormField
+              control={form.control}
+              name="firstName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>First Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="lastName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Last Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* Account Information */}
+          <div className="space-y-4">
+            <div className="border-b pb-2">
+              <h4 className="text-sm font-medium text-muted-foreground">
+                Account Information
+              </h4>
+            </div>
+
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input {...field} type="email" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* Roles & Permissions */}
+          <div className="space-y-4">
+            <div className="border-b pb-2">
+              <h4 className="text-sm font-medium text-muted-foreground">
+                Roles & Permissions
+              </h4>
+            </div>
+
             <FormField
               control={form.control}
               name="adminRole"

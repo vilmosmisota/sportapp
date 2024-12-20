@@ -51,19 +51,22 @@ export default function UsersPage({ params }: { params: { domain: string } }) {
   });
 
   return (
-    <div className="w-full">
-      <h3 className="text-lg mb-6">Users</h3>
-
-      <div className="flex items-center space-x-4 mb-6">
+    <div className="w-full space-y-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-2xl font-semibold tracking-tight">Users</h3>
         {canManageUsers && (
           <Button
             onClick={() => setIsAddUserOpen(true)}
-            className="shrink-0 gap-2"
+            className="gap-2"
+            size="sm"
           >
             <Plus className="h-4 w-4" />
             Add User
           </Button>
         )}
+      </div>
+
+      <div className="flex items-center space-x-4">
         <UsersTableFilters
           roleFilter={roleFilter}
           setRoleFilter={setRoleFilter}
@@ -72,7 +75,7 @@ export default function UsersPage({ params }: { params: { domain: string } }) {
         />
       </div>
 
-      <div className="mt-4">
+      <div>
         <UsersTable
           users={filteredUsers}
           tenantId={tenant?.id.toString() ?? ""}

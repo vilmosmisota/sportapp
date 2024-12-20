@@ -16,8 +16,13 @@ export default function FormButtons({
   onSubmit,
 }: FormButtonsProps) {
   return (
-    <div className="flex gap-3 w-fit">
-      <Button type="submit" className="w-full" disabled={!isDirty}>
+    <div className="flex gap-2 w-fit">
+      <Button
+        type="submit"
+        size="sm"
+        className="min-w-[100px]"
+        disabled={!isDirty}
+      >
         {isLoading ? (
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         ) : (
@@ -27,7 +32,8 @@ export default function FormButtons({
 
       <Button
         type="button"
-        className="w-full"
+        size="sm"
+        className="min-w-[100px]"
         variant={"outline"}
         disabled={isLoading && !isDirty ? true : false}
         onClick={onCancel}

@@ -49,17 +49,11 @@ export default function AuthMenu({
 
   return user ? (
     <div className="flex items-center gap-3">
-      <Button size={"sm"} variant={"default"} asChild>
-        <Link href={dashboardUrl}>Dashboard</Link>
-      </Button>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="overflow-hidden rounded-full"
-          >
-            <UserCircle />
+          <Button variant="ghost" size="sm" className="gap-2 h-8">
+            <UserCircle className="h-4 w-4" />
+            <span className="text-sm font-normal">Menu</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
@@ -71,6 +65,12 @@ export default function AuthMenu({
               </p>
             </div>
           </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <Link href={dashboardUrl} className="font-medium">
+              Dashboard
+            </Link>
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
             <Link href="/profile">Profile</Link>

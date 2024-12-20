@@ -21,9 +21,11 @@ export default function OrganizationDetailPage({
   }
 
   return (
-    <div>
-      <h3 className="text-lg mb-3">Organisation</h3>
-      <div className="">
+    <div className="w-full space-y-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-2xl font-semibold tracking-tight">Organisation</h3>
+      </div>
+      <div>
         <Tabs defaultValue="profile">
           <TabsList className="mb-3">
             <TabsTrigger value="profile">Profile</TabsTrigger>

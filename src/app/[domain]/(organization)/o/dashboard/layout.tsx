@@ -24,12 +24,12 @@ const navItems = [
   {
     name: "Users",
     href: "/o/dashboard/users",
-    iconName: "Users",
+    iconName: "UsersRound",
   },
   {
     name: "Teams",
     href: "/o/dashboard/teams",
-    iconName: "Users2",
+    iconName: "ShieldCheck",
   },
   {
     name: "Players",

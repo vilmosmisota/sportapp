@@ -4,7 +4,6 @@ import { Tenant } from "@/entities/tenant/Tenant.schema";
 import { Edit2Icon, MoreVertical, SquarePen } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import OrgEditForm from "../forms/OrgEditForm";
@@ -35,23 +34,25 @@ export default function ProfileContent({ tenant }: ProfileContentProps) {
         />
       </ResponsiveSheet>
 
-      <div className="w-full grid grid-cols-2 gap-5">
+      <div className="w-full max-w-3xl">
         <Card>
-          <CardHeader className="bg-secondary rounded-t-lg ">
+          <CardHeader className="bg-secondary/50 rounded-t-lg">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-3">
                 {tenant.logo && (
-                  <Avatar>
+                  <Avatar className="h-12 w-12 border-2 border-background">
                     <AvatarImage src={tenant.logo} />
                   </Avatar>
                 )}
-                <CardTitle className="text-base">{tenant.name}</CardTitle>
+                <CardTitle className="text-base font-semibold">
+                  {tenant.name}
+                </CardTitle>
               </div>
 
               <div>
                 <Button
                   variant={"ghost"}
-                  className="rounded-full"
+                  className="rounded-full hover:bg-background/80"
                   size={"icon"}
                   type="button"
                   onClick={() => setIsEditOpen(!isEditOpen)}
@@ -62,52 +63,74 @@ export default function ProfileContent({ tenant }: ProfileContentProps) {
             </div>
           </CardHeader>
 
-          <CardContent>
-            <Table>
-              <TableBody>
-                <TableRow>
-                  <TableCell className="text-muted-foreground">
-                    Domain
-                  </TableCell>
-                  <TableCell className="text-right">{tenant.domain}</TableCell>
-                </TableRow>
+          <CardContent className="pt-6">
+            <div className="space-y-6">
+              <div>
+                <div className="pb-4">
+                  <h3 className="font-semibold text-sm text-foreground">
+                    Basic Information
+                  </h3>
+                </div>
+                <div className="flex justify-between py-2">
+                  <span className="text-sm text-muted-foreground">Domain</span>
+                  <span className="text-sm font-medium">{tenant.domain}</span>
+                </div>
+              </div>
 
-                <TableRow>
-                  <TableCell className="text-muted-foreground">Email</TableCell>
-                  <TableCell className="text-right">
-                    {tenant.email || "N/A"}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="text-muted-foreground">
-                    Phone Number
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {tenant.phoneNumber || "N/A"}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="text-muted-foreground">Sport</TableCell>
-                  <TableCell className="text-right">{tenant.sport}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="text-muted-foreground">
-                    Location
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {tenant.location || "N/A"}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="text-muted-foreground">
-                    Membership currency
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {tenant.membershipCurrency || "N/A"}
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
+              <div>
+                <div className="pb-4">
+                  <h3 className="font-semibold text-sm text-foreground">
+                    Contact Information
+                  </h3>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between py-2">
+                    <span className="text-sm text-muted-foreground">Email</span>
+                    <span className="text-sm font-medium">
+                      {tenant.email || "N/A"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-2">
+                    <span className="text-sm text-muted-foreground">
+                      Phone Number
+                    </span>
+                    <span className="text-sm font-medium">
+                      {tenant.phoneNumber || "N/A"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-2">
+                    <span className="text-sm text-muted-foreground">
+                      Location
+                    </span>
+                    <span className="text-sm font-medium">
+                      {tenant.location || "N/A"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div className="pb-4">
+                  <h3 className="font-semibold text-sm text-foreground">
+                    Sport & Currency
+                  </h3>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between py-2">
+                    <span className="text-sm text-muted-foreground">Sport</span>
+                    <span className="text-sm font-medium">{tenant.sport}</span>
+                  </div>
+                  <div className="flex justify-between py-2">
+                    <span className="text-sm text-muted-foreground">
+                      Membership currency
+                    </span>
+                    <span className="text-sm font-medium">
+                      {tenant.membershipCurrency || "N/A"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>

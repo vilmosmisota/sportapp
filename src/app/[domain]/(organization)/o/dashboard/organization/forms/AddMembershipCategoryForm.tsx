@@ -80,42 +80,58 @@ export default function AddMembershipCategoryForm({
   return (
     <Form {...form}>
       <form
-        className="flex flex-col gap-4 relative "
+        className="flex flex-col gap-6 relative"
         onSubmit={handleSubmit(onSubmit)}
       >
-        <div className="space-y-3">
-          <div className="grid gap-2">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem className="w-full">
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input {...field} type="text" />
-                  </FormControl>
-                  <FormDescription></FormDescription>
-                  <FormMessage></FormMessage>
-                </FormItem>
-              )}
-            />
-          </div>
+        <div className="space-y-6">
+          <div className="space-y-4">
+            <div className="border-b pb-2">
+              <h4 className="text-sm font-medium text-muted-foreground">
+                Category Details
+              </h4>
+            </div>
 
-          <div className="grid gap-2">
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem className="w-full">
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea {...field} />
-                  </FormControl>
-                  <FormDescription></FormDescription>
-                  <FormMessage></FormMessage>
-                </FormItem>
-              )}
-            />
+            <div className="grid gap-2">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="text" />
+                    </FormControl>
+                    <FormDescription>
+                      The name of the membership category
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        placeholder="Enter category description"
+                        className="min-h-[100px]"
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Additional details about this membership category
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           </div>
         </div>
 

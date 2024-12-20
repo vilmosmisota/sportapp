@@ -28,14 +28,14 @@ export default function UsersTableFilters({
   setSearchQuery,
 }: UsersTableFiltersProps) {
   return (
-    <div className="flex gap-4 flex-1">
+    <div className="flex flex-col md:flex-row gap-4 w-full">
       <div className="relative flex-1">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           placeholder="Search users..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-9"
+          className="pl-9 w-full md:w-[300px] bg-white"
         />
       </div>
       <Select
@@ -51,21 +51,23 @@ export default function UsersTableFilters({
         <SelectTrigger className="w-[180px]">
           <SelectValue placeholder="Filter by role" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="max-h-[300px]">
+          <div className="font-medium px-2 py-1.5 text-sm text-muted-foreground">
+            Admin Roles
+          </div>
           <SelectItem value="admin:all">All Admin Roles</SelectItem>
           {Object.values(AdminRole).map((role) => (
             <SelectItem key={role} value={`admin:${role}`}>
-              <span className="capitalize">
-                Admin: {role.replace("-", " ")}
-              </span>
+              <span className="capitalize">{role.replace("-", " ")}</span>
             </SelectItem>
           ))}
+          <div className="font-medium px-2 py-1.5 text-sm text-muted-foreground mt-2">
+            Domain Roles
+          </div>
           <SelectItem value="domain:all">All Domain Roles</SelectItem>
           {Object.values(DomainRole).map((role) => (
             <SelectItem key={role} value={`domain:${role}`}>
-              <span className="capitalize">
-                Domain: {role.replace("-", " ")}
-              </span>
+              <span className="capitalize">{role.replace("-", " ")}</span>
             </SelectItem>
           ))}
         </SelectContent>

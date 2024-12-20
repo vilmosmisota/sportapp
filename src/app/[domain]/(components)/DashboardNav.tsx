@@ -20,19 +20,26 @@ export default function DashboardNav({ items, icons }: DashboardNavProps) {
   const pathname = usePathname();
 
   return (
-    <nav className="grid items-start gap-2 p-4">
+    <nav className="grid items-start gap-1">
       {items.map((item, index) => {
         const Icon = icons[item.iconName];
+        const isActive = pathname === item.href;
         return (
           <Link key={index} href={item.href}>
             <span
               className={cn(
-                "group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
-                pathname === item.href ? "bg-accent" : "transparent"
+                "group flex items-center gap-3 rounded-md px-4 py-2 text-sm transition-colors",
+                isActive
+                  ? "bg-accent text-accent-foreground font-medium"
+                  : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                "active:scale-[0.98]"
               )}
             >
-              <Icon className="mr-2 h-4 w-4" />
+              <Icon className={cn("h-4 w-4", isActive && "text-primary")} />
               <span>{item.name}</span>
+              {isActive && (
+                <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
+              )}
             </span>
           </Link>
         );

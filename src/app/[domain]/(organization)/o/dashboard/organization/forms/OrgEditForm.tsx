@@ -86,180 +86,202 @@ export default function OrgEditForm({
   return (
     <Form {...form}>
       <form
-        className="flex flex-col gap-4 relative "
+        className="flex flex-col gap-6 relative"
         onSubmit={handleSubmit(onSubmit)}
       >
-        <div className="space-y-3">
-          <div className="grid gap-2">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem className="w-full">
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input {...field} type="text" />
-                  </FormControl>
-                  <FormDescription></FormDescription>
-                  <FormMessage></FormMessage>
-                </FormItem>
-              )}
-            />
-          </div>
+        <div className="space-y-6">
+          {/* Basic Information */}
+          <div className="space-y-4">
+            <div className="border-b pb-2">
+              <h4 className="text-sm font-medium text-muted-foreground">
+                Basic Information
+              </h4>
+            </div>
 
-          <div className="grid gap-2">
-            <FormField
-              control={form.control}
-              name="domain"
-              render={({ field }) => (
-                <FormItem className="w-full">
-                  <FormLabel>Domain</FormLabel>
-                  <FormControl>
-                    <Input {...field} type="text" disabled />
-                  </FormControl>
-                  <FormDescription>Not editable</FormDescription>
-                  <FormMessage></FormMessage>
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem className="w-full">
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      {...field}
-                      placeholder="Enter description"
-                      className="min-h-[100px]"
-                    />
-                  </FormControl>
-                  <FormDescription></FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <FormField
-              control={form.control}
-              name="sport"
-              render={({ field }) => (
-                <FormItem className="w-full">
-                  <FormLabel>Sport</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
+            <div className="grid gap-2">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a sport" />
-                      </SelectTrigger>
+                      <Input {...field} type="text" />
                     </FormControl>
-                    <SelectContent>
-                      {Object.values(TenantSportType).map((sport) => (
-                        <SelectItem key={sport} value={sport}>
-                          {sport}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormDescription></FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-          <div className="grid gap-2">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem className="w-full">
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input {...field} type="email" />
-                  </FormControl>
-                  <FormDescription></FormDescription>
-                  <FormMessage></FormMessage>
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <FormField
-              control={form.control}
-              name="phoneNumber"
-              render={({ field }) => (
-                <FormItem className="w-full">
-                  <FormLabel>Phone number</FormLabel>
-                  <FormControl>
-                    <Input {...field} type="tel" />
-                  </FormControl>
-                  <FormDescription></FormDescription>
-                  <FormMessage></FormMessage>
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <FormField
-              control={form.control}
-              name="location"
-              render={({ field }) => (
-                <FormItem className="w-full">
-                  <FormLabel>Location</FormLabel>
-                  <FormControl>
-                    <Input {...field} type="text" />
-                  </FormControl>
-                  <FormDescription></FormDescription>
-                  <FormMessage></FormMessage>
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <FormField
-              control={form.control}
-              name="membershipCurrency"
-              render={({ field }) => (
-                <FormItem className="w-full">
-                  <FormLabel>Currency</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
+            <div className="grid gap-2">
+              <FormField
+                control={form.control}
+                name="domain"
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormLabel>Domain</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a currency" />
-                      </SelectTrigger>
+                      <Input {...field} type="text" disabled />
                     </FormControl>
-                    <SelectContent>
-                      {Object.values(CurrencyTypes).map((currency) => (
-                        <SelectItem key={currency} value={currency}>
-                          {getCurrencySymbol(currency)} {currency}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    Currency for membership fees
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormDescription>Not editable</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        placeholder="Enter description"
+                        className="min-h-[100px]"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+
+          {/* Sport & Currency */}
+          <div className="space-y-4">
+            <div className="border-b pb-2">
+              <h4 className="text-sm font-medium text-muted-foreground">
+                Sport & Currency
+              </h4>
+            </div>
+
+            <div className="grid gap-2">
+              <FormField
+                control={form.control}
+                name="sport"
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormLabel>Sport</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a sport" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Object.values(TenantSportType).map((sport) => (
+                          <SelectItem key={sport} value={sport}>
+                            {sport}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <FormField
+                control={form.control}
+                name="membershipCurrency"
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormLabel>Currency</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a currency" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Object.values(CurrencyTypes).map((currency) => (
+                          <SelectItem key={currency} value={currency}>
+                            {getCurrencySymbol(currency)} {currency}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Currency for membership fees
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+
+          {/* Contact Information */}
+          <div className="space-y-4">
+            <div className="border-b pb-2">
+              <h4 className="text-sm font-medium text-muted-foreground">
+                Contact Information
+              </h4>
+            </div>
+
+            <div className="grid gap-2">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="email" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <FormField
+                control={form.control}
+                name="phoneNumber"
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormLabel>Phone number</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="tel" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <FormField
+                control={form.control}
+                name="location"
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormLabel>Location</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="text" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           </div>
         </div>
+
         <div className="bg-white sticky h-[100px] flex items-center justify-end bottom-0 left-0 right-0 border-t">
           <FormButtons
             buttonText="Save"

@@ -72,17 +72,18 @@ export default function MembershipCategoriesContent({
   }
 
   return (
-    <div className="flex  items-start gap-3">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
-        {/* <h3>Membership categories</h3> */}
+        <h3 className="text-sm font-medium text-muted-foreground">
+          Membership Categories
+        </h3>
         <Button
-          size="icon"
-          variant="outline"
-          className="rounded-full"
+          size="sm"
+          className="gap-2"
           onClick={() => setIsAddCategoryOpen(true)}
-          type="button"
         >
           <Plus className="h-4 w-4" />
+          Add Category
         </Button>
       </div>
 
@@ -97,13 +98,19 @@ export default function MembershipCategoriesContent({
         />
       </ResponsiveSheet>
 
-      <div className="border rounded-lg w-full max-w-screen-md  overflow-hidden">
-        <Table className="w-full ">
-          <TableHeader className="bg-secondary">
+      <div className="border rounded-lg overflow-hidden">
+        <Table className="w-full [&_tr:last-child]:border-0">
+          <TableHeader className="bg-secondary/50">
             <TableRow>
-              <TableHead className="text-left p-6">Name</TableHead>
-              <TableHead className="text-left p-6">Description</TableHead>
-              <TableHead className="text-right p-6">Actions</TableHead>
+              <TableHead className="text-left p-6 text-sm font-medium">
+                Name
+              </TableHead>
+              <TableHead className="text-left p-6 text-sm font-medium">
+                Description
+              </TableHead>
+              <TableHead className="text-right p-6 text-sm font-medium w-[100px]">
+                Actions
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody className="p-6">
@@ -117,21 +124,22 @@ export default function MembershipCategoriesContent({
             {!isLoading && categories?.length === 0 && (
               <TableRow>
                 <TableCell colSpan={3} className="text-center p-6">
-                  <Card className="border-dashed shadow-none">
-                    <CardHeader>
-                      <CardTitle className="text-base">No Categories</CardTitle>
-                    </CardHeader>
-                  </Card>
+                  <div className="flex flex-col items-center justify-center h-[200px] text-muted-foreground">
+                    <p>No categories added yet</p>
+                    <p className="text-sm">
+                      Click the + button to add your first category
+                    </p>
+                  </div>
                 </TableCell>
               </TableRow>
             )}
             {categories?.map((category) => (
               <TableRow key={category.id}>
                 <TableCell className="p-6">
-                  <div className="font-medium">{category.name}</div>
+                  <div className="font-medium text-sm">{category.name}</div>
                 </TableCell>
                 <TableCell className="p-6">
-                  <div className="text-neutral-600 whitespace-pre-line">
+                  <div className="text-muted-foreground text-sm whitespace-pre-line">
                     {category.description}
                   </div>
                 </TableCell>
@@ -141,40 +149,34 @@ export default function MembershipCategoriesContent({
                       <DropdownMenuTrigger asChild>
                         <Button
                           variant="ghost"
-                          className="flex h-8 w-8 p-0 data-[state=open]:bg-gray-200"
+                          className="h-8 w-8 p-0 hover:bg-background/20 data-[state=open]:bg-background/20"
+                          size="sm"
                         >
                           <MoreVertical className="h-4 w-4" />
                           <span className="sr-only">Open menu</span>
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="end"
-                        className="w-[160px] z-50"
-                      >
-                        <DropdownMenuItem className="group flex w-full items-center justify-between text-left p-0 text-sm font-medium text-neutral-700">
-                          <button
-                            onClick={() => {
-                              setSelectedCategory(category);
-                              setIsEditOpen(true);
-                            }}
-                            className="w-full justify-start items-center gap-2 flex rounded-md p-2 transition-all duration-75 hover:bg-gray-100"
-                          >
-                            <SquarePen className="h-4 w-4" />
-                            Edit
-                          </button>
+                      <DropdownMenuContent align="end" className="w-[160px]">
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelectedCategory(category);
+                            setIsEditOpen(true);
+                          }}
+                          className="cursor-pointer"
+                        >
+                          <SquarePen className="h-4 w-4 mr-2" />
+                          Edit
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="group flex w-full items-center justify-between text-left p-0 text-sm font-medium text-neutral-700">
-                          <button
-                            onClick={() => {
-                              setSelectedCategory(category);
-                              setIsDeleteOpen(true);
-                            }}
-                            className="w-full justify-start items-center gap-2 flex text-red-500 rounded-md p-2 transition-all duration-75 hover:bg-gray-100"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            Delete
-                          </button>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelectedCategory(category);
+                            setIsDeleteOpen(true);
+                          }}
+                          className="cursor-pointer text-red-500"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
