@@ -54,5 +54,12 @@ export const Permissions = {
         requiredDomainRoles: [DomainRole.COACH],
       }),
   },
+  Organization: {
+    manage: (userEntity?: UserEntity | null) =>
+      checkPermission({
+        userEntity,
+        requiredAdminRoles: [AdminRole.ADMIN],
+      }),
+  },
   // Add more permission groups as needed
 };

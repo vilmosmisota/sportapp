@@ -5,6 +5,11 @@ import SeasonItem from "../items/SeasonItem";
 import { useSeasonsByTenantId } from "@/entities/season/Season.query";
 import { CurrencyTypes } from "@/entities/common/Types";
 import { Card, CardContent } from "@/components/ui/card";
+import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
+import AddSeasonForm from "../forms/AddSeasonForm";
+import { useState } from "react";
+import { useUserRoles } from "@/entities/user/hooks/useUserRoles";
+import { Permissions } from "@/libs/permissions/permissions";
 
 type SeasonsContentProps = {
   tenantId?: number;
@@ -13,8 +18,13 @@ type SeasonsContentProps = {
 
 export default function SeasonsContent({
   tenantId,
-  currency,
+  currency = CurrencyTypes.GBP,
 }: SeasonsContentProps) {
+  const [isAddSeasonOpen, setIsAddSeasonOpen] = useState(false);
+  const userEntity = useUserRoles();
+
+  const canManage = Permissions.Organization.manage(userEntity);
+
   const {
     data: seasons,
     isLoading,
@@ -34,17 +44,38 @@ export default function SeasonsContent({
         <h3 className="text-sm font-medium text-muted-foreground">
           Active Seasons
         </h3>
-        <Button size="sm" className="gap-2" onClick={() => {}}>
-          <Plus className="h-4 w-4" />
-          Add Season
-        </Button>
+        {canManage && (
+          <Button
+            size="sm"
+            className="gap-2"
+            onClick={() => setIsAddSeasonOpen(true)}
+          >
+            <Plus className="h-4 w-4" />
+            Add Season
+          </Button>
+        )}
       </div>
+
+      <ResponsiveSheet
+        isOpen={isAddSeasonOpen}
+        setIsOpen={setIsAddSeasonOpen}
+        title="Add Season"
+      >
+        <AddSeasonForm
+          tenantId={tenantId?.toString() ?? ""}
+          setSheetOpen={setIsAddSeasonOpen}
+          setIsParentModalOpen={setIsAddSeasonOpen}
+          currency={currency}
+        />
+      </ResponsiveSheet>
+
       <div className="grid grid-cols-2 gap-6">
         {seasons?.map((season) => (
           <SeasonItem
             key={season.id}
             season={season}
-            currency={currency ?? CurrencyTypes.GBP}
+            currency={currency}
+            canManage={canManage}
           />
         ))}
         {seasons?.length === 0 && (

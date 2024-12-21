@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import OrgEditForm from "../forms/OrgEditForm";
 import { useState } from "react";
+import { useUserRoles } from "@/entities/user/hooks/useUserRoles";
+import { Permissions } from "@/libs/permissions/permissions";
 
 type ProfileContentProps = {
   tenant?: Tenant;
@@ -15,10 +17,13 @@ type ProfileContentProps = {
 
 export default function ProfileContent({ tenant }: ProfileContentProps) {
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const userEntity = useUserRoles();
 
   if (!tenant) {
     return null;
   }
+
+  const canManage = Permissions.Organization.manage(userEntity);
 
   return (
     <>
@@ -49,17 +54,19 @@ export default function ProfileContent({ tenant }: ProfileContentProps) {
                 </CardTitle>
               </div>
 
-              <div>
-                <Button
-                  variant={"ghost"}
-                  className="rounded-full hover:bg-background/80"
-                  size={"icon"}
-                  type="button"
-                  onClick={() => setIsEditOpen(!isEditOpen)}
-                >
-                  <SquarePen className="h-4 w-4" />
-                </Button>
-              </div>
+              {canManage && (
+                <div>
+                  <Button
+                    variant={"ghost"}
+                    className="rounded-full hover:bg-background/80"
+                    size={"icon"}
+                    type="button"
+                    onClick={() => setIsEditOpen(!isEditOpen)}
+                  >
+                    <SquarePen className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
             </div>
           </CardHeader>
 

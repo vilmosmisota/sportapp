@@ -1,6 +1,7 @@
 import React, { useState, Dispatch, SetStateAction } from "react";
 import { format, addDays, isAfter, isBefore } from "date-fns";
 import { DateRange } from "react-day-picker";
+import { toast } from "sonner";
 
 import { Calendar } from "@/components/ui/calendar";
 import { Plus, Edit2, X, AlertCircle } from "lucide-react";
@@ -30,24 +31,19 @@ type Break = {
 type BreaksEditorProps = {
   breaks: Break[];
   onUpdate: Dispatch<SetStateAction<Break[]>>;
-  minDate?: number | Date;
-  maxDate?: number | Date;
+  minDate: Date;
+  maxDate: Date;
   disabledDates?: Date[];
 };
 
 const BreaksEditor = ({
   breaks,
   onUpdate,
-  minDate,
-  maxDate,
+  minDate = new Date(),
+  maxDate = new Date(),
   disabledDates = [],
 }: BreaksEditorProps) => {
   const [selectedBreak, setSelectedBreak] = useState<Break | null>(null);
-
-  const normalizedMinDate =
-    minDate instanceof Date ? minDate : minDate ? new Date(minDate) : undefined;
-  const normalizedMaxDate =
-    maxDate instanceof Date ? maxDate : maxDate ? new Date(maxDate) : undefined;
 
   const handleAddBreak = () => {
     const now = new Date();
@@ -70,13 +66,18 @@ const BreaksEditor = ({
   ) => {
     if (!dateRange?.from || !dateRange?.to) return;
 
+    if (dateRange.from < minDate || dateRange.to > maxDate) {
+      toast.error("Break period must be within the season dates");
+      return;
+    }
+
     onUpdate((prevBreaks) =>
       prevBreaks.map((br) => {
         if (br.id === breakId) {
           return {
             ...br,
-            from: dateRange.from ?? new Date(),
-            to: dateRange.to ?? new Date(),
+            from: dateRange.from as Date,
+            to: dateRange.to as Date,
           };
         }
         return br;
@@ -131,7 +132,7 @@ const BreaksEditor = ({
                   days
                 </TableCell>
                 <TableCell className="text-right space-x-2">
-                  <Popover>
+                  <Popover modal>
                     <PopoverTrigger asChild>
                       <Button
                         variant="ghost"
@@ -151,8 +152,8 @@ const BreaksEditor = ({
                           handleSelectDate(br.id, dateRange)
                         }
                         numberOfMonths={2}
-                        fromDate={normalizedMinDate}
-                        toDate={normalizedMaxDate}
+                        fromDate={minDate}
+                        toDate={maxDate}
                       />
                     </PopoverContent>
                   </Popover>

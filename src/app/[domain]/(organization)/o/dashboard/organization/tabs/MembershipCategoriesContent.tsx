@@ -26,6 +26,8 @@ import {
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
 import { MembershipCategory } from "@/entities/membership-category/MembershipCategory.schema";
 import { toast } from "sonner";
+import { useUserRoles } from "@/entities/user/hooks/useUserRoles";
+import { Permissions } from "@/libs/permissions/permissions";
 
 interface MembershipCategoriesContentProps {
   tenantId?: number;
@@ -50,6 +52,9 @@ export default function MembershipCategoriesContent({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] =
     useState<MembershipCategory | null>(null);
+
+  const userEntity = useUserRoles();
+  const canManage = Permissions.Organization.manage(userEntity);
 
   const handleConfirm = (categoryId: string) => {
     deleteCategory(categoryId, {
@@ -77,14 +82,16 @@ export default function MembershipCategoriesContent({
         <h3 className="text-sm font-medium text-muted-foreground">
           Membership Categories
         </h3>
-        <Button
-          size="sm"
-          className="gap-2"
-          onClick={() => setIsAddCategoryOpen(true)}
-        >
-          <Plus className="h-4 w-4" />
-          Add Category
-        </Button>
+        {canManage && (
+          <Button
+            size="sm"
+            className="gap-2"
+            onClick={() => setIsAddCategoryOpen(true)}
+          >
+            <Plus className="h-4 w-4" />
+            Add Category
+          </Button>
+        )}
       </div>
 
       <ResponsiveSheet
@@ -144,43 +151,45 @@ export default function MembershipCategoriesContent({
                   </div>
                 </TableCell>
                 <TableCell className="text-right p-6">
-                  <div className="flex items-center justify-end gap-2">
-                    <DropdownMenu onOpenChange={setIsDropdownOpen}>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          className="h-8 w-8 p-0 hover:bg-background/20 data-[state=open]:bg-background/20"
-                          size="sm"
-                        >
-                          <MoreVertical className="h-4 w-4" />
-                          <span className="sr-only">Open menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-[160px]">
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setSelectedCategory(category);
-                            setIsEditOpen(true);
-                          }}
-                          className="cursor-pointer"
-                        >
-                          <SquarePen className="h-4 w-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setSelectedCategory(category);
-                            setIsDeleteOpen(true);
-                          }}
-                          className="cursor-pointer text-red-500"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
+                  {canManage && (
+                    <div className="flex items-center justify-end gap-2">
+                      <DropdownMenu onOpenChange={setIsDropdownOpen}>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            className="h-8 w-8 p-0 hover:bg-background/20 data-[state=open]:bg-background/20"
+                            size="sm"
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                            <span className="sr-only">Open menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-[160px]">
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelectedCategory(category);
+                              setIsEditOpen(true);
+                            }}
+                            className="cursor-pointer"
+                          >
+                            <SquarePen className="h-4 w-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelectedCategory(category);
+                              setIsDeleteOpen(true);
+                            }}
+                            className="cursor-pointer text-red-500"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  )}
                 </TableCell>
               </TableRow>
             ))}

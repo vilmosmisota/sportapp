@@ -18,20 +18,20 @@ export type SeasonMembershipPrice = z.infer<typeof SeasonMembershipPriceSchema>;
 export const SeasonSchema = z.object({
   id: z.number(),
   customName: z.string().optional(),
-  startDate: z.string().transform((item) => new Date(item)),
-  endDate: z.string().transform((item) => new Date(item)),
+  startDate: z.string().transform((str) => new Date(str)),
+  endDate: z.string().transform((str) => new Date(str)),
   tenantId: z.number(),
-  breaks: z.array(BreakSchema),
-  membershipPrices: z.array(SeasonMembershipPriceSchema),
+  breaks: z.array(BreakSchema).default([]),
+  membershipPrices: z.array(SeasonMembershipPriceSchema).default([]),
 });
 
 export type Season = z.infer<typeof SeasonSchema>;
 
-export const SeasonFormSchema = SeasonSchema.omit({
-  id: true,
-  tenantId: true,
-  membershipPrices: true,
-}).extend({
+export const SeasonFormSchema = z.object({
+  startDate: z.date(),
+  endDate: z.date(),
+  customName: z.string().optional(),
+  breaks: z.array(BreakSchema).default([]),
   membershipPrices: z.array(
     z.object({ membershipCategoryId: z.number(), price: z.number().positive() })
   ),

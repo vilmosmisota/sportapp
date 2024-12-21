@@ -26,16 +26,40 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getCurrencySymbol } from "@/entities/player-fee-category/PlayerFeeCategory.utils";
+import { useDeleteSeason } from "@/entities/season/Season.actions.client";
+import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
+import { toast } from "sonner";
 
 type SeasonItemProps = {
   season: Season;
   currency: CurrencyTypes;
+  canManage: boolean;
 };
 
-export default function SeasonItem({ season, currency }: SeasonItemProps) {
+export default function SeasonItem({
+  season,
+  currency,
+  canManage,
+}: SeasonItemProps) {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const deleteSeason = useDeleteSeason(season.tenantId.toString());
+
+  const handleDelete = (seasonId: string) => {
+    deleteSeason.mutate(seasonId, {
+      onSuccess: () => {
+        toast.success("Season deleted successfully");
+        setIsDeleteOpen(false);
+      },
+      onError: (error) => {
+        toast.error("Failed to delete season");
+        console.error("Delete error:", error);
+        setIsDeleteOpen(false);
+      },
+    });
+  };
 
   return (
     <>
@@ -52,6 +76,14 @@ export default function SeasonItem({ season, currency }: SeasonItemProps) {
         />
       </ResponsiveSheet>
 
+      <ConfirmDeleteDialog
+        categoryId={season.id.toString()}
+        isOpen={isDeleteOpen && !isDropdownOpen}
+        setIsOpen={setIsDeleteOpen}
+        text="This will permanently delete this season and all associated membership prices. Are you sure you want to proceed?"
+        onConfirm={handleDelete}
+      />
+
       <Card key={season.id}>
         <CardHeader className="bg-secondary/50 rounded-t-lg">
           <div className="flex justify-between items-center">
@@ -64,43 +96,45 @@ export default function SeasonItem({ season, currency }: SeasonItemProps) {
                 {format(season.endDate, "dd MMM yyyy")}
               </CardTitle>
             </div>
-            <DropdownMenu onOpenChange={setIsDropdownOpen}>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="h-8 w-8 p-0 hover:bg-background/20 data-[state=open]:bg-background/20"
-                  size="sm"
-                >
-                  <MoreVertical className="h-4 w-4" />
-                  <span className="sr-only">Open menu</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[160px] z-50">
-                <DropdownMenuItem className="group flex w-full items-center justify-between text-left p-0 text-sm font-medium text-neutral-700">
-                  <button
-                    onClick={() => {
-                      setIsEditOpen(true);
-                    }}
-                    className="w-full justify-start items-center gap-2 flex rounded-md p-2 transition-all duration-75 hover:bg-gray-100"
+            {canManage && (
+              <DropdownMenu onOpenChange={setIsDropdownOpen}>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="h-8 w-8 p-0 hover:bg-background/20 data-[state=open]:bg-background/20"
+                    size="sm"
                   >
-                    <SquarePen className="h-4 w-4" />
-                    Edit
-                  </button>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="group flex w-full items-center justify-between text-left p-0 text-sm font-medium text-neutral-700">
-                  <button
-                    onClick={() => {
-                      setIsDeleteOpen(true);
-                    }}
-                    className="w-full justify-start items-center gap-2 flex text-red-500 rounded-md p-2 transition-all duration-75 hover:bg-gray-100"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Delete
-                  </button>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                    <MoreVertical className="h-4 w-4" />
+                    <span className="sr-only">Open menu</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-[160px] z-50">
+                  <DropdownMenuItem className="group flex w-full items-center justify-between text-left p-0 text-sm font-medium text-neutral-700">
+                    <button
+                      onClick={() => {
+                        setIsEditOpen(true);
+                      }}
+                      className="w-full justify-start items-center gap-2 flex rounded-md p-2 transition-all duration-75 hover:bg-gray-100"
+                    >
+                      <SquarePen className="h-4 w-4" />
+                      Edit
+                    </button>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="group flex w-full items-center justify-between text-left p-0 text-sm font-medium text-neutral-700">
+                    <button
+                      onClick={() => {
+                        setIsDeleteOpen(true);
+                      }}
+                      className="w-full justify-start items-center gap-2 flex text-red-500 rounded-md p-2 transition-all duration-75 hover:bg-gray-100"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete
+                    </button>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </CardHeader>
         <CardContent className="pt-6">
