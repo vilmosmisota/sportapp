@@ -85,9 +85,9 @@ export default function UsersTable({
             {users?.map((user) => (
               <TableRow key={user.id}>
                 <TableCell className="p-6 font-medium">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 capitalize">
                     <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                      <span className="text-xs font-medium">
+                      <span className="text-xs font-medium lowercase">
                         {user.firstName?.[0]}
                         {user.lastName?.[0]}
                       </span>

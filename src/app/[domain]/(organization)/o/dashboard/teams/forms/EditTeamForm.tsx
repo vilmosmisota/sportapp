@@ -14,11 +14,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useAddTeamToTenant } from "@/entities/team/Team.actions.client";
+import { useUpdateTeam } from "@/entities/team/Team.actions.client";
 import {
   AgeLevel,
   Gender,
   SkillLevel,
+  Team,
   TeamForm,
   TeamFormSchema,
 } from "@/entities/team/Team.schema";
@@ -27,24 +28,27 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useGetCoachesByTenantId } from "@/entities/team/Team.query";
 
-type AddTeamFormProps = {
+type EditTeamFormProps = {
+  team: Team;
   tenantId: string;
   setIsParentModalOpen?: (value: boolean) => void;
 };
 
-export default function AddTeamForm({
+export default function EditTeamForm({
+  team,
   tenantId,
   setIsParentModalOpen,
-}: AddTeamFormProps) {
-  const addTeam = useAddTeamToTenant(tenantId);
+}: EditTeamFormProps) {
+  const updateTeam = useUpdateTeam(team.id, tenantId);
   const { data: coaches } = useGetCoachesByTenantId(tenantId);
 
   const form = useForm<TeamForm>({
     resolver: zodResolver(TeamFormSchema),
     defaultValues: {
-      age: AgeLevel.U8,
-      skill: SkillLevel.Beginner,
-      gender: Gender.Mixed,
+      age: team.age as AgeLevel,
+      skill: team.skill as SkillLevel,
+      gender: team.gender as Gender,
+      coachId: team.coachId ?? undefined,
     },
   });
 
@@ -52,14 +56,13 @@ export default function AddTeamForm({
   const { isDirty, isLoading } = form.formState;
 
   const onSubmit = (data: TeamForm) => {
-    addTeam.mutate(data, {
+    updateTeam.mutate(data, {
       onSuccess: () => {
-        toast.success("Team added successfully");
-        form.reset();
+        toast.success("Team updated successfully");
         setIsParentModalOpen?.(false);
       },
       onError: () => {
-        toast.error("Failed to add team");
+        toast.error("Failed to update team");
       },
     });
   };
@@ -90,7 +93,7 @@ export default function AddTeamForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Age Group</FormLabel>
-                  <Select onValueChange={field.onChange}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select an age group" />
@@ -115,7 +118,7 @@ export default function AddTeamForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Gender</FormLabel>
-                  <Select onValueChange={field.onChange}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select gender" />
@@ -140,7 +143,7 @@ export default function AddTeamForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Skill Level</FormLabel>
-                  <Select onValueChange={field.onChange}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select skill level" />
@@ -191,7 +194,7 @@ export default function AddTeamForm({
 
         <div className="bg-white sticky h-[100px] flex items-center justify-end bottom-0 left-0 right-0 border-t">
           <FormButtons
-            buttonText="Add"
+            buttonText="Save"
             isLoading={isLoading}
             isDirty={isDirty}
             onCancel={onCancel}

@@ -19,6 +19,8 @@ export const queryKeys = {
   },
   team: {
     all: ["team"] as const,
+    coaches: (tenantId: string | undefined) =>
+      [...queryKeys.team.all, tenantId] as const,
     detail: (tenantId: string | undefined, teamId: string | undefined) =>
       [...queryKeys.team.all, tenantId, teamId] as const,
   },

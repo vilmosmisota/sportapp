@@ -1,54 +1,56 @@
 import { z } from "zod";
 
-export enum AgeLevel {
-  UNDER_6 = "U6",
-  UNDER_8 = "U8",
-  UNDER_10 = "U10",
-  UNDER_12 = "U12",
-  UNDER_14 = "U14",
-  UNDER_16 = "U16",
-  UNDER_18 = "U18",
-  ADULT = "Adult",
-  SENIOR = "Senior",
-}
 
-export enum SkillLevel {
-  BEGINNER = "Beginner",
-  INTERMEDIATE = "Intermediate",
-  ADVANCED = "Advanced",
-  ELITE = "Elite",
-  PROFESSIONAL = "Professional",
+export enum AgeLevel {
+  U8 = "U8",
+  U10 = "U10",
+  U12 = "U12",
+  U14 = "U14",
+  U16 = "U16",
+  U18 = "U18",
 }
 
 export enum Gender {
-  MALE = "Male",
-  FEMALE = "Female",
-  MIXED = "Mixed",
+  Boys = "Boys",
+  Girls = "Girls",
+  Mixed = "Mixed",
+}
+
+export enum SkillLevel {
+  Beginner = "Beginner",
+  Intermediate = "Intermediate",
+  Advanced = "Advanced",
+  Elite = "Elite",
 }
 
 export const TeamSchema = z.object({
   id: z.number(),
   name: z.string().nullable().optional(),
   age: z.nativeEnum(AgeLevel).nullable(),
-  skill: z.string(),
-  gender: z.string(),
+  gender: z.nativeEnum(Gender).nullable(),
+  skill: z.nativeEnum(SkillLevel).nullable(),
+  playerCount: z.number().nullable().optional(),
   tenantId: z.number(),
-  clubId: z.number().nullable(),
-  playerCount: z.number().optional(),
-  coach: z.string().nullable().optional(),
-  createdAt: z.string().nullable().optional(),
-  updatedAt: z.string().nullable().optional(),
+  coachId: z.string().nullable().optional(),
+  coach: z
+    .object({
+      id: z.string(),
+      firstName: z.string().nullable(),
+      lastName: z.string().nullable(),
+    })
+    .nullable()
+    .optional(),
 });
 
 export type Team = z.infer<typeof TeamSchema>;
 
-export const TeamFormSchema = TeamSchema.omit({
-  id: true,
-  tenantId: true,
-  clubId: true,
-  playerCount: true,
-  createdAt: true,
-  updatedAt: true,
+export const TeamFormSchema = z.object({
+  age: z.nativeEnum(AgeLevel),
+  gender: z.nativeEnum(Gender),
+  skill: z.nativeEnum(SkillLevel),
+  coachId: z.string().nullable().optional(),
 });
 
 export type TeamForm = z.infer<typeof TeamFormSchema>;
+
+
