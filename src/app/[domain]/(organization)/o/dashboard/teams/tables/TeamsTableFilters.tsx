@@ -39,7 +39,7 @@ export default function TeamsTableFilters({
         />
       </div>
       <Select
-        value={`${teamFilter.type}:${teamFilter.value}`}
+        value={`${teamFilter.type}:${teamFilter.value}` || "age:all"}
         onValueChange={(value) => {
           const [type, filterValue] = value.split(":") as [
             "age" | "gender" | "skill",

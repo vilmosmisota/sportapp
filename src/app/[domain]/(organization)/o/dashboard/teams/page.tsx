@@ -8,15 +8,8 @@ import { useState } from "react";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import TeamsTable from "./tables/TeamsTable";
 import AddTeamForm from "./forms/AddTeamForm";
-import TeamsTableFilters from "./tables/TeamsTableFilters";
 import { useUserRoles } from "@/entities/user/hooks/useUserRoles";
 import { Permissions } from "@/libs/permissions/permissions";
-import { AgeLevel, Gender, SkillLevel } from "@/entities/team/Team.schema";
-
-type TeamFilter = {
-  type: "age" | "gender" | "skill";
-  value: AgeLevel | Gender | SkillLevel | "all";
-};
 
 export default function TeamsPage({ params }: { params: { domain: string } }) {
   const { data: tenant } = useTenantByDomain(params.domain);
@@ -24,32 +17,8 @@ export default function TeamsPage({ params }: { params: { domain: string } }) {
     tenant?.id.toString() ?? ""
   );
   const [isAddTeamOpen, setIsAddTeamOpen] = useState(false);
-  const [teamFilter, setTeamFilter] = useState<TeamFilter>({
-    type: "age",
-    value: "all",
-  });
-  const [searchQuery, setSearchQuery] = useState("");
   const userEntity = useUserRoles();
   const canManageTeams = Permissions.Teams.manage(userEntity);
-
-  if (error) return <div>{error.message}</div>;
-
-  const filteredTeams = teams?.filter((team) => {
-    const matchesFilter =
-      teamFilter.value === "all" ||
-      (teamFilter.type === "age" && team.age === teamFilter.value) ||
-      (teamFilter.type === "gender" && team.gender === teamFilter.value) ||
-      (teamFilter.type === "skill" && team.skill === teamFilter.value);
-
-    const matchesSearch =
-      searchQuery === "" ||
-      team.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      `${team.gender} ${team.age} ${team.skill}`
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-
-    return matchesFilter && matchesSearch;
-  });
 
   return (
     <div className="w-full space-y-6">
@@ -67,22 +36,11 @@ export default function TeamsPage({ params }: { params: { domain: string } }) {
         )}
       </div>
 
-      <div className="flex items-center space-x-4">
-        <TeamsTableFilters
-          teamFilter={teamFilter}
-          setTeamFilter={setTeamFilter}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-        />
-      </div>
-
-      <div>
-        <TeamsTable
-          teams={filteredTeams}
-          tenantId={tenant?.id.toString() ?? ""}
-          canManageTeams={canManageTeams}
-        />
-      </div>
+      <TeamsTable
+        teams={teams}
+        tenantId={tenant?.id.toString() ?? ""}
+        canManageTeams={canManageTeams}
+      />
 
       <ResponsiveSheet
         isOpen={isAddTeamOpen}

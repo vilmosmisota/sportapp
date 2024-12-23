@@ -90,7 +90,7 @@ export default function AddTeamForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Age Group</FormLabel>
-                  <Select onValueChange={field.onChange}>
+                  <Select onValueChange={field.onChange} value={field.value ?? ""}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select an age group" />
