@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
 import { X, Plus } from "lucide-react";
 import { useTenantGroupTypes } from "@/entities/tenant/hooks/useGroupTypes";
+import FormButtons from "@/components/ui/form-buttons";
 
 interface AddGroupTypeFormProps {
   tenant: Tenant | undefined;
@@ -119,6 +120,8 @@ export default function AddGroupTypeForm({
     );
   };
 
+  const { isDirty, isSubmitting } = form.formState;
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -208,17 +211,13 @@ export default function AddGroupTypeForm({
           </div>
         </div>
 
-        <div className="flex justify-end gap-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setIsParentModalOpen(false)}
-          >
-            Cancel
-          </Button>
-          <Button type="submit" disabled={updateTenant.isPending}>
-            Save Changes
-          </Button>
+        <div className="bg-background sticky h-[100px] flex items-center justify-end bottom-0 left-0 right-0 border-t">
+          <FormButtons
+            buttonText="Save Changes"
+            isLoading={isSubmitting}
+            isDirty={isDirty}
+            onCancel={() => setIsParentModalOpen(false)}
+          />
         </div>
       </form>
     </Form>

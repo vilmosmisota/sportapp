@@ -39,7 +39,7 @@ export function MultiSelectFilters({
         <Button
           variant="outline"
           className={cn(
-            "h-auto min-w-28",
+            "h-auto w-[240px]",
             totalSelected > 0 && "border-primary",
             className
           )}
@@ -56,78 +56,82 @@ export function MultiSelectFilters({
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[80vw] max-w-3xl p-4" align="start">
-        <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+      <PopoverContent
+        className="w-[calc(100vw-2rem)] md:w-auto md:min-w-[600px] p-2 md:p-4"
+        align="start"
+        side="bottom"
+        sideOffset={8}
+      >
+        <div className="flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x">
           {groups.map((group, groupIndex) => (
-            <React.Fragment key={group.title}>
-              <div className="flex-1 space-y-4">
-                <h4 className="font-medium leading-none">{group.title}</h4>
-                <ScrollArea className="h-[300px]">
-                  <div className="space-y-2">
-                    {group.options.map((option) => {
-                      const isSelected = group.selectedValues.includes(
-                        option.value
-                      );
-                      return (
-                        <Button
-                          key={option.value}
-                          variant="ghost"
-                          size="sm"
-                          disabled={option.disabled}
-                          className={cn(
-                            "w-full justify-start font-normal",
-                            isSelected && "bg-accent",
-                            option.disabled && "opacity-50 cursor-not-allowed"
-                          )}
-                          onClick={() => {
-                            if (option.disabled) return;
-                            const newValues = isSelected
-                              ? group.selectedValues.filter(
-                                  (v) => v !== option.value
-                                )
-                              : [...group.selectedValues, option.value];
-                            group.onSelectionChange(newValues);
-                          }}
-                        >
-                          <div className="flex items-center justify-between w-full">
-                            <div className="flex items-center">
-                              <div
-                                className={cn(
-                                  "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                                  isSelected
-                                    ? "bg-primary text-primary-foreground"
-                                    : "opacity-50 [&_svg]:invisible",
-                                  option.disabled && "opacity-30"
-                                )}
-                              >
-                                <Check className={cn("h-4 w-4")} />
-                              </div>
-                              {option.label}
+            <div
+              key={group.title}
+              className="flex-1 py-2 first:pt-0 last:pb-0 md:py-0 md:px-4 first:md:pl-0 last:md:pr-0"
+            >
+              <h4 className="font-medium leading-none text-sm mb-2">
+                {group.title}
+              </h4>
+              <ScrollArea className="h-[200px]">
+                <div className="space-y-1">
+                  {group.options.map((option) => {
+                    const isSelected = group.selectedValues.includes(
+                      option.value
+                    );
+                    return (
+                      <Button
+                        key={option.value}
+                        variant="ghost"
+                        size="sm"
+                        disabled={option.disabled}
+                        className={cn(
+                          "w-full justify-start font-normal h-8 rounded-none px-1",
+                          isSelected && "bg-accent",
+                          option.disabled && "opacity-50 cursor-not-allowed"
+                        )}
+                        onClick={() => {
+                          if (option.disabled) return;
+                          const newValues = isSelected
+                            ? group.selectedValues.filter(
+                                (v) => v !== option.value
+                              )
+                            : [...group.selectedValues, option.value];
+                          group.onSelectionChange(newValues);
+                        }}
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex items-center">
+                            <div
+                              className={cn(
+                                "mr-2 flex h-3.5 w-3.5 items-center justify-center rounded-sm border border-primary",
+                                isSelected
+                                  ? "bg-primary text-primary-foreground"
+                                  : "opacity-50 [&_svg]:invisible",
+                                option.disabled && "opacity-30"
+                              )}
+                            >
+                              <Check className={cn("h-3 w-3")} />
                             </div>
-                            {typeof option.count === "number" && (
-                              <span
-                                className={cn(
-                                  "text-xs text-muted-foreground ml-2",
-                                  option.disabled && "opacity-50"
-                                )}
-                              >
-                                {option.count}
-                              </span>
-                            )}
+                            <span className="truncate text-sm">
+                              {option.label}
+                            </span>
                           </div>
-                        </Button>
-                      );
-                    })}
-                  </div>
-                </ScrollArea>
-              </div>
-              {groupIndex < groups.length - 1 && (
-                <Separator orientation="vertical" className="hidden md:block" />
-              )}
-              {groupIndex < groups.length - 1 && (
-                <Separator className="block md:hidden" />
-              )}
-            </React.Fragment>
+                          {typeof option.count === "number" && (
+                            <span
+                              className={cn(
+                                "ml-2 text-xs text-muted-foreground flex-shrink-0",
+                                option.disabled && "opacity-50"
+                              )}
+                            >
+                              {option.count}
+                            </span>
+                          )}
+                        </div>
+                      </Button>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
+            </div>
           ))}
         </div>
       </PopoverContent>

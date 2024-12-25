@@ -22,8 +22,8 @@ export default function MobileMenu({ navItems }: { navItems: NavItem[] }) {
   return (
     <Drawer open={isOpen} onOpenChange={setIsOpen}>
       <DrawerTrigger asChild>
-        <Button className="md:hidden" variant={"outline"} size={"icon"}>
-          <MenuIcon />
+        <Button className="md:hidden h-6 w-6" variant={"ghost"} size={"icon"}>
+          <MenuIcon className="w-4 h-4" />
         </Button>
       </DrawerTrigger>
       <DrawerContent className="h-[calc(100%-3rem)] bg-bar flex items-center justify-center">
@@ -34,7 +34,6 @@ export default function MobileMenu({ navItems }: { navItems: NavItem[] }) {
         >
           {navItems.map((item) => (
             <Link
-              onClick={() => setIsOpen(false)}
               key={item.href}
               href={item.href}
               className="text-sm font-medium transition-colors hover:text-primary"

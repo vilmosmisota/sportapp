@@ -50,7 +50,7 @@ export default function OrganizationDetailPage({
             </ScrollArea>
           </div>
 
-          <div className="mt-4 px-4 md:px-0">
+          <div className="mt-4  md:px-0">
             <TabsContent value="profile">
               <ProfileContent tenant={tenant} />
             </TabsContent>

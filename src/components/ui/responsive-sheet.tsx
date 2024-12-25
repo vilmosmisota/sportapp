@@ -34,12 +34,12 @@ export function ResponsiveSheet({
   if (isDesktop) {
     return (
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        <SheetContent className="overflow-auto pb-0">
-          <div className="relative h-full">
-            <SheetHeader className="mb-5">
+        <SheetContent className="w-full sm:max-w-[440px] overflow-y-auto">
+          <div className="h-full flex flex-col">
+            <SheetHeader className="flex-shrink-0 pb-4">
               <SheetTitle>{title}</SheetTitle>
             </SheetHeader>
-            {children}
+            <div className="flex-1 overflow-y-auto pb-6">{children}</div>
           </div>
         </SheetContent>
       </Sheet>
@@ -48,16 +48,11 @@ export function ResponsiveSheet({
 
   return (
     <Drawer open={isOpen} onOpenChange={setIsOpen}>
-      <DrawerContent className="p-2">
-        <DrawerHeader className="text-left">
+      <DrawerContent className="px-4 pt-4 pb-8 h-[85vh] flex flex-col">
+        <DrawerHeader className="flex-shrink-0 px-0">
           <DrawerTitle>{title}</DrawerTitle>
         </DrawerHeader>
-        {children}
-        {/* <DrawerFooter className="pt-2">
-          <DrawerClose asChild>
-            <Button variant="outline">Cancel</Button>
-          </DrawerClose>
-        </DrawerFooter> */}
+        <div className="flex-1 overflow-y-auto -mx-4 px-4">{children}</div>
       </DrawerContent>
     </Drawer>
   );

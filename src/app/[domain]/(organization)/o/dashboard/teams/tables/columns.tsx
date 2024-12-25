@@ -2,7 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { Team } from "@/entities/team/Team.schema";
-import { MoreVertical, SquarePen, Trash2 } from "lucide-react";
+import { Eye, MoreVertical, SquarePen, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -14,6 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import DataTableColumnHeader from "@/components/ui/data-table/DataTableColumnHeader";
 import { cn } from "@/libs/tailwind/utils";
+import Link from "next/link";
 
 interface TeamsTableActionsProps {
   team: Team;
@@ -28,38 +29,49 @@ const TeamsTableActions = ({
   onDelete,
   canManageTeams,
 }: TeamsTableActionsProps) => {
-  if (!canManageTeams) return null;
-
   return (
     <div className="flex items-center justify-end gap-2">
-      <DropdownMenu modal={false}>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className="h-8 w-8 p-0 data-[state=open]:bg-gray-100"
-          >
-            <MoreVertical className="h-4 w-4" />
-            <span className="sr-only">Open menu</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-[160px]">
-          <DropdownMenuItem
-            onClick={() => onEdit(team)}
-            className="cursor-pointer"
-          >
-            <SquarePen className="h-4 w-4 mr-2" />
-            Edit
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={() => onDelete(team.id)}
-            className="cursor-pointer text-red-500"
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8 opacity-40 hover:opacity-100"
+        asChild
+      >
+        <Link href={`/o/dashboard/teams/${team.id}`}>
+          <Eye className="h-4 w-4" />
+          <span className="sr-only">View team</span>
+        </Link>
+      </Button>
+      {canManageTeams && (
+        <DropdownMenu modal={false}>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className="h-8 w-8 p-0 data-[state=open]:bg-gray-100"
+            >
+              <MoreVertical className="h-4 w-4" />
+              <span className="sr-only">Open menu</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-[160px]">
+            <DropdownMenuItem
+              onClick={() => onEdit(team)}
+              className="cursor-pointer"
+            >
+              <SquarePen className="h-4 w-4 mr-2" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => onDelete(team.id)}
+              className="cursor-pointer text-red-500"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
     </div>
   );
 };
@@ -71,12 +83,12 @@ const customAgeSort = (rowA: any, rowB: any) => {
   const numA = parseInt(ageA.replace(/u/i, ""), 10);
   const numB = parseInt(ageB.replace(/u/i, ""), 10);
 
-  return numA - numB; // Sort numerically
+  return numA - numB;
 };
 
 const customCoachFilter = (row: any, columnId: string, filterValue: string) => {
   const coach = row.getValue(columnId);
-  if (!coach) return false; // No coach, can't match
+  if (!coach) return false;
   const fullName = `${coach.firstName} ${coach.lastName}`.toLowerCase();
   return fullName.includes(filterValue.toLowerCase());
 };
@@ -96,25 +108,14 @@ export const columns = ({
       <DataTableColumnHeader column={column} title="Age Group" />
     ),
     cell: ({ row }) => (
-      <div className="flex flex-col gap-1">
-        <Badge
-          variant="outline"
-          className="font-medium whitespace-nowrap w-fit"
-        >
+      <div className="flex items-center gap-2">
+        <Badge variant="outline" className="font-medium whitespace-nowrap">
           {row.getValue("age")}
         </Badge>
-        <div className="flex gap-1 md:hidden">
-          <Badge variant="secondary" className="capitalize text-xs">
-            {row.getValue("gender")}
-          </Badge>
-          <Badge variant="secondary" className="capitalize text-xs">
-            {row.getValue("skill")}
-          </Badge>
-        </div>
       </div>
     ),
     sortingFn: customAgeSort,
-    minSize: 120,
+    minSize: 100,
   },
   {
     accessorKey: "gender",
@@ -122,13 +123,11 @@ export const columns = ({
       <DataTableColumnHeader column={column} title="Gender" />
     ),
     cell: ({ row }) => (
-      <div className="hidden md:block">
-        <Badge variant="secondary" className="capitalize whitespace-nowrap">
-          {row.getValue("gender")}
-        </Badge>
-      </div>
+      <Badge variant="secondary" className="capitalize whitespace-nowrap">
+        {row.getValue("gender")}
+      </Badge>
     ),
-    minSize: 100,
+    minSize: 90,
   },
   {
     accessorKey: "skill",
@@ -136,13 +135,11 @@ export const columns = ({
       <DataTableColumnHeader column={column} title="Skill Level" />
     ),
     cell: ({ row }) => (
-      <div className="hidden md:block">
-        <Badge variant="secondary" className="capitalize whitespace-nowrap">
-          {row.getValue("skill")}
-        </Badge>
-      </div>
+      <Badge variant="secondary" className="capitalize whitespace-nowrap">
+        {row.getValue("skill")}
+      </Badge>
     ),
-    minSize: 120,
+    minSize: 100,
   },
   {
     accessorKey: "coach",
@@ -173,15 +170,13 @@ export const columns = ({
   {
     id: "actions",
     cell: ({ row }) => (
-      <div className="text-right">
-        <TeamsTableActions
-          team={row.original}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          canManageTeams={canManageTeams}
-        />
-      </div>
+      <TeamsTableActions
+        team={row.original}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        canManageTeams={canManageTeams}
+      />
     ),
-    minSize: 70,
+    minSize: 100,
   },
 ];
