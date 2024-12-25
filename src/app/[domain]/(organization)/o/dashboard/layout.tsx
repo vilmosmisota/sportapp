@@ -27,20 +27,16 @@ const navItems = [
     iconName: "UsersRound",
   },
   {
-    name: "Teams",
-    href: "/o/dashboard/teams",
-    iconName: "ShieldCheck",
-  },
-  {
     name: "Players",
     href: "/o/dashboard/players",
     iconName: "UserRound",
   },
   {
-    name: "Coaches",
-    href: "/o/dashboard/coaches",
-    iconName: "GraduationCap",
+    name: "Teams",
+    href: "/o/dashboard/teams",
+    iconName: "ShieldCheck",
   },
+
   {
     name: "Trainings",
     href: "/o/dashboard/trainings",

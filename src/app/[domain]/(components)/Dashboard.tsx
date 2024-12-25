@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import {
   Building2,
   UsersRound,
@@ -14,8 +15,11 @@ import {
   Medal,
   Shield,
   ShieldCheck,
+  Menu,
 } from "lucide-react";
 import DashboardNav from "./DashboardNav";
+import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
+import { useState } from "react";
 
 const iconMap: Record<string, LucideIcon> = {
   LayoutDashboard,
@@ -44,8 +48,11 @@ type DashboardProps = {
 };
 
 export default function Dashboard({ items, children }: DashboardProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
     <div className="grid min-h-[calc(100vh-48px)] w-full md:grid-cols-[240px_1fr]">
+      {/* Desktop Sidebar */}
       <div className="hidden border-r bg-muted/40 md:block overflow-y-auto">
         <div className="flex h-full flex-col py-2">
           <div className="px-2 py-2">
@@ -58,6 +65,32 @@ export default function Dashboard({ items, children }: DashboardProps) {
           </div>
         </div>
       </div>
+
+      {/* Mobile Navigation */}
+      <div className="fixed bottom-4 right-4 z-40 md:hidden">
+        <Drawer open={isOpen} onOpenChange={setIsOpen}>
+          <DrawerTrigger asChild>
+            <Button size="icon" className="h-12 w-12 rounded-full shadow-lg">
+              <Menu className="h-6 w-6" />
+            </Button>
+          </DrawerTrigger>
+          <DrawerContent className="h-[80vh]">
+            <div className="flex h-full flex-col py-6 px-4">
+              <h2 className="px-4 text-lg font-semibold tracking-tight mb-4">
+                Dashboard
+              </h2>
+              <div className="flex-1">
+                <DashboardNav
+                  items={items}
+                  icons={iconMap}
+                  className="gap-4" // Increased gap for better touch targets
+                />
+              </div>
+            </div>
+          </DrawerContent>
+        </Drawer>
+      </div>
+
       <div className="flex flex-col bg-background">
         <main className="flex flex-1 flex-col gap-4 p-6">{children}</main>
       </div>

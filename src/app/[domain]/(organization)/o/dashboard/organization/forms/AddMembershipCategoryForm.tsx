@@ -77,13 +77,14 @@ export default function AddMembershipCategoryForm({
     form.reset();
     setIsParentModalOpen?.(false);
   };
+
   return (
     <Form {...form}>
       <form
-        className="flex flex-col gap-6 relative"
+        className="flex flex-col gap-4 md:gap-6 relative h-[calc(100vh-8rem)] md:h-auto"
         onSubmit={handleSubmit(onSubmit)}
       >
-        <div className="space-y-6">
+        <div className="flex-1 space-y-4 md:space-y-6 overflow-y-auto px-4 md:px-0">
           <div className="space-y-4">
             <div className="border-b pb-2">
               <h4 className="text-sm font-medium text-muted-foreground">
@@ -91,17 +92,17 @@ export default function AddMembershipCategoryForm({
               </h4>
             </div>
 
-            <div className="grid gap-2">
+            <div className="grid gap-4">
               <FormField
                 control={form.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem className="w-full">
-                    <FormLabel>Name</FormLabel>
+                    <FormLabel className="text-base">Name</FormLabel>
                     <FormControl>
-                      <Input {...field} type="text" />
+                      <Input {...field} type="text" className="h-11" />
                     </FormControl>
-                    <FormDescription>
+                    <FormDescription className="text-xs md:text-sm">
                       The name of the membership category
                     </FormDescription>
                     <FormMessage />
@@ -110,21 +111,21 @@ export default function AddMembershipCategoryForm({
               />
             </div>
 
-            <div className="grid gap-2">
+            <div className="grid gap-4">
               <FormField
                 control={form.control}
                 name="description"
                 render={({ field }) => (
                   <FormItem className="w-full">
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel className="text-base">Description</FormLabel>
                     <FormControl>
                       <Textarea
                         {...field}
                         placeholder="Enter category description"
-                        className="min-h-[100px]"
+                        className="min-h-[120px] md:min-h-[100px] text-base"
                       />
                     </FormControl>
-                    <FormDescription>
+                    <FormDescription className="text-xs md:text-sm">
                       Additional details about this membership category
                     </FormDescription>
                     <FormMessage />
@@ -135,12 +136,13 @@ export default function AddMembershipCategoryForm({
           </div>
         </div>
 
-        <div className="bg-background sticky h-[100px] w-full bottom-0 left-0 right-0 border-t flex justify-end pt-3">
+        <div className="bg-background sticky bottom-0 left-0 right-0 p-4 md:pt-3 border-t mt-auto">
           <FormButtons
             buttonText="Add"
             isLoading={isLoading}
             isDirty={isDirty}
             onCancel={onCancel}
+            className="w-full md:w-auto"
           />
         </div>
       </form>

@@ -148,10 +148,10 @@ export default function SeasonEditForm({
   return (
     <Form {...form}>
       <form
-        className="flex flex-col gap-6 relative"
+        className="flex flex-col gap-4 md:gap-6 relative h-[calc(100vh-8rem)] md:h-auto"
         onSubmit={handleSubmit(onSubmit)}
       >
-        <div className="space-y-6">
+        <div className="flex-1 space-y-4 md:space-y-6 overflow-y-auto px-4 md:px-0">
           {/* Season Period */}
           <div className="space-y-4">
             <div className="border-b pb-2">
@@ -160,28 +160,32 @@ export default function SeasonEditForm({
               </h4>
             </div>
 
-            <div className="grid gap-2">
+            <div className="grid gap-4">
               <FormField
                 control={form.control}
                 name="startDate"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>Start date</FormLabel>
+                    <FormLabel className="text-base">Start date</FormLabel>
                     <Popover modal>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
                             variant={"outline"}
-                            className={cn("w-full pl-3 text-left font-normal", {
-                              "text-muted-foreground": !field.value,
-                            })}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal h-11",
+                              "justify-between text-base",
+                              {
+                                "text-muted-foreground": !field.value,
+                              }
+                            )}
                           >
                             {field.value ? (
                               format(field.value, "PPP")
                             ) : (
                               <span>Pick a date</span>
                             )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            <CalendarIcon className="h-5 w-5 opacity-50" />
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
@@ -194,35 +198,39 @@ export default function SeasonEditForm({
                         />
                       </PopoverContent>
                     </Popover>
-                    <FormDescription></FormDescription>
+                    <FormDescription className="text-xs md:text-sm"></FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
 
-            <div className="grid gap-2">
+            <div className="grid gap-4">
               <FormField
                 control={form.control}
                 name="endDate"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>End date</FormLabel>
+                    <FormLabel className="text-base">End date</FormLabel>
                     <Popover modal>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
                             variant={"outline"}
-                            className={cn("w-full pl-3 text-left font-normal", {
-                              "text-muted-foreground": !field.value,
-                            })}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal h-11",
+                              "justify-between text-base",
+                              {
+                                "text-muted-foreground": !field.value,
+                              }
+                            )}
                           >
                             {field.value ? (
                               format(field.value, "PPP")
                             ) : (
                               <span>Pick a date</span>
                             )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            <CalendarIcon className="h-5 w-5 opacity-50" />
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
@@ -236,7 +244,7 @@ export default function SeasonEditForm({
                         />
                       </PopoverContent>
                     </Popover>
-                    <FormDescription></FormDescription>
+                    <FormDescription className="text-xs md:text-sm"></FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -266,16 +274,22 @@ export default function SeasonEditForm({
                 Season Breaks
               </h4>
             </div>
-            <BreaksEditor breaks={breaks} onUpdate={setBreaks} />
+            <BreaksEditor
+              breaks={breaks}
+              onUpdate={setBreaks}
+              minDate={form.getValues("startDate")}
+              maxDate={form.getValues("endDate")}
+            />
           </div>
         </div>
 
-        <div className="bg-background sticky h-[100px] flex items-center justify-end bottom-0 left-0 right-0 border-t">
+        <div className="bg-background sticky bottom-0 left-0 right-0 p-4 md:pt-3 border-t mt-auto">
           <FormButtons
             buttonText="Save"
             isLoading={isLoading}
             isDirty={isDirty}
             onCancel={onCancel}
+            className="w-full md:w-auto"
           />
         </div>
       </form>

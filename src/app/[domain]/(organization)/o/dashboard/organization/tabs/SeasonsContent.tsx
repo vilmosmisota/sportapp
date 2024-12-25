@@ -45,11 +45,7 @@ export default function SeasonsContent({
           Active Seasons
         </h3>
         {canManage && (
-          <Button
-            size="sm"
-            className="gap-2"
-            onClick={() => setIsAddSeasonOpen(true)}
-          >
+          <Button className="gap-2" onClick={() => setIsAddSeasonOpen(true)}>
             <Plus className="h-4 w-4" />
             Add Season
           </Button>

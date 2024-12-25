@@ -38,6 +38,7 @@ export default function TeamsPage({ params }: { params: { domain: string } }) {
         <TeamsTable
           teams={teams}
           tenantId={tenant?.id.toString() ?? ""}
+          domain={params.domain}
           canManageTeams={canManageTeams}
         />
       )}
@@ -49,6 +50,7 @@ export default function TeamsPage({ params }: { params: { domain: string } }) {
       >
         <AddTeamForm
           tenantId={tenant?.id.toString() ?? ""}
+          domain={params.domain}
           setIsParentModalOpen={setIsAddTeamOpen}
         />
       </ResponsiveSheet>

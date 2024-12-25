@@ -14,13 +14,18 @@ type NavItem = {
 interface DashboardNavProps {
   items: NavItem[];
   icons: Record<string, LucideIcon>;
+  className?: string;
 }
 
-export default function DashboardNav({ items, icons }: DashboardNavProps) {
+export default function DashboardNav({
+  items,
+  icons,
+  className,
+}: DashboardNavProps) {
   const pathname = usePathname();
 
   return (
-    <nav className="grid items-start gap-1">
+    <nav className={cn("grid items-start gap-1", className)}>
       {items.map((item, index) => {
         const Icon = icons[item.iconName];
         const isActive = pathname === item.href;

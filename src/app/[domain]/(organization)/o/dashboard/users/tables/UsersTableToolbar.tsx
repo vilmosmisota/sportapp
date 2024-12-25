@@ -1,20 +1,18 @@
 "use client";
 
-import { Table } from "@tanstack/react-table";
-import { X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Table, Row } from "@tanstack/react-table";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
+import { User } from "@/entities/user/User.schema";
 import DataTableViewOptions from "@/components/ui/data-table/DataTableViewOptions";
 import { MultiSelectFilters } from "@/components/ui/multi-select-filters";
-import { Row } from "@tanstack/react-table";
 
-interface TeamsTableToolbarProps<TData> {
-  table: Table<TData>;
+interface UsersTableToolbarProps {
+  table: Table<User>;
 }
 
-export default function TeamsTableToolbar<TData>({
-  table,
-}: TeamsTableToolbarProps<TData>) {
+export default function UsersTableToolbar({ table }: UsersTableToolbarProps) {
   const isFiltered = table.getState().columnFilters.length > 0;
 
   // Helper function to get filtered rows excluding a specific column
@@ -38,23 +36,28 @@ export default function TeamsTableToolbar<TData>({
   // Helper function to count available options for a column
   const getOptionsWithCounts = (
     columnId: string,
-    filteredRows: Row<TData>[]
+    filteredRows: Row<User>[]
   ) => {
     const valueMap = new Map<string, number>();
 
     filteredRows.forEach((row) => {
       const value = row.getValue(columnId) as string;
-      valueMap.set(value, (valueMap.get(value) || 0) + 1);
+      if (value) {
+        valueMap.set(value, (valueMap.get(value) || 0) + 1);
+      }
     });
 
     const allValues = Array.from(
       new Set(
-        table.getPreFilteredRowModel().rows.map((row) => row.getValue(columnId))
+        table
+          .getPreFilteredRowModel()
+          .rows.map((row) => row.getValue(columnId))
+          .filter(Boolean)
       )
     ) as string[];
 
     return allValues.map((value) => ({
-      label: value,
+      label: value.replace("-", " "),
       value: value,
       count: valueMap.get(value) || 0,
       disabled: !valueMap.has(value),
@@ -62,41 +65,29 @@ export default function TeamsTableToolbar<TData>({
   };
 
   // Get filtered rows for each column
-  const ageRows = getFilteredRowsExcluding("age");
-  const genderRows = getFilteredRowsExcluding("gender");
-  const skillRows = getFilteredRowsExcluding("skill");
+  const adminRoleRows = getFilteredRowsExcluding("adminRole");
+  const domainRoleRows = getFilteredRowsExcluding("domainRole");
 
   const filterGroups = [
     {
-      title: "Age Groups",
-      options: getOptionsWithCounts("age", ageRows),
+      title: "Admin Role",
+      options: getOptionsWithCounts("adminRole", adminRoleRows),
       selectedValues:
-        (table.getColumn("age")?.getFilterValue() as string[]) || [],
+        (table.getColumn("adminRole")?.getFilterValue() as string[]) || [],
       onSelectionChange: (values: string[]) => {
         table
-          .getColumn("age")
+          .getColumn("adminRole")
           ?.setFilterValue(values.length ? values : undefined);
       },
     },
     {
-      title: "Gender",
-      options: getOptionsWithCounts("gender", genderRows),
+      title: "Domain Role",
+      options: getOptionsWithCounts("domainRole", domainRoleRows),
       selectedValues:
-        (table.getColumn("gender")?.getFilterValue() as string[]) || [],
+        (table.getColumn("domainRole")?.getFilterValue() as string[]) || [],
       onSelectionChange: (values: string[]) => {
         table
-          .getColumn("gender")
-          ?.setFilterValue(values.length ? values : undefined);
-      },
-    },
-    {
-      title: "Skill Level",
-      options: getOptionsWithCounts("skill", skillRows),
-      selectedValues:
-        (table.getColumn("skill")?.getFilterValue() as string[]) || [],
-      onSelectionChange: (values: string[]) => {
-        table
-          .getColumn("skill")
+          .getColumn("domainRole")
           ?.setFilterValue(values.length ? values : undefined);
       },
     },
@@ -106,10 +97,10 @@ export default function TeamsTableToolbar<TData>({
     <div className="flex flex-col md:flex-row gap-4 w-full">
       <div className="flex flex-1 items-center space-x-4">
         <Input
-          placeholder="Search by Coach..."
-          value={(table.getColumn("coach")?.getFilterValue() as string) ?? ""}
+          placeholder="Search by Name..."
+          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
-            table.getColumn("coach")?.setFilterValue(event.target.value)
+            table.getColumn("name")?.setFilterValue(event.target.value)
           }
           className="h-auto w-full md:w-[300px] bg-background"
         />
@@ -120,7 +111,7 @@ export default function TeamsTableToolbar<TData>({
           <Button
             variant="ghost"
             onClick={() => table.resetColumnFilters()}
-            className="px-2 lg:px-3 h-auto min-w-28 "
+            className="px-2 lg:px-3 h-auto min-w-28"
           >
             Reset
             <X className="ml-2 h-4 w-4" />

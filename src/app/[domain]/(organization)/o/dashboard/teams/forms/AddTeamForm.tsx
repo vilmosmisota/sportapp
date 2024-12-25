@@ -16,34 +16,38 @@ import {
 } from "@/components/ui/select";
 import { useAddTeamToTenant } from "@/entities/team/Team.actions.client";
 import {
-  AgeLevel,
   Gender,
-  SkillLevel,
   TeamForm,
-  TeamFormSchema,
+  createTeamFormSchema,
 } from "@/entities/team/Team.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useGetCoachesByTenantId } from "@/entities/team/Team.query";
+import { useTenantGroupTypes } from "@/entities/tenant/hooks/useGroupTypes";
 
 type AddTeamFormProps = {
   tenantId: string;
+  domain: string;
   setIsParentModalOpen?: (value: boolean) => void;
 };
 
 export default function AddTeamForm({
   tenantId,
+  domain,
   setIsParentModalOpen,
 }: AddTeamFormProps) {
+  const { ageGroups, skillLevels } = useTenantGroupTypes(domain);
   const addTeam = useAddTeamToTenant(tenantId);
   const { data: coaches } = useGetCoachesByTenantId(tenantId);
+
+  const TeamFormSchema = createTeamFormSchema(ageGroups, skillLevels);
 
   const form = useForm<TeamForm>({
     resolver: zodResolver(TeamFormSchema),
     defaultValues: {
-      age: AgeLevel.U8,
-      skill: SkillLevel.Beginner,
+      age: ageGroups[0],
+      skill: skillLevels[0],
       gender: Gender.Mixed,
     },
   });
@@ -100,7 +104,7 @@ export default function AddTeamForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {Object.values(AgeLevel).map((age) => (
+                      {ageGroups.map((age) => (
                         <SelectItem key={age} value={age}>
                           {age}
                         </SelectItem>
@@ -150,7 +154,7 @@ export default function AddTeamForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {Object.values(SkillLevel).map((skill) => (
+                      {skillLevels.map((skill) => (
                         <SelectItem key={skill} value={skill}>
                           {skill}
                         </SelectItem>

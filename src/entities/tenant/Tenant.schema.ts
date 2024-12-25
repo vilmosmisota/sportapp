@@ -1,6 +1,4 @@
 import { baseUrl, removeBaseUrl } from "@/utils/url.config";
-import { addMonths } from "date-fns";
-import { start } from "repl";
 import { z } from "zod";
 import { CurrencyTypes } from "../common/Types";
 
@@ -12,6 +10,13 @@ export enum TenantType {
 export enum TenantSportType {
   WATERPOLO = "water polo",
 }
+
+export const GroupTypeSchema = z.object({
+  ageGroups: z.array(z.string()),
+  skillLevels: z.array(z.string()),
+});
+
+export type GroupType = z.infer<typeof GroupTypeSchema>;
 
 export const TenantSchema = z.object({
   id: z.number(),
@@ -29,6 +34,7 @@ export const TenantSchema = z.object({
   createdAt: z.string(),
   sport: z.nativeEnum(TenantSportType),
   membershipCurrency: z.nativeEnum(CurrencyTypes),
+  groupTypes: GroupTypeSchema.nullable(),
 });
 
 export type Tenant = z.infer<typeof TenantSchema>;
@@ -45,6 +51,7 @@ export const TenantFormSchema = TenantSchema.omit({
     .optional(),
   location: z.string().optional(),
   phoneNumber: z.string().optional(),
+  groupTypes: GroupTypeSchema.optional(),
 });
 
 export type TenantForm = z.infer<typeof TenantFormSchema>;

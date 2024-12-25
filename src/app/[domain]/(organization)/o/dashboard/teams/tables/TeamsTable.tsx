@@ -24,12 +24,14 @@ import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
 interface TeamsTableProps {
   teams?: Team[];
   tenantId: string;
+  domain: string;
   canManageTeams: boolean;
 }
 
 export default function TeamsTable({
   teams = [],
   tenantId,
+  domain,
   canManageTeams,
 }: TeamsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([
@@ -120,6 +122,7 @@ export default function TeamsTable({
           <EditTeamForm
             team={selectedTeam}
             tenantId={tenantId}
+            domain={domain}
             setIsParentModalOpen={setIsEditOpen}
           />
         </ResponsiveSheet>

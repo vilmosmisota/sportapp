@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import DataTableColumnHeader from "@/components/ui/data-table/DataTableColumnHeader";
+import { cn } from "@/libs/tailwind/utils";
 
 interface TeamsTableActionsProps {
   team: Team;
@@ -95,11 +96,25 @@ export const columns = ({
       <DataTableColumnHeader column={column} title="Age Group" />
     ),
     cell: ({ row }) => (
-      <Badge variant="outline" className="font-medium">
-        {row.getValue("age")}
-      </Badge>
+      <div className="flex flex-col gap-1">
+        <Badge
+          variant="outline"
+          className="font-medium whitespace-nowrap w-fit"
+        >
+          {row.getValue("age")}
+        </Badge>
+        <div className="flex gap-1 md:hidden">
+          <Badge variant="secondary" className="capitalize text-xs">
+            {row.getValue("gender")}
+          </Badge>
+          <Badge variant="secondary" className="capitalize text-xs">
+            {row.getValue("skill")}
+          </Badge>
+        </div>
+      </div>
     ),
     sortingFn: customAgeSort,
+    minSize: 120,
   },
   {
     accessorKey: "gender",
@@ -107,10 +122,13 @@ export const columns = ({
       <DataTableColumnHeader column={column} title="Gender" />
     ),
     cell: ({ row }) => (
-      <Badge variant="secondary" className="capitalize">
-        {row.getValue("gender")}
-      </Badge>
+      <div className="hidden md:block">
+        <Badge variant="secondary" className="capitalize whitespace-nowrap">
+          {row.getValue("gender")}
+        </Badge>
+      </div>
     ),
+    minSize: 100,
   },
   {
     accessorKey: "skill",
@@ -118,10 +136,13 @@ export const columns = ({
       <DataTableColumnHeader column={column} title="Skill Level" />
     ),
     cell: ({ row }) => (
-      <Badge variant="secondary" className="capitalize">
-        {row.getValue("skill")}
-      </Badge>
+      <div className="hidden md:block">
+        <Badge variant="secondary" className="capitalize whitespace-nowrap">
+          {row.getValue("skill")}
+        </Badge>
+      </div>
     ),
+    minSize: 120,
   },
   {
     accessorKey: "coach",
@@ -133,13 +154,13 @@ export const columns = ({
       if (!coach) return "-";
       return (
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+          <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
             <span className="text-xs font-medium lowercase">
               {coach.firstName?.[0]}
               {coach.lastName?.[0]}
             </span>
           </div>
-          <span className="font-medium capitalize">
+          <span className="font-medium capitalize truncate">
             {coach.firstName} {coach.lastName}
           </span>
         </div>
@@ -147,6 +168,7 @@ export const columns = ({
     },
     enableColumnFilter: true,
     filterFn: customCoachFilter,
+    minSize: 200,
   },
   {
     id: "actions",
@@ -160,5 +182,6 @@ export const columns = ({
         />
       </div>
     ),
+    minSize: 70,
   },
 ];

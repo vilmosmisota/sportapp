@@ -14,7 +14,7 @@ import { useMembershipCategories } from "@/entities/membership-category/Membersh
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import AddMembershipCategoryForm from "../forms/AddMembershipCategoryForm";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import EditMembershipCategoryForm from "../forms/EditMembershipCategoryForm";
 import {
   DropdownMenu,
@@ -72,6 +72,44 @@ export default function MembershipCategoriesContent({
     });
   };
 
+  const ActionMenu = ({ category }: { category: MembershipCategory }) => (
+    <DropdownMenu onOpenChange={setIsDropdownOpen}>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          className="h-8 w-8 p-0 hover:bg-background/20 data-[state=open]:bg-background/20"
+          size="sm"
+        >
+          <MoreVertical className="h-4 w-4" />
+          <span className="sr-only">Open menu</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-[160px]">
+        <DropdownMenuItem
+          onClick={() => {
+            setSelectedCategory(category);
+            setIsEditOpen(true);
+          }}
+          className="cursor-pointer"
+        >
+          <SquarePen className="h-4 w-4 mr-2" />
+          Edit
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={() => {
+            setSelectedCategory(category);
+            setIsDeleteOpen(true);
+          }}
+          className="cursor-pointer text-red-500"
+        >
+          <Trash2 className="h-4 w-4 mr-2" />
+          Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
   if (error) {
     return <div>{error.message}</div>;
   }
@@ -83,11 +121,7 @@ export default function MembershipCategoriesContent({
           Membership Categories
         </h3>
         {canManage && (
-          <Button
-            size="sm"
-            className="gap-2"
-            onClick={() => setIsAddCategoryOpen(true)}
-          >
+          <Button className="gap-2" onClick={() => setIsAddCategoryOpen(true)}>
             <Plus className="h-4 w-4" />
             Add Category
           </Button>
@@ -105,7 +139,8 @@ export default function MembershipCategoriesContent({
         />
       </ResponsiveSheet>
 
-      <div className="border rounded-lg overflow-hidden">
+      {/* Desktop View */}
+      <div className="hidden md:block border rounded-lg overflow-hidden">
         <Table className="w-full [&_tr:last-child]:border-0">
           <TableHeader className="bg-secondary/50">
             <TableRow>
@@ -153,41 +188,7 @@ export default function MembershipCategoriesContent({
                 <TableCell className="text-right p-6">
                   {canManage && (
                     <div className="flex items-center justify-end gap-2">
-                      <DropdownMenu onOpenChange={setIsDropdownOpen}>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            className="h-8 w-8 p-0 hover:bg-background/20 data-[state=open]:bg-background/20"
-                            size="sm"
-                          >
-                            <MoreVertical className="h-4 w-4" />
-                            <span className="sr-only">Open menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-[160px]">
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setSelectedCategory(category);
-                              setIsEditOpen(true);
-                            }}
-                            className="cursor-pointer"
-                          >
-                            <SquarePen className="h-4 w-4 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setSelectedCategory(category);
-                              setIsDeleteOpen(true);
-                            }}
-                            className="cursor-pointer text-red-500"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <ActionMenu category={category} />
                     </div>
                   )}
                 </TableCell>
@@ -195,6 +196,42 @@ export default function MembershipCategoriesContent({
             ))}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Mobile View */}
+      <div className="md:hidden space-y-4">
+        {isLoading && (
+          <div className="space-y-3">
+            <Skeleton className="h-[100px] w-full" />
+            <Skeleton className="h-[100px] w-full" />
+            <Skeleton className="h-[100px] w-full" />
+          </div>
+        )}
+        {!isLoading && categories?.length === 0 && (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center h-[200px] text-muted-foreground">
+              <p>No categories added yet</p>
+              <p className="text-sm">
+                Click the + button to add your first category
+              </p>
+            </CardContent>
+          </Card>
+        )}
+        {categories?.map((category) => (
+          <Card key={category.id}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-base font-medium">
+                {category.name}
+              </CardTitle>
+              {canManage && <ActionMenu category={category} />}
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground whitespace-pre-line">
+                {category.description}
+              </p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {selectedCategory && (

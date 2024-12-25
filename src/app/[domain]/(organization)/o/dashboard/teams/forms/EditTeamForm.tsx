@@ -16,37 +16,41 @@ import {
 } from "@/components/ui/select";
 import { useUpdateTeam } from "@/entities/team/Team.actions.client";
 import {
-  AgeLevel,
   Gender,
-  SkillLevel,
   Team,
   TeamForm,
-  TeamFormSchema,
+  createTeamFormSchema,
 } from "@/entities/team/Team.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useGetCoachesByTenantId } from "@/entities/team/Team.query";
+import { useTenantGroupTypes } from "@/entities/tenant/hooks/useGroupTypes";
 
 type EditTeamFormProps = {
   team: Team;
   tenantId: string;
+  domain: string;
   setIsParentModalOpen?: (value: boolean) => void;
 };
 
 export default function EditTeamForm({
   team,
   tenantId,
+  domain,
   setIsParentModalOpen,
 }: EditTeamFormProps) {
+  const { ageGroups, skillLevels } = useTenantGroupTypes(domain);
   const updateTeam = useUpdateTeam(team.id, tenantId);
   const { data: coaches } = useGetCoachesByTenantId(tenantId);
+
+  const TeamFormSchema = createTeamFormSchema(ageGroups, skillLevels);
 
   const form = useForm<TeamForm>({
     resolver: zodResolver(TeamFormSchema),
     defaultValues: {
-      age: team.age as AgeLevel,
-      skill: team.skill as SkillLevel,
+      age: team.age ?? ageGroups[0],
+      skill: team.skill ?? skillLevels[0],
       gender: team.gender as Gender,
       coachId: team.coachId ?? undefined,
     },
@@ -103,7 +107,7 @@ export default function EditTeamForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {Object.values(AgeLevel).map((age) => (
+                      {ageGroups.map((age) => (
                         <SelectItem key={age} value={age}>
                           {age}
                         </SelectItem>
@@ -153,7 +157,7 @@ export default function EditTeamForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {Object.values(SkillLevel).map((skill) => (
+                      {skillLevels.map((skill) => (
                         <SelectItem key={skill} value={skill}>
                           {skill}
                         </SelectItem>
