@@ -39,7 +39,7 @@ export default function ProfileContent({ tenant }: ProfileContentProps) {
         />
       </ResponsiveSheet>
 
-      <div className="w-full max-w-3xl">
+      <div className="w-full md:max-w-3xl">
         <Card>
           <CardHeader className="bg-secondary/50 rounded-t-lg">
             <div className="flex justify-between items-center">
