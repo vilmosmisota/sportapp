@@ -36,27 +36,31 @@ type AddSeasonFormProps = {
   currency: CurrencyTypes;
 };
 
-const formSchema = z.object({
-  startDate: z.date(),
-  endDate: z.date().refine(
-    (date) => date > new Date(),
-    "End date must be in the future"
-  ),
-  customName: z.string().optional(),
-}).refine(
-  (data) => data.endDate > data.startDate,
-  {
+const formSchema = z
+  .object({
+    startDate: z.date(),
+    endDate: z
+      .date()
+      .refine((date) => date > new Date(), "End date must be in the future"),
+    customName: z.string().optional(),
+  })
+  .refine((data) => data.endDate > data.startDate, {
     message: "End date must be after start date",
-    path: ["endDate"]
-  }
-);
+    path: ["endDate"],
+  });
 
-const validateBreaks = (breaks: { from: Date; to: Date }[], startDate: Date, endDate: Date) => {
+const validateBreaks = (
+  breaks: { from: Date; to: Date }[],
+  startDate: Date,
+  endDate: Date
+) => {
   const errors: string[] = [];
 
   breaks.forEach((breakPeriod, index) => {
     if (breakPeriod.from < startDate || breakPeriod.from > endDate) {
-      errors.push(`Break ${index + 1}: Start date must be within season period`);
+      errors.push(
+        `Break ${index + 1}: Start date must be within season period`
+      );
     }
     if (breakPeriod.to < startDate || breakPeriod.to > endDate) {
       errors.push(`Break ${index + 1}: End date must be within season period`);
@@ -96,8 +100,12 @@ export default function AddSeasonForm({
 
   const onSubmit = (data: SeasonForm) => {
     // Validate breaks
-    const breakValidationErrors = validateBreaks(breaks, data.startDate, data.endDate);
-    
+    const breakValidationErrors = validateBreaks(
+      breaks,
+      data.startDate,
+      data.endDate
+    );
+
     if (breakValidationErrors.length > 0) {
       breakValidationErrors.forEach((error) => {
         toast.error(error);
@@ -261,8 +269,8 @@ export default function AddSeasonForm({
                 Season Breaks
               </h4>
             </div>
-            <BreaksEditor 
-              breaks={breaks} 
+            <BreaksEditor
+              breaks={breaks}
               onUpdate={setBreaks}
               minDate={form.watch("startDate")}
               maxDate={form.watch("endDate")}
@@ -270,7 +278,7 @@ export default function AddSeasonForm({
           </div>
         </div>
 
-        <div className="bg-white sticky h-[100px] flex items-center justify-end bottom-0 left-0 right-0 border-t">
+        <div className="bg-background sticky h-[100px] flex items-center justify-end bottom-0 left-0 right-0 border-t">
           <FormButtons
             buttonText="Add"
             isLoading={isLoading}

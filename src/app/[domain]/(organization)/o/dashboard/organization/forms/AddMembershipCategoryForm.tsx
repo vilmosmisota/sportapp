@@ -135,7 +135,7 @@ export default function AddMembershipCategoryForm({
           </div>
         </div>
 
-        <div className="bg-white sticky h-[100px] w-full bottom-0 left-0 right-0 border-t flex justify-end pt-3">
+        <div className="bg-background sticky h-[100px] w-full bottom-0 left-0 right-0 border-t flex justify-end pt-3">
           <FormButtons
             buttonText="Add"
             isLoading={isLoading}

@@ -16,10 +16,10 @@ export default function FormButtons({
   onSubmit,
 }: FormButtonsProps) {
   return (
-    <div className="flex gap-2 w-fit">
+    <div className="flex gap-2 w-fit bg-inherit">
       <Button
         type="submit"
-        size="sm"
+        // size="sm"
         className="min-w-[100px]"
         disabled={!isDirty}
       >
@@ -32,7 +32,7 @@ export default function FormButtons({
 
       <Button
         type="button"
-        size="sm"
+        // size="sm"
         className="min-w-[100px]"
         variant={"outline"}
         disabled={isLoading && !isDirty ? true : false}

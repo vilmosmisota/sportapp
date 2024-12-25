@@ -231,7 +231,7 @@ export default function AddUserForm({
           </div>
         </div>
 
-        <div className="bg-white sticky h-[100px] flex items-center justify-end bottom-0 left-0 right-0 border-t">
+        <div className="bg-background sticky h-[100px] flex items-center justify-end bottom-0 left-0 right-0 border-t">
           <FormButtons
             buttonText="Add"
             isLoading={isLoading}
