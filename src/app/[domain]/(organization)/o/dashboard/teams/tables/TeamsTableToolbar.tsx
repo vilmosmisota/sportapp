@@ -125,7 +125,7 @@ export default function TeamsTableToolbar<TData>({
           <Button
             variant="ghost"
             onClick={() => table.resetColumnFilters()}
-            className="h-9 px-2 lg:px-3"
+            className=" px-2 lg:px-3 h-auto"
           >
             Reset
             <X className="ml-2 h-4 w-4" />

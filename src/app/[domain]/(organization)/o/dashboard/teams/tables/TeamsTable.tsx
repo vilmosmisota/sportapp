@@ -32,7 +32,9 @@ export default function TeamsTable({
   tenantId,
   canManageTeams,
 }: TeamsTableProps) {
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "age", desc: false },
+  ]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);

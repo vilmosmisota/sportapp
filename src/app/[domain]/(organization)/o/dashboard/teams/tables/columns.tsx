@@ -63,6 +63,16 @@ const TeamsTableActions = ({
   );
 };
 
+const customAgeSort = (rowA: any, rowB: any) => {
+  const ageA = rowA.original.age;
+  const ageB = rowB.original.age;
+
+  const numA = parseInt(ageA.replace(/u/i, ""), 10);
+  const numB = parseInt(ageB.replace(/u/i, ""), 10);
+
+  return numA - numB; // Sort numerically
+};
+
 const customCoachFilter = (row: any, columnId: string, filterValue: string) => {
   const coach = row.getValue(columnId);
   if (!coach) return false; // No coach, can't match
@@ -89,6 +99,7 @@ export const columns = ({
         {row.getValue("age")}
       </Badge>
     ),
+    sortingFn: customAgeSort,
   },
   {
     accessorKey: "gender",
