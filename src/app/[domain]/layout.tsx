@@ -8,9 +8,9 @@ export default function Layout({
   params: { domain: string };
 }) {
   return (
-    <>
+    <div className="flex min-h-screen flex-col">
       <Menu domain={params.domain} />
-      <div className="mx-auto max-w-screen-2xl">{children}</div>
-    </>
+      <div className="flex-1 mx-auto w-full max-w-screen-2xl">{children}</div>
+    </div>
   );
 }

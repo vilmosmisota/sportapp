@@ -51,16 +51,16 @@ export default function Dashboard({ items, children }: DashboardProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="grid min-h-[calc(100vh-48px)] w-full md:grid-cols-[240px_1fr]">
+    <div className="grid w-full md:grid-cols-[240px_1fr]">
       {/* Desktop Sidebar */}
-      <div className="hidden border-r bg-muted/40 md:block overflow-y-auto">
-        <div className="flex h-full flex-col py-2">
+      <div className="hidden border-r bg-muted/40 md:block">
+        <div className="sticky top-0 flex h-full flex-col py-2">
           <div className="px-2 py-2">
             <h2 className="px-4 text-lg font-semibold tracking-tight">
               Dashboard
             </h2>
           </div>
-          <div className="flex-1 px-2">
+          <div className="flex-1 overflow-y-auto px-2">
             <DashboardNav items={items} icons={iconMap} />
           </div>
         </div>
@@ -79,11 +79,12 @@ export default function Dashboard({ items, children }: DashboardProps) {
               <h2 className="px-4 text-lg font-semibold tracking-tight mb-4">
                 Dashboard
               </h2>
-              <div className="flex-1">
+              <div className="flex-1 overflow-y-auto">
                 <DashboardNav
                   items={items}
                   icons={iconMap}
-                  className="gap-4" // Increased gap for better touch targets
+                  className="gap-4"
+                  onItemClick={() => setIsOpen(false)}
                 />
               </div>
             </div>
@@ -92,7 +93,9 @@ export default function Dashboard({ items, children }: DashboardProps) {
       </div>
 
       <div className="flex flex-col bg-background">
-        <main className="flex flex-1 flex-col gap-4 p-6">{children}</main>
+        <main className="flex flex-1 flex-col gap-4 p-4 md:p-6 overflow-x-hidden">
+          {children}
+        </main>
       </div>
     </div>
   );

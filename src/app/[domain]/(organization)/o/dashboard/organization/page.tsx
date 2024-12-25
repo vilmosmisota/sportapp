@@ -30,23 +30,26 @@ export default function OrganizationDetailPage({
       </div>
       <div className="px-0">
         <Tabs defaultValue="profile" className="w-full">
-          <ScrollArea className="w-full">
-            <TabsList className="mb-3 w-full inline-flex h-10 items-center justify-start rounded-md p-1 text-muted-foreground">
-              <TabsTrigger value="profile" className="text-sm">
-                Profile
-              </TabsTrigger>
-              <TabsTrigger value="seasons" className="text-sm">
-                Seasons
-              </TabsTrigger>
-              <TabsTrigger value="memberships" className="text-sm">
-                Memberships
-              </TabsTrigger>
-              <TabsTrigger value="group-types" className="text-sm">
-                Group Types
-              </TabsTrigger>
-            </TabsList>
-            <ScrollBar orientation="horizontal" className="invisible" />
-          </ScrollArea>
+          <div className="w-[calc(100vw-2rem)] md:w-fit">
+            <ScrollArea className="">
+              <TabsList className="mb-3 w-full inline-flex h-10 items-center justify-start rounded-md p-1 text-muted-foreground">
+                <TabsTrigger value="profile" className="text-sm">
+                  Profile
+                </TabsTrigger>
+                <TabsTrigger value="seasons" className="text-sm">
+                  Seasons
+                </TabsTrigger>
+                <TabsTrigger value="memberships" className="text-sm">
+                  Memberships
+                </TabsTrigger>
+                <TabsTrigger value="group-types" className="text-sm">
+                  Group Types
+                </TabsTrigger>
+              </TabsList>
+              <ScrollBar orientation="horizontal" className="invisible" />
+            </ScrollArea>
+          </div>
+
           <div className="mt-4 px-4 md:px-0">
             <TabsContent value="profile">
               <ProfileContent tenant={tenant} />

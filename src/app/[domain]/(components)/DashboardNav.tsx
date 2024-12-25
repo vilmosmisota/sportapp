@@ -15,12 +15,14 @@ interface DashboardNavProps {
   items: NavItem[];
   icons: Record<string, LucideIcon>;
   className?: string;
+  onItemClick?: () => void;
 }
 
 export default function DashboardNav({
   items,
   icons,
   className,
+  onItemClick,
 }: DashboardNavProps) {
   const pathname = usePathname();
 
@@ -30,7 +32,7 @@ export default function DashboardNav({
         const Icon = icons[item.iconName];
         const isActive = pathname === item.href;
         return (
-          <Link key={index} href={item.href}>
+          <Link key={index} href={item.href} onClick={onItemClick}>
             <span
               className={cn(
                 "group flex items-center gap-3 rounded-md px-4 py-2 text-sm transition-colors",

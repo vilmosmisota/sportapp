@@ -10,6 +10,7 @@ import {
 import { cn } from "@/libs/tailwind/utils";
 import { MenuIcon } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 
 type NavItem = {
   name: string;
@@ -17,8 +18,9 @@ type NavItem = {
 };
 
 export default function MobileMenu({ navItems }: { navItems: NavItem[] }) {
+  const [isOpen, setIsOpen] = useState(false);
   return (
-    <Drawer>
+    <Drawer open={isOpen} onOpenChange={setIsOpen}>
       <DrawerTrigger asChild>
         <Button className="md:hidden" variant={"outline"} size={"icon"}>
           <MenuIcon />
@@ -32,6 +34,7 @@ export default function MobileMenu({ navItems }: { navItems: NavItem[] }) {
         >
           {navItems.map((item) => (
             <Link
+              onClick={() => setIsOpen(false)}
               key={item.href}
               href={item.href}
               className="text-sm font-medium transition-colors hover:text-primary"
