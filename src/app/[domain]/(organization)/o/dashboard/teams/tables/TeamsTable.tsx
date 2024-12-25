@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
   getCoreRowModel,
   useReactTable,
@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import EditTeamForm from "../forms/EditTeamForm";
 import TeamsTableToolbar from "./TeamsTableToolbar";
+import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
 
 interface TeamsTableProps {
   teams?: Team[];
@@ -36,30 +37,53 @@ export default function TeamsTable({
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [selectedTeamToDelete, setSelectedTeamToDelete] = useState<Team | null>(
+    null
+  );
 
-  const { mutate: deleteTeam } = useDeleteTeam(tenantId);
+  const deleteTeam = useDeleteTeam(tenantId);
 
-  const handleDelete = (teamId: number) => {
-    deleteTeam(teamId, {
-      onSuccess: () => {
-        toast.success("Team deleted successfully");
-      },
-      onError: (error) => {
-        toast.error(error.message);
-      },
-    });
-  };
+  const handleConfirmDelete = useCallback(() => {
+    if (selectedTeamToDelete) {
+      deleteTeam.mutate(selectedTeamToDelete.id, {
+        onSuccess: () => {
+          toast.success("Team deleted successfully");
+          setIsDeleteOpen(false);
+          setSelectedTeamToDelete(null);
+        },
+        onError: (error: Error) => {
+          toast.error(error.message);
+          setIsDeleteOpen(false);
+          setSelectedTeamToDelete(null);
+        },
+      });
+    }
+  }, [deleteTeam, selectedTeamToDelete]);
+
+  const handleEditTeam = useCallback((team: Team) => {
+    setSelectedTeam(team);
+    setIsEditOpen(true);
+  }, []);
+
+  const handleDeleteTeam = useCallback(
+    (teamId: number) => {
+      const teamToDelete = teams.find((team) => team.id === teamId);
+      if (teamToDelete) {
+        setSelectedTeamToDelete(teamToDelete);
+        setIsDeleteOpen(true);
+      }
+    },
+    [teams]
+  );
 
   const memoizedColumns = useMemo(() => {
     return columns({
-      onEdit: (team) => {
-        setSelectedTeam(team);
-        setIsEditOpen(true);
-      },
-      onDelete: handleDelete,
+      onEdit: handleEditTeam,
+      onDelete: handleDeleteTeam,
       canManageTeams,
     });
-  }, [canManageTeams]);
+  }, [canManageTeams, handleEditTeam, handleDeleteTeam]);
 
   const table = useReactTable({
     data: teams,
@@ -82,9 +106,8 @@ export default function TeamsTable({
   return (
     <div className="space-y-4">
       <TeamsTableToolbar table={table} />
-      <div className="border rounded-lg overflow-hidden bg-white">
-        <DataTable columns={memoizedColumns} data={teams} table={table} />
-      </div>
+
+      <DataTable columns={memoizedColumns} data={teams} table={table} />
 
       {selectedTeam && (
         <ResponsiveSheet
@@ -98,6 +121,16 @@ export default function TeamsTable({
             setIsParentModalOpen={setIsEditOpen}
           />
         </ResponsiveSheet>
+      )}
+
+      {selectedTeamToDelete && (
+        <ConfirmDeleteDialog
+          categoryId={selectedTeamToDelete.id}
+          isOpen={isDeleteOpen}
+          setIsOpen={setIsDeleteOpen}
+          text="This will permanently delete this team and remove its access. Are you sure you want to proceed? This action cannot be undone."
+          onConfirm={handleConfirmDelete}
+        />
       )}
     </div>
   );

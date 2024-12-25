@@ -25,22 +25,22 @@ export default function TeamsPage({ params }: { params: { domain: string } }) {
       <div className="flex items-center justify-between">
         <h3 className="text-2xl font-semibold tracking-tight">Teams</h3>
         {canManageTeams && (
-          <Button
-            onClick={() => setIsAddTeamOpen(true)}
-            className="gap-2"
-            size="sm"
-          >
+          <Button onClick={() => setIsAddTeamOpen(true)} className="gap-2">
             <Plus className="h-4 w-4" />
             Add Team
           </Button>
         )}
       </div>
 
-      <TeamsTable
-        teams={teams}
-        tenantId={tenant?.id.toString() ?? ""}
-        canManageTeams={canManageTeams}
-      />
+      {error && <div className="text-red-500">{error.message}</div>}
+
+      {teams && (
+        <TeamsTable
+          teams={teams}
+          tenantId={tenant?.id.toString() ?? ""}
+          canManageTeams={canManageTeams}
+        />
+      )}
 
       <ResponsiveSheet
         isOpen={isAddTeamOpen}

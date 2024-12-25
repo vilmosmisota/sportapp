@@ -23,12 +23,8 @@ export default function DataTableViewOptions<TData>({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className="ml-auto hidden h-8 lg:flex"
-        >
-          <Settings2 />
+        <Button variant="outline" className="ml-auto hidden h-8 lg:flex ">
+          <Settings2 className="h-4 w-4 mr-2 stroke-1" />
           View
         </Button>
       </DropdownMenuTrigger>
@@ -56,4 +52,4 @@ export default function DataTableViewOptions<TData>({
       </DropdownMenuContent>
     </DropdownMenu>
   );
-} 
+}

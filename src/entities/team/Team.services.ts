@@ -123,7 +123,7 @@ export const deleteTeam = async (
     .from("teams")
     .delete()
     .eq("id", teamId)
-    .eq("tenantId", tenantId);
+    .eq("tenantId", Number(tenantId));
 
   if (error) {
     throw new Error(error.message);

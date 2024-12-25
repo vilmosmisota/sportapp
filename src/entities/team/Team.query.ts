@@ -7,7 +7,7 @@ import { useUsers } from "@/entities/user/User.query";
 export const useGetTeamsByTenantId = (tenantId: string) => {
   const client = useSupabase();
   const { data: users } = useUsers(tenantId);
-  const queryKey = [queryKeys.team.all];
+  const queryKey = [queryKeys.team.all, tenantId];
 
   return useQuery({
     queryKey,

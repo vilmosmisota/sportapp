@@ -30,31 +30,44 @@ const TeamsTableActions = ({
   if (!canManageTeams) return null;
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon">
-          <MoreVertical className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem
-          onClick={() => onEdit(team)}
-          className="cursor-pointer"
-        >
-          <SquarePen className="h-4 w-4 mr-2" />
-          Edit
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={() => onDelete(team.id)}
-          className="cursor-pointer text-red-500"
-        >
-          <Trash2 className="h-4 w-4 mr-2" />
-          Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="flex items-center justify-end gap-2">
+      <DropdownMenu modal={false}>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            className="h-8 w-8 p-0 data-[state=open]:bg-gray-100"
+          >
+            <MoreVertical className="h-4 w-4" />
+            <span className="sr-only">Open menu</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-[160px]">
+          <DropdownMenuItem
+            onClick={() => onEdit(team)}
+            className="cursor-pointer"
+          >
+            <SquarePen className="h-4 w-4 mr-2" />
+            Edit
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={() => onDelete(team.id)}
+            className="cursor-pointer text-red-500"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
+};
+
+const customCoachFilter = (row: any, columnId: string, filterValue: string) => {
+  const coach = row.getValue(columnId);
+  if (!coach) return false; // No coach, can't match
+  const fullName = `${coach.firstName} ${coach.lastName}`.toLowerCase();
+  return fullName.includes(filterValue.toLowerCase());
 };
 
 export const columns = ({
@@ -115,12 +128,14 @@ export const columns = ({
               {coach.lastName?.[0]}
             </span>
           </div>
-          <span className="font-medium">
+          <span className="font-medium capitalize">
             {coach.firstName} {coach.lastName}
           </span>
         </div>
       );
     },
+    enableColumnFilter: true,
+    filterFn: customCoachFilter,
   },
   {
     id: "actions",
