@@ -1,12 +1,12 @@
-import { TypedBrowserClient } from "@/libs/supabase/client";
+import { TypedClient } from "../../libs/supabase/type";
 import { GameSchema } from "./Game.schema";
 
 export const getUpcomingGamesByDivisionId = async (
-  browserClient: TypedBrowserClient,
+  browserClient: TypedClient,
   domain: string,
   divisionId: number
 ) => {
-  const { data, error } = await browserClient.rpc(
+  const { data: games, error } = await browserClient.rpc(
     "get_featured_upcoming_games",
     {
       division_id_param: divisionId,
@@ -18,5 +18,5 @@ export const getUpcomingGamesByDivisionId = async (
     throw new Error(error.message);
   }
 
-  return data.map((game) => GameSchema.parse(game));
+  return GameSchema.parse(games);
 };

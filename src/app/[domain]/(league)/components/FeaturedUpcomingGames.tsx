@@ -16,16 +16,16 @@ import { useState } from "react";
 
 export default function FeaturedUpcomingGames({ domain }: { domain: string }) {
   const [divisionId, setDivisionId] = useState(2);
-  const {
-    data: games,
-    isLoading,
-    isError,
-    error,
-  } = useUpcomingGamesByDivisionId(divisionId, domain);
+  // const {
+  //   data: games,
+  //   isLoading,
+  //   isError,
+  //   error,
+  // } = useUpcomingGamesByDivisionId(divisionId, domain);
 
-  if (isError && !games) {
-    return <div>Error</div>;
-  }
+  // if (isError && !games) {
+  //   return <div>Error</div>;
+  // }
 
   return (
     <div className="border rounded-lg h-full">
@@ -52,18 +52,14 @@ export default function FeaturedUpcomingGames({ domain }: { domain: string }) {
         </div>
       </header>
       <section className=" ">
-        <ScrollArea
-          className={`${
-            !games?.length ? "" : "h-[300px]"
-          } lg:h-[500px] w-full  py-4 px-2`}
-        >
-          {!games?.length && (
+        <ScrollArea className={` lg:h-[500px] w-full  py-4 px-2`}>
+          {/* {!games?.length && (
             <div className="bg-muted h-full min-h-[180px] flex items-center text-center rounded-md`">
               <div className="w-full">No games</div>
             </div>
-          )}
+          )} */}
 
-          {games?.map((game) => {
+          {/* {games?.map((game) => {
             const [hours, minutes] = game.startTime
               ? game.startTime.split(":")
               : [0, 0];
@@ -95,7 +91,7 @@ export default function FeaturedUpcomingGames({ domain }: { domain: string }) {
                 </CardContent>
               </Card>
             );
-          })}
+          })} */}
         </ScrollArea>
       </section>
     </div>

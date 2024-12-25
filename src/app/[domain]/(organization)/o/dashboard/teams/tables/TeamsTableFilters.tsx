@@ -6,12 +6,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AgeLevel, Gender, SkillLevel } from "@/entities/team/Team.schema";
+import { Gender } from "@/entities/team/Team.schema";
 import { Search } from "lucide-react";
+import { useTenantGroupTypes } from "@/entities/tenant/hooks/useGroupTypes";
 
 type TeamFilter = {
   type: "age" | "gender" | "skill";
-  value: AgeLevel | Gender | SkillLevel | "all";
+  value: string;
 };
 
 type TeamsTableFiltersProps = {
@@ -19,6 +20,7 @@ type TeamsTableFiltersProps = {
   setTeamFilter: (filter: TeamFilter) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
+  domain: string;
 };
 
 export default function TeamsTableFilters({
@@ -26,7 +28,10 @@ export default function TeamsTableFilters({
   setTeamFilter,
   searchQuery,
   setSearchQuery,
+  domain,
 }: TeamsTableFiltersProps) {
+  const { ageGroups, skillLevels } = useTenantGroupTypes(domain);
+
   return (
     <div className="flex flex-col md:flex-row gap-4 w-full">
       <div className="relative flex-1">
@@ -43,7 +48,7 @@ export default function TeamsTableFilters({
         onValueChange={(value) => {
           const [type, filterValue] = value.split(":") as [
             "age" | "gender" | "skill",
-            AgeLevel | Gender | SkillLevel | "all"
+            string
           ];
           setTeamFilter({ type, value: filterValue });
         }}
@@ -56,7 +61,7 @@ export default function TeamsTableFilters({
             Age Groups
           </div>
           <SelectItem value="age:all">All Age Groups</SelectItem>
-          {Object.values(AgeLevel).map((age) => (
+          {ageGroups.map((age) => (
             <SelectItem key={age} value={`age:${age}`}>
               {age}
             </SelectItem>
@@ -76,7 +81,7 @@ export default function TeamsTableFilters({
             Skill Level
           </div>
           <SelectItem value="skill:all">All Skill Levels</SelectItem>
-          {Object.values(SkillLevel).map((skill) => (
+          {skillLevels.map((skill) => (
             <SelectItem key={skill} value={`skill:${skill}`}>
               {skill}
             </SelectItem>
