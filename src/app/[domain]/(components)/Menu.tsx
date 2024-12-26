@@ -7,6 +7,7 @@ import NavLink from "./NavLink";
 import MobileMenu from "./MobileMenu";
 import AuthMenu from "./AuthMenu";
 import { TenantType } from "@/entities/tenant/Tenant.schema";
+import DashboardMobileMenuPlaceholder from "./DashboardMobileMenuPlaceholder";
 
 const leagueNavItems = [
   {
@@ -80,12 +81,13 @@ export async function Menu({ domain }: { domain: string }) {
         </nav>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         <AuthMenu
           tenantId={tenant?.id.toString()}
           tenantType={tenant?.type ?? TenantType.ORGANIZATION}
         />
         <MobileMenu navItems={navItems} />
+        <DashboardMobileMenuPlaceholder />
       </div>
     </div>
   );

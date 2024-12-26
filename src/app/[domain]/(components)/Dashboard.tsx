@@ -20,6 +20,7 @@ import {
 import DashboardNav from "./DashboardNav";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { useState } from "react";
+import { DashboardIcon } from "@radix-ui/react-icons";
 
 const iconMap: Record<string, LucideIcon> = {
   LayoutDashboard,
@@ -67,11 +68,15 @@ export default function Dashboard({ items, children }: DashboardProps) {
       </div>
 
       {/* Mobile Navigation */}
-      <div className="fixed bottom-4 right-4 z-40 md:hidden">
+      <div className="fixed top-3 right-7 z-40 md:hidden">
         <Drawer open={isOpen} onOpenChange={setIsOpen}>
           <DrawerTrigger asChild>
-            <Button size="icon" className="h-12 w-12 rounded-full shadow-lg">
-              <Menu className="h-6 w-6" />
+            <Button
+              className="md:hidden h-6 w-6"
+              variant={"ghost"}
+              size={"icon"}
+            >
+              <DashboardIcon className="h-4 w-4" />
             </Button>
           </DrawerTrigger>
           <DrawerContent className="h-[80vh]">

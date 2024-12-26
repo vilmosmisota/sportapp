@@ -54,6 +54,14 @@ export const Permissions = {
         requiredDomainRoles: [DomainRole.COACH],
       }),
   },
+  Players: {
+    manage: (userEntity?: UserEntity | null) =>
+      checkPermission({
+        userEntity,
+        requiredAdminRoles: [AdminRole.ADMIN, AdminRole.EDITOR],
+        requiredDomainRoles: [DomainRole.COACH],
+      }),
+  },
   Organization: {
     manage: (userEntity?: UserEntity | null) =>
       checkPermission({

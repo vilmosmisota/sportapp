@@ -86,8 +86,10 @@ export default function TeamsTable({
       onEdit: handleEditTeam,
       onDelete: handleDeleteTeam,
       canManageTeams,
+      domain,
+      tenantId,
     });
-  }, [canManageTeams, handleEditTeam, handleDeleteTeam]);
+  }, [canManageTeams, handleEditTeam, handleDeleteTeam, domain, tenantId]);
 
   const table = useReactTable({
     data: teams,

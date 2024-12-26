@@ -34,12 +34,12 @@ export function ResponsiveSheet({
   if (isDesktop) {
     return (
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        <SheetContent className="w-full sm:max-w-[440px] overflow-y-auto">
+        <SheetContent className="w-full  overflow-y-auto">
           <div className="h-full flex flex-col">
             <SheetHeader className="flex-shrink-0 pb-4">
               <SheetTitle>{title}</SheetTitle>
             </SheetHeader>
-            <div className="flex-1 overflow-y-auto pb-6">{children}</div>
+            <div className="flex-1 overflow-y-auto px-2">{children}</div>
           </div>
         </SheetContent>
       </Sheet>

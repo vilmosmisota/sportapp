@@ -2,7 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { Team } from "@/entities/team/Team.schema";
-import { Eye, MoreVertical, SquarePen, Trash2 } from "lucide-react";
+import { Eye, MoreVertical, SquarePen, Trash2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,12 +15,20 @@ import { Badge } from "@/components/ui/badge";
 import DataTableColumnHeader from "@/components/ui/data-table/DataTableColumnHeader";
 import { cn } from "@/libs/tailwind/utils";
 import Link from "next/link";
+import { usePlayerTeamConnections } from "@/entities/player/PlayerTeam.actions.client";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface TeamsTableActionsProps {
   team: Team;
   onEdit: (team: Team) => void;
   onDelete: (teamId: number) => void;
   canManageTeams: boolean;
+  domain: string;
 }
 
 const TeamsTableActions = ({
@@ -28,6 +36,7 @@ const TeamsTableActions = ({
   onEdit,
   onDelete,
   canManageTeams,
+  domain,
 }: TeamsTableActionsProps) => {
   return (
     <div className="flex items-center justify-end gap-2">
@@ -37,7 +46,7 @@ const TeamsTableActions = ({
         className="h-8 w-8 opacity-40 hover:opacity-100"
         asChild
       >
-        <Link href={`/o/dashboard/teams/${team.id}`}>
+        <Link href={`/${domain}/o/dashboard/teams/${team.id}`}>
           <Eye className="h-4 w-4" />
           <span className="sr-only">View team</span>
         </Link>
@@ -76,6 +85,41 @@ const TeamsTableActions = ({
   );
 };
 
+const PlayersCell = ({
+  teamId,
+  tenantId,
+}: {
+  teamId: number;
+  tenantId: string;
+}) => {
+  const { data: connections } = usePlayerTeamConnections(tenantId, { teamId });
+
+  if (!connections?.length)
+    return <div className="text-muted-foreground text-sm">No players</div>;
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4 text-muted-foreground" />
+            <span className="font-medium">{connections.length}</span>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>
+          <div className="space-y-1">
+            {connections.map((connection) => (
+              <div key={connection.id}>
+                {connection.player?.firstName} {connection.player?.secondName}
+              </div>
+            ))}
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+};
+
 const customAgeSort = (rowA: any, rowB: any) => {
   const ageA = rowA.original.age;
   const ageB = rowB.original.age;
@@ -97,10 +141,14 @@ export const columns = ({
   onEdit,
   onDelete,
   canManageTeams,
+  domain,
+  tenantId,
 }: {
   onEdit: (team: Team) => void;
   onDelete: (teamId: number) => void;
   canManageTeams: boolean;
+  domain: string;
+  tenantId: string;
 }): ColumnDef<Team>[] => [
   {
     accessorKey: "age",
@@ -168,6 +216,16 @@ export const columns = ({
     minSize: 200,
   },
   {
+    id: "players",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Players" />
+    ),
+    cell: ({ row }) => (
+      <PlayersCell teamId={row.original.id} tenantId={tenantId} />
+    ),
+    minSize: 100,
+  },
+  {
     id: "actions",
     cell: ({ row }) => (
       <TeamsTableActions
@@ -175,6 +233,7 @@ export const columns = ({
         onEdit={onEdit}
         onDelete={onDelete}
         canManageTeams={canManageTeams}
+        domain={domain}
       />
     ),
     minSize: 100,

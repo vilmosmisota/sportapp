@@ -1,3 +1,7 @@
 export default function OrganizationLandingPage() {
-  return <h1>OrganizationLandingPage</h1>;
+  return (
+    <div>
+      <h1>Org landing page</h1>
+    </div>
+  );
 }

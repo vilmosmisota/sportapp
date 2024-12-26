@@ -53,7 +53,7 @@ export default function AuthMenu({
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="sm" className="gap-2 h-8">
             <UserCircle className="h-4 w-4" />
-            <span className="text-sm font-normal">Menu</span>
+            <span className="text-sm font-normal hidden md:block">Menu</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">

@@ -24,6 +24,35 @@ export const queryKeys = {
     detail: (tenantId: string | undefined, teamId: string | undefined) =>
       [...queryKeys.team.all, tenantId, teamId] as const,
   },
+  player: {
+    all: ["player"] as const,
+    detail: (tenantId: string | undefined, playerId: string | undefined) =>
+      [...queryKeys.player.all, tenantId, playerId] as const,
+  },
+  playerTeam: {
+    all: ["playerTeam"] as const,
+    detail: (tenantId: string | undefined, connectionId: string | undefined) =>
+      [...queryKeys.playerTeam.all, tenantId, connectionId] as const,
+  },
+  playerMembership: {
+    all: ["playerMembership"] as const,
+    detail: (tenantId: string | undefined, membershipId: string | undefined) =>
+      [...queryKeys.playerMembership.all, tenantId, membershipId] as const,
+  },
+  seasonMembershipPrice: {
+    all: ["seasonMembershipPrice"] as const,
+    detail: (
+      tenantId: string | undefined,
+      seasonId: string | undefined,
+      membershipCategoryId: string | undefined
+    ) =>
+      [
+        ...queryKeys.seasonMembershipPrice.all,
+        tenantId,
+        seasonId,
+        membershipCategoryId,
+      ] as const,
+  },
   playerFeeCategory: {
     all: ["playerFeeCategory"] as const,
     detail: (
