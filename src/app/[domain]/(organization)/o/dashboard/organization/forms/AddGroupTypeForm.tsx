@@ -29,6 +29,7 @@ interface AddGroupTypeFormProps {
 const formSchema = z.object({
   ageGroups: z.array(z.string().min(1, "Value is required")),
   skillLevels: z.array(z.string().min(1, "Value is required")),
+  positions: z.array(z.string().min(1, "Value is required")),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -38,7 +39,7 @@ export default function AddGroupTypeForm({
   domain,
   setIsParentModalOpen,
 }: AddGroupTypeFormProps) {
-  const { ageGroups, skillLevels } = useTenantGroupTypes(domain);
+  const { ageGroups, skillLevels, positions } = useTenantGroupTypes(domain);
   const updateTenant = useUpdateTenant(
     tenant?.id.toString() ?? "",
     tenant?.domain ?? ""
@@ -49,6 +50,7 @@ export default function AddGroupTypeForm({
     defaultValues: {
       ageGroups: ageGroups.length ? ageGroups : [""],
       skillLevels: skillLevels.length ? skillLevels : [""],
+      positions: positions.length ? positions : [""],
     },
   });
 
@@ -66,6 +68,13 @@ export default function AddGroupTypeForm({
           return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
         }),
       skillLevels: data.skillLevels
+        .filter(Boolean)
+        .map((value) => value.trim())
+        .map(
+          (value) =>
+            value.charAt(0).toUpperCase() + value.slice(1).toLowerCase()
+        ),
+      positions: data.positions
         .filter(Boolean)
         .map((value) => value.trim())
         .map(
@@ -117,6 +126,19 @@ export default function AddGroupTypeForm({
     form.setValue(
       "skillLevels",
       currentSkillLevels.filter((_, i) => i !== index)
+    );
+  };
+
+  const addPosition = () => {
+    const currentPositions = form.getValues("positions");
+    form.setValue("positions", [...currentPositions, ""]);
+  };
+
+  const removePosition = (index: number) => {
+    const currentPositions = form.getValues("positions");
+    form.setValue(
+      "positions",
+      currentPositions.filter((_, i) => i !== index)
     );
   };
 
@@ -202,6 +224,49 @@ export default function AddGroupTypeForm({
                   variant="ghost"
                   size="icon"
                   onClick={() => removeSkillLevel(index)}
+                  className="mt-1"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+
+          <Separator />
+
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-sm font-medium">Player Positions</h4>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addPosition}
+                className="h-8 gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Add Position
+              </Button>
+            </div>
+            {form.watch("positions").map((_, index) => (
+              <div key={index} className="flex gap-4 items-start mb-4">
+                <FormField
+                  control={form.control}
+                  name={`positions.${index}`}
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormControl>
+                        <Input {...field} placeholder="e.g. Forward" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removePosition(index)}
                   className="mt-1"
                 >
                   <X className="h-4 w-4" />

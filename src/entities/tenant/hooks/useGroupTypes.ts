@@ -14,8 +14,14 @@ export function useTenantGroupTypes(domain: string) {
     return tenant.groupTypes.skillLevels;
   }, [tenant?.groupTypes?.skillLevels]);
 
+  const positions = useMemo(() => {
+    if (!tenant?.groupTypes?.positions) return [];
+    return tenant.groupTypes.positions;
+  }, [tenant?.groupTypes?.positions]);
+
   return {
     ageGroups,
     skillLevels,
+    positions,
   };
 }

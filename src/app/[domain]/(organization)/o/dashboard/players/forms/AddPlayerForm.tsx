@@ -22,7 +22,6 @@ import { useAddPlayer } from "@/entities/player/Player.actions.client";
 import {
   PlayerForm,
   PlayerGender,
-  PlayerPosition,
   createPlayerFormSchema,
 } from "@/entities/player/Player.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -119,7 +118,7 @@ export default function AddPlayerForm({
   const addPlayer = useAddPlayer(tenantId);
   const { data: teams } = useGetTeamsByTenantId(tenantId);
   const { data: existingPlayers } = usePlayers(tenantId);
-  const { ageGroups } = useTenantGroupTypes(domain);
+  const { ageGroups, positions } = useTenantGroupTypes(domain);
   const { data: membershipCategories } = useMembershipCategories(tenantId);
   const { data: parentUsers } = useParentUsers(tenantId);
   const { data: playerUsers } = usePlayerUsers(tenantId);
@@ -363,34 +362,6 @@ export default function AddPlayerForm({
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="position"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Position</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select position" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {Object.values(PlayerPosition).map((position) => (
-                                <SelectItem key={position} value={position}>
-                                  {position}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
                     <FormField
                       control={form.control}
                       name="pin"

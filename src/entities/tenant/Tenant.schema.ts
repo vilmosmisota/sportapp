@@ -14,6 +14,7 @@ export enum TenantSportType {
 export const GroupTypeSchema = z.object({
   ageGroups: z.array(z.string()),
   skillLevels: z.array(z.string()),
+  positions: z.array(z.string()).default([]),
 });
 
 export type GroupType = z.infer<typeof GroupTypeSchema>;

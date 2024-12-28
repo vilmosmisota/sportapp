@@ -5,13 +5,6 @@ export enum PlayerGender {
   Female = "Female",
 }
 
-export enum PlayerPosition {
-  Forward = "Forward",
-  Midfielder = "Midfielder",
-  Defender = "Defender",
-  Goalkeeper = "Goalkeeper",
-}
-
 export const MembershipCategorySchema = z.object({
   id: z.number(),
   name: z.string().nullable(),
@@ -69,7 +62,7 @@ export const PlayerSchema = z.object({
     .nullable(),
   tenantId: z.number().nullable(),
   gender: z.nativeEnum(PlayerGender).nullable(),
-  position: z.nativeEnum(PlayerPosition).nullable(),
+  position: z.string().nullable(),
   joinDate: z.string().nullable(),
   membershipCategoryId: z.number().nullable(),
   membershipCategory: MembershipCategorySchema.nullable(),
@@ -93,7 +86,7 @@ export const createPlayerFormSchema = () =>
       .regex(/^\d{4}$/, "PIN must be a 4-digit number")
       .optional(),
     gender: z.nativeEnum(PlayerGender),
-    position: z.nativeEnum(PlayerPosition),
+    position: z.string(),
     joinDate: z.string().optional(),
     membershipCategoryId: z.number().optional(),
     teamIds: z.array(z.number()).default([]),

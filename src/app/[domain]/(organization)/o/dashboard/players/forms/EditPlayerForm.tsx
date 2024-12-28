@@ -23,7 +23,6 @@ import {
   Player,
   PlayerForm,
   PlayerGender,
-  PlayerPosition,
   createPlayerFormSchema,
 } from "@/entities/player/Player.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -122,7 +121,7 @@ export default function EditPlayerForm({
   const updatePlayer = useUpdatePlayer(tenantId);
   const { data: teams } = useGetTeamsByTenantId(tenantId);
   const { data: existingPlayers } = usePlayers(tenantId);
-  const { ageGroups } = useTenantGroupTypes(domain);
+  const { ageGroups, positions } = useTenantGroupTypes(domain);
   const { data: membershipCategories } = useMembershipCategories(tenantId);
   const { data: parentUsers } = useParentUsers(tenantId);
   const { data: playerUsers } = usePlayerUsers(tenantId);
@@ -386,7 +385,7 @@ export default function EditPlayerForm({
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {Object.values(PlayerPosition).map((position) => (
+                              {positions.map((position: string) => (
                                 <SelectItem key={position} value={position}>
                                   {position}
                                 </SelectItem>

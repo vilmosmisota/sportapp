@@ -22,7 +22,7 @@ export default function GroupTypesContent({
   domain,
 }: GroupTypesContentProps) {
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const { ageGroups, skillLevels } = useTenantGroupTypes(domain);
+  const { ageGroups, skillLevels, positions } = useTenantGroupTypes(domain);
   const userEntity = useUserRoles();
   const canManage = Permissions.Organization.manage(userEntity);
 
@@ -31,8 +31,8 @@ export default function GroupTypesContent({
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-sm font-medium text-muted-foreground">
-            Manage your organization&apos;s age groups and skill levels for
-            teams.
+            Manage your organization&apos;s age groups, skill levels, and player
+            positions for teams.
           </h3>
         </div>
         {canManage && (
@@ -43,7 +43,7 @@ export default function GroupTypesContent({
         )}
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-3">
         <Card>
           <CardHeader className="bg-secondary/50 rounded-t-lg">
             <CardTitle className="text-base font-semibold">
@@ -83,6 +83,33 @@ export default function GroupTypesContent({
                 skillLevels.map((level) => (
                   <Badge key={level} variant="secondary" className="capitalize">
                     {level}
+                  </Badge>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="bg-secondary/50 rounded-t-lg">
+            <CardTitle className="text-base font-semibold">
+              Player Positions
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="flex flex-wrap gap-2">
+              {positions.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No positions defined
+                </p>
+              ) : (
+                positions.map((position) => (
+                  <Badge
+                    key={position}
+                    variant="secondary"
+                    className="capitalize"
+                  >
+                    {position}
                   </Badge>
                 ))
               )}
