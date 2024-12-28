@@ -6,7 +6,7 @@ import DataTableViewOptions from "@/components/ui/data-table/DataTableViewOption
 import { MultiSelectFilters } from "@/components/ui/multi-select-filters";
 import { PlayerGender } from "@/entities/player/Player.schema";
 import { useGetTeamsByTenantId } from "@/entities/team/Team.query";
-import { useTenantGroupTypes } from "@/entities/tenant/hooks/useGroupTypes";
+
 import { Row } from "@tanstack/react-table";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,6 @@ export function PlayersTableToolbar<TData>({
   domain,
 }: PlayersTableToolbarProps<TData>) {
   const { data: teams } = useGetTeamsByTenantId(tenantId);
-  const { positions } = useTenantGroupTypes(domain);
   const isFiltered = table.getState().columnFilters.length > 0;
 
   // Helper function to get filtered rows excluding a specific column
