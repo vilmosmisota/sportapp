@@ -8,6 +8,7 @@ import ProfileContent from "./tabs/ProfileContent";
 import SeasonsContent from "./tabs/SeasonsContent";
 import MembershipCategoriesContent from "./tabs/MembershipCategoriesContent";
 import GroupTypesContent from "./tabs/GroupTypesContent";
+import TrainingLocationsContent from "./tabs/TrainingLocationsContent";
 import { CurrencyTypes } from "@/entities/common/Types";
 
 export default function OrganizationDetailPage({
@@ -45,6 +46,9 @@ export default function OrganizationDetailPage({
                 <TabsTrigger value="group-types" className="text-sm">
                   Group Types
                 </TabsTrigger>
+                <TabsTrigger value="training-locations" className="text-sm">
+                  Training Locations
+                </TabsTrigger>
               </TabsList>
               <ScrollBar orientation="horizontal" className="invisible" />
             </ScrollArea>
@@ -65,6 +69,12 @@ export default function OrganizationDetailPage({
             </TabsContent>
             <TabsContent value="group-types">
               <GroupTypesContent tenant={tenant} domain={params.domain} />
+            </TabsContent>
+            <TabsContent value="training-locations">
+              <TrainingLocationsContent
+                tenant={tenant}
+                domain={params.domain}
+              />
             </TabsContent>
           </div>
         </Tabs>

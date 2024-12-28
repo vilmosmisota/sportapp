@@ -44,7 +44,6 @@ export default function SeasonItem({
 }: SeasonItemProps) {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const deleteSeason = useDeleteSeason(season.tenantId.toString());
 
@@ -63,7 +62,7 @@ export default function SeasonItem({
   };
 
   const ActionMenu = () => (
-    <DropdownMenu onOpenChange={setIsDropdownOpen}>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
@@ -105,7 +104,7 @@ export default function SeasonItem({
   return (
     <>
       <ResponsiveSheet
-        isOpen={isEditOpen && !isDropdownOpen}
+        isOpen={isEditOpen}
         setIsOpen={setIsEditOpen}
         title="Edit Season"
       >
@@ -119,7 +118,7 @@ export default function SeasonItem({
 
       <ConfirmDeleteDialog
         categoryId={season.id.toString()}
-        isOpen={isDeleteOpen && !isDropdownOpen}
+        isOpen={isDeleteOpen}
         setIsOpen={setIsDeleteOpen}
         text="This will permanently delete this season and all associated membership prices. Are you sure you want to proceed?"
         onConfirm={handleDelete}
