@@ -16,9 +16,9 @@ import {
 } from "@/components/ui/select";
 import { useUpdateTeam } from "@/entities/team/Team.actions.client";
 import {
-  Gender,
   Team,
   TeamForm,
+  TeamGender,
   createTeamFormSchema,
 } from "@/entities/team/Team.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -51,7 +51,7 @@ export default function EditTeamForm({
     defaultValues: {
       age: team.age ?? ageGroups[0],
       skill: team.skill ?? skillLevels[0],
-      gender: team.gender as Gender,
+      gender: team.gender as TeamGender,
       coachId: team.coachId ?? undefined,
     },
   });
@@ -132,7 +132,7 @@ export default function EditTeamForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {Object.values(Gender).map((gender) => (
+                      {Object.values(TeamGender).map((gender) => (
                         <SelectItem key={gender} value={gender}>
                           {gender}
                         </SelectItem>

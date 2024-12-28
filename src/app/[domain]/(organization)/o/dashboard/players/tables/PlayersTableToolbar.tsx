@@ -4,8 +4,9 @@ import { Table } from "@tanstack/react-table";
 import { Input } from "@/components/ui/input";
 import DataTableViewOptions from "@/components/ui/data-table/DataTableViewOptions";
 import { MultiSelectFilters } from "@/components/ui/multi-select-filters";
-import { PlayerGender, PlayerPosition } from "@/entities/player/Player.schema";
+import { PlayerGender } from "@/entities/player/Player.schema";
 import { useGetTeamsByTenantId } from "@/entities/team/Team.query";
+import { useTenantGroupTypes } from "@/entities/tenant/hooks/useGroupTypes";
 import { Row } from "@tanstack/react-table";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,13 +14,16 @@ import { Button } from "@/components/ui/button";
 interface PlayersTableToolbarProps<TData> {
   table: Table<TData>;
   tenantId: string;
+  domain: string;
 }
 
 export function PlayersTableToolbar<TData>({
   table,
   tenantId,
+  domain,
 }: PlayersTableToolbarProps<TData>) {
   const { data: teams } = useGetTeamsByTenantId(tenantId);
+  const { positions } = useTenantGroupTypes(domain);
   const isFiltered = table.getState().columnFilters.length > 0;
 
   // Helper function to get filtered rows excluding a specific column

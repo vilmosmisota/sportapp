@@ -59,7 +59,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useState, useMemo, useEffect } from "react";
-import { Team, Gender } from "@/entities/team/Team.schema";
+import {
+  Team,
+  TeamGender,
+  getDisplayGender,
+} from "@/entities/team/Team.schema";
 import { usePlayerUsers } from "@/entities/user/hooks/usePlayerUsers";
 
 type EditPlayerFormProps = {
@@ -101,14 +105,14 @@ const isTeamAgeCompatible = (
   return playerAge <= parsedTeamAge;
 };
 
-const mapPlayerToTeamGender = (playerGender: PlayerGender): Gender => {
+const mapPlayerToTeamGender = (playerGender: PlayerGender): TeamGender => {
   switch (playerGender) {
     case PlayerGender.Male:
-      return Gender.Boys;
+      return TeamGender.Male;
     case PlayerGender.Female:
-      return Gender.Girls;
+      return TeamGender.Female;
     default:
-      return Gender.Mixed;
+      return TeamGender.Mixed;
   }
 };
 
@@ -121,7 +125,7 @@ export default function EditPlayerForm({
   const updatePlayer = useUpdatePlayer(tenantId);
   const { data: teams } = useGetTeamsByTenantId(tenantId);
   const { data: existingPlayers } = usePlayers(tenantId);
-  const { ageGroups, positions } = useTenantGroupTypes(domain);
+  const { ageGroups, skillLevels, positions } = useTenantGroupTypes(domain);
   const { data: membershipCategories } = useMembershipCategories(tenantId);
   const { data: parentUsers } = useParentUsers(tenantId);
   const { data: playerUsers } = usePlayerUsers(tenantId);
@@ -185,7 +189,7 @@ export default function EditPlayerForm({
         if (isTeamAgeCompatible(playerAge, team.age)) {
           // Check gender compatibility if specified
           if (
-            team.gender === Gender.Mixed ||
+            team.gender === TeamGender.Mixed ||
             team.gender === mapPlayerToTeamGender(gender as PlayerGender)
           ) {
             recommended.push(team);
@@ -385,7 +389,7 @@ export default function EditPlayerForm({
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {positions.map((position: string) => (
+                              {positions.map((position) => (
                                 <SelectItem key={position} value={position}>
                                   {position}
                                 </SelectItem>
@@ -669,7 +673,8 @@ export default function EditPlayerForm({
                                       field.onChange(Array.from(value));
                                     }}
                                   >
-                                    {team.name} ({team.age} {team.gender}{" "}
+                                    {team.name} ({team.age}{" "}
+                                    {getDisplayGender(team.gender, team.age)}{" "}
                                     {team.skill})
                                   </Badge>
                                 ))}
@@ -700,7 +705,8 @@ export default function EditPlayerForm({
                                       field.onChange(Array.from(value));
                                     }}
                                   >
-                                    {team.name} ({team.age} {team.gender}{" "}
+                                    {team.name} ({team.age}{" "}
+                                    {getDisplayGender(team.gender, team.age)}{" "}
                                     {team.skill})
                                   </Badge>
                                 ))}

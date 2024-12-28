@@ -16,8 +16,8 @@ import {
 } from "@/components/ui/select";
 import { useAddTeamToTenant } from "@/entities/team/Team.actions.client";
 import {
-  Gender,
   TeamForm,
+  TeamGender,
   createTeamFormSchema,
 } from "@/entities/team/Team.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -48,7 +48,7 @@ export default function AddTeamForm({
     defaultValues: {
       age: ageGroups[0],
       skill: skillLevels[0],
-      gender: Gender.Mixed,
+      gender: TeamGender.Mixed,
     },
   });
 
@@ -129,7 +129,7 @@ export default function AddTeamForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {Object.values(Gender).map((gender) => (
+                      {Object.values(TeamGender).map((gender) => (
                         <SelectItem key={gender} value={gender}>
                           {gender}
                         </SelectItem>

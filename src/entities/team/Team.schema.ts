@@ -1,10 +1,34 @@
 import { z } from "zod";
 
-export enum Gender {
-  Boys = "Boys",
-  Girls = "Girls",
+export enum TeamGender {
+  Male = "Male",
+  Female = "Female",
   Mixed = "Mixed",
 }
+
+export const getDisplayGender = (
+  gender: TeamGender | null | undefined | string,
+  age: string | null | undefined
+): string => {
+  if (!gender) return "";
+  if (gender === TeamGender.Mixed) return "Mixed";
+
+  // Extract age number from string (e.g., "u18" -> 18)
+  const ageMatch = age?.match(/u(\d+)/i);
+  const ageNumber = ageMatch ? parseInt(ageMatch[1], 10) : null;
+
+  if (gender === TeamGender.Male) {
+    if (!age) return "Men";
+    return ageNumber && ageNumber < 18 ? "Boys" : "Men";
+  }
+
+  if (gender === TeamGender.Female) {
+    if (!age) return "Women";
+    return ageNumber && ageNumber < 18 ? "Girls" : "Women";
+  }
+
+  return gender;
+};
 
 const PlayerTeamConnectionSchema = z.object({
   id: z.number(),
@@ -21,7 +45,7 @@ export const TeamSchema = z.object({
   id: z.number(),
   name: z.string().nullable().optional(),
   age: z.string().nullable(),
-  gender: z.nativeEnum(Gender).nullable(),
+  gender: z.nativeEnum(TeamGender).nullable(),
   skill: z.string().nullable(),
   playerCount: z.number().nullable().optional(),
   tenantId: z.number(),
@@ -45,7 +69,7 @@ export const createTeamFormSchema = (
 ) =>
   z.object({
     age: z.enum([...ageGroups] as [string, ...string[]]),
-    gender: z.nativeEnum(Gender),
+    gender: z.nativeEnum(TeamGender),
     skill: z.enum([...skillLevels] as [string, ...string[]]),
     coachId: z.string().nullable().optional(),
   });

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { PlayerGender } from "./Player.schema";
-import { Gender } from "../team/Team.schema";
+import { TeamGender } from "../team/Team.schema";
 
 // Simplified schemas for the connection relations
 const PlayerInConnectionSchema = z.object({
@@ -15,7 +15,7 @@ const PlayerInConnectionSchema = z.object({
 const TeamInConnectionSchema = z.object({
   id: z.number(),
   age: z.string().nullable(),
-  gender: z.nativeEnum(Gender).nullable(),
+  gender: z.nativeEnum(TeamGender).nullable(),
   skill: z.string().nullable(),
 });
 

@@ -91,7 +91,11 @@ export default function PlayersTable({
   return (
     <ErrorBoundary>
       <div className="space-y-4">
-        <PlayersTableToolbar table={table} tenantId={tenantId} />
+        <PlayersTableToolbar
+          table={table}
+          tenantId={tenantId}
+          domain={domain}
+        />
         <DataTable table={table} columns={tableColumns} data={players} />
         <DataTablePagination table={table} />
 
