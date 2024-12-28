@@ -2,9 +2,11 @@ import { TypedClient } from "@/libs/supabase/type";
 import {
   PlayerMembershipForm,
   PlayerMembershipSchema,
+} from "./PlayerMembership.schema";
+import {
   SeasonMembershipPriceForm,
   SeasonMembershipPriceSchema,
-} from "./PlayerMembership.schema";
+} from "../season/SeasonMembershipPrice.schema";
 
 export const getPlayerMembershipsByTenantId = async (
   client: TypedClient,
@@ -42,17 +44,24 @@ export const getPlayerMembershipsByTenantId = async (
 
 export const addPlayerMembership = async (
   client: TypedClient,
-  data: PlayerMembershipForm
+  data: PlayerMembershipForm,
+  tenantId: string
 ) => {
   const { data: membership, error } = await client
     .from("playerMembership")
     .insert([data])
     .select(
       `
-      *,
-      player:players(*),
-      season:seasons(*),
-      membershipCategory:membershipCategories(*)
+      id,
+      createdAt,
+      playerId,
+      memberhsipCategoryId,
+      joinDate,
+      membershipCategory:membershipCategories(
+        id,
+        name,
+        description
+      )
     `
     )
     .single();

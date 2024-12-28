@@ -3,21 +3,9 @@
 import { Player } from "@/entities/player/Player.schema";
 import { ColumnDef } from "@tanstack/react-table";
 import DataTableColumnHeader from "@/components/ui/data-table/DataTableColumnHeader";
-import { DataTableRowActions } from "./DataTableRowActions";
-import { format } from "date-fns";
+import { format, differenceInYears } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { usePlayerTeamConnections } from "@/entities/player/PlayerTeam.actions.client";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Eye, MoreVertical, SquarePen, Trash2 } from "lucide-react";
+import { Eye, MoreVertical, SquarePen, Trash2, Users } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,59 +16,126 @@ import {
 import Link from "next/link";
 import { useState } from "react";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
-import { useGetTeamsByTenantId } from "@/entities/team/Team.query";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
-// Add type for team connection
-interface PlayerTeamConnection {
-  id: number;
-  teamId: number;
-  team: {
-    id: number;
-    age: string | null;
-    gender: string | null;
-    skill: string | null;
-  } | null;
-}
-
-// Add type for extended Player with connections
-interface PlayerWithConnections extends Player {
-  playerTeamConnections?: PlayerTeamConnection[];
-}
-
-const TeamsCell = ({
-  playerId,
-  tenantId,
-}: {
-  playerId: number;
-  tenantId: string;
-}) => {
-  const { data: connections, isLoading: connectionsLoading } =
-    usePlayerTeamConnections(tenantId, {
-      playerId,
-    });
-  const { data: teams, isLoading: teamsLoading } =
-    useGetTeamsByTenantId(tenantId);
-
-  if (connectionsLoading || teamsLoading) {
-    return <div className="text-muted-foreground text-sm">Loading...</div>;
-  }
-
-  if (!connections?.length) {
+const TeamsCell = ({ player }: { player: Player }) => {
+  if (!player.teamConnections?.length) {
     return <div className="text-muted-foreground text-sm">No teams</div>;
   }
 
+  const teams = player.teamConnections
+    .map((c) => c.team)
+    .filter((team): team is NonNullable<typeof team> => team !== null);
+
+  if (!teams.length) {
+    return <div className="text-muted-foreground text-sm">No active teams</div>;
+  }
+
   return (
-    <div className="flex flex-wrap gap-1">
-      {connections.map((connection) => {
-        const team = teams?.find((t) => t.id === connection.teamId);
-        if (!team) return null;
-        return (
-          <Badge key={connection.id} variant="outline">
-            {`${team.age} ${team.gender} ${team.skill}`}
-          </Badge>
-        );
-      })}
+    <div className="flex flex-wrap gap-2 flex-col items-start justify-start">
+      {teams.map((team) => (
+        <Badge key={team.id} variant="outline" className="whitespace-nowrap">
+          {[team.age, team.gender, team.skill]
+            .filter(
+              (value): value is string =>
+                typeof value === "string" && value.length > 0
+            )
+            .join(" • ")}
+        </Badge>
+      ))}
     </div>
+  );
+};
+
+const MembershipCell = ({ player }: { player: Player }) => {
+  if (!player.membershipCategory) {
+    return <div className="text-muted-foreground text-sm">No membership</div>;
+  }
+
+  return (
+    <Badge variant="outline" className="whitespace-nowrap">
+      {player.membershipCategory.name}
+    </Badge>
+  );
+};
+
+const ParentsCell = ({ player }: { player: Player }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const parents =
+    player.userConnections?.filter((c) => c.isParent && c.user) || [];
+
+  if (!parents.length) {
+    return <div className="text-muted-foreground text-sm">No parents</div>;
+  }
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="flex items-center gap-2 cursor-pointer">
+            <Users className="h-4 w-4 text-muted-foreground" />
+            <span className="font-medium">{parents.length}</span>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>
+          <div className="space-y-1">
+            {parents.map((connection) => {
+              const parent = connection.user!;
+              return (
+                <Dialog
+                  key={connection.id}
+                  open={isOpen}
+                  onOpenChange={setIsOpen}
+                >
+                  <DialogTrigger asChild>
+                    <Button variant="link" className="h-auto p-0">
+                      {parent.firstName} {parent.lastName}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent
+                    onPointerDownOutside={(e) => e.preventDefault()}
+                    onInteractOutside={(e) => e.preventDefault()}
+                  >
+                    <DialogHeader>
+                      <DialogTitle>Parent/Guardian Details</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <div className="text-sm font-medium text-muted-foreground">
+                          Name
+                        </div>
+                        <div>
+                          {parent.firstName} {parent.lastName}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-muted-foreground">
+                          Email
+                        </div>
+                        <div>{parent.email}</div>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              );
+            })}
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 };
 
@@ -191,6 +246,7 @@ export const columns = ({
     },
     enableSorting: true,
     enableHiding: false,
+    minSize: 200,
   },
   {
     accessorKey: "dateOfBirth",
@@ -200,12 +256,21 @@ export const columns = ({
     cell: ({ row }) => {
       const date = row.original.dateOfBirth;
       if (!date) return null;
+
+      const birthDate = new Date(date);
+      const age = differenceInYears(new Date(), birthDate);
+
       return (
-        <div className="flex w-[100px]">
-          {format(new Date(date), "dd/MM/yyyy")}
+        <div className="flex items-start flex-col gap-2">
+          <div className="text-sm">{format(birthDate, "dd/MM/yyyy")}</div>
+
+          <Badge variant="outline" className="text-xs">
+            {age} years
+          </Badge>
         </div>
       );
     },
+    minSize: 180,
   },
   {
     accessorKey: "gender",
@@ -222,6 +287,7 @@ export const columns = ({
     filterFn: (row, id, value) => {
       return value.includes(row.getValue(id));
     },
+    minSize: 90,
   },
   {
     accessorKey: "position",
@@ -238,89 +304,51 @@ export const columns = ({
     filterFn: (row, id, value) => {
       return value.includes(row.getValue(id));
     },
+    minSize: 100,
   },
   {
     id: "teams",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Teams" />
     ),
-    cell: ({ row }) => (
-      <TeamsCell playerId={row.original.id} tenantId={tenantId} />
-    ),
-    accessorFn: (row: PlayerWithConnections) => {
-      const connections = row.playerTeamConnections || [];
-      return connections.map((c) => c.teamId);
+    cell: ({ row }) => <TeamsCell player={row.original} />,
+    accessorFn: (row) => {
+      const connections = row.teamConnections || [];
+      return connections.map((c) => c.teamId.toString());
     },
     filterFn: (row, id, value: string[]) => {
       if (!value?.length) return true;
-      const teams = row.getValue(id) as number[];
-      return value.some((teamId) => teams.includes(Number(teamId)));
+      const teams = row.getValue(id) as string[];
+      return value.some((teamId) => teams.includes(teamId));
     },
     enableSorting: false,
+    minSize: 200,
   },
   {
     id: "membership",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Membership" />
     ),
-    cell: ({ row }) => {
-      const membership = row.original.membership;
-      if (!membership) {
-        return (
-          <div className="text-muted-foreground text-sm">No membership</div>
-        );
-      }
-      return (
-        <div className="flex flex-col gap-1">
-          <Badge variant="outline">
-            {membership.season?.name || `Season ${membership.seasonId}`}
-          </Badge>
-          <Badge variant="outline">
-            {membership.membershipCategory?.name ||
-              `Category ${membership.memberhsipCategoryId}`}
-          </Badge>
-        </div>
-      );
-    },
+    cell: ({ row }) => <MembershipCell player={row.original} />,
+    accessorFn: (row) => row.membershipCategory?.name,
+    enableSorting: true,
+    minSize: 120,
   },
   {
-    accessorKey: "parent",
-    header: "Parent/Guardian",
-    cell: ({ row }) => {
-      const parent = row.original.parent;
-      if (!parent) return null;
-
-      return (
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="link" className="p-0">
-              {parent.firstName} {parent.lastName}
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Parent/Guardian Details</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <div className="text-sm font-medium text-muted-foreground">
-                  Name
-                </div>
-                <div>
-                  {parent.firstName} {parent.lastName}
-                </div>
-              </div>
-              <div>
-                <div className="text-sm font-medium text-muted-foreground">
-                  Email
-                </div>
-                <div>{parent.email}</div>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      );
+    id: "parents",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Parents" />
+    ),
+    cell: ({ row }) => <ParentsCell player={row.original} />,
+    accessorFn: (row) => {
+      const parents =
+        row.userConnections?.filter((c) => c.isParent && c.user) || [];
+      return parents
+        .map((c) => `${c.user!.firstName} ${c.user!.lastName}`)
+        .join(", ");
     },
+    enableSorting: true,
+    minSize: 100,
   },
   {
     id: "actions",
@@ -333,5 +361,6 @@ export const columns = ({
         domain={domain}
       />
     ),
+    minSize: 100,
   },
 ];

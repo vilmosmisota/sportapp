@@ -33,6 +33,12 @@ export function PlayersTableToolbar<TData>({
       if (column) {
         rows = rows.filter((row) => {
           const value = row.getValue(filter.id);
+          if (filter.id === "teams") {
+            const teamIds = value as string[];
+            return (filter.value as string[]).some((id) =>
+              teamIds.includes(id)
+            );
+          }
           return (filter.value as string[])?.includes(value as string);
         });
       }
@@ -48,11 +54,41 @@ export function PlayersTableToolbar<TData>({
     const valueMap = new Map<string, number>();
 
     filteredRows.forEach((row) => {
-      const value = row.getValue(columnId) as string;
-      if (value) {
-        valueMap.set(value, (valueMap.get(value) || 0) + 1);
+      const value = row.getValue(columnId);
+      if (columnId === "teams") {
+        const teamIds = value as string[];
+        teamIds.forEach((teamId) => {
+          valueMap.set(teamId, (valueMap.get(teamId) || 0) + 1);
+        });
+      } else if (value) {
+        valueMap.set(value as string, (valueMap.get(value as string) || 0) + 1);
       }
     });
+
+    if (columnId === "teams") {
+      // Get all unique team IDs from the current filtered rows
+      const teamIds = new Set<string>();
+      filteredRows.forEach((row) => {
+        const rowTeams = row.getValue(columnId) as string[];
+        if (Array.isArray(rowTeams)) {
+          rowTeams.forEach((id) => teamIds.add(id));
+        }
+      });
+
+      // Only show teams that exist in the current filtered data
+      return (
+        teams
+          ?.filter((team) => teamIds.has(team.id.toString()))
+          .map((team) => ({
+            label: `${team.name || ""} (${team.age || ""} ${
+              team.gender || ""
+            } ${team.skill || ""})`.trim(),
+            value: team.id.toString(),
+            count: valueMap.get(team.id.toString()) || 0,
+            disabled: !valueMap.has(team.id.toString()),
+          })) || []
+      );
+    }
 
     const allValues = Array.from(
       new Set(
@@ -96,49 +132,17 @@ export function PlayersTableToolbar<TData>({
     },
   ];
 
-  if (teams) {
-    // Get all unique team IDs from the current filtered rows
-    const teamIds = new Set<string>();
-    teamRows.forEach((row) => {
-      const rowTeams = row.getValue("teams") as string[];
-      if (Array.isArray(rowTeams)) {
-        rowTeams.forEach((id) => teamIds.add(id));
-      }
+  if (teams?.length) {
+    filterGroups.push({
+      title: "Teams",
+      options: getOptionsWithCounts("teams", teamRows),
+      selectedValues:
+        (table.getColumn("teams")?.getFilterValue() as string[]) || [],
+      onSelectionChange: (values: string[]) =>
+        table
+          .getColumn("teams")
+          ?.setFilterValue(values.length ? values : undefined),
     });
-
-    // Count team occurrences in filtered rows
-    const valueMap = new Map<string, number>();
-    teamRows.forEach((row) => {
-      const rowTeams = row.getValue("teams") as string[];
-      if (Array.isArray(rowTeams)) {
-        rowTeams.forEach((teamId) => {
-          valueMap.set(teamId, (valueMap.get(teamId) || 0) + 1);
-        });
-      }
-    });
-
-    // Create team options only for teams that exist in the data
-    const teamOptions = teams
-      .filter((team) => teamIds.has(team.id.toString()))
-      .map((team) => ({
-        label: `${team.age} ${team.gender} ${team.skill}`,
-        value: team.id.toString(),
-        count: valueMap.get(team.id.toString()) || 0,
-        disabled: !valueMap.has(team.id.toString()),
-      }));
-
-    if (teamOptions.length > 0) {
-      filterGroups.push({
-        title: "Teams",
-        options: teamOptions,
-        selectedValues:
-          (table.getColumn("teams")?.getFilterValue() as string[]) || [],
-        onSelectionChange: (values: string[]) =>
-          table
-            .getColumn("teams")
-            ?.setFilterValue(values.length ? values : undefined),
-      });
-    }
   }
 
   return (

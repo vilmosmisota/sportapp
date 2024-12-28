@@ -85,32 +85,32 @@ const TeamsTableActions = ({
   );
 };
 
-const PlayersCell = ({
-  teamId,
-  tenantId,
-}: {
-  teamId: number;
-  tenantId: string;
-}) => {
-  const { data: connections } = usePlayerTeamConnections(tenantId, { teamId });
+const PlayersCell = ({ team }: { team: Team }) => {
+  const players =
+    team.playerTeamConnections
+      ?.map((c) => c.player)
+      .filter(
+        (player): player is NonNullable<typeof player> => player !== null
+      ) ?? [];
 
-  if (!connections?.length)
+  if (!players.length) {
     return <div className="text-muted-foreground text-sm">No players</div>;
+  }
 
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 cursor-pointer">
             <Users className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium">{connections.length}</span>
+            <span className="font-medium">{players.length}</span>
           </div>
         </TooltipTrigger>
         <TooltipContent>
           <div className="space-y-1">
-            {connections.map((connection) => (
-              <div key={connection.id}>
-                {connection.player?.firstName} {connection.player?.secondName}
+            {players.map((player) => (
+              <div key={player.id} className="whitespace-nowrap">
+                {player.firstName} {player.secondName}
               </div>
             ))}
           </div>
@@ -220,9 +220,7 @@ export const columns = ({
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Players" />
     ),
-    cell: ({ row }) => (
-      <PlayersCell teamId={row.original.id} tenantId={tenantId} />
-    ),
+    cell: ({ row }) => <PlayersCell team={row.original} />,
     minSize: 100,
   },
   {

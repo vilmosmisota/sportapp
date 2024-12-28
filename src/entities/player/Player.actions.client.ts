@@ -1,53 +1,44 @@
-import { queryKeys } from "@/cacheKeys/cacheKeys";
-import { useSupabase } from "@/libs/supabase/useSupabase";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PlayerForm } from "./Player.schema";
 import {
   addPlayerToTenant,
   deletePlayer,
-  updatePlayer,
   getPlayersByTenantId,
+  updatePlayer,
 } from "./Player.services";
+import { useSupabase } from "@/libs/supabase/useSupabase";
 
-export const usePlayers = (tenantId: string) => {
+export const usePlayers = (tenantId?: string) => {
   const client = useSupabase();
 
   return useQuery({
-    queryKey: [queryKeys.player.all, tenantId],
-    queryFn: () => getPlayersByTenantId(client, tenantId),
+    queryKey: ["players", tenantId],
+    queryFn: () => getPlayersByTenantId(client, tenantId!),
+    enabled: !!tenantId,
   });
 };
 
-export const useAddPlayerToTenant = (tenantId: string) => {
+export const useAddPlayer = (tenantId: string) => {
   const client = useSupabase();
   const queryClient = useQueryClient();
-  const queryKey = [queryKeys.player.all, tenantId];
 
   return useMutation({
-    mutationFn: (
-      data: PlayerForm & {
-        parentId?: string;
-        teams?: number[];
-        membershipCategoryId?: number;
-        joinDate?: string;
-      }
-    ) => addPlayerToTenant(client, data, tenantId),
+    mutationFn: (data: PlayerForm) => addPlayerToTenant(client, data, tenantId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: ["players", tenantId] });
     },
   });
 };
 
-export const useUpdatePlayer = (playerId: number, tenantId: string) => {
+export const useUpdatePlayer = (tenantId: string) => {
   const client = useSupabase();
   const queryClient = useQueryClient();
-  const queryKey = [queryKeys.player.all];
 
   return useMutation({
-    mutationFn: (data: PlayerForm) =>
+    mutationFn: ({ data, playerId }: { data: PlayerForm; playerId: number }) =>
       updatePlayer(client, data, playerId, tenantId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: ["players", tenantId] });
     },
   });
 };
@@ -55,12 +46,11 @@ export const useUpdatePlayer = (playerId: number, tenantId: string) => {
 export const useDeletePlayer = (tenantId: string) => {
   const client = useSupabase();
   const queryClient = useQueryClient();
-  const queryKey = [queryKeys.player.all];
 
   return useMutation({
     mutationFn: (playerId: number) => deletePlayer(client, playerId, tenantId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: ["players", tenantId] });
     },
   });
 };

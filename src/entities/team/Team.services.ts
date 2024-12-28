@@ -7,14 +7,39 @@ export const getTeamsByTenantId = async (
 ) => {
   const { data, error } = await typedClient
     .from("teams")
-    .select("*")
+    .select(
+      `
+      *,
+      playerTeamConnections:playerTeamConnections(
+        id,
+        player:players(
+          id,
+          firstName,
+          secondName
+        )
+      ),
+      coach:userEntities!teamId (
+        user:users (
+          id,
+          firstName,
+          lastName
+        )
+      )
+    `
+    )
     .eq("tenantId", tenantId);
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return data.map((team) => TeamSchema.parse(team));
+  return data.map((team) =>
+    TeamSchema.parse({
+      ...team,
+      coach: team.coach?.[0]?.user || null,
+      playerTeamConnections: team.playerTeamConnections || [],
+    })
+  );
 };
 
 export const getCoachesByTenantId = async (

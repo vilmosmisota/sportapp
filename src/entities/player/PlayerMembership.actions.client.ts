@@ -1,10 +1,8 @@
 import { queryKeys } from "@/cacheKeys/cacheKeys";
 import { useSupabase } from "@/libs/supabase/useSupabase";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  PlayerMembershipForm,
-  SeasonMembershipPriceForm,
-} from "./PlayerMembership.schema";
+import { PlayerMembershipForm } from "./PlayerMembership.schema";
+import { SeasonMembershipPriceForm } from "../season/SeasonMembershipPrice.schema";
 import {
   addPlayerMembership,
   deletePlayerMembership,
@@ -27,13 +25,13 @@ export const usePlayerMemberships = (
   });
 };
 
-export const useAddPlayerMembership = () => {
+export const useAddPlayerMembership = (tenantId: string) => {
   const client = useSupabase();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (data: PlayerMembershipForm) =>
-      addPlayerMembership(client, data),
+      addPlayerMembership(client, data, tenantId),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: [queryKeys.playerMembership.all],

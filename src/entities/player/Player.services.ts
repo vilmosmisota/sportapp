@@ -1,84 +1,61 @@
 import { TypedClient } from "@/libs/supabase/type";
 import { PlayerForm, PlayerSchema } from "./Player.schema";
 
+const PLAYER_QUERY_WITH_RELATIONS = `
+  *,
+  membershipCategory:membershipCategories(*),
+  teamConnections:playerTeamConnections!left(
+    *,
+    team:teams(*)
+  ),
+  userConnections:playerUserConnections!left(
+    *,
+    user:users(
+      id,
+      firstName,
+      lastName,
+      email
+    )
+  )
+`;
+
+const getPlayerWithRelations = async (
+  client: TypedClient,
+  playerId: number
+) => {
+  const { data, error } = await client
+    .from("players")
+    .select(PLAYER_QUERY_WITH_RELATIONS)
+    .eq("id", playerId)
+    .single();
+
+  if (error) throw error;
+  return PlayerSchema.parse(data);
+};
+
 export const getPlayersByTenantId = async (
   typedClient: TypedClient,
   tenantId: string
 ) => {
-  // Get players with team connections and parent information
   const { data: players, error } = await typedClient
     .from("players")
-    .select(
-      `
-      *,
-      playerTeamConnections:playerTeamConnections(
-        *,
-        team:teams(*)
-      ),
-      playerMembership:playerMembership(
-        *,
-        membershipCategory:membershipCategories(*)
-      ),
-      parentEntity:userEntities!parentEntityId(
-        id,
-        userId,
-        domainRole,
-        user:users(
-          id,
-          firstName,
-          lastName,
-          email
-        )
-      )
-    `
-    )
+    .select(PLAYER_QUERY_WITH_RELATIONS)
     .eq("tenantId", tenantId);
 
   if (error) {
     throw new Error(error.message);
   }
 
-  // Transform the data to match our schema
-  const playersWithRelations = players.map((player) => ({
-    ...player,
-    playerTeamConnections: player.playerTeamConnections || [],
-    membership: player.playerMembership?.[0] || null,
-    parent:
-      player.parentEntity?.domainRole === "parent"
-        ? player.parentEntity?.user
-        : null,
-  }));
-
-  return playersWithRelations.map((player) => PlayerSchema.parse(player));
+  return players.map((player) => PlayerSchema.parse(player));
 };
 
 export const addPlayerToTenant = async (
   client: TypedClient,
-  data: PlayerForm & {
-    parentId?: string;
-    teams?: number[];
-    membershipCategoryId?: number;
-    joinDate?: string;
-  },
+  data: PlayerForm,
   tenantId: string
 ) => {
   try {
-    // First get the userEntity for the parent
-    let parentEntityId: number | undefined;
-    if (data.parentId) {
-      const { data: parentEntity } = await client
-        .from("userEntities")
-        .select("id")
-        .eq("userId", data.parentId)
-        .eq("tenantId", Number(tenantId))
-        .eq("domainRole", "parent")
-        .single();
-
-      parentEntityId = parentEntity?.id;
-    }
-
-    // Extract data for different tables
-    const { teams, membershipCategoryId, joinDate, ...playerData } = data;
+    const { teamIds, parentUserIds, ...playerData } = data;
 
     // Insert the player
     const { data: newPlayer, error: insertError } = await client
@@ -86,7 +63,6 @@ export const addPlayerToTenant = async (
       .insert({
         ...playerData,
         tenantId: Number(tenantId),
-        parentEntityId,
       })
       .select()
       .single();
@@ -94,8 +70,8 @@ export const addPlayerToTenant = async (
     if (insertError) throw insertError;
 
     // Add team connections if provided
-    if (teams?.length) {
-      const teamConnections = teams.map((teamId) => ({
+    if (teamIds?.length) {
+      const teamConnections = teamIds.map((teamId) => ({
         playerId: newPlayer.id,
         teamId,
         tenantId: Number(tenantId),
@@ -108,68 +84,23 @@ export const addPlayerToTenant = async (
       if (teamError) throw teamError;
     }
 
-    // Add membership if provided
-    if (membershipCategoryId && joinDate) {
-      const { error: membershipError } = await client
-        .from("playerMembership")
-        .insert({
-          playerId: newPlayer.id,
-          memberhsipCategoryId: membershipCategoryId,
-          joinDate,
-        });
+    // Add parent user connections if provided
+    if (parentUserIds?.length) {
+      const parentConnections = parentUserIds.map((userId) => ({
+        playerId: newPlayer.id,
+        userId,
+        isParent: true,
+        tenantId: Number(tenantId),
+      }));
 
-      if (membershipError) {
-        console.error("Membership Error:", membershipError);
-        throw membershipError;
-      }
+      const { error: parentError } = await client
+        .from("playerUserConnections")
+        .insert(parentConnections);
+
+      if (parentError) throw parentError;
     }
 
-    // Fetch the complete player data with all relations
-    const { data: playerWithRelations, error: fetchError } = await client
-      .from("players")
-      .select(
-        `
-        *,
-        playerTeamConnections:playerTeamConnections(
-          *,
-          team:teams(*)
-        ),
-        playerMembership:playerMembership(
-          *,
-          membershipCategory:membershipCategories(*)
-        ),
-        parentEntity:userEntities!parentEntityId(
-          id,
-          userId,
-          domainRole,
-          user:users(
-            id,
-            firstName,
-            lastName,
-            email
-          )
-        )
-      `
-      )
-      .eq("id", newPlayer.id)
-      .single();
-
-    if (fetchError) throw fetchError;
-
-    // Only use parent data if the entity has the parent role
-    const parentEntity =
-      playerWithRelations.parentEntity?.domainRole === "parent"
-        ? playerWithRelations.parentEntity
-        : null;
-
-    return PlayerSchema.parse({
-      ...playerWithRelations,
-      teams: (playerWithRelations.playerTeamConnections || []).map(
-        (c: { teamId: number }) => c.teamId.toString()
-      ),
-      membership: playerWithRelations.playerMembership?.[0] || null,
-      parent: parentEntity?.user || null,
-    });
+    return getPlayerWithRelations(client, newPlayer.id);
   } catch (error) {
     console.error("Error in addPlayerToTenant:", error);
     throw error;
@@ -182,19 +113,77 @@ export const updatePlayer = async (
   playerId: number,
   tenantId: string
 ) => {
-  const { data: player, error } = await client
-    .from("players")
-    .update({ ...data })
-    .eq("id", playerId)
-    .eq("tenantId", tenantId)
-    .select()
-    .single();
+  try {
+    const { teamIds, parentUserIds, ...playerData } = data;
 
-  if (error) {
-    throw new Error(error.message);
+    // Update player base data
+    const { error: updateError } = await client
+      .from("players")
+      .update(playerData)
+      .eq("id", playerId)
+      .eq("tenantId", tenantId);
+
+    if (updateError) throw updateError;
+
+    // Update team connections if provided
+    if (teamIds !== undefined) {
+      // Delete existing team connections
+      const { error: deleteTeamError } = await client
+        .from("playerTeamConnections")
+        .delete()
+        .eq("playerId", playerId);
+
+      if (deleteTeamError) throw deleteTeamError;
+
+      // Add new team connections
+      if (teamIds.length > 0) {
+        const teamConnections = teamIds.map((teamId) => ({
+          playerId,
+          teamId,
+          tenantId: Number(tenantId),
+        }));
+
+        const { error: teamError } = await client
+          .from("playerTeamConnections")
+          .insert(teamConnections);
+
+        if (teamError) throw teamError;
+      }
+    }
+
+    // Update parent user connections if provided
+    if (parentUserIds !== undefined) {
+      // Delete existing parent connections
+      const { error: deleteParentError } = await client
+        .from("playerUserConnections")
+        .delete()
+        .eq("playerId", playerId)
+        .eq("isParent", true);
+
+      if (deleteParentError) throw deleteParentError;
+
+      // Add new parent connections
+      if (parentUserIds.length > 0) {
+        const parentConnections = parentUserIds.map((userId) => ({
+          playerId,
+          userId,
+          isParent: true,
+          tenantId: Number(tenantId),
+        }));
+
+        const { error: parentError } = await client
+          .from("playerUserConnections")
+          .insert(parentConnections);
+
+        if (parentError) throw parentError;
+      }
+    }
+
+    return getPlayerWithRelations(client, playerId);
+  } catch (error) {
+    console.error("Error in updatePlayer:", error);
+    throw error;
   }
-
-  return PlayerSchema.parse(player);
 };
 
 export const deletePlayer = async (
@@ -202,15 +191,33 @@ export const deletePlayer = async (
   playerId: number,
   tenantId: string
 ) => {
-  const { error } = await client
-    .from("players")
-    .delete()
-    .eq("id", playerId)
-    .eq("tenantId", Number(tenantId));
+  try {
+    // Delete player team connections
+    const { error: teamError } = await client
+      .from("playerTeamConnections")
+      .delete()
+      .eq("playerId", playerId);
 
-  if (error) {
-    throw new Error(error.message);
+    if (teamError) throw teamError;
+
+    // Delete player user connections
+    const { error: userError } = await client
+      .from("playerUserConnections")
+      .delete()
+      .eq("playerId", playerId);
+
+    if (userError) throw userError;
+
+    // Delete player
+    const { error: playerError } = await client
+      .from("players")
+      .delete()
+      .eq("id", playerId)
+      .eq("tenantId", tenantId);
+
+    if (playerError) throw playerError;
+  } catch (error) {
+    console.error("Error in deletePlayer:", error);
+    throw error;
   }
-
-  return true;
 };

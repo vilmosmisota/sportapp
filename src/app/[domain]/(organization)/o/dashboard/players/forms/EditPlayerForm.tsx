@@ -18,8 +18,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useAddPlayer } from "@/entities/player/Player.actions.client";
+import { useUpdatePlayer } from "@/entities/player/Player.actions.client";
 import {
+  Player,
   PlayerForm,
   PlayerGender,
   PlayerPosition,
@@ -62,7 +63,8 @@ import { useState, useMemo, useEffect } from "react";
 import { Team, Gender } from "@/entities/team/Team.schema";
 import { usePlayerUsers } from "@/entities/user/hooks/usePlayerUsers";
 
-type AddPlayerFormProps = {
+type EditPlayerFormProps = {
+  player: Player;
   tenantId: string;
   domain: string;
   setIsParentModalOpen?: (value: boolean) => void;
@@ -111,12 +113,13 @@ const mapPlayerToTeamGender = (playerGender: PlayerGender): Gender => {
   }
 };
 
-export default function AddPlayerForm({
+export default function EditPlayerForm({
+  player,
   tenantId,
   domain,
   setIsParentModalOpen,
-}: AddPlayerFormProps) {
-  const addPlayer = useAddPlayer(tenantId);
+}: EditPlayerFormProps) {
+  const updatePlayer = useUpdatePlayer(tenantId);
   const { data: teams } = useGetTeamsByTenantId(tenantId);
   const { data: existingPlayers } = usePlayers(tenantId);
   const { ageGroups } = useTenantGroupTypes(domain);
@@ -127,17 +130,21 @@ export default function AddPlayerForm({
   const form = useForm<PlayerForm>({
     resolver: zodResolver(createPlayerFormSchema()),
     defaultValues: {
-      firstName: "",
-      secondName: "",
-      dateOfBirth: format(new Date(), "yyyy-MM-dd"),
-      pin: "",
-      gender: undefined,
-      position: undefined,
-      joinDate: format(new Date(), "yyyy-MM-dd"),
-      membershipCategoryId: undefined,
-      teamIds: [],
-      parentUserIds: [],
-      ownerUserId: undefined,
+      firstName: player.firstName || "",
+      secondName: player.secondName || "",
+      dateOfBirth: player.dateOfBirth || format(new Date(), "yyyy-MM-dd"),
+      pin: player.pin || "",
+      gender: player.gender || undefined,
+      position: player.position || undefined,
+      joinDate: player.joinDate || format(new Date(), "yyyy-MM-dd"),
+      membershipCategoryId: player.membershipCategoryId || undefined,
+      teamIds: player.teamConnections?.map((tc) => tc.teamId) || [],
+      parentUserIds:
+        player.userConnections
+          ?.filter((uc) => uc.isParent)
+          .map((uc) => uc.userId) || [],
+      ownerUserId:
+        player.userConnections?.find((uc) => uc.isOwner)?.userId || undefined,
     },
   });
 
@@ -213,7 +220,7 @@ export default function AddPlayerForm({
 
   // Check if PIN is unique
   const isPinUnique = (pin: string) => {
-    return !existingPlayers?.some((player) => player.pin === pin);
+    return !existingPlayers?.some((p) => p.pin === pin && p.id !== player.id);
   };
 
   // Add state for PIN validation
@@ -222,7 +229,9 @@ export default function AddPlayerForm({
   // Check if PIN is unique and update validation state
   const validatePin = (pin: string) => {
     if (pin.length === 4) {
-      const isUnique = !existingPlayers?.some((player) => player.pin === pin);
+      const isUnique = !existingPlayers?.some(
+        (p) => p.pin === pin && p.id !== player.id
+      );
       setIsPinValid(isUnique);
       return isUnique;
     }
@@ -237,18 +246,16 @@ export default function AddPlayerForm({
     }
 
     try {
-      await addPlayer.mutateAsync(data);
-      toast.success("Player added successfully");
-      form.reset();
+      await updatePlayer.mutateAsync({ playerId: player.id, data });
+      toast.success("Player updated successfully");
       setIsParentModalOpen?.(false);
     } catch (error: any) {
-      console.error("Error adding player:", error);
-      toast.error(error.message || "Failed to add player");
+      console.error("Error updating player:", error);
+      toast.error(error.message || "Failed to update player");
     }
   };
 
   const onCancel = () => {
-    form.reset();
     setIsParentModalOpen?.(false);
   };
 
@@ -714,7 +721,7 @@ export default function AddPlayerForm({
 
         <div className="bg-background sticky h-[100px] flex items-center justify-end bottom-0 left-0 right-0 border-t">
           <FormButtons
-            buttonText="Add"
+            buttonText="Update"
             isLoading={isLoading}
             isDirty={isDirty}
             onCancel={onCancel}

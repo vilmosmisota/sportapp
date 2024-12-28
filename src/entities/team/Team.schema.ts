@@ -6,6 +6,17 @@ export enum Gender {
   Mixed = "Mixed",
 }
 
+const PlayerTeamConnectionSchema = z.object({
+  id: z.number(),
+  player: z
+    .object({
+      id: z.number(),
+      firstName: z.string().nullable(),
+      secondName: z.string().nullable(),
+    })
+    .nullable(),
+});
+
 export const TeamSchema = z.object({
   id: z.number(),
   name: z.string().nullable().optional(),
@@ -23,6 +34,7 @@ export const TeamSchema = z.object({
     })
     .nullable()
     .optional(),
+  playerTeamConnections: z.array(PlayerTeamConnectionSchema).optional(),
 });
 
 export type Team = z.infer<typeof TeamSchema>;

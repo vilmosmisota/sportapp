@@ -8,7 +8,7 @@ export enum AdminRole {
 
 export enum DomainRole {
   COACH = "coach",
-  // PLAYER = "player",
+  PLAYER = "player",
   PARENT = "parent",
 }
 

@@ -1,16 +1,33 @@
 import { z } from "zod";
-import { PlayerSchema } from "./Player.schema";
-import { TeamSchema } from "../team/Team.schema";
+import { PlayerGender, PlayerPosition } from "./Player.schema";
+import { Gender } from "../team/Team.schema";
+
+// Simplified schemas for the connection relations
+const PlayerInConnectionSchema = z.object({
+  id: z.number(),
+  firstName: z.string().nullable(),
+  secondName: z.string().nullable(),
+  dateOfBirth: z.string().nullable(),
+  gender: z.nativeEnum(PlayerGender).nullable(),
+  position: z.nativeEnum(PlayerPosition).nullable(),
+});
+
+const TeamInConnectionSchema = z.object({
+  id: z.number(),
+  age: z.string().nullable(),
+  gender: z.nativeEnum(Gender).nullable(),
+  skill: z.string().nullable(),
+});
 
 export const PlayerTeamConnectionSchema = z.object({
   id: z.number(),
-  createdAt: z.string(),
+  createdAt: z.string().optional(),
   teamId: z.number(),
   playerId: z.number(),
   tenantId: z.number(),
-  // Relations
-  player: PlayerSchema.nullable(),
-  team: TeamSchema.nullable(),
+  // Relations with simplified schemas
+  player: PlayerInConnectionSchema.nullable().optional(),
+  team: TeamInConnectionSchema.nullable().optional(),
 });
 
 export type PlayerTeamConnection = z.infer<typeof PlayerTeamConnectionSchema>;

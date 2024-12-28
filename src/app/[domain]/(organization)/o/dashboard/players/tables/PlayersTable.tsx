@@ -11,7 +11,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { columns } from "./columns";
 import { DataTablePagination } from "@/components/ui/data-table/DataTablePagination";
 import { PlayersTableToolbar } from "./PlayersTableToolbar";
@@ -19,6 +19,8 @@ import { useDeletePlayer } from "@/entities/player/Player.actions.client";
 import { toast } from "sonner";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { DataTable } from "@/components/ui/data-table/DataTable";
+import { ErrorBoundary } from "../../../../../../../components/ui/error-boundary";
+import EditPlayerForm from "../forms/EditPlayerForm";
 
 interface PlayersTableProps {
   players: Player[];
@@ -55,15 +57,21 @@ export default function PlayersTable({
     }
   };
 
+  const tableColumns = useMemo(
+    () =>
+      columns({
+        onEdit: handleEdit,
+        onDelete: handleDelete,
+        canManagePlayers,
+        domain,
+        tenantId,
+      }),
+    [canManagePlayers, domain, tenantId]
+  );
+
   const table = useReactTable({
     data: players,
-    columns: columns({
-      onEdit: handleEdit,
-      onDelete: handleDelete,
-      canManagePlayers,
-      domain,
-      tenantId,
-    }),
+    columns: tableColumns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -81,36 +89,27 @@ export default function PlayersTable({
   });
 
   return (
-    <div className="space-y-4">
-      <PlayersTableToolbar table={table} tenantId={tenantId} />
-      <DataTable
-        table={table}
-        columns={columns({
-          onEdit: handleEdit,
-          onDelete: handleDelete,
-          canManagePlayers,
-          domain,
-          tenantId,
-        })}
-        data={players}
-      />
-      <DataTablePagination table={table} />
+    <ErrorBoundary>
+      <div className="space-y-4">
+        <PlayersTableToolbar table={table} tenantId={tenantId} />
+        <DataTable table={table} columns={tableColumns} data={players} />
+        <DataTablePagination table={table} />
 
-      {selectedPlayer && (
-        <ResponsiveSheet
-          isOpen={isEditOpen}
-          setIsOpen={setIsEditOpen}
-          title="Edit Player"
-        >
-          {/* <EditPlayerForm
-            player={selectedPlayer}
-            tenantId={tenantId}
-            domain={domain}
-            setIsParentModalOpen={setIsEditOpen}
-          /> */}
-          <></>
-        </ResponsiveSheet>
-      )}
-    </div>
+        {selectedPlayer && (
+          <ResponsiveSheet
+            isOpen={isEditOpen}
+            setIsOpen={setIsEditOpen}
+            title="Edit Player"
+          >
+            <EditPlayerForm
+              player={selectedPlayer}
+              tenantId={tenantId}
+              domain={domain}
+              setIsParentModalOpen={setIsEditOpen}
+            />
+          </ResponsiveSheet>
+        )}
+      </div>
+    </ErrorBoundary>
   );
 }

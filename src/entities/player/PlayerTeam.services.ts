@@ -13,9 +13,25 @@ export const getPlayerTeamConnections = async (
     .from("playerTeamConnections")
     .select(
       `
-      *,
-      player:players(*),
-      team:teams(*)
+      id,
+      teamId,
+      playerId,
+      tenantId,
+      createdAt,
+      player:players(
+        id,
+        firstName,
+        secondName,
+        dateOfBirth,
+        gender,
+        position
+      ),
+      team:teams(
+        id,
+        age,
+        gender,
+        skill
+      )
     `
     )
     .eq("tenantId", tenantId);
@@ -47,9 +63,25 @@ export const addPlayerToTeam = async (
     .insert([{ ...data, tenantId: Number(tenantId) }])
     .select(
       `
-      *,
-      player:players(*),
-      team:teams(*)
+      id,
+      teamId,
+      playerId,
+      tenantId,
+      createdAt,
+      player:players(
+        id,
+        firstName,
+        secondName,
+        dateOfBirth,
+        gender,
+        position
+      ),
+      team:teams(
+        id,
+        age,
+        gender,
+        skill
+      )
     `
     )
     .single();
