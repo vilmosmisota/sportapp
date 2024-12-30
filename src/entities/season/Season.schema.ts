@@ -21,6 +21,7 @@ export const SeasonSchema = z.object({
   startDate: z.string().transform((str) => new Date(str)),
   endDate: z.string().transform((str) => new Date(str)),
   tenantId: z.number(),
+  isActive: z.boolean().default(false),
   breaks: z.array(BreakSchema).default([]),
   membershipPrices: z.array(SeasonMembershipPriceSchema).default([]),
 });
@@ -31,6 +32,7 @@ export const SeasonFormSchema = z.object({
   startDate: z.date(),
   endDate: z.date(),
   customName: z.string().optional(),
+  isActive: z.boolean().default(false),
   breaks: z.array(BreakSchema).default([]),
   membershipPrices: z.array(
     z.object({ membershipCategoryId: z.number(), price: z.number().positive() })

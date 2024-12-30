@@ -53,6 +53,21 @@ export const queryKeys = {
         membershipCategoryId,
       ] as const,
   },
+  training: {
+    all: ["training"] as const,
+    grouped: ["training", "grouped"] as const,
+    detail: (tenantId: string | undefined, trainingId: string | undefined) =>
+      ["training", tenantId, trainingId] as const,
+  },
+  trainingSeasonConnection: {
+    all: ["trainingSeasonConnection"] as const,
+    detail: (tenantId: string | undefined, connectionId: string | undefined) =>
+      [
+        ...queryKeys.trainingSeasonConnection.all,
+        tenantId,
+        connectionId,
+      ] as const,
+  },
   playerFeeCategory: {
     all: ["playerFeeCategory"] as const,
     detail: (
@@ -83,4 +98,4 @@ export const queryKeys = {
   users: {
     all: "users",
   },
-};
+} as const;
