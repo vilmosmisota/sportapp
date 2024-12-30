@@ -1,5 +1,11 @@
 import { TypedClient } from "@/libs/supabase/type";
-import { Training, TrainingForm, TrainingSchema } from "./Training.schema";
+import {
+  Training,
+  TrainingForm,
+  TrainingSchema,
+  UpdateTrainingPattern,
+  DeleteTrainingPattern,
+} from "./Training.schema";
 import { TrainingLocation } from "@/entities/tenant/Tenant.schema";
 
 const TRAINING_QUERY_WITH_RELATIONS = `
@@ -287,4 +293,32 @@ export const addTrainingBatch = async (
     console.error("Error in addTrainingBatch:", error);
     throw error;
   }
+};
+
+export const updateTrainingPattern = async (
+  client: TypedClient,
+  { tenantId, patternId, updates }: UpdateTrainingPattern
+) => {
+  const { error } = await client.rpc("update_training_pattern", {
+    p_tenant_id: tenantId,
+    p_pattern_id: patternId,
+    p_updates: updates,
+  });
+
+  if (error) throw error;
+  return true;
+};
+
+export const deleteTrainingPattern = async (
+  client: TypedClient,
+  { tenantId, patternId, params }: DeleteTrainingPattern
+) => {
+  const { error } = await client.rpc("delete_training_pattern", {
+    p_tenant_id: tenantId,
+    p_pattern_id: patternId,
+    p_params: params,
+  });
+
+  if (error) throw error;
+  return true;
 };

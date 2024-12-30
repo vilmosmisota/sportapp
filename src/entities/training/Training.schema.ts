@@ -65,3 +65,32 @@ export const GroupedTrainingSchema = z.object({
 });
 
 export type GroupedTraining = z.infer<typeof GroupedTrainingSchema>;
+
+export const UpdateTrainingPatternSchema = z.object({
+  tenantId: z.number(),
+  patternId: z.string(),
+  updates: z.object({
+    startTime: z.string().optional(),
+    endTime: z.string().optional(),
+    location: TrainingLocationSchema.optional(),
+    seasonId: z.number().optional(),
+    fromDate: z.string().optional(),
+    originalStartTime: z.string(),
+    originalEndTime: z.string(),
+  }),
+});
+
+export type UpdateTrainingPattern = z.infer<typeof UpdateTrainingPatternSchema>;
+
+export const DeleteTrainingPatternSchema = z.object({
+  tenantId: z.number(),
+  patternId: z.string(),
+  params: z.object({
+    seasonId: z.number(),
+    fromDate: z.string().optional(),
+    originalStartTime: z.string(),
+    originalEndTime: z.string(),
+  }),
+});
+
+export type DeleteTrainingPattern = z.infer<typeof DeleteTrainingPatternSchema>;

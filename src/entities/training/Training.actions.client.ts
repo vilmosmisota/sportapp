@@ -1,14 +1,21 @@
 import { queryKeys } from "@/cacheKeys/cacheKeys";
 import { useSupabase } from "@/libs/supabase/useSupabase";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { TrainingForm } from "./Training.schema";
+import {
+  TrainingForm,
+  UpdateTrainingPattern,
+  DeleteTrainingPattern,
+} from "./Training.schema";
 import {
   addTraining,
   updateTraining,
   deleteTraining,
   addTrainingBatch,
+  updateTrainingPattern,
+  deleteTrainingPattern,
 } from "./Training.services";
 import { TrainingLocation } from "@/entities/tenant/Tenant.schema";
+import { Json } from "@/db/database.types";
 
 export const useAddTraining = (tenantId: string) => {
   const client = useSupabase();
@@ -89,6 +96,34 @@ export const useDeleteTraining = (tenantId: string) => {
       queryClient.invalidateQueries({
         queryKey: [queryKeys.season.all],
       });
+    },
+  });
+};
+
+export const useUpdateTrainingPattern = () => {
+  const queryClient = useQueryClient();
+  const client = useSupabase();
+
+  return useMutation({
+    mutationFn: (params: UpdateTrainingPattern) =>
+      updateTrainingPattern(client, params),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [queryKeys.training.all] });
+      queryClient.invalidateQueries({ queryKey: [queryKeys.training.grouped] });
+    },
+  });
+};
+
+export const useDeleteTrainingPattern = () => {
+  const queryClient = useQueryClient();
+  const client = useSupabase();
+
+  return useMutation({
+    mutationFn: (params: DeleteTrainingPattern) =>
+      deleteTrainingPattern(client, params),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [queryKeys.training.all] });
+      queryClient.invalidateQueries({ queryKey: [queryKeys.training.grouped] });
     },
   });
 };

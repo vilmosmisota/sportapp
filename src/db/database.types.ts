@@ -563,7 +563,15 @@ export type Database = {
         Args: {
           p_tenant_id: number;
           p_pattern_id: string;
-          p_updates: Json;
+          p_updates: {
+            startTime?: string;
+            endTime?: string;
+            location?: Json;
+            seasonId?: number;
+            fromDate?: string;
+            originalStartTime: string;
+            originalEndTime: string;
+          };
         };
         Returns: void;
       };
@@ -621,6 +629,19 @@ export type Database = {
           userid: string;
         };
         Returns: boolean;
+      };
+      delete_training_pattern: {
+        Args: {
+          p_tenant_id: number;
+          p_pattern_id: string;
+          p_params: {
+            seasonId: number;
+            fromDate?: string;
+            originalStartTime: string;
+            originalEndTime: string;
+          };
+        };
+        Returns: void;
       };
     };
     Enums: {

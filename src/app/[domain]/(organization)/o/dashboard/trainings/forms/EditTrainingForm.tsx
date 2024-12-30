@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -9,6 +12,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import {
   Select,
@@ -20,8 +24,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import FormButtons from "@/components/ui/form-buttons";
-import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Clock, MapPin, Users, Calendar } from "lucide-react";
+import { format } from "date-fns";
+import { GroupedTraining } from "@/entities/training/Training.schema";
 import { useTrainingLocations } from "@/entities/tenant/hooks/useTrainingLocations";
+import { useUpdateTrainingPattern } from "@/entities/training/Training.actions.client";
 
 const formSchema = z.object({
   startTime: z.string().min(1, "Start time is required"),
@@ -32,13 +40,23 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 interface Props {
-  training: any; // Replace with proper type
+  training: GroupedTraining;
   setIsOpen: (open: boolean) => void;
+  domain: string;
+  tenantId: number;
+  seasonId: number;
 }
 
-export default function EditTrainingForm({ training, setIsOpen }: Props) {
+export default function EditTrainingForm({
+  training,
+  setIsOpen,
+  domain,
+  tenantId,
+  seasonId,
+}: Props) {
+  const locations = useTrainingLocations(domain);
+  const updatePattern = useUpdateTrainingPattern();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const locations = useTrainingLocations(training.domain);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -56,7 +74,20 @@ export default function EditTrainingForm({ training, setIsOpen }: Props) {
       const location = locations.find((l) => l.id === values.locationId);
       if (!location) return;
 
-      // Add update logic here
+      await updatePattern.mutateAsync({
+        tenantId,
+        patternId: `${training.teamId}-${training.startTime}-${training.endTime}`,
+        updates: {
+          startTime: values.startTime,
+          endTime: values.endTime,
+          location,
+          seasonId,
+          originalStartTime: training.startTime,
+          originalEndTime: training.endTime,
+          fromDate: training.firstDate,
+        },
+      });
+
       toast.success("Training schedule updated successfully");
       setIsOpen(false);
     } catch (error) {
@@ -70,64 +101,119 @@ export default function EditTrainingForm({ training, setIsOpen }: Props) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="startTime"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Start Time</FormLabel>
-                  <FormControl>
-                    <Input type="time" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        <div className="space-y-6">
+          {/* Schedule Info */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-medium flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Schedule Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm">
+                From {format(new Date(training.firstDate), "dd/MM/yyyy")}
+                {" to "}
+                {format(new Date(training.lastDate), "dd/MM/yyyy")}
+                <br />
+                Total sessions: {training.trainingCount}
+              </p>
+            </CardContent>
+          </Card>
 
-            <FormField
-              control={form.control}
-              name="endTime"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>End Time</FormLabel>
-                  <FormControl>
-                    <Input type="time" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+          {/* Time Selection */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-medium flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                Time
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="startTime"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Start Time</FormLabel>
+                      <FormControl>
+                        <Input type="time" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-          <FormField
-            control={form.control}
-            name="locationId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Location</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select location" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {locations.map((location) => (
-                      <SelectItem key={location.id} value={location.id}>
-                        {location.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                <FormField
+                  control={form.control}
+                  name="endTime"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>End Time</FormLabel>
+                      <FormControl>
+                        <Input type="time" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Location Selection */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-medium flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                Location
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <FormField
+                control={form.control}
+                name="locationId"
+                render={({ field }) => (
+                  <FormItem>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select location" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {locations.map((location) => (
+                          <SelectItem key={location.id} value={location.id}>
+                            {location.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Team Info */}
+          {training.teamName && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-medium flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Team
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm">{training.teamName}</p>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         <div className="bg-background sticky h-[100px] flex items-center justify-end bottom-0 left-0 right-0 border-t">
