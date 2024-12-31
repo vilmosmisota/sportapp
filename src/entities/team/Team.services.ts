@@ -15,7 +15,10 @@ export const getTeamsByTenantId = async (
         player:players(
           id,
           firstName,
-          secondName
+          secondName,
+          dateOfBirth,
+          position,
+          gender
         )
       ),
       coach:userEntities!teamId (

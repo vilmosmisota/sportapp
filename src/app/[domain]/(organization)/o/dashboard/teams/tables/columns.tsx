@@ -13,9 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import DataTableColumnHeader from "@/components/ui/data-table/DataTableColumnHeader";
-import { cn } from "@/libs/tailwind/utils";
 import Link from "next/link";
-import { usePlayerTeamConnections } from "@/entities/player/PlayerTeam.actions.client";
 import {
   Tooltip,
   TooltipContent,
@@ -46,7 +44,7 @@ const TeamsTableActions = ({
         className="h-8 w-8 opacity-40 hover:opacity-100"
         asChild
       >
-        <Link href={`/${domain}/o/dashboard/teams/${team.id}`}>
+        <Link href={`/o/dashboard/teams/${team.id}`}>
           <Eye className="h-4 w-4" />
           <span className="sr-only">View team</span>
         </Link>
@@ -137,19 +135,21 @@ const customCoachFilter = (row: any, columnId: string, filterValue: string) => {
   return fullName.includes(filterValue.toLowerCase());
 };
 
+interface ColumnsProps {
+  onEdit: (team: Team) => void;
+  onDelete: (teamId: number) => void;
+  canManageTeams: boolean;
+  domain: string;
+  tenantId: string;
+}
+
 export const columns = ({
   onEdit,
   onDelete,
   canManageTeams,
   domain,
   tenantId,
-}: {
-  onEdit: (team: Team) => void;
-  onDelete: (teamId: number) => void;
-  canManageTeams: boolean;
-  domain: string;
-  tenantId: string;
-}): ColumnDef<Team>[] => [
+}: ColumnsProps): ColumnDef<Team>[] => [
   {
     accessorKey: "age",
     header: ({ column }) => (

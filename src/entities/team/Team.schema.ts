@@ -37,6 +37,9 @@ const PlayerTeamConnectionSchema = z.object({
       id: z.number(),
       firstName: z.string().nullable(),
       secondName: z.string().nullable(),
+      dateOfBirth: z.string().nullable(),
+      position: z.string().nullable(),
+      gender: z.string().nullable(),
     })
     .nullable(),
 });
