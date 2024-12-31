@@ -131,6 +131,7 @@ export default function AddSeasonForm({
       breaks: formattedBreaks,
       membershipPrices: formattedMembershipPrices,
       customName: data.customName,
+      isActive: false,
     };
 
     seasonMutation.mutate(formData, {
