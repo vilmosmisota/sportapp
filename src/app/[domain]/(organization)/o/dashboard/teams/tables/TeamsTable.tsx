@@ -113,7 +113,12 @@ export default function TeamsTable({
     <div className="space-y-4">
       <TeamsTableToolbar table={table} />
 
-      <DataTable columns={memoizedColumns} data={teams} table={table} />
+      <DataTable
+        columns={memoizedColumns}
+        data={teams}
+        table={table}
+        rowClassName="group/row"
+      />
 
       {selectedTeam && (
         <ResponsiveSheet

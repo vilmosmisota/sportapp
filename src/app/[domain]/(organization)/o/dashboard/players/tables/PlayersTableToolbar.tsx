@@ -154,9 +154,10 @@ export function PlayersTableToolbar<TData>({
         <Input
           placeholder="Filter by name..."
           value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("name")?.setFilterValue(event.target.value)
-          }
+          onChange={(event) => {
+            const value = event.target.value;
+            table.getColumn("name")?.setFilterValue(value);
+          }}
           className="h-auto w-full md:w-[300px] bg-background"
         />
         <MultiSelectFilters groups={filterGroups} />

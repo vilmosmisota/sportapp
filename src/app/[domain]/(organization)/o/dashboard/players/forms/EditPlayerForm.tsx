@@ -65,6 +65,7 @@ import {
   getDisplayGender,
 } from "@/entities/team/Team.schema";
 import { usePlayerUsers } from "@/entities/user/hooks/usePlayerUsers";
+import { DateInput } from "../../../../../../../components/ui/date-input/DateInput";
 
 type EditPlayerFormProps = {
   player: Player;
@@ -135,11 +136,11 @@ export default function EditPlayerForm({
     defaultValues: {
       firstName: player.firstName || "",
       secondName: player.secondName || "",
-      dateOfBirth: player.dateOfBirth || format(new Date(), "yyyy-MM-dd"),
+      dateOfBirth: player.dateOfBirth || "",
       pin: player.pin || "",
       gender: player.gender || undefined,
       position: player.position || undefined,
-      joinDate: player.joinDate || format(new Date(), "yyyy-MM-dd"),
+      joinDate: player.joinDate || "",
       membershipCategoryId: player.membershipCategoryId || undefined,
       teamIds: player.teamConnections?.map((tc) => tc.teamId) || [],
       parentUserIds:
@@ -327,7 +328,7 @@ export default function EditPlayerForm({
                         <FormItem>
                           <FormLabel>Date of Birth</FormLabel>
                           <FormControl>
-                            <DatePicker
+                            <DateInput
                               value={
                                 field.value ? parseISO(field.value) : undefined
                               }
@@ -431,6 +432,7 @@ export default function EditPlayerForm({
                             <FormControl>
                               <Input
                                 {...field}
+                                value={field.value || ""}
                                 maxLength={4}
                                 placeholder="4-digit PIN"
                                 onChange={(e) => {
@@ -504,7 +506,7 @@ export default function EditPlayerForm({
                         <FormItem>
                           <FormLabel>Join Date</FormLabel>
                           <FormControl>
-                            <DatePicker
+                            <DateInput
                               value={
                                 field.value ? parseISO(field.value) : undefined
                               }

@@ -38,6 +38,7 @@ import {
   ShieldCheck,
   Shirt,
   X,
+  PlusCircle,
 } from "lucide-react";
 import { useGetTeamsByTenantId } from "@/entities/team/Team.query";
 import { useTenantGroupTypes } from "@/entities/tenant/hooks/useGroupTypes";
@@ -64,6 +65,7 @@ import {
   getDisplayGender,
 } from "@/entities/team/Team.schema";
 import { usePlayerUsers } from "@/entities/user/hooks/usePlayerUsers";
+import { DateInput } from "@/components/ui/date-input/DateInput";
 
 type AddPlayerFormProps = {
   tenantId: string;
@@ -132,11 +134,11 @@ export default function AddPlayerForm({
     defaultValues: {
       firstName: "",
       secondName: "",
-      dateOfBirth: format(new Date(), "yyyy-MM-dd"),
+      dateOfBirth: "",
       pin: "",
       gender: undefined,
       position: undefined,
-      joinDate: format(new Date(), "yyyy-MM-dd"),
+      joinDate: "",
       membershipCategoryId: undefined,
       teamIds: [],
       parentUserIds: [],
@@ -250,6 +252,22 @@ export default function AddPlayerForm({
     }
   };
 
+  const onSubmitAndAddAnother = async (data: PlayerForm) => {
+    if (data.pin && !isPinUnique(data.pin)) {
+      toast.error("PIN must be unique");
+      return;
+    }
+
+    try {
+      await addPlayer.mutateAsync(data);
+      toast.success("Player added successfully");
+      form.reset();
+    } catch (error: any) {
+      console.error("Error adding player:", error);
+      toast.error(error.message || "Failed to add player");
+    }
+  };
+
   const onCancel = () => {
     form.reset();
     setIsParentModalOpen?.(false);
@@ -288,7 +306,7 @@ export default function AddPlayerForm({
                       name="firstName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>First Name</FormLabel>
+                          <FormLabel>First Name *</FormLabel>
                           <FormControl>
                             <Input {...field} />
                           </FormControl>
@@ -302,7 +320,7 @@ export default function AddPlayerForm({
                       name="secondName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Second Name</FormLabel>
+                          <FormLabel>Second Name *</FormLabel>
                           <FormControl>
                             <Input {...field} />
                           </FormControl>
@@ -318,9 +336,9 @@ export default function AddPlayerForm({
                       name="dateOfBirth"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Date of Birth</FormLabel>
+                          <FormLabel>Date of Birth *</FormLabel>
                           <FormControl>
-                            <DatePicker
+                            <DateInput
                               value={
                                 field.value ? parseISO(field.value) : undefined
                               }
@@ -329,6 +347,7 @@ export default function AddPlayerForm({
                                   date ? format(date, "yyyy-MM-dd") : ""
                                 )
                               }
+                              error={!!form.formState.errors.dateOfBirth}
                             />
                           </FormControl>
                           <FormMessage />
@@ -341,7 +360,7 @@ export default function AddPlayerForm({
                       name="gender"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Gender</FormLabel>
+                          <FormLabel>Gender *</FormLabel>
                           <Select
                             onValueChange={field.onChange}
                             defaultValue={field.value}
@@ -371,7 +390,7 @@ export default function AddPlayerForm({
                       name="position"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Position</FormLabel>
+                          <FormLabel>Position *</FormLabel>
                           <Select
                             onValueChange={field.onChange}
                             defaultValue={field.value}
@@ -424,6 +443,7 @@ export default function AddPlayerForm({
                             <FormControl>
                               <Input
                                 {...field}
+                                value={field.value ?? ""}
                                 maxLength={4}
                                 placeholder="4-digit PIN"
                                 onChange={(e) => {
@@ -497,7 +517,7 @@ export default function AddPlayerForm({
                         <FormItem>
                           <FormLabel>Join Date</FormLabel>
                           <FormControl>
-                            <DatePicker
+                            <DateInput
                               value={
                                 field.value ? parseISO(field.value) : undefined
                               }
@@ -717,9 +737,19 @@ export default function AddPlayerForm({
           </Tabs>
         </div>
 
-        <div className="bg-background sticky h-[100px] flex items-center justify-end bottom-0 left-0 right-0 border-t">
+        <div className="bg-background sticky h-[100px] flex items-center justify-between bottom-0 left-0 right-0 border-t">
+          <div className="pl-4">
+            <Button
+              type="button"
+              onClick={handleSubmit(onSubmitAndAddAnother)}
+              disabled={!isDirty || isLoading}
+            >
+              <PlusCircle className="h-4 w-4 mr-2" />
+              Add
+            </Button>
+          </div>
           <FormButtons
-            buttonText="Add"
+            buttonText="Add and close"
             isLoading={isLoading}
             isDirty={isDirty}
             onCancel={onCancel}

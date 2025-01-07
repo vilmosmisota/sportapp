@@ -41,7 +41,7 @@ const TeamsTableActions = ({
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8 opacity-40 hover:opacity-100"
+        className="h-8 w-8 opacity-0 md:opacity-0 md:group-hover/row:opacity-100 transition-opacity sm:opacity-100"
         asChild
       >
         <Link href={`/o/dashboard/teams/${team.id}`}>
@@ -54,7 +54,7 @@ const TeamsTableActions = ({
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="h-8 w-8 p-0 data-[state=open]:bg-gray-100"
+              className="h-8 w-8 p-0 opacity-0 md:opacity-0 md:group-hover/row:opacity-100 transition-opacity sm:opacity-100 data-[state=open]:bg-gray-100"
             >
               <MoreVertical className="h-4 w-4" />
               <span className="sr-only">Open menu</span>

@@ -56,10 +56,12 @@ export const PlayerSchema = z.object({
   firstName: z.string().nullable(),
   secondName: z.string().nullable(),
   dateOfBirth: z.string().nullable(),
-  pin: z
-    .string()
-    .regex(/^\d{4}$/, "PIN must be a 4-digit number")
-    .nullable(),
+  pin: z.union([
+    z.string().regex(/^\d{4}$/, "If provided, PIN must be a 4-digit number"),
+    z.string().max(0),
+    z.null(),
+    z.undefined(),
+  ]),
   tenantId: z.number().nullable(),
   gender: z.nativeEnum(PlayerGender).nullable(),
   position: z.string().nullable(),
@@ -80,13 +82,17 @@ export const createPlayerFormSchema = () =>
   z.object({
     firstName: z.string().min(1, "First name is required"),
     secondName: z.string().min(1, "Second name is required"),
-    dateOfBirth: z.string(),
-    pin: z
-      .string()
-      .regex(/^\d{4}$/, "PIN must be a 4-digit number")
-      .optional(),
-    gender: z.nativeEnum(PlayerGender),
-    position: z.string(),
+    dateOfBirth: z.string().min(1, "Date of birth is required"),
+    pin: z.union([
+      z.string().regex(/^\d{4}$/, "If provided, PIN must be a 4-digit number"),
+      z.string().max(0),
+      z.null(),
+      z.undefined(),
+    ]),
+    gender: z.nativeEnum(PlayerGender, {
+      required_error: "Gender is required",
+    }),
+    position: z.string().min(1, "Position is required"),
     joinDate: z.string().optional(),
     membershipCategoryId: z.number().optional(),
     teamIds: z.array(z.number()).default([]),

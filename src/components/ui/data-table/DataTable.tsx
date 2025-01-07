@@ -10,24 +10,26 @@ import {
 } from "@/components/ui/table";
 import {
   ColumnDef,
+  type Table as TableType,
   flexRender,
-  Table as TanstackTable,
 } from "@tanstack/react-table";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 interface DataTableProps<TData> {
-  table: TanstackTable<TData>;
+  table: TableType<TData>;
   columns: ColumnDef<TData>[];
   data: TData[];
+  rowClassName?: string;
 }
 
 export function DataTable<TData>({
   table,
   columns,
   data,
+  rowClassName,
 }: DataTableProps<TData>) {
   return (
-    <div className="w-[calc(100vw-2rem)] md:w-full ">
+    <div className="w-[calc(100vw-2rem)] md:w-full">
       <ScrollArea className="rounded-md border">
         <Table className="bg-white">
           <TableHeader>
@@ -56,9 +58,10 @@ export function DataTable<TData>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  className={rowClassName}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="p-4 text-sm ">
+                    <TableCell key={cell.id} className="p-4 text-sm">
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()

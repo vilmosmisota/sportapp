@@ -96,7 +96,12 @@ export default function PlayersTable({
           tenantId={tenantId}
           domain={domain}
         />
-        <DataTable table={table} columns={tableColumns} data={players} />
+        <DataTable
+          table={table}
+          columns={tableColumns}
+          data={players}
+          rowClassName="group/row"
+        />
         <DataTablePagination table={table} />
 
         {selectedPlayer && (

@@ -48,7 +48,7 @@ const TeamsCell = ({ player }: { player: Player }) => {
   return (
     <div className="flex flex-wrap gap-2 flex-col items-start justify-start">
       {teams.map((team) => (
-        <Badge key={team.id} variant="outline" className="whitespace-nowrap">
+        <Badge key={team.id} variant="secondary" className="whitespace-nowrap">
           {[team.age, getDisplayGender(team.gender, team.age), team.skill]
             .filter(
               (value): value is string =>
@@ -67,7 +67,7 @@ const MembershipCell = ({ player }: { player: Player }) => {
   }
 
   return (
-    <Badge variant="outline" className="whitespace-nowrap">
+    <Badge variant="secondary" className="whitespace-nowrap">
       {player.membershipCategory.name}
     </Badge>
   );
@@ -170,7 +170,7 @@ const PlayersTableActions = ({
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8 opacity-40 hover:opacity-100"
+        className="h-8 w-8 opacity-0 md:opacity-0 md:group-hover/row:opacity-100 transition-opacity sm:opacity-100"
         asChild
       >
         <Link href={`/${domain}/o/dashboard/players/${player.id}`}>
@@ -184,7 +184,7 @@ const PlayersTableActions = ({
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="h-8 w-8 p-0 data-[state=open]:bg-gray-100"
+                className="h-8 w-8 p-0 opacity-0 md:opacity-0 md:group-hover/row:opacity-100 transition-opacity sm:opacity-100 data-[state=open]:bg-gray-100"
               >
                 <MoreVertical className="h-4 w-4" />
                 <span className="sr-only">Open menu</span>
@@ -248,6 +248,18 @@ export const columns = ({
     enableSorting: true,
     enableHiding: false,
     minSize: 200,
+    filterFn: (row, id, filterValue) => {
+      const searchValue = filterValue.toLowerCase();
+      const firstName = (row.original.firstName || "").toLowerCase();
+      const secondName = (row.original.secondName || "").toLowerCase();
+      const fullName = `${firstName} ${secondName}`.toLowerCase();
+
+      return (
+        fullName.includes(searchValue) ||
+        firstName.includes(searchValue) ||
+        secondName.includes(searchValue)
+      );
+    },
   },
   {
     accessorKey: "dateOfBirth",
@@ -265,7 +277,7 @@ export const columns = ({
         <div className="flex items-start flex-col gap-2">
           <div className="text-sm">{format(birthDate, "dd/MM/yyyy")}</div>
 
-          <Badge variant="outline" className="text-xs">
+          <Badge variant="secondary" className="text-xs">
             {age} years
           </Badge>
         </div>
@@ -281,7 +293,7 @@ export const columns = ({
     cell: ({ row }) => {
       return (
         <div className="flex w-[80px]">
-          <Badge variant="outline">{row.original.gender}</Badge>
+          <Badge variant="secondary">{row.original.gender}</Badge>
         </div>
       );
     },
@@ -298,7 +310,7 @@ export const columns = ({
     cell: ({ row }) => {
       return (
         <div className="flex w-[100px]">
-          <Badge variant="outline">{row.original.position}</Badge>
+          <Badge variant="secondary">{row.original.position}</Badge>
         </div>
       );
     },
