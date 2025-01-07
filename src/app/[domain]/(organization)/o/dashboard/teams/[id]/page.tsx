@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import ManagePlayersForm from "./forms/ManagePlayersForm";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 export default function TeamPage({
   params,
@@ -54,22 +54,27 @@ export default function TeamPage({
   const canManageTeams = Permissions.Teams.manage(userEntity);
   const [isManagePlayersOpen, setIsManagePlayersOpen] = useState(false);
 
-  const isLoading = isTenantLoading || isTeamsLoading;
+  const isLoading = isTenantLoading || isTeamsLoading || !teams;
   const team = teams?.find((t) => t.id === parseInt(params.id));
-  const players: TeamPlayer[] =
-    team?.playerTeamConnections
-      ?.map((connection) => {
-        if (!connection.player) return null;
-        return {
-          id: connection.player.id,
-          firstName: connection.player.firstName ?? "",
-          secondName: connection.player.secondName ?? "",
-          dateOfBirth: connection.player.dateOfBirth,
-          position: connection.player.position,
-          gender: connection.player.gender,
-        };
-      })
-      .filter((player): player is TeamPlayer => player !== null) ?? [];
+
+  // Memoize players array to prevent unnecessary re-renders
+  const players: TeamPlayer[] = useMemo(
+    () =>
+      team?.playerTeamConnections
+        ?.map((connection) => {
+          if (!connection.player) return null;
+          return {
+            id: connection.player.id,
+            firstName: connection.player.firstName ?? "",
+            secondName: connection.player.secondName ?? "",
+            dateOfBirth: connection.player.dateOfBirth,
+            position: connection.player.position,
+            gender: connection.player.gender,
+          };
+        })
+        .filter((player): player is TeamPlayer => player !== null) ?? [],
+    [team?.playerTeamConnections]
+  );
 
   const table = useReactTable({
     data: players,

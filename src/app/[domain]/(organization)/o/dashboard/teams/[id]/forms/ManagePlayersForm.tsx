@@ -76,58 +76,66 @@ const PlayerTable = ({
   players,
   selectedIds,
   onTogglePlayer,
-}: PlayerTableProps) => (
-  <Table>
-    <TableHeader>
-      <TableRow>
-        <TableHead className="w-12"></TableHead>
-        <TableHead>Name</TableHead>
-        <TableHead>Age</TableHead>
-        <TableHead>Gender</TableHead>
-        <TableHead>Position</TableHead>
-      </TableRow>
-    </TableHeader>
-    <TableBody>
-      {players.map((player) => {
-        const age = player.dateOfBirth
-          ? differenceInYears(new Date(), parseISO(player.dateOfBirth))
-          : null;
-
-        return (
-          <TableRow key={player.id}>
-            <TableCell>
-              <Checkbox
-                checked={selectedIds.includes(player.id)}
-                onCheckedChange={() => onTogglePlayer(player.id)}
-              />
-            </TableCell>
-            <TableCell className="font-medium">
-              {player.firstName} {player.secondName}
-            </TableCell>
-            <TableCell>{age ?? "-"}</TableCell>
-            <TableCell>
-              <Badge variant="outline" className="capitalize">
-                {player.gender?.toLowerCase() ?? "-"}
-              </Badge>
-            </TableCell>
-            <TableCell>
-              <Badge variant="secondary" className="capitalize">
-                {player.position?.toLowerCase() ?? "-"}
-              </Badge>
-            </TableCell>
+}: PlayerTableProps) => {
+  // Memoize the table content to prevent unnecessary re-renders
+  const tableContent = useMemo(
+    () => (
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-12"></TableHead>
+            <TableHead>Name</TableHead>
+            <TableHead>Age</TableHead>
+            <TableHead>Gender</TableHead>
+            <TableHead>Position</TableHead>
           </TableRow>
-        );
-      })}
-      {players.length === 0 && (
-        <TableRow>
-          <TableCell colSpan={5} className="h-24 text-center">
-            No players available
-          </TableCell>
-        </TableRow>
-      )}
-    </TableBody>
-  </Table>
-);
+        </TableHeader>
+        <TableBody>
+          {players.map((player) => {
+            const age = player.dateOfBirth
+              ? differenceInYears(new Date(), parseISO(player.dateOfBirth))
+              : null;
+
+            return (
+              <TableRow key={player.id}>
+                <TableCell>
+                  <Checkbox
+                    checked={selectedIds.includes(player.id)}
+                    onCheckedChange={() => onTogglePlayer(player.id)}
+                  />
+                </TableCell>
+                <TableCell className="font-medium">
+                  {player.firstName} {player.secondName}
+                </TableCell>
+                <TableCell>{age ?? "-"}</TableCell>
+                <TableCell>
+                  <Badge variant="outline" className="capitalize">
+                    {player.gender?.toLowerCase() ?? "-"}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge variant="secondary" className="capitalize">
+                    {player.position?.toLowerCase() ?? "-"}
+                  </Badge>
+                </TableCell>
+              </TableRow>
+            );
+          })}
+          {players.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={5} className="h-24 text-center">
+                No players available
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    ),
+    [players, selectedIds, onTogglePlayer]
+  );
+
+  return tableContent;
+};
 
 export default function ManagePlayersForm({
   team,
