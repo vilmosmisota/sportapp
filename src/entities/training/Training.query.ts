@@ -1,6 +1,10 @@
 import { queryKeys } from "@/cacheKeys/cacheKeys";
 import { useSupabase } from "@/libs/supabase/useSupabase";
-import { getTrainings, getTrainingById } from "./Training.services";
+import {
+  getTrainings,
+  getTrainingById,
+  getTrainingsByDayRange,
+} from "./Training.services";
 import { useQuery } from "@tanstack/react-query";
 import { GroupedTraining, GroupedTrainingSchema } from "./Training.schema";
 import { z } from "zod";
@@ -46,5 +50,16 @@ export const useTraining = (tenantId: string, trainingId: number) => {
     queryKey,
     queryFn: () => getTrainingById(client, trainingId, tenantId),
     enabled: !!tenantId && !!trainingId,
+  });
+};
+
+export const useTrainingsByDayRange = (tenantId: string, days: number) => {
+  const client = useSupabase();
+  const queryKey = [queryKeys.training.byDayRange(days), tenantId];
+
+  return useQuery({
+    queryKey,
+    queryFn: () => getTrainingsByDayRange(client, tenantId, days),
+    enabled: !!tenantId,
   });
 };

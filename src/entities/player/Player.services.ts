@@ -1,5 +1,6 @@
 import { TypedClient } from "@/libs/supabase/type";
 import { PlayerForm, PlayerSchema } from "./Player.schema";
+import { z } from "zod";
 
 const PLAYER_QUERY_WITH_RELATIONS = `
   *,
@@ -220,4 +221,43 @@ export const deletePlayer = async (
     console.error("Error in deletePlayer:", error);
     throw error;
   }
+};
+
+export const updatePlayerPin = async (
+  client: TypedClient,
+  playerId: number,
+  pin: string,
+  tenantId: string
+) => {
+  const { data, error } = await client
+    .from("players")
+    .update({ pin })
+    .eq("id", playerId)
+    .eq("tenantId", tenantId)
+    .select(
+      `
+      id,
+      firstName,
+      secondName,
+      pin
+    `
+    )
+    .single();
+
+  if (error) throw error;
+
+  // Use a simpler schema for pin update response
+  const PinUpdateResponseSchema = z.object({
+    id: z.number(),
+    firstName: z.string().nullable(),
+    secondName: z.string().nullable(),
+    pin: z.union([
+      z.string().regex(/^\d{4}$/, "If provided, PIN must be a 4-digit number"),
+      z.string().max(0),
+      z.null(),
+      z.undefined(),
+    ]),
+  });
+
+  return PinUpdateResponseSchema.parse(data);
 };

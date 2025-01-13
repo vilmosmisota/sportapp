@@ -199,12 +199,6 @@ export const columns = ({
       if (!coach) return "-";
       return (
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-            <span className="text-xs font-medium lowercase">
-              {coach.firstName?.[0]}
-              {coach.lastName?.[0]}
-            </span>
-          </div>
           <span className="font-medium capitalize truncate">
             {coach.firstName} {coach.lastName}
           </span>

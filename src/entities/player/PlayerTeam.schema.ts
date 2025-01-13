@@ -2,14 +2,20 @@ import { z } from "zod";
 import { PlayerGender } from "./Player.schema";
 import { TeamGender } from "../team/Team.schema";
 
-// Simplified schemas for the connection relations
+// Schema for the nested player object
 const PlayerInConnectionSchema = z.object({
   id: z.number(),
-  firstName: z.string().nullable(),
-  secondName: z.string().nullable(),
-  dateOfBirth: z.string().nullable(),
-  gender: z.nativeEnum(PlayerGender).nullable(),
-  position: z.string().nullable(),
+  pin: z.union([
+    z.string().regex(/^\d{4}$/, "If provided, PIN must be a 4-digit number"),
+    z.string().max(0),
+    z.null(),
+    z.undefined(),
+  ]),
+  firstName: z.string(),
+  secondName: z.string(),
+  dateOfBirth: z.string(),
+  gender: z.nativeEnum(PlayerGender),
+  position: z.string(),
 });
 
 const TeamInConnectionSchema = z.object({
@@ -21,12 +27,10 @@ const TeamInConnectionSchema = z.object({
 
 export const PlayerTeamConnectionSchema = z.object({
   id: z.number(),
-  createdAt: z.string().optional(),
-  teamId: z.number(),
-  playerId: z.number(),
-  tenantId: z.number(),
-  // Relations with simplified schemas
-  player: PlayerInConnectionSchema.nullable().optional(),
+  player: PlayerInConnectionSchema,
+  teamId: z.number().optional(),
+  playerId: z.number().optional(),
+  tenantId: z.number().optional(),
   team: TeamInConnectionSchema.nullable().optional(),
 });
 

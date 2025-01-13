@@ -239,7 +239,7 @@ export const columns = ({
       const secondName = row.original.secondName;
       return (
         <div className="flex space-x-2">
-          <span className="max-w-[500px] truncate font-medium">
+          <span className="max-w-[200px] truncate font-medium">
             {firstName} {secondName}
           </span>
         </div>
@@ -247,7 +247,9 @@ export const columns = ({
     },
     enableSorting: true,
     enableHiding: false,
-    minSize: 200,
+    minSize: 150,
+    size: 200,
+    maxSize: 300,
     filterFn: (row, id, filterValue) => {
       const searchValue = filterValue.toLowerCase();
       const firstName = (row.original.firstName || "").toLowerCase();
@@ -259,6 +261,29 @@ export const columns = ({
         firstName.includes(searchValue) ||
         secondName.includes(searchValue)
       );
+    },
+  },
+  {
+    accessorKey: "pin",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="PIN" />
+    ),
+    cell: ({ row }) => {
+      const pin = row.original.pin;
+      return (
+        <div className="flex space-x-2">
+          <span className="font-medium">{pin || "-"}</span>
+        </div>
+      );
+    },
+    enableSorting: false,
+    enableHiding: false,
+    minSize: 80,
+    size: 100,
+    maxSize: 120,
+    enableColumnFilter: false,
+    meta: {
+      isVisible: canManagePlayers,
     },
   },
   {
@@ -276,14 +301,15 @@ export const columns = ({
       return (
         <div className="flex items-start flex-col gap-2">
           <div className="text-sm">{format(birthDate, "dd/MM/yyyy")}</div>
-
           <Badge variant="secondary" className="text-xs">
             {age} years
           </Badge>
         </div>
       );
     },
-    minSize: 180,
+    minSize: 120,
+    size: 150,
+    maxSize: 180,
   },
   {
     accessorKey: "gender",
@@ -300,7 +326,9 @@ export const columns = ({
     filterFn: (row, id, value) => {
       return value.includes(row.getValue(id));
     },
-    minSize: 90,
+    minSize: 80,
+    size: 90,
+    maxSize: 100,
   },
   {
     accessorKey: "position",
@@ -317,7 +345,9 @@ export const columns = ({
     filterFn: (row, id, value) => {
       return value.includes(row.getValue(id));
     },
-    minSize: 100,
+    minSize: 80,
+    size: 100,
+    maxSize: 120,
   },
   {
     id: "teams",
@@ -335,7 +365,9 @@ export const columns = ({
       return value.some((teamId) => teams.includes(teamId));
     },
     enableSorting: false,
-    minSize: 200,
+    minSize: 150,
+    size: 200,
+    maxSize: 300,
   },
   {
     id: "membership",
@@ -345,7 +377,9 @@ export const columns = ({
     cell: ({ row }) => <MembershipCell player={row.original} />,
     accessorFn: (row) => row.membershipCategory?.name,
     enableSorting: true,
-    minSize: 120,
+    minSize: 100,
+    size: 120,
+    maxSize: 150,
   },
   {
     id: "parents",
@@ -361,7 +395,9 @@ export const columns = ({
         .join(", ");
     },
     enableSorting: true,
-    minSize: 100,
+    minSize: 80,
+    size: 100,
+    maxSize: 120,
   },
   {
     id: "actions",
@@ -374,6 +410,8 @@ export const columns = ({
         domain={domain}
       />
     ),
-    minSize: 100,
+    minSize: 80,
+    size: 100,
+    maxSize: 120,
   },
 ];

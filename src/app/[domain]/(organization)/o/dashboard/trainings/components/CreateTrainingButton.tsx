@@ -31,7 +31,7 @@ export default function CreateTrainingButton({
     <>
       <Button onClick={() => setIsOpen(true)} className="gap-2">
         <Plus className="h-4 w-4" />
-        Create Schedule
+        Create Training
       </Button>
 
       <ResponsiveSheet

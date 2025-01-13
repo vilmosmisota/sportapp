@@ -22,9 +22,16 @@ import {
 interface DatePickerProps {
   value?: Date;
   onChange: (date?: Date) => void;
+  fromDate?: Date;
+  toDate?: Date;
 }
 
-export function DatePicker({ value, onChange }: DatePickerProps) {
+export function DatePicker({
+  value,
+  onChange,
+  fromDate,
+  toDate,
+}: DatePickerProps) {
   const [month, setMonth] = React.useState<Date>(value || new Date());
 
   // Update month when value changes externally
@@ -106,7 +113,9 @@ export function DatePicker({ value, onChange }: DatePickerProps) {
             selected={value}
             onSelect={onChange}
             disabled={(date) =>
-              date > new Date() || date < new Date("1940-01-01")
+              Boolean(
+                (fromDate && date < fromDate) || (toDate && date > toDate)
+              )
             }
             month={month}
             onMonthChange={setMonth}

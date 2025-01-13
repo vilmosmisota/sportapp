@@ -43,6 +43,11 @@ const navItems = [
     iconName: "Dumbbell",
   },
   {
+    name: "Attendance",
+    href: "/o/dashboard/attendance",
+    iconName: "ClipboardCheck",
+  },
+  {
     name: "Statistics",
     href: "/o/dashboard/statistics",
     iconName: "BarChart3",

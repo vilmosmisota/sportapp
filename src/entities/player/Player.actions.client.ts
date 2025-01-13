@@ -5,8 +5,10 @@ import {
   deletePlayer,
   getPlayersByTenantId,
   updatePlayer,
+  updatePlayerPin,
 } from "./Player.services";
 import { useSupabase } from "@/libs/supabase/useSupabase";
+import { queryKeys } from "@/cacheKeys/cacheKeys";
 
 export const usePlayers = (tenantId?: string) => {
   const client = useSupabase();
@@ -51,6 +53,20 @@ export const useDeletePlayer = (tenantId: string) => {
     mutationFn: (playerId: number) => deletePlayer(client, playerId, tenantId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["players", tenantId] });
+    },
+  });
+};
+
+export const useUpdatePlayerPin = (tenantId: string) => {
+  const client = useSupabase();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ playerId, pin }: { playerId: number; pin: string }) =>
+      updatePlayerPin(client, playerId, pin, tenantId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["players", tenantId] });
+      queryClient.invalidateQueries({ queryKey: ["team-players"] });
     },
   });
 };

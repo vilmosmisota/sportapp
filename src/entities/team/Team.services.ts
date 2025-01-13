@@ -1,5 +1,10 @@
 import { TypedClient } from "@/libs/supabase/type";
-import { TeamForm, TeamSchema } from "./Team.schema";
+import {
+  TeamForm,
+  TeamSchema,
+  PlayerTeamConnectionSchema,
+} from "./Team.schema";
+import { PlayerSchema } from "../player/Player.schema";
 
 export const getTeamsByTenantId = async (
   typedClient: TypedClient,
@@ -158,4 +163,64 @@ export const deleteTeam = async (
   }
 
   return true;
+};
+
+export const getTeamPlayers = async (
+  client: TypedClient,
+  teamId: number,
+  tenantId: string
+) => {
+  const { data, error } = await client
+    .from("playerTeamConnections")
+    .select(
+      `
+      id,
+      player:players!inner (
+        id,
+        firstName,
+        secondName,
+        dateOfBirth,
+        position,
+        gender,
+        pin
+      )
+    `
+    )
+    .eq("teamId", teamId)
+    .eq("tenantId", tenantId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+};
+
+export const getPlayersByTeamId = async (
+  client: TypedClient,
+  teamId: number,
+  tenantId: string
+) => {
+  const { data, error } = await client
+    .from("playerTeamConnections")
+    .select(
+      `
+      id,
+      player:players!inner (
+        id,
+        firstName,
+        secondName,
+        dateOfBirth,
+        position,
+        gender,
+        pin
+      )
+    `
+    )
+    .eq("teamId", teamId)
+    .eq("tenantId", tenantId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data.map((connection) => PlayerTeamConnectionSchema.parse(connection));
 };

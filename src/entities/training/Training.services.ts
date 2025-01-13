@@ -12,7 +12,6 @@ const TRAINING_QUERY_WITH_RELATIONS = `
   *,
   team:teams (
     id,
-    name,
     age,
     gender,
     skill
@@ -21,7 +20,6 @@ const TRAINING_QUERY_WITH_RELATIONS = `
     *,
     season:seasons (
       id,
-      customName,
       startDate,
       endDate,
       breaks
@@ -321,4 +319,33 @@ export const deleteTrainingPattern = async (
 
   if (error) throw error;
   return true;
+};
+
+export const getTrainingsByDayRange = async (
+  client: TypedClient,
+  tenantId: string,
+  days: number
+) => {
+  try {
+    const today = new Date();
+    const endDate = new Date();
+    endDate.setDate(today.getDate() + days);
+
+    const todayStr = today.toISOString().split("T")[0];
+    const endDateStr = endDate.toISOString().split("T")[0];
+
+    const { data, error } = await client
+      .from("trainings")
+      .select(TRAINING_QUERY_WITH_RELATIONS)
+      .eq("tenantId", tenantId)
+      .gte("date", todayStr)
+      .lt("date", endDateStr)
+      .order("date", { ascending: true });
+
+    if (error) throw error;
+    return data.map((training) => TrainingSchema.parse(training));
+  } catch (error) {
+    console.error("Error in getTrainingsByDayRange:", error);
+    throw error;
+  }
 };

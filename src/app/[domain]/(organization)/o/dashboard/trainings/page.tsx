@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 import { useGetTeamsByTenantId } from "@/entities/team/Team.query";
 import { useSeasonsByTenantId } from "@/entities/season/Season.query";
@@ -37,7 +37,8 @@ export default function TrainingsPage({
     tenant?.id.toString() ?? ""
   );
   const activeSeason = selectedSeason?.find((s: Season) => s.isActive) ?? null;
-  const { data: groupedTrainings } = useGroupedTrainings(
+
+  const { data: groupedTrainings, error } = useGroupedTrainings(
     tenant?.id.toString() ?? "",
     activeSeason?.id.toString()
   );
@@ -102,13 +103,18 @@ export default function TrainingsPage({
     }
   };
 
+  useEffect(() => {
+    console.log("groupedTrainings", groupedTrainings);
+    console.log("error", error);
+  }, [groupedTrainings, error]);
+
   if (!tenant) return null;
 
   return (
-    <div className="container max-w-7xl mx-auto py-4 md:py-8 space-y-6">
-      <div className="flex flex-col md:flex-row justify-between gap-4">
+    <>
+      <div className="flex flex-col md:flex-row justify-between gap-4 space-y-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Trainings</h1>
+          <h3 className="text-2xl font-semibold tracking-tight">Trainings</h3>
           <p className="text-muted-foreground">
             {activeSeason ? (
               <>
@@ -179,6 +185,6 @@ export default function TrainingsPage({
           }
         }}
       />
-    </div>
+    </>
   );
 }

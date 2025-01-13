@@ -69,5 +69,13 @@ export const Permissions = {
         requiredAdminRoles: [AdminRole.ADMIN],
       }),
   },
+  Attendance: {
+    manage: (userEntity?: UserEntity | null) =>
+      checkPermission({
+        userEntity,
+        requiredAdminRoles: [AdminRole.ADMIN, AdminRole.EDITOR],
+        requiredDomainRoles: [DomainRole.COACH],
+      }),
+  },
   // Add more permission groups as needed
 };

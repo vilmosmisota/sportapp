@@ -86,6 +86,13 @@ export default function PlayersTable({
       columnVisibility,
       rowSelection,
     },
+    enableColumnPinning: true,
+    initialState: {
+      columnPinning: {
+        left: ["name"],
+        right: ["actions"],
+      },
+    },
   });
 
   return (

@@ -23,6 +23,8 @@ export const queryKeys = {
       [...queryKeys.team.all, tenantId] as const,
     detail: (tenantId: string | undefined, teamId: string | undefined) =>
       [...queryKeys.team.all, tenantId, teamId] as const,
+    players: (tenantId: string | undefined, teamId: number | undefined) =>
+      [...queryKeys.team.all, "players", tenantId, teamId] as const,
   },
   player: {
     all: ["player"] as const,
@@ -58,6 +60,7 @@ export const queryKeys = {
     grouped: ["training", "grouped"] as const,
     detail: (tenantId: string | undefined, trainingId: string | undefined) =>
       ["training", tenantId, trainingId] as const,
+    byDayRange: (days: number) => ["training", "byDayRange", days] as const,
   },
   trainingSeasonConnection: {
     all: ["trainingSeasonConnection"] as const,
@@ -97,5 +100,13 @@ export const queryKeys = {
   },
   users: {
     all: "users",
+  },
+  attendance: {
+    all: ["attendance"] as const,
+    sessions: ["attendance", "sessions"] as const,
+    activeSessions: ["attendance", "activeSessions"] as const,
+    records: ["attendance", "records"] as const,
+    detail: (tenantId: string | undefined, sessionId: string | undefined) =>
+      [...queryKeys.attendance.all, tenantId, sessionId] as const,
   },
 } as const;

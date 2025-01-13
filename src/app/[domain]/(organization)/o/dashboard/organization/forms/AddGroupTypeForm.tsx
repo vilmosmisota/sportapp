@@ -112,7 +112,10 @@ export default function AddGroupTypeForm({
     const currentAgeGroups = form.getValues("ageGroups");
     form.setValue(
       "ageGroups",
-      currentAgeGroups.filter((_, i) => i !== index)
+      currentAgeGroups.filter((_, i) => i !== index),
+      {
+        shouldDirty: true,
+      }
     );
   };
 
@@ -125,7 +128,10 @@ export default function AddGroupTypeForm({
     const currentSkillLevels = form.getValues("skillLevels");
     form.setValue(
       "skillLevels",
-      currentSkillLevels.filter((_, i) => i !== index)
+      currentSkillLevels.filter((_, i) => i !== index),
+      {
+        shouldDirty: true,
+      }
     );
   };
 
@@ -138,7 +144,10 @@ export default function AddGroupTypeForm({
     const currentPositions = form.getValues("positions");
     form.setValue(
       "positions",
-      currentPositions.filter((_, i) => i !== index)
+      currentPositions.filter((_, i) => i !== index),
+      {
+        shouldDirty: true,
+      }
     );
   };
 

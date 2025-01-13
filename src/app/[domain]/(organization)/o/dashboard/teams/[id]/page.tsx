@@ -36,8 +36,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
+
+import { useState, useMemo, useCallback } from "react";
+import TeamTrainings from "./components/TeamTrainings";
+import { toast } from "sonner";
+import { useRemovePlayerFromTeam } from "@/entities/player/PlayerTeam.actions.client";
 import ManagePlayersForm from "./forms/ManagePlayersForm";
-import { useState, useMemo } from "react";
 
 export default function TeamPage({
   params,
@@ -76,9 +80,35 @@ export default function TeamPage({
     [team?.playerTeamConnections]
   );
 
+  const removePlayerFromTeam = useRemovePlayerFromTeam(
+    tenant?.id.toString() ?? ""
+  );
+
+  const handleRemovePlayer = useCallback(
+    (playerId: number) => {
+      if (!team) return;
+
+      removePlayerFromTeam.mutate(
+        { teamId: team.id, playerId },
+        {
+          onSuccess: () => {
+            toast.success("Player removed from team");
+          },
+          onError: (error: Error) => {
+            toast.error(error.message);
+          },
+        }
+      );
+    },
+    [team, removePlayerFromTeam]
+  );
+
   const table = useReactTable({
     data: players,
-    columns: playerColumns,
+    columns: playerColumns({
+      onRemove: handleRemovePlayer,
+      canManageTeams: canManageTeams,
+    }),
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -180,18 +210,9 @@ export default function TeamPage({
                   </h4>
                   {team.coach ? (
                     <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                        <span className="text-xs font-medium">
-                          {team.coach.firstName?.[0]}
-                          {team.coach.lastName?.[0]}
-                        </span>
-                      </div>
                       <div>
-                        <p className="text-sm font-medium">
+                        <p className="text-sm font-medium capitalize">
                           {team.coach.firstName} {team.coach.lastName}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Head Coach
                         </p>
                       </div>
                     </div>
@@ -212,17 +233,13 @@ export default function TeamPage({
                       Assigned
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    <span className="text-sm">Training Schedule Available</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <MapPin className="h-4 w-4" />
-                    <span className="text-sm">Multiple Training Locations</span>
-                  </div>
                 </div>
               </CardContent>
             </Card>
+            <TeamTrainings
+              tenantId={tenant?.id.toString() ?? ""}
+              teamId={team.id}
+            />
           </div>
 
           {/* Players Section */}
@@ -239,7 +256,7 @@ export default function TeamPage({
                     onClick={() => setIsManagePlayersOpen(true)}
                   >
                     <Users className="h-4 w-4" />
-                    Manage Players
+                    Assign Players
                   </Button>
                 )}
               </CardHeader>
@@ -248,8 +265,12 @@ export default function TeamPage({
                   {players.length > 0 ? (
                     <DataTable
                       table={table}
-                      columns={playerColumns}
+                      columns={playerColumns({
+                        onRemove: handleRemovePlayer,
+                        canManageTeams: canManageTeams,
+                      })}
                       data={players}
+                      rowClassName="group/row"
                     />
                   ) : (
                     <div className="text-center text-muted-foreground py-8">
@@ -266,7 +287,7 @@ export default function TeamPage({
         <ResponsiveSheet
           isOpen={isManagePlayersOpen}
           setIsOpen={setIsManagePlayersOpen}
-          title="Manage Players"
+          title="Assign Players"
           description="Add or remove players from this team"
         >
           <ManagePlayersForm

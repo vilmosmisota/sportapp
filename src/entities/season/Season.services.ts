@@ -23,6 +23,7 @@ export const getSeasonsByTenantId = async (
   }
 
   const validatedData = data.map((season) => SeasonSchema.parse(season));
+  console.log("validatedData", validatedData);
   return validatedData;
 };
 

@@ -49,7 +49,6 @@ export default function MembershipCategoriesContent({
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] =
     useState<MembershipCategory | null>(null);
 
@@ -73,7 +72,7 @@ export default function MembershipCategoriesContent({
   };
 
   const ActionMenu = ({ category }: { category: MembershipCategory }) => (
-    <DropdownMenu onOpenChange={setIsDropdownOpen}>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
@@ -236,7 +235,7 @@ export default function MembershipCategoriesContent({
 
       {selectedCategory && (
         <ResponsiveSheet
-          isOpen={isEditOpen && !isDropdownOpen}
+          isOpen={isEditOpen}
           setIsOpen={setIsEditOpen}
           title="Edit Fee Category"
         >
@@ -251,7 +250,7 @@ export default function MembershipCategoriesContent({
       {selectedCategory && (
         <ConfirmDeleteDialog
           categoryId={selectedCategory.id}
-          isOpen={isDeleteOpen && !isDropdownOpen}
+          isOpen={isDeleteOpen}
           setIsOpen={setIsDeleteOpen}
           text={
             "This will remove this category and all its associated pricing in seasons. Are you sure you want to proceed? This action cannot be undone."

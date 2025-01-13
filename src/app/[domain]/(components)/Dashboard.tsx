@@ -16,6 +16,7 @@ import {
   Shield,
   ShieldCheck,
   Menu,
+  ClipboardCheck,
 } from "lucide-react";
 import DashboardNav from "./DashboardNav";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
@@ -35,6 +36,7 @@ const iconMap: Record<string, LucideIcon> = {
   Medal,
   Shield,
   ShieldCheck,
+  ClipboardCheck,
 };
 
 type NavItem = {
