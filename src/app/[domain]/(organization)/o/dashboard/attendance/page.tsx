@@ -10,10 +10,13 @@ import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { useUserRoles } from "@/entities/user/hooks/useUserRoles";
 import { Permissions } from "@/libs/permissions/permissions";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
-import { format, isToday, isFuture, parseISO } from "date-fns";
+import { format, isToday, isFuture, parseISO, isPast } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Training } from "@/entities/training/Training.schema";
-import { useCreateAttendanceSession } from "@/entities/attendance/Attendance.actions.client";
+import {
+  useCreateAttendanceSession,
+  useCloseAttendanceSession,
+} from "@/entities/attendance/Attendance.actions.client";
 import { toast } from "sonner";
 import Link from "next/link";
 
@@ -47,7 +50,7 @@ export default function AttendancePage({
   const { data: trainings, isLoading: isTrainingsLoading } =
     useTrainingsByDayRange(
       tenant?.id?.toString() ?? "",
-      7 // Fetch trainings for the next 7 days
+      8 // Fetch trainings for the next 7 days
     );
   const { data: activeSessions } = useActiveAttendanceSessions(
     tenant?.id?.toString() ?? ""
@@ -63,6 +66,16 @@ export default function AttendancePage({
     trainings
       ?.filter((training) => isFuture(training.date))
       .sort((a, b) => a.date.getTime() - b.date.getTime()) ?? [];
+
+  // Get past trainings with active sessions
+  const pastTrainingsWithActiveSessions =
+    trainings
+      ?.filter(
+        (training) =>
+          isPast(training.date) &&
+          activeSessions?.some((session) => session.trainingId === training.id)
+      )
+      .sort((a, b) => b.date.getTime() - a.date.getTime()) ?? [];
 
   if (isLoading) {
     return (
@@ -106,35 +119,66 @@ export default function AttendancePage({
           )}
         </div>
 
-        {upcomingTrainings.length === 0 ? (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg font-medium flex items-center gap-2">
-                <CalendarClock className="h-5 w-5 text-muted-foreground" />
-                No Upcoming Trainings
-              </CardTitle>
-            </CardHeader>
-          </Card>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {upcomingTrainings.map((training) => (
-              <TrainingCard
-                key={training.id}
-                training={training}
-                activeSessionId={
-                  activeSessions?.find(
-                    (session) => session.trainingId === training.id
-                  )?.id
-                }
-                hasActiveSession={
-                  activeSessions?.some(
-                    (session) => session.trainingId === training.id
-                  ) ?? false
-                }
-                tenantId={tenant.id.toString()}
-                canManageAttendance={canManageAttendance}
-              />
-            ))}
+        {/* Upcoming Trainings */}
+        <div className="space-y-4">
+          <h4 className="text-lg font-semibold">Upcoming Trainings</h4>
+          {upcomingTrainings.length === 0 ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg font-medium flex items-center gap-2">
+                  <CalendarClock className="h-5 w-5 text-muted-foreground" />
+                  No Upcoming Trainings
+                </CardTitle>
+              </CardHeader>
+            </Card>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {upcomingTrainings.map((training) => (
+                <TrainingCard
+                  key={training.id}
+                  training={training}
+                  activeSessionId={
+                    activeSessions?.find(
+                      (session) => session.trainingId === training.id
+                    )?.id
+                  }
+                  hasActiveSession={
+                    activeSessions?.some(
+                      (session) => session.trainingId === training.id
+                    ) ?? false
+                  }
+                  tenantId={tenant.id.toString()}
+                  canManageAttendance={canManageAttendance}
+                  isPastTraining={false}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Past Trainings with Active Sessions */}
+        {pastTrainingsWithActiveSessions.length > 0 && (
+          <div className="space-y-4">
+            <h4 className="text-lg font-semibold">
+              Past Trainings with Active Sessions
+            </h4>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {pastTrainingsWithActiveSessions.map((training) => (
+                <TrainingCard
+                  key={training.id}
+                  training={training}
+                  activeSessionId={
+                    activeSessions?.find(
+                      (session) => session.trainingId === training.id
+                    )?.id
+                  }
+                  hasActiveSession={true}
+                  tenantId={tenant.id.toString()}
+                  canManageAttendance={canManageAttendance}
+                  isPastTraining={true}
+                />
+              ))}
+            </div>
           </div>
         )}
 
@@ -158,14 +202,17 @@ function TrainingCard({
   tenantId,
   canManageAttendance,
   activeSessionId,
+  isPastTraining,
 }: {
   training: Training;
   hasActiveSession: boolean;
   tenantId: string;
   canManageAttendance: boolean;
   activeSessionId: number | undefined;
+  isPastTraining: boolean;
 }) {
   const createSession = useCreateAttendanceSession();
+  const closeSession = useCloseAttendanceSession();
 
   const handleStartSession = async () => {
     try {
@@ -178,6 +225,20 @@ function TrainingCard({
     } catch (error) {
       console.error("Error creating session:", error);
       toast.error("Failed to create attendance session");
+    }
+  };
+
+  const handleCloseSession = async () => {
+    if (!activeSessionId) return;
+    try {
+      await closeSession.mutateAsync({
+        sessionId: activeSessionId,
+        tenantId,
+      });
+      toast.success("Session closed successfully");
+    } catch (error) {
+      console.error("Error closing session:", error);
+      toast.error("Failed to close attendance session");
     }
   };
 
@@ -204,15 +265,32 @@ function TrainingCard({
           <span className="font-medium">{training.location?.name}</span>
         </div>
         {hasActiveSession && canManageAttendance && (
-          <div className="pt-4">
+          <div className="pt-4 space-y-2">
             <Link href={`/o/dashboard/attendance/${activeSessionId}`}>
               <Button variant="secondary" className="w-full">
                 View Active Session
               </Button>
             </Link>
+            {isPastTraining && (
+              <Button
+                variant="destructive"
+                className="w-full"
+                onClick={handleCloseSession}
+                disabled={closeSession.isPending}
+              >
+                {closeSession.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Closing...
+                  </>
+                ) : (
+                  "Close Session"
+                )}
+              </Button>
+            )}
           </div>
         )}
-        {!hasActiveSession && canManageAttendance && (
+        {!hasActiveSession && canManageAttendance && !isPastTraining && (
           <div className="mt-4">
             <Button
               variant="outline"

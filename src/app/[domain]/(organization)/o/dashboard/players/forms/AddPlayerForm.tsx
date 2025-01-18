@@ -121,6 +121,8 @@ export default function AddPlayerForm({
   domain,
   setIsParentModalOpen,
 }: AddPlayerFormProps) {
+  const [formKey, setFormKey] = useState(0);
+  const [forceReset, setForceReset] = useState(false);
   const addPlayer = useAddPlayer(tenantId);
   const { data: teams } = useGetTeamsByTenantId(tenantId);
   const { data: existingPlayers } = usePlayers(tenantId);
@@ -235,6 +237,36 @@ export default function AddPlayerForm({
     return true;
   };
 
+  const resetFormCompletely = () => {
+    // First, reset all form fields explicitly
+    form.setValue("firstName", "");
+    form.setValue("secondName", "");
+    form.setValue("dateOfBirth", "");
+    form.setValue("pin", "");
+    form.setValue("gender", "" as any);
+    form.setValue("position", "" as any);
+    form.setValue("joinDate", "");
+    form.setValue("membershipCategoryId", undefined);
+    form.setValue("teamIds", []);
+    form.setValue("parentUserIds", []);
+    form.setValue("ownerUserId", undefined);
+
+    // Then trigger the form reset
+    form.reset();
+
+    // Force a re-render
+    setFormKey((prev) => prev + 1);
+    setForceReset(true);
+  };
+
+  // Add effect to handle force reset
+  useEffect(() => {
+    if (forceReset) {
+      form.reset();
+      setForceReset(false);
+    }
+  }, [forceReset, form]);
+
   const onSubmit = async (data: PlayerForm) => {
     if (data.pin && !isPinUnique(data.pin)) {
       toast.error("PIN must be unique");
@@ -244,7 +276,7 @@ export default function AddPlayerForm({
     try {
       await addPlayer.mutateAsync(data);
       toast.success("Player added successfully");
-      form.reset();
+      resetFormCompletely();
       setIsParentModalOpen?.(false);
     } catch (error: any) {
       console.error("Error adding player:", error);
@@ -261,7 +293,7 @@ export default function AddPlayerForm({
     try {
       await addPlayer.mutateAsync(data);
       toast.success("Player added successfully");
-      form.reset();
+      resetFormCompletely();
     } catch (error: any) {
       console.error("Error adding player:", error);
       toast.error(error.message || "Failed to add player");
@@ -276,6 +308,7 @@ export default function AddPlayerForm({
   return (
     <Form {...form}>
       <form
+        key={formKey}
         className="flex flex-col gap-6 relative"
         onSubmit={handleSubmit(onSubmit)}
       >
@@ -363,7 +396,7 @@ export default function AddPlayerForm({
                           <FormLabel>Gender *</FormLabel>
                           <Select
                             onValueChange={field.onChange}
-                            defaultValue={field.value}
+                            value={field.value}
                           >
                             <FormControl>
                               <SelectTrigger>
@@ -393,7 +426,7 @@ export default function AddPlayerForm({
                           <FormLabel>Position *</FormLabel>
                           <Select
                             onValueChange={field.onChange}
-                            defaultValue={field.value}
+                            value={field.value}
                           >
                             <FormControl>
                               <SelectTrigger>
@@ -487,7 +520,7 @@ export default function AddPlayerForm({
                             onValueChange={(value) =>
                               field.onChange(Number(value))
                             }
-                            value={field.value?.toString()}
+                            value={field.value?.toString() || undefined}
                           >
                             <FormControl>
                               <SelectTrigger>

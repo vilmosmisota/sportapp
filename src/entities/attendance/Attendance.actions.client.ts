@@ -1,7 +1,10 @@
 import { TypedClient } from "@/libs/supabase/type";
 import { useSupabase } from "@/libs/supabase/useSupabase";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createAttendanceSession } from "./Attendance.services";
+import {
+  createAttendanceSession,
+  updateAttendanceSession,
+} from "./Attendance.services";
 import { queryKeys } from "@/cacheKeys/cacheKeys";
 import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
@@ -80,6 +83,49 @@ export const useCreateAttendanceRecord = (
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: [queryKeys.attendance.records],
+      });
+    },
+  });
+};
+
+export const useCloseAttendanceSession = () => {
+  const client = useSupabase();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      sessionId,
+      tenantId,
+    }: {
+      sessionId: number;
+      tenantId: string;
+    }) => {
+      const currentTime = new Date();
+      const formattedCurrentTime = currentTime.toLocaleTimeString("en-GB", {
+        hour12: false,
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+
+      const session = await updateAttendanceSession(
+        client,
+        sessionId,
+        {
+          isActive: false,
+          endTime: formattedCurrentTime,
+        },
+        tenantId
+      );
+
+      return session;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.attendance.all,
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.attendance.activeSessions,
       });
     },
   });

@@ -7,13 +7,14 @@ import {
   useAttendanceRecords,
 } from "@/entities/attendance/Attendance.query";
 import { usePlayersByTeamId } from "@/entities/team/Team.query";
-import { Loader2, ArrowLeft, X, Delete } from "lucide-react";
+import { Loader2, Delete } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { useState, useEffect } from "react";
 import { cn } from "@/libs/tailwind/utils";
@@ -22,6 +23,7 @@ import {
   useUpdatePlayerPin,
 } from "@/entities/player/Player.actions.client";
 import { useCreateAttendanceRecord } from "@/entities/attendance/Attendance.actions.client";
+import { Player } from "@/entities/player/Player.schema";
 
 import { toast } from "sonner";
 
@@ -32,6 +34,8 @@ function NumericKeypad({
   pin,
   isPinValid,
   isCreatingPin,
+  error,
+  sessionTime,
 }: {
   onKeyPress: (num: string) => void;
   onDelete: () => void;
@@ -39,6 +43,8 @@ function NumericKeypad({
   pin: string;
   isPinValid: boolean;
   isCreatingPin: boolean;
+  error: string | null;
+  sessionTime: string;
 }) {
   const [showPin, setShowPin] = useState(false);
   const numbers = [
@@ -67,80 +73,92 @@ function NumericKeypad({
   };
 
   return (
-    <div className="space-y-12">
-      {/* PIN Display */}
-      <div className="flex flex-col items-center gap-4 min-h-[80px]">
-        <div className="flex flex-col items-center gap-2">
-          {isCreatingPin && (
-            <p className="text-muted-foreground text-sm mb-2">
-              Create your PIN
-            </p>
-          )}
-          <div className="flex justify-center gap-4">
-            {[0, 1, 2, 3].map((index) => (
-              <div
-                key={index}
-                className={cn(
-                  "w-5 h-5 rounded-full border-2 relative transition-colors duration-200",
-                  pin[index]
-                    ? "bg-primary border-primary"
-                    : "border-muted-foreground"
-                )}
-              >
-                {showPin && pin[index] && (
-                  <span className="absolute inset-0 flex items-center justify-center text-primary-foreground text-xs">
-                    {pin[index]}
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
+    <div className="flex flex-col items-center max-w-md mx-auto py-4">
+      {/* Header */}
+      <div className="text-center mb-6">
+        <h1 className="text-3xl font-bold mb-1">Check-In</h1>
+        <p className="text-xl text-muted-foreground">{sessionTime}</p>
+      </div>
+
+      {/* PIN Display and Messages */}
+      <div className="mb-6">
+        <div className="flex justify-center gap-3 mb-2">
+          {[0, 1, 2, 3].map((index) => (
+            <div
+              key={index}
+              className={cn(
+                "w-5 h-5 rounded-full border-2 relative transition-colors duration-200",
+                pin[index]
+                  ? "bg-primary border-primary"
+                  : "border-muted-foreground"
+              )}
+            >
+              {showPin && pin[index] && (
+                <span className="absolute inset-0 flex items-center justify-center text-primary-foreground text-xs">
+                  {pin[index]}
+                </span>
+              )}
+            </div>
+          ))}
         </div>
-        <div className="h-8 flex items-center">
+        <div className="h-4 flex justify-center">
           {pin.length > 0 && (
             <Button
               variant="ghost"
               size="sm"
-              className="text-muted-foreground text-sm hover:bg-accent/50"
+              className="text-muted-foreground text-sm hover:bg-accent/50 h-4 px-2 -mt-1"
               onClick={() => setShowPin(!showPin)}
             >
               {showPin ? "Hide PIN" : "Show PIN"}
             </Button>
           )}
         </div>
+        <div className="h-4 flex justify-center mt-1">
+          {error && <p className="text-destructive text-sm">No player found</p>}
+        </div>
       </div>
 
       {/* Keypad */}
-      <div className="grid grid-cols-3 gap-6 px-4">
-        {numbers.map((num) => {
-          if (num === "submit") {
-            return (
-              <Button
-                key={num}
-                variant="default"
-                disabled={!isPinValid || pin.length !== 4}
-                className="col-span-3 h-14 text-xl font-medium rounded-full bg-primary hover:bg-primary/90 active:bg-primary/70 transition-all duration-200"
-                onClick={() => handleKeyPress(num)}
-              >
-                {isCreatingPin ? "Set PIN" : "Check In"}
-              </Button>
-            );
-          }
-
-          return (
+      <div className="w-[320px] p-6 border border-border rounded-3xl">
+        <div className="grid grid-cols-3 place-items-center gap-4 mb-4">
+          {numbers.slice(0, 9).map((num) => (
             <Button
               key={num}
               variant="outline"
-              className={cn(
-                "w-20 h-20 text-3xl font-medium rounded-full flex items-center justify-center hover:bg-accent/10 active:bg-accent/30 transition-all duration-200",
-                num === "delete" && "text-muted-foreground"
-              )}
+              className="w-16 h-16 text-2xl rounded-full border hover:bg-accent/10 active:bg-accent/30 transition-colors duration-200"
               onClick={() => handleKeyPress(num)}
             >
-              {num === "delete" ? <Delete className="h-8 w-8" /> : num}
+              {num}
             </Button>
-          );
-        })}
+          ))}
+        </div>
+        <div className="grid grid-cols-3 place-items-center gap-4">
+          <Button
+            variant="outline"
+            className="w-16 h-16 rounded-full border hover:bg-accent/10 active:bg-accent/30 transition-colors duration-200"
+            onClick={() => handleKeyPress("delete")}
+          >
+            <Delete className="h-6 w-6" />
+          </Button>
+          <Button
+            variant="outline"
+            className="w-16 h-16 text-2xl rounded-full border hover:bg-accent/10 active:bg-accent/30 transition-colors duration-200"
+            onClick={() => handleKeyPress("0")}
+          >
+            0
+          </Button>
+          <div className="w-16 h-16" /> {/* Spacer */}
+        </div>
+        <div className="mt-4">
+          <Button
+            variant="default"
+            disabled={!isPinValid || pin.length !== 4}
+            className="w-full h-12 text-lg rounded-full bg-primary hover:bg-primary/90 transition-colors duration-200"
+            onClick={() => handleKeyPress("submit")}
+          >
+            Check In
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -150,17 +168,16 @@ export default function AttendanceSessionPage() {
   const params = useParams();
   const router = useRouter();
   const { data: tenant } = useTenantByDomain(params.domain as string);
-  const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
   const [pin, setPin] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [isCreatingPin, setIsCreatingPin] = useState(false);
   const [isPinValid, setIsPinValid] = useState(true);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [matchedPlayer, setMatchedPlayer] = useState<Player | null>(null);
 
   const { data: session, isLoading: isSessionLoading } =
     useAttendanceSessionById(params.id as string, tenant?.id?.toString() ?? "");
 
   const { data: existingPlayers } = usePlayers(tenant?.id?.toString() ?? "");
-  const updatePlayerPin = useUpdatePlayerPin(tenant?.id?.toString() ?? "");
   const createAttendanceRecord = useCreateAttendanceRecord(
     Number(params.id),
     tenant?.id?.toString() ?? ""
@@ -187,32 +204,11 @@ export default function AttendanceSessionPage() {
     );
   };
 
-  // Check if PIN is unique
-  const validatePin = (pin: string) => {
-    if (pin.length === 4 && isCreatingPin) {
-      const isUnique = !existingPlayers?.some((player) => player.pin === pin);
-      setIsPinValid(isUnique);
-      if (!isUnique) {
-        setError("This PIN is already taken");
-      } else {
-        setError(null);
-      }
-      return isUnique;
-    }
-    setIsPinValid(true);
-    setError(null);
-    return true;
-  };
-
   const handleKeyPress = (num: string) => {
     if (pin.length < 4) {
       const newPin = pin + num;
       setPin(newPin);
-      if (newPin.length === 4 && isCreatingPin) {
-        validatePin(newPin);
-      } else {
-        setError(null);
-      }
+      setError(null);
     }
   };
 
@@ -222,85 +218,63 @@ export default function AttendanceSessionPage() {
     setIsPinValid(true);
   };
 
-  const selectedPlayer = playersConnections?.find(
-    (conn) => conn.player.id === selectedPlayerId
-  )?.player;
-
-  // Check if selected player has a PIN
-  useEffect(() => {
-    if (selectedPlayer) {
-      setIsCreatingPin(!selectedPlayer.pin);
-      setPin("");
-      setError(null);
-      setIsPinValid(true);
-    }
-  }, [selectedPlayer]);
-
   const handleSubmit = async () => {
     if (pin.length !== 4) {
       setError("Please enter a 4-digit PIN");
       return;
     }
 
-    if (isCreatingPin) {
-      if (!isPinValid) {
-        setError("This PIN is already taken");
-        return;
-      }
+    // Find player by PIN
+    const player = existingPlayers?.find((p) => p.pin === pin);
 
-      try {
-        await updatePlayerPin.mutateAsync({
-          playerId: selectedPlayerId!,
-          pin,
-        });
-        toast.success("PIN created successfully");
-        // Reset the form for check-in
-        setIsCreatingPin(false);
-        setPin("");
-        setError(null);
-      } catch (error) {
-        console.error("Error setting PIN:", error);
-        toast.error("Failed to set PIN");
-        setPin("");
-      }
-      return;
-    }
-
-    // Verify PIN
-    const selectedPlayer = playersConnections?.find(
-      (conn) => conn.player.id === selectedPlayerId
-    )?.player;
-
-    if (!selectedPlayer?.pin) {
-      setError("Player does not have a PIN set");
+    if (!player) {
+      setError("Invalid PIN");
       setPin("");
       return;
     }
 
-    if (selectedPlayer.pin !== pin) {
-      setError("Incorrect PIN. Please try again.");
+    // Check if player belongs to the team
+    const playerConnection = playersConnections?.find(
+      (conn) => conn.player.id === player.id
+    );
+
+    if (!playerConnection) {
+      setError("You are not part of this team's session");
       setPin("");
       return;
     }
+
+    // Check if already checked in
+    if (isPlayerCheckedIn(player.id)) {
+      setError("You have already checked in");
+      setPin("");
+      return;
+    }
+
+    setMatchedPlayer(player);
+    setShowConfirmation(true);
+  };
+
+  const handleConfirmCheckIn = async () => {
+    if (!matchedPlayer) return;
 
     try {
       await createAttendanceRecord.mutateAsync({
-        playerId: selectedPlayerId!,
+        playerId: matchedPlayer.id,
       });
-      toast.success("Check-in successful");
-      setSelectedPlayerId(null);
+
+      toast.success("Successfully checked in!");
+      setShowConfirmation(false);
       setPin("");
-      setError(null);
+      setMatchedPlayer(null);
     } catch (error) {
-      console.error("Error checking in:", error);
       toast.error("Failed to check in");
-      setPin("");
     }
   };
 
   if (isLoading) {
     return (
-      <div className="w-screen h-screen bg-background absolute top-0 left-0 flex items-center justify-center">
+      <div className="flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
@@ -308,7 +282,7 @@ export default function AttendanceSessionPage() {
 
   if (playersError) {
     return (
-      <div className="w-screen h-screen bg-background absolute top-0 left-0 flex flex-col items-center justify-center gap-4">
+      <div className="flex flex-col items-center justify-center gap-4">
         <h1 className="text-xl font-semibold text-destructive">
           Error Loading Players
         </h1>
@@ -318,101 +292,76 @@ export default function AttendanceSessionPage() {
   }
 
   return (
-    <div className="w-screen h-screen bg-background absolute top-0 left-0">
-      {/* Back Button */}
-      <Button
-        variant="ghost"
-        className="absolute top-4 left-4 p-2"
-        onClick={() => router.push("/o/dashboard/attendance")}
-      >
-        <ArrowLeft className="h-6 w-6" />
-      </Button>
+    <>
+      <NumericKeypad
+        onKeyPress={handleKeyPress}
+        onDelete={handleDelete}
+        onSubmit={handleSubmit}
+        pin={pin}
+        isPinValid={isPinValid}
+        isCreatingPin={false}
+        error={error}
+        sessionTime={`${session?.training?.startTime} - ${session?.training?.endTime}`}
+      />
 
-      {/* Main Content */}
-      <div className="max-w-3xl mx-auto h-full px-4 py-8 flex flex-col">
-        {/* Header */}
-        <div className="mb-12">
-          <h1 className="text-4xl font-bold text-center">Check-In</h1>
-          <p className="text-muted-foreground text-center mt-2 text-xl">
-            {session?.training?.startTime} - {session?.training?.endTime}
-          </p>
-        </div>
-
-        {/* Players List */}
-        <div className="flex-1 overflow-y-auto space-y-3 px-4">
-          {playersConnections?.map((connection) => {
-            const isCheckedIn = isPlayerCheckedIn(connection.player.id);
-            return (
-              <Button
-                key={connection.id}
-                variant="outline"
-                disabled={isCheckedIn}
-                className={cn(
-                  "w-full py-8 flex items-center justify-between",
-                  isCheckedIn
-                    ? "opacity-50 cursor-not-allowed"
-                    : "hover:bg-accent"
-                )}
-                onClick={() => {
-                  if (!isCheckedIn) {
-                    setSelectedPlayerId(connection.player.id);
-                    setPin("");
-                    setError(null);
-                  }
-                }}
-              >
-                <div className="flex flex-col items-start">
-                  <span className="font-medium text-xl">
-                    {connection.player.firstName} {connection.player.secondName}
-                  </span>
-                  {isCheckedIn && (
-                    <span className="text-sm text-muted-foreground">
-                      Checked In
-                    </span>
-                  )}
-                </div>
-              </Button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Check-in Dialog */}
-      <Dialog
-        open={!!selectedPlayerId}
-        onOpenChange={() => {
-          setSelectedPlayerId(null);
-          setPin("");
-          setError(null);
-          setIsCreatingPin(false);
-          setIsPinValid(true);
-        }}
-      >
-        <DialogContent className="sm:max-w-[440px] p-8">
-          <DialogHeader className="mb-8">
-            <DialogTitle className="text-3xl text-center">
-              {selectedPlayer
-                ? `${selectedPlayer.firstName} ${selectedPlayer.secondName}`
-                : "Check-In Player"}
+      {/* Confirmation Dialog */}
+      <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+        <DialogContent className="sm:max-w-xl md:max-w-2xl w-[95vw] p-8">
+          <DialogHeader className="mb-12">
+            <DialogTitle className="text-2xl font-normal text-center">
+              Check-in Confirmation
             </DialogTitle>
           </DialogHeader>
-          <div className="py-4">
-            <NumericKeypad
-              onKeyPress={handleKeyPress}
-              onDelete={handleDelete}
-              onSubmit={handleSubmit}
-              pin={pin}
-              isPinValid={isPinValid}
-              isCreatingPin={isCreatingPin}
-            />
-            {error && (
-              <p className="text-destructive text-center mt-8 text-base">
-                {error}
-              </p>
-            )}
+
+          <div className="space-y-12">
+            <p className="text-4xl font-bold text-center">
+              {matchedPlayer
+                ? `${matchedPlayer.firstName} ${matchedPlayer.secondName}`
+                : ""}
+            </p>
+
+            <div className="space-y-8">
+              <div className="text-center">
+                <p className="text-xl text-muted-foreground mb-2">
+                  Session Time
+                </p>
+                <p className="text-4xl">
+                  {session?.training?.startTime} - {session?.training?.endTime}
+                </p>
+              </div>
+
+              <div className="text-center">
+                <p className="text-xl text-muted-foreground mb-2">Date</p>
+                <p className="text-4xl">
+                  {new Date(session?.training?.date ?? "").toLocaleDateString(
+                    "en-GB"
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 mt-12">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowConfirmation(false);
+                setPin("");
+                setMatchedPlayer(null);
+              }}
+              className="flex-1 text-xl py-6"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmCheckIn}
+              className="flex-1 text-xl py-6 bg-primary"
+            >
+              Confirm Check-in
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

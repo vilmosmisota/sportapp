@@ -9,6 +9,12 @@ export enum TenantType {
 
 export enum TenantSportType {
   WATERPOLO = "water polo",
+  FOOTBALL = "football",
+  TENNIS = "tennis",
+  GYMNASTICS = "gymnastics",
+  SWIMMING = "swimming",
+  VOLLEYBALL = "volleyball",
+  BASKETBALL = "basketball",
 }
 
 export const GroupTypeSchema = z.object({
