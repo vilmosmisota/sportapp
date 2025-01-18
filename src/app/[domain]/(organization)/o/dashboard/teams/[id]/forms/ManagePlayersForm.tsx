@@ -105,7 +105,7 @@ const PlayerTable = ({
                   />
                 </TableCell>
                 <TableCell className="font-medium">
-                  {player.firstName} {player.secondName}
+                  {player.firstName} {player.lastName}
                 </TableCell>
                 <TableCell>{age ?? "-"}</TableCell>
                 <TableCell>

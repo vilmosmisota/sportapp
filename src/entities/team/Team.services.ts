@@ -20,7 +20,7 @@ export const getTeamsByTenantId = async (
         player:players(
           id,
           firstName,
-          secondName,
+          lastName,
           dateOfBirth,
           position,
           gender
@@ -178,7 +178,7 @@ export const getTeamPlayers = async (
       player:players!inner (
         id,
         firstName,
-        secondName,
+        lastName,
         dateOfBirth,
         position,
         gender,
@@ -207,7 +207,7 @@ export const getPlayersByTeamId = async (
       player:players!inner (
         id,
         firstName,
-        secondName,
+        lastName,
         dateOfBirth,
         position,
         gender,

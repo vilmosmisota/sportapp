@@ -54,7 +54,7 @@ export const PlayerSchema = z.object({
   id: z.number(),
   createdAt: z.string(),
   firstName: z.string().nullable(),
-  secondName: z.string().nullable(),
+  lastName: z.string().nullable(),
   dateOfBirth: z.string().nullable(),
   pin: z.union([
     z.string().regex(/^\d{4}$/, "If provided, PIN must be a 4-digit number"),
@@ -81,7 +81,7 @@ export type Team = z.infer<typeof TeamSchema>;
 export const createPlayerFormSchema = () =>
   z.object({
     firstName: z.string().min(1, "First name is required"),
-    secondName: z.string().min(1, "Second name is required"),
+    lastName: z.string().min(1, "Last name is required"),
     dateOfBirth: z.string().min(1, "Date of birth is required"),
     pin: z.union([
       z.string().regex(/^\d{4}$/, "If provided, PIN must be a 4-digit number"),

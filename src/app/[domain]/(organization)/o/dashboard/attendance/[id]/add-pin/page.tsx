@@ -75,7 +75,7 @@ export default function AddPinPage() {
                 // TODO: Implement PIN creation flow
               }}
             >
-              {connection.player.firstName} {connection.player.secondName}
+              {connection.player.firstName} {connection.player.lastName}
             </Button>
           ))
         )}

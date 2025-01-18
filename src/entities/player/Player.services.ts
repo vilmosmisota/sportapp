@@ -238,7 +238,7 @@ export const updatePlayerPin = async (
       `
       id,
       firstName,
-      secondName,
+      lastName,
       pin
     `
     )
@@ -250,7 +250,7 @@ export const updatePlayerPin = async (
   const PinUpdateResponseSchema = z.object({
     id: z.number(),
     firstName: z.string().nullable(),
-    secondName: z.string().nullable(),
+    lastName: z.string().nullable(),
     pin: z.union([
       z.string().regex(/^\d{4}$/, "If provided, PIN must be a 4-digit number"),
       z.string().max(0),

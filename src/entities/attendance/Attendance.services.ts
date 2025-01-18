@@ -29,7 +29,7 @@ const ATTENDANCE_RECORD_QUERY_WITH_RELATIONS = `
   player:players (
     id,
     firstName,
-    secondName
+    lastName
   ),
   attendanceSession:attendanceSession (
     id,

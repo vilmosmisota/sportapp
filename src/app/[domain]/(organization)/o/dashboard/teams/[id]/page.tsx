@@ -70,7 +70,7 @@ export default function TeamPage({
           return {
             id: connection.player.id,
             firstName: connection.player.firstName ?? "",
-            secondName: connection.player.secondName ?? "",
+            lastName: connection.player.lastName ?? "",
             dateOfBirth: connection.player.dateOfBirth,
             position: connection.player.position,
             gender: connection.player.gender,

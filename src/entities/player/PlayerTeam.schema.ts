@@ -12,7 +12,7 @@ const PlayerInConnectionSchema = z.object({
     z.undefined(),
   ]),
   firstName: z.string(),
-  secondName: z.string(),
+  lastName: z.string(),
   dateOfBirth: z.string(),
   gender: z.nativeEnum(PlayerGender),
   position: z.string(),

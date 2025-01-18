@@ -16,7 +16,7 @@ import DataTableColumnHeader from "@/components/ui/data-table/DataTableColumnHea
 export interface TeamPlayer {
   id: number;
   firstName: string;
-  secondName: string;
+  lastName: string;
   dateOfBirth: string;
   position: string;
   gender: string;
@@ -77,11 +77,11 @@ export const playerColumns = ({
     ),
     cell: ({ row }) => {
       const firstName = row.original.firstName;
-      const secondName = row.original.secondName;
+      const lastName = row.original.lastName;
       return (
         <div className="flex space-x-2">
           <span className="max-w-[500px] truncate font-medium">
-            {firstName} {secondName}
+            {firstName} {lastName}
           </span>
         </div>
       );

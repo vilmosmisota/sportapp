@@ -21,7 +21,7 @@ export const getPlayerTeamConnections = async (
       player:players(
         id,
         firstName,
-        secondName,
+        lastName,
         dateOfBirth,
         gender,
         position
@@ -71,7 +71,7 @@ export const addPlayerToTeam = async (
       player:players(
         id,
         firstName,
-        secondName,
+        lastName,
         dateOfBirth,
         gender,
         position

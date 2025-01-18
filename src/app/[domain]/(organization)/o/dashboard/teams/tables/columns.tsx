@@ -108,7 +108,7 @@ const PlayersCell = ({ team }: { team: Team }) => {
           <div className="space-y-1">
             {players.map((player) => (
               <div key={player.id} className="whitespace-nowrap">
-                {player.firstName} {player.secondName}
+                {player.firstName} {player.lastName}
               </div>
             ))}
           </div>

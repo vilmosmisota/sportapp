@@ -135,7 +135,7 @@ export default function EditPlayerForm({
     resolver: zodResolver(createPlayerFormSchema()),
     defaultValues: {
       firstName: player.firstName || "",
-      secondName: player.secondName || "",
+      lastName: player.lastName || "",
       dateOfBirth: player.dateOfBirth || "",
       pin: player.pin || "",
       gender: player.gender || undefined,
@@ -157,7 +157,7 @@ export default function EditPlayerForm({
 
   const dateOfBirth = watch("dateOfBirth");
   const firstName = watch("firstName");
-  const secondName = watch("secondName");
+  const lastName = watch("lastName");
   const gender = watch("gender");
   const position = watch("position");
   const selectedTeams = watch("teamIds") || [];
@@ -176,7 +176,7 @@ export default function EditPlayerForm({
 
     // Only process teams if we have all required player details
     const hasRequiredDetails = Boolean(
-      firstName && secondName && gender && position
+      firstName && lastName && gender && position
     );
 
     if (hasRequiredDetails) {
@@ -214,7 +214,7 @@ export default function EditPlayerForm({
     }
 
     return { recommended, available };
-  }, [teams, playerAge, firstName, secondName, gender, position]);
+  }, [teams, playerAge, firstName, lastName, gender, position]);
 
   // Generate a random 4-digit PIN
   const generateRandomPin = () => {
@@ -307,10 +307,10 @@ export default function EditPlayerForm({
 
                     <FormField
                       control={form.control}
-                      name="secondName"
+                      name="lastName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Second Name</FormLabel>
+                          <FormLabel>Last Name</FormLabel>
                           <FormControl>
                             <Input {...field} />
                           </FormControl>

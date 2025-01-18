@@ -211,7 +211,7 @@ const PlayersTableActions = ({
 
           <ConfirmDeleteDialog
             categoryId={player.id}
-            text={`Are you sure you want to delete ${player.firstName} ${player.secondName}? This action cannot be undone.`}
+            text={`Are you sure you want to delete ${player.firstName} ${player.lastName}? This action cannot be undone.`}
             isOpen={isDeleteDialogOpen}
             setIsOpen={setIsDeleteDialogOpen}
             onConfirm={(id) => onDelete(Number(id))}
@@ -236,11 +236,11 @@ export const columns = ({
     ),
     cell: ({ row }) => {
       const firstName = row.original.firstName;
-      const secondName = row.original.secondName;
+      const lastName = row.original.lastName;
       return (
         <div className="flex space-x-2">
           <span className="max-w-[200px] truncate font-medium">
-            {firstName} {secondName}
+            {firstName} {lastName}
           </span>
         </div>
       );
@@ -253,13 +253,13 @@ export const columns = ({
     filterFn: (row, id, filterValue) => {
       const searchValue = filterValue.toLowerCase();
       const firstName = (row.original.firstName || "").toLowerCase();
-      const secondName = (row.original.secondName || "").toLowerCase();
-      const fullName = `${firstName} ${secondName}`.toLowerCase();
+      const lastName = (row.original.lastName || "").toLowerCase();
+      const fullName = `${firstName} ${lastName}`.toLowerCase();
 
       return (
         fullName.includes(searchValue) ||
         firstName.includes(searchValue) ||
-        secondName.includes(searchValue)
+        lastName.includes(searchValue)
       );
     },
   },

@@ -135,7 +135,7 @@ export default function AddPlayerForm({
     resolver: zodResolver(createPlayerFormSchema()),
     defaultValues: {
       firstName: "",
-      secondName: "",
+      lastName: "",
       dateOfBirth: "",
       pin: "",
       gender: undefined,
@@ -153,7 +153,7 @@ export default function AddPlayerForm({
 
   const dateOfBirth = watch("dateOfBirth");
   const firstName = watch("firstName");
-  const secondName = watch("secondName");
+  const lastName = watch("lastName");
   const gender = watch("gender");
   const position = watch("position");
   const selectedTeams = watch("teamIds") || [];
@@ -172,7 +172,7 @@ export default function AddPlayerForm({
 
     // Only process teams if we have all required player details
     const hasRequiredDetails = Boolean(
-      firstName && secondName && gender && position
+      firstName && lastName && gender && position
     );
 
     if (hasRequiredDetails) {
@@ -210,7 +210,7 @@ export default function AddPlayerForm({
     }
 
     return { recommended, available };
-  }, [teams, playerAge, firstName, secondName, gender, position]);
+  }, [teams, playerAge, firstName, lastName, gender, position]);
 
   // Generate a random 4-digit PIN
   const generateRandomPin = () => {
@@ -240,7 +240,7 @@ export default function AddPlayerForm({
   const resetFormCompletely = () => {
     // First, reset all form fields explicitly
     form.setValue("firstName", "");
-    form.setValue("secondName", "");
+    form.setValue("lastName", "");
     form.setValue("dateOfBirth", "");
     form.setValue("pin", "");
     form.setValue("gender", "" as any);
@@ -350,10 +350,10 @@ export default function AddPlayerForm({
 
                     <FormField
                       control={form.control}
-                      name="secondName"
+                      name="lastName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Second Name *</FormLabel>
+                          <FormLabel>Last Name *</FormLabel>
                           <FormControl>
                             <Input {...field} />
                           </FormControl>

@@ -316,7 +316,7 @@ export default function AttendanceSessionPage() {
           <div className="space-y-12">
             <p className="text-4xl font-bold text-center">
               {matchedPlayer
-                ? `${matchedPlayer.firstName} ${matchedPlayer.secondName}`
+                ? `${matchedPlayer.firstName} ${matchedPlayer.lastName}`
                 : ""}
             </p>
 

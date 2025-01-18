@@ -35,7 +35,7 @@ export const PlayerTeamConnectionSchema = z.object({
   player: z.object({
     id: z.number(),
     firstName: z.string(),
-    secondName: z.string(),
+    lastName: z.string(),
     dateOfBirth: z.string(),
     position: z.string(),
     gender: z.string(),
