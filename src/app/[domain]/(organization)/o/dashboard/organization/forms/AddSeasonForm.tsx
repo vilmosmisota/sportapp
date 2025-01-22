@@ -28,6 +28,7 @@ import BreaksEditor from "./BreaksEditor";
 import { CurrencyTypes } from "@/entities/common/Types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { Switch } from "../../../../../../../components/ui/switch";
 
 type AddSeasonFormProps = {
   tenantId: string;
@@ -43,6 +44,7 @@ const formSchema = z
       .date()
       .refine((date) => date > new Date(), "End date must be in the future"),
     customName: z.string().optional(),
+    isActive: z.boolean().default(false),
   })
   .refine((data) => data.endDate > data.startDate, {
     message: "End date must be after start date",
@@ -92,6 +94,7 @@ export default function AddSeasonForm({
       endDate: new Date(),
       breaks: [],
       membershipPrices: [],
+      isActive: false,
     },
   });
 
@@ -131,7 +134,7 @@ export default function AddSeasonForm({
       breaks: formattedBreaks,
       membershipPrices: formattedMembershipPrices,
       customName: data.customName,
-      isActive: false,
+      isActive: data.isActive,
     };
 
     seasonMutation.mutate(formData, {
@@ -277,6 +280,27 @@ export default function AddSeasonForm({
               maxDate={form.watch("endDate")}
             />
           </div>
+
+          <FormField
+            control={form.control}
+            name="isActive"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <FormLabel className="text-base">Active Season</FormLabel>
+                  <FormDescription>
+                    Make this season active for your organization
+                  </FormDescription>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
         </div>
 
         <div className="bg-background sticky h-[100px] flex items-center justify-end bottom-0 left-0 right-0 border-t">

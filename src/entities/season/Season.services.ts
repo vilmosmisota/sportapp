@@ -40,6 +40,7 @@ export const updateSeasonById = async (
       endDate: data.endDate,
       breaks: data.breaks,
       customName: data.customName,
+      isActive: data.isActive,
     })
     .eq("id", seasonId)
     .select()

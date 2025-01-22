@@ -19,6 +19,8 @@ import {
 } from "@/entities/attendance/Attendance.actions.client";
 import { toast } from "sonner";
 import Link from "next/link";
+import { getDisplayGender } from "@/entities/team/Team.schema";
+import { useParams } from "next/navigation";
 
 function formatTimeString(timeStr: string) {
   try {
@@ -213,6 +215,7 @@ function TrainingCard({
 }) {
   const createSession = useCreateAttendanceSession();
   const closeSession = useCloseAttendanceSession();
+  const params = useParams();
 
   const handleStartSession = async () => {
     try {
@@ -246,7 +249,16 @@ function TrainingCard({
     <Card>
       <CardHeader>
         <CardTitle className="text-lg font-medium">
-          {training.team?.age} {training.team?.gender} {training.team?.skill}
+          {[
+            training.team?.age,
+            getDisplayGender(training.team?.gender, training.team?.age),
+            training.team?.skill,
+          ]
+            .filter(
+              (value): value is string =>
+                typeof value === "string" && value.length > 0
+            )
+            .join(" • ")}
         </CardTitle>
         <p className="text-sm text-muted-foreground">
           {format(training.date, "EEEE, MMMM d")}
@@ -266,11 +278,19 @@ function TrainingCard({
         </div>
         {hasActiveSession && canManageAttendance && (
           <div className="pt-4 space-y-2">
-            <Link href={`/o/dashboard/attendance/${activeSessionId}`}>
-              <Button variant="secondary" className="w-full">
-                View Active Session
+            <div className="flex gap-2">
+              <Link
+                href={`/o/dashboard/attendance/${activeSessionId}`}
+                className="flex-1"
+              >
+                <Button variant="secondary" className="w-full">
+                  View Active Session
+                </Button>
+              </Link>
+              <Button variant="outline" className="flex-1">
+                Check In
               </Button>
-            </Link>
+            </div>
             {isPastTraining && (
               <Button
                 variant="destructive"

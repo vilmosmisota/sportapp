@@ -2,23 +2,29 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
-import { useAttendanceSessionById } from "@/entities/attendance/Attendance.query";
+import {
+  useAttendanceSessionById,
+  useAttendanceRecords,
+} from "@/entities/attendance/Attendance.query";
 import { usePlayersByTeamId } from "@/entities/team/Team.query";
-import { Loader2, ArrowLeft, UserCheck, Delete } from "lucide-react";
+import { Loader2, Delete, ArrowLeft, Key } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
-import { Player } from "@/entities/player/Player.schema";
-import { useUpdatePlayerPin } from "@/entities/player/Player.actions.client";
-import { toast } from "sonner";
-import { PlayerGender } from "@/entities/player/Player.schema";
+import { useState } from "react";
 import { cn } from "@/libs/tailwind/utils";
-import { useQueryClient } from "@tanstack/react-query";
+import {
+  usePlayers,
+  useUpdatePlayerPin,
+} from "@/entities/player/Player.actions.client";
+import { useCreateAttendanceRecord } from "@/entities/attendance/Attendance.actions.client";
+import { Player } from "@/entities/player/Player.schema";
+import { toast } from "sonner";
 
 function NumericKeypad({
   onKeyPress,
@@ -26,16 +32,20 @@ function NumericKeypad({
   onSubmit,
   pin,
   isPinValid,
+  isCreatingPin,
   error,
+  sessionTime,
 }: {
   onKeyPress: (num: string) => void;
   onDelete: () => void;
   onSubmit: () => void;
   pin: string;
   isPinValid: boolean;
+  isCreatingPin: boolean;
   error: string | null;
+  sessionTime: string;
 }) {
-  const [showPin, setShowPin] = useState(true);
+  const [showPin, setShowPin] = useState(false);
   const numbers = [
     "1",
     "2",
@@ -63,6 +73,12 @@ function NumericKeypad({
 
   return (
     <div className="flex flex-col items-center max-w-md mx-auto py-4">
+      {/* Header */}
+      <div className="text-center mb-6">
+        <h1 className="text-3xl font-bold mb-1">Check-In</h1>
+        <p className="text-xl text-muted-foreground">{sessionTime}</p>
+      </div>
+
       {/* PIN Display and Messages */}
       <div className="mb-6">
         <div className="flex justify-center gap-3 mb-2">
@@ -84,7 +100,7 @@ function NumericKeypad({
             </div>
           ))}
         </div>
-        <div className="h-4 flex justify-center mt-4">
+        <div className="h-4 flex justify-center">
           {pin.length > 0 && (
             <Button
               variant="ghost"
@@ -139,7 +155,7 @@ function NumericKeypad({
             className="w-full h-12 text-lg rounded-full bg-primary hover:bg-primary/90 transition-colors duration-200"
             onClick={() => handleKeyPress("submit")}
           >
-            Create PIN
+            Check In
           </Button>
         </div>
       </div>
@@ -147,24 +163,45 @@ function NumericKeypad({
   );
 }
 
-function CreatePinDialog({
-  player,
-  isOpen,
-  onOpenChange,
-  tenantId,
-  teamId,
-}: {
-  player: Player;
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-  tenantId: string;
-  teamId: number;
-}) {
+export default function CheckInPage() {
+  const params = useParams();
+  const router = useRouter();
+  const { data: tenant } = useTenantByDomain(params.domain as string);
   const [pin, setPin] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPinValid, setIsPinValid] = useState(true);
-  const updatePlayerPin = useUpdatePlayerPin(tenantId);
-  const queryClient = useQueryClient();
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [matchedPlayer, setMatchedPlayer] = useState<Player | null>(null);
+
+  const { data: session, isLoading: isSessionLoading } =
+    useAttendanceSessionById(params.id as string, tenant?.id?.toString() ?? "");
+
+  const { data: existingPlayers } = usePlayers(tenant?.id?.toString() ?? "");
+  const createAttendanceRecord = useCreateAttendanceRecord(
+    Number(params.id),
+    tenant?.id?.toString() ?? ""
+  );
+
+  const { data: attendanceRecords, isLoading: isRecordsLoading } =
+    useAttendanceRecords(Number(params.id), tenant?.id?.toString() ?? "");
+
+  const {
+    data: playersConnections,
+    isLoading: isPlayersLoading,
+    error: playersError,
+  } = usePlayersByTeamId(
+    session?.training?.teamId ?? 0,
+    tenant?.id?.toString() ?? ""
+  );
+
+  const isLoading = isSessionLoading || isPlayersLoading || isRecordsLoading;
+
+  // Check if player is already checked in
+  const isPlayerCheckedIn = (playerId: number) => {
+    return (
+      attendanceRecords?.some((record) => record.playerId === playerId) ?? false
+    );
+  };
 
   const handleKeyPress = (num: string) => {
     if (pin.length < 4) {
@@ -186,76 +223,53 @@ function CreatePinDialog({
       return;
     }
 
+    // Find player by PIN
+    const player = existingPlayers?.find((p) => p.pin === pin);
+
+    if (!player) {
+      setError("Invalid PIN");
+      setPin("");
+      return;
+    }
+
+    // Check if player belongs to the team
+    const playerConnection = playersConnections?.find(
+      (conn) => conn.player.id === player.id
+    );
+
+    if (!playerConnection) {
+      setError("You are not part of this team's session");
+      setPin("");
+      return;
+    }
+
+    // Check if already checked in
+    if (isPlayerCheckedIn(player.id)) {
+      setError("You have already checked in");
+      setPin("");
+      return;
+    }
+
+    setMatchedPlayer(player);
+    setShowConfirmation(true);
+  };
+
+  const handleConfirmCheckIn = async () => {
+    if (!matchedPlayer) return;
+
     try {
-      await updatePlayerPin.mutateAsync({
-        playerId: player.id,
-        pin,
+      await createAttendanceRecord.mutateAsync({
+        playerId: matchedPlayer.id,
       });
 
-      // Invalidate the usePlayersByTeamId query
-      queryClient.invalidateQueries({
-        queryKey: ["team", "players", teamId, tenantId],
-      });
-
-      toast.success("Successfully created PIN!");
-      onOpenChange(false);
+      toast.success("Successfully checked in!");
+      setShowConfirmation(false);
       setPin("");
+      setMatchedPlayer(null);
     } catch (error) {
-      toast.error("Failed to create PIN");
+      toast.error("Failed to check in");
     }
   };
-
-  const handleOpenChange = (open: boolean) => {
-    if (!open) {
-      setPin("");
-      setError(null);
-      setIsPinValid(true);
-    }
-    onOpenChange(open);
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-xl md:max-w-2xl w-[95vw] p-8">
-        <DialogHeader className="mb-12">
-          <DialogTitle className="text-2xl font-normal text-center">
-            Create PIN for {player.firstName} {player.lastName}
-          </DialogTitle>
-        </DialogHeader>
-
-        <NumericKeypad
-          onKeyPress={handleKeyPress}
-          onDelete={handleDelete}
-          onSubmit={handleSubmit}
-          pin={pin}
-          isPinValid={isPinValid}
-          error={error}
-        />
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-export default function AddPinPage() {
-  const params = useParams();
-  const router = useRouter();
-  const { data: tenant } = useTenantByDomain(params.domain as string);
-  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  const { data: session, isLoading: isSessionLoading } =
-    useAttendanceSessionById(params.id as string, tenant?.id?.toString() ?? "");
-
-  const {
-    data: playersConnections,
-    isLoading: isPlayersLoading,
-    error: playersError,
-  } = usePlayersByTeamId(
-    session?.training?.teamId ?? 0,
-    tenant?.id?.toString() ?? ""
-  );
-
-  const isLoading = isSessionLoading || isPlayersLoading;
 
   if (isLoading) {
     return (
@@ -276,9 +290,6 @@ export default function AddPinPage() {
     );
   }
 
-  const playersWithoutPin =
-    playersConnections?.filter((conn) => !conn.player.pin) ?? [];
-
   return (
     <div className="w-screen h-screen bg-background absolute top-0 left-0 flex flex-col">
       {/* Navigation */}
@@ -295,77 +306,87 @@ export default function AddPinPage() {
           variant="outline"
           className="flex items-center gap-2"
           onClick={() =>
-            router.push(`/o/dashboard/attendance/${params.id}/check-in`)
+            router.push(`/o/dashboard/attendance/${params.id}/add-pin`)
           }
         >
-          <UserCheck className="h-4 w-4" />
-          Check In
+          <Key className="h-4 w-4" />
+          Create PIN
         </Button>
       </div>
 
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="flex flex-col items-center max-w-md mx-auto pt-8">
-          {/* Header */}
-          <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold mb-1">Create PIN</h1>
-            <p className="text-xl text-muted-foreground">
-              Select a player to create their PIN
-            </p>
-          </div>
-
-          {/* Players List */}
-          <div className="w-[320px] space-y-3">
-            {playersWithoutPin.length === 0 ? (
-              <div className="text-center py-6">
-                <p className="text-xl text-muted-foreground">
-                  All players have PINs set
-                </p>
-              </div>
-            ) : (
-              playersWithoutPin.map((connection) => (
-                <Button
-                  key={connection.id}
-                  variant="outline"
-                  disabled={
-                    isDialogOpen && selectedPlayer?.id === connection.player.id
-                  }
-                  className="w-full h-16 text-lg border rounded-2xl hover:bg-accent/10 active:bg-accent/30 transition-colors duration-200"
-                  onClick={() => {
-                    // Create a full Player object with required fields
-                    const fullPlayer = {
-                      ...connection.player,
-                      createdAt: new Date().toISOString(),
-                      tenantId: tenant?.id ?? null,
-                      joinDate: null,
-                      membershipCategoryId: null,
-                      membershipCategory: null,
-                      teamConnections: [],
-                      userConnections: [],
-                      gender: connection.player.gender as PlayerGender,
-                    };
-                    setSelectedPlayer(fullPlayer);
-                    setIsDialogOpen(true);
-                  }}
-                >
-                  {connection.player.firstName} {connection.player.lastName}
-                </Button>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Create PIN Dialog */}
-      {selectedPlayer && (
-        <CreatePinDialog
-          player={selectedPlayer}
-          isOpen={isDialogOpen}
-          onOpenChange={setIsDialogOpen}
-          tenantId={tenant?.id?.toString() ?? ""}
-          teamId={session?.training?.teamId ?? 0}
+        <NumericKeypad
+          onKeyPress={handleKeyPress}
+          onDelete={handleDelete}
+          onSubmit={handleSubmit}
+          pin={pin}
+          isPinValid={isPinValid}
+          isCreatingPin={false}
+          error={error}
+          sessionTime={`${session?.training?.startTime} - ${session?.training?.endTime}`}
         />
-      )}
+
+        {/* Confirmation Dialog */}
+        <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+          <DialogContent className="sm:max-w-xl md:max-w-2xl w-[95vw] p-8">
+            <DialogHeader className="mb-12">
+              <DialogTitle className="text-2xl font-normal text-center">
+                Check-in Confirmation
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-12">
+              <p className="text-4xl font-bold text-center">
+                {matchedPlayer
+                  ? `${matchedPlayer.firstName} ${matchedPlayer.lastName}`
+                  : ""}
+              </p>
+
+              <div className="space-y-8">
+                <div className="text-center">
+                  <p className="text-xl text-muted-foreground mb-2">
+                    Session Time
+                  </p>
+                  <p className="text-4xl">
+                    {session?.training?.startTime} -{" "}
+                    {session?.training?.endTime}
+                  </p>
+                </div>
+
+                <div className="text-center">
+                  <p className="text-xl text-muted-foreground mb-2">Date</p>
+                  <p className="text-4xl">
+                    {new Date(session?.training?.date ?? "").toLocaleDateString(
+                      "en-GB"
+                    )}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 mt-12">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowConfirmation(false);
+                  setPin("");
+                  setMatchedPlayer(null);
+                }}
+                className="flex-1 text-xl py-6"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleConfirmCheckIn}
+                className="flex-1 text-xl py-6 bg-primary"
+              >
+                Confirm Check-in
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 }

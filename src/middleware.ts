@@ -102,6 +102,8 @@ export default async function middleware(req: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
+    console.log("user", user);
+
     if (!user) {
       return NextResponse.redirect(
         new URL(`/login`, `${protocol}://${subDomain}.${rootDomain}/`)
@@ -115,13 +117,21 @@ export default async function middleware(req: NextRequest) {
       req.nextUrl.pathname.startsWith("/notifications") ||
       req.nextUrl.pathname.startsWith("/help")
     ) {
-      const { data } = await supabase
+      console.log("user", user);
+      console.log("tenantId", tenantId);
+
+      const { data, error } = await supabase
         .from("userEntities")
         .select("tenantId")
-        .eq("userId", user.id)
-        .single();
+        .eq("userId", user.id);
 
-      if (!data || !data.tenantId || data.tenantId.toString() !== tenantId) {
+      console.log("error", error);
+
+      const hasAccessToTenant = data?.some(
+        (entity) => entity.tenantId?.toString() === tenantId
+      );
+
+      if (!data || !hasAccessToTenant) {
         return NextResponse.redirect(
           new URL(`/`, `${protocol}://${subDomain}.${rootDomain}/`)
         );

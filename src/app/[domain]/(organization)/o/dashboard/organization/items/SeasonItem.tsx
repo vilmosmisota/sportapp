@@ -10,6 +10,7 @@ import SeasonEditForm from "../forms/SeasonEditForm";
 import { Season } from "@/entities/season/Season.schema";
 import { CurrencyTypes } from "@/entities/common/Types";
 import { cn } from "@/libs/tailwind/utils";
+import { Badge } from "@/components/ui/badge";
 
 import {
   DropdownMenu,
@@ -128,9 +129,19 @@ export default function SeasonItem({
         <CardHeader className="bg-secondary/50 rounded-t-lg px-4 py-3 md:px-6 md:py-4">
           <div className="flex justify-between items-start md:items-center gap-4">
             <div className="flex flex-col gap-1">
-              <span className="text-sm text-muted-foreground">
-                {season.customName || "Season"}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {season.customName || "Season"}
+                </span>
+                {season.isActive && (
+                  <Badge
+                    variant="secondary"
+                    className="text-xs bg-secondary/80 hover:bg-secondary/80"
+                  >
+                    Active
+                  </Badge>
+                )}
+              </div>
               <CardTitle className="text-sm md:text-base font-semibold break-words">
                 <span className="block md:inline">
                   {format(season.startDate, "dd MMM yyyy")}

@@ -28,6 +28,7 @@ import { toast } from "sonner";
 import MembershipFeeEditor from "./MembershipFeeEditor";
 import BreaksEditor from "./BreaksEditor";
 import { CurrencyTypes } from "@/entities/common/Types";
+import { Switch } from "@/components/ui/switch";
 
 type SeasonEditFormProps = {
   season: Season;
@@ -83,6 +84,7 @@ export default function SeasonEditForm({
       startDate: season.startDate,
       endDate: season.endDate,
       breaks: season.breaks,
+      isActive: season.isActive,
     },
   });
 
@@ -282,6 +284,27 @@ export default function SeasonEditForm({
               maxDate={form.getValues("endDate")}
             />
           </div>
+
+          <FormField
+            control={form.control}
+            name="isActive"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <FormLabel className="text-base">Active Season</FormLabel>
+                  <FormDescription>
+                    Make this season active for your organization
+                  </FormDescription>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
         </div>
 
         <div className="bg-background sticky bottom-0 left-0 right-0 p-4 md:pt-3 border-t mt-auto">
