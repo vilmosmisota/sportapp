@@ -43,10 +43,7 @@ export const TenantSchema = z.object({
   domain: z.string().min(1, { message: "Domain is required" }),
   email: z.string().email({ message: "Invalid email" }).nullable(),
   description: z.string().nullable(),
-  logo: z
-    .string()
-    .transform((item) => baseUrl(item))
-    .nullable(),
+  logo: z.string().nullable(),
   location: z.string().nullable(),
   phoneNumber: z.string().nullable(),
   createdAt: z.string(),
@@ -64,10 +61,7 @@ export const TenantFormSchema = TenantSchema.omit({
 }).extend({
   email: z.string().email({ message: "Invalid email" }).optional(),
   description: z.string().optional(),
-  logo: z
-    .string()
-    .transform((item) => removeBaseUrl(item))
-    .optional(),
+  logo: z.string().optional(),
   location: z.string().optional(),
   phoneNumber: z.string().optional(),
   groupTypes: GroupTypeSchema.optional(),
