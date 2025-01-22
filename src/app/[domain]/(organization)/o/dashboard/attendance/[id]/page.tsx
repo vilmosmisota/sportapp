@@ -70,7 +70,14 @@ export default function AttendanceSessionPage() {
       cell: ({ row }) => {
         const time = row.getValue("checkInTime") as string | null;
         if (!time) return "-";
+
         try {
+          // If time is in HH:mm:ss format, parse it directly
+          if (time.match(/^\d{2}:\d{2}:\d{2}$/)) {
+            const [hours, minutes] = time.split(":");
+            return `${hours}:${minutes}`;
+          }
+          // Otherwise try to parse as date
           return format(new Date(time), "HH:mm");
         } catch (error) {
           console.error("Invalid time format:", time);
@@ -82,14 +89,13 @@ export default function AttendanceSessionPage() {
       accessorKey: "status",
       header: "Status",
       cell: ({ row }) => {
-        const status = row.getValue("status") as string | null;
-        const isLate = row.getValue("isLate") as boolean | null;
+        const status = row.getValue("status") as PlayerAttendanceRow["status"];
 
         if (!status) return <Badge variant="secondary">Not Checked In</Badge>;
 
         return (
-          <Badge variant={isLate ? "destructive" : "default"}>
-            {isLate ? "Late" : "On Time"}
+          <Badge variant={status === "LATE" ? "destructive" : "default"}>
+            {status === "LATE" ? "Late" : "Present"}
           </Badge>
         );
       },

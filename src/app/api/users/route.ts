@@ -6,9 +6,6 @@ export async function POST(request: Request) {
     const { userData, tenantId } = await request.json();
     const adminClient = getAdminClient();
 
-    console.log("userData", userData);
-    console.log("tenantId,", tenantId);
-
     // Create auth user with metadata
     const { data: authData, error: authError } =
       await adminClient.auth.admin.createUser({
@@ -20,9 +17,6 @@ export async function POST(request: Request) {
           last_name: userData.lastName,
         },
       });
-
-    console.log("authData", authData);
-    console.log("authError", authError);
 
     if (authError) throw new Error(`Auth error: ${authError.message}`);
     if (!authData?.user)

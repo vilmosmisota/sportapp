@@ -103,10 +103,7 @@ export default function TrainingsPage({
     }
   };
 
-  useEffect(() => {
-    console.log("groupedTrainings", groupedTrainings);
-    console.log("error", error);
-  }, [groupedTrainings, error]);
+  useEffect(() => {}, [groupedTrainings, error]);
 
   if (!tenant) return null;
 
