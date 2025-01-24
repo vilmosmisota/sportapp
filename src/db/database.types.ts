@@ -643,6 +643,47 @@ export type Database = {
         };
         Returns: void;
       };
+      get_team_player_attendance_stats: {
+        Args: {
+          teamId: number;
+          tenantId: number;
+        };
+        Returns: {
+          playerId: number;
+          firstName: string;
+          lastName: string;
+          totalAttendance: number;
+          totalLate: number;
+          totalAbsent: number;
+          totalSessions: number;
+          attendancePercentage: number;
+        }[];
+      };
+      get_team_attendance_stats: {
+        Args: {
+          teamId: number;
+          tenantId: number;
+          seasonId?: number | null;
+        };
+        Returns: {
+          totalSessions: number;
+          averageAttendanceRate: number;
+          averagePlayersPerSession: number;
+          dayOfWeekStats: {
+            dayOfWeek: string;
+            attendanceRate: number;
+            averagePlayersPresent: number;
+          }[];
+          lateArrivalRate: number;
+          mostConsecutiveFullAttendance: number;
+          recentTrend: {
+            date: string;
+            attendanceRate: number;
+            playersPresent: number;
+            totalPlayers: number;
+          }[];
+        };
+      };
     };
     Enums: {
       [_ in never]: never;

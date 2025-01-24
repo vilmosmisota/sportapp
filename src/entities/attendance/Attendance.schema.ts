@@ -33,8 +33,47 @@ export const attendanceRecordSchema = z.object({
   status: z.string().nullable(),
 });
 
+// New schemas for team statistics
+export const dayOfWeekStatsSchema = z.object({
+  dayOfWeek: z.string(),
+  attendanceRate: z.number(),
+  averagePlayersPresent: z.number(),
+});
+
+export const recentTrendSchema = z.object({
+  date: z.string(),
+  attendanceRate: z.number(),
+  playersPresent: z.number(),
+  totalPlayers: z.number(),
+});
+
+export const teamAttendanceStatsSchema = z.object({
+  totalSessions: z.number(),
+  averageAttendanceRate: z.number().nullable().default(0),
+  averagePlayersPerSession: z.number().nullable().default(0),
+  dayOfWeekStats: z.array(dayOfWeekStatsSchema).nullable().default([]),
+  lateArrivalRate: z.number().nullable().default(0),
+  mostConsecutiveFullAttendance: z.number(),
+  recentTrend: z.array(recentTrendSchema).nullable().default([]),
+});
+
+export const playerAttendanceStatsSchema = z.object({
+  playerId: z.number(),
+  firstName: z.string(),
+  lastName: z.string(),
+  totalAttendance: z.number(),
+  totalLate: z.number(),
+  totalAbsent: z.number(),
+  totalSessions: z.number(),
+  attendancePercentage: z.number(),
+});
+
 export type AttendanceSession = z.infer<typeof attendanceSessionSchema>;
 export type AttendanceRecord = z.infer<typeof attendanceRecordSchema>;
+export type DayOfWeekStats = z.infer<typeof dayOfWeekStatsSchema>;
+export type RecentTrend = z.infer<typeof recentTrendSchema>;
+export type TeamAttendanceStats = z.infer<typeof teamAttendanceStatsSchema>;
+export type PlayerAttendanceStats = z.infer<typeof playerAttendanceStatsSchema>;
 
 export const createAttendanceSessionSchema = attendanceSessionSchema.omit({
   id: true,

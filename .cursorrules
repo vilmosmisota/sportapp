@@ -1,0 +1,100 @@
+Every time you choose to apply a rule(s), explicitly state the rule(s) in the output. You can abbreviate the rule description to a single word or phrase.
+
+Project Context:
+
+- Sportwise is a platform for managing sports organizations and leagues.
+- Sportwise is a multi-tenant platform, meaning that each organization and league has its own subdomain.
+
+Features:
+
+- Attendance tracking for training sessions for organizations
+
+Project Structure:
+/src
+
+- app/ # Next.js pages and routing
+  - [domain]/ # Multi-tenant routing
+    - (organization)/ # Organization admin pages (o.\*)
+    - (league)/ # League-specific pages (l.\*)
+    - (components)/ # Shared domain components
+    - settings/ # User settings (protected)
+    - profile/ # User profile (protected)
+    - login/ # Authentication
+- components/ # Reusable UI components
+- entities/ # Data models and business logic
+- db/ # Database configuration and utilities
+- libs/ # Shared libraries and utilities
+- providers/ # Context providers and wrappers
+- utils/ # Helper functions and utilities
+- styles/ # Global styles and CSS
+- cacheKeys/ # Cache management
+
+/public # Static assets
+/node_modules # Dependencies
+/.next # Next.js build output
+
+Middleware & Route Protection:
+
+- Multi-tenant routing based on subdomains (e.g., tenant.sportwise.net)
+- Tenant type validation (Organization vs League)
+  - Organizations can only access /o/\* routes
+  - Leagues can only access /l/\* routes
+- Protected routes requiring authentication:
+  - /settings
+  - /profile
+  - /notifications
+  - /help
+  - /o/dashboard/\*
+  - /l/dashboard/\*
+- Additional tenant validation:
+  - Users must belong to the tenant to access settings/profile
+  - Tenant info cached in cookies for performance
+
+Design System:
+
+- Use Shadcn UI for components
+- Use Tailwind CSS for styling
+- Use TypeScript for type safety
+- Use Supabase for database
+
+UI:
+
+- Modern, clean, and minimalistic design
+- Use a consistent color palette
+- Use a consistent font family
+- Use a consistent font size
+- Use a consistent font weight
+- Use a consistent line height
+- Use a consistent letter spacing
+
+Git usage:
+
+- Use lowercase for commit messages
+- Keep the summary line concise
+- Include description for non-obvious changes
+- Reference issue numbers when applicable
+
+Loading States:
+
+- Use loading states for all API requests
+- Use Skeleton components for loading states
+
+Error Handling:
+
+- Use try/catch blocks for error handling
+- Log errors to the console
+- Display user-friendly error messages to the client
+- Redirect to an error page or display a generic error message
+
+Testing:
+
+- Make sure to test all new features and components when they are added
+- Write unit tests for utilities and components
+- Implement E2E tests for critical flows
+- Use Jest for unit testing
+- Test memory usage and performance
+- Use React Testing Library for component testing
+
+Security:
+
+- Handle sensitive data properly

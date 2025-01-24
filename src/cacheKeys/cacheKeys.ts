@@ -106,7 +106,11 @@ export const queryKeys = {
     sessions: ["attendance", "sessions"] as const,
     activeSessions: ["attendance", "activeSessions"] as const,
     records: ["attendance", "records"] as const,
-    detail: (tenantId: string | undefined, sessionId: string | undefined) =>
-      [...queryKeys.attendance.all, tenantId, sessionId] as const,
+    detail: (tenantId?: string, sessionId?: string) =>
+      ["attendance", "detail", tenantId, sessionId] as const,
+    stats: (tenantId?: string, teamId?: number) =>
+      ["attendance", "stats", tenantId, teamId] as const,
+    teamStats: (tenantId?: string, teamId?: number) =>
+      ["attendance", "teamStats", tenantId, teamId] as const,
   },
 } as const;

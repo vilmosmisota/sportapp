@@ -17,13 +17,14 @@ import {
   ShieldCheck,
   Menu,
   ClipboardCheck,
+  Users2,
 } from "lucide-react";
 import DashboardNav from "./DashboardNav";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { useState } from "react";
 import { DashboardIcon } from "@radix-ui/react-icons";
 
-const iconMap: Record<string, LucideIcon> = {
+export const iconMap: Record<string, LucideIcon> = {
   LayoutDashboard,
   Building2,
   UsersRound,
@@ -37,6 +38,7 @@ const iconMap: Record<string, LucideIcon> = {
   Shield,
   ShieldCheck,
   ClipboardCheck,
+  Users2,
 };
 
 type NavItem = {
@@ -45,9 +47,14 @@ type NavItem = {
   iconName: keyof typeof iconMap;
 };
 
+type NavSection = {
+  section: string;
+  items: NavItem[];
+};
+
 type DashboardProps = {
   children: React.ReactNode;
-  items: NavItem[];
+  items: NavSection[];
 };
 
 export default function Dashboard({ items, children }: DashboardProps) {
@@ -63,7 +70,7 @@ export default function Dashboard({ items, children }: DashboardProps) {
               Dashboard
             </h2>
           </div>
-          <div className="flex-1 overflow-y-auto px-2 ">
+          <div className="flex-1 overflow-y-auto px-2">
             <DashboardNav items={items} icons={iconMap} />
           </div>
         </div>

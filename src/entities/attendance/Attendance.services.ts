@@ -8,6 +8,10 @@ import {
   CreateAttendanceRecord,
   UpdateAttendanceSession,
   UpdateAttendanceRecord,
+  TeamAttendanceStats,
+  PlayerAttendanceStats,
+  teamAttendanceStatsSchema,
+  playerAttendanceStatsSchema,
 } from "./Attendance.schema";
 
 const ATTENDANCE_SESSION_QUERY_WITH_RELATIONS = `
@@ -256,6 +260,49 @@ export const deleteAttendanceRecord = async (
     return true;
   } catch (error) {
     console.error("Error in deleteAttendanceRecord:", error);
+    throw error;
+  }
+};
+
+export const getTeamPlayerAttendanceStats = async (
+  client: TypedClient,
+  teamId: number,
+  tenantId: string
+): Promise<PlayerAttendanceStats[]> => {
+  try {
+    const { data, error } = await client.rpc(
+      "get_team_player_attendance_stats",
+      {
+        teamId,
+        tenantId: Number(tenantId),
+      }
+    );
+
+    if (error) throw error;
+    return data.map((stats) => playerAttendanceStatsSchema.parse(stats));
+  } catch (error) {
+    console.error("Error in getTeamPlayerAttendanceStats:", error);
+    throw error;
+  }
+};
+
+export const getTeamAttendanceStats = async (
+  client: TypedClient,
+  teamId: number,
+  tenantId: string,
+  seasonId?: string
+): Promise<TeamAttendanceStats> => {
+  try {
+    const { data, error } = await client.rpc("get_team_attendance_stats", {
+      teamId,
+      tenantId: Number(tenantId),
+      seasonId: seasonId ? Number(seasonId) : null,
+    });
+
+    if (error) throw error;
+    return teamAttendanceStatsSchema.parse(data);
+  } catch (error) {
+    console.error("Error in getTeamAttendanceStats:", error);
     throw error;
   }
 };

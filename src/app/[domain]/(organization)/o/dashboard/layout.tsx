@@ -8,49 +8,71 @@ import {
   GraduationCap,
   Users,
   LayoutDashboard,
+  Settings,
+  ClipboardCheck,
+  ShieldCheck,
 } from "lucide-react";
 
 const navItems = [
   {
-    name: "Overview",
-    href: "/o/dashboard",
-    iconName: "LayoutDashboard",
+    section: "Overview",
+    items: [
+      {
+        name: "Dashboard",
+        href: "/o/dashboard",
+        iconName: "LayoutDashboard",
+      },
+    ],
   },
   {
-    name: "Organisation",
-    href: "/o/dashboard/organization",
-    iconName: "Building2",
+    section: "Organization",
+    items: [
+      {
+        name: "Settings",
+        href: "/o/dashboard/organization",
+        iconName: "Building2",
+      },
+      {
+        name: "Users",
+        href: "/o/dashboard/users",
+        iconName: "Users2",
+      },
+    ],
   },
   {
-    name: "Users",
-    href: "/o/dashboard/users",
-    iconName: "UsersRound",
+    section: "Team Management",
+    items: [
+      {
+        name: "Players",
+        href: "/o/dashboard/players",
+        iconName: "UserRound",
+      },
+      {
+        name: "Teams",
+        href: "/o/dashboard/teams",
+        iconName: "ShieldCheck",
+      },
+      {
+        name: "Trainings",
+        href: "/o/dashboard/trainings",
+        iconName: "Dumbbell",
+      },
+    ],
   },
   {
-    name: "Players",
-    href: "/o/dashboard/players",
-    iconName: "UserRound",
-  },
-  {
-    name: "Teams",
-    href: "/o/dashboard/teams",
-    iconName: "ShieldCheck",
-  },
-
-  {
-    name: "Trainings",
-    href: "/o/dashboard/trainings",
-    iconName: "Dumbbell",
-  },
-  {
-    name: "Attendance",
-    href: "/o/dashboard/attendance",
-    iconName: "ClipboardCheck",
-  },
-  {
-    name: "Statistics",
-    href: "/o/dashboard/statistics",
-    iconName: "BarChart3",
+    section: "Attendance",
+    items: [
+      {
+        name: "Check-in",
+        href: "/o/dashboard/attendance",
+        iconName: "ClipboardCheck",
+      },
+      {
+        name: "Statistics",
+        href: "/o/dashboard/attendance/statistics",
+        iconName: "BarChart3",
+      },
+    ],
   },
 ];
 
