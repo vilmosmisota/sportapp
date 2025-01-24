@@ -1,15 +1,12 @@
 "use client";
 
 import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProfileContent from "./tabs/ProfileContent";
-import SeasonsContent from "./tabs/SeasonsContent";
 import MembershipCategoriesContent from "./tabs/MembershipCategoriesContent";
 import GroupTypesContent from "./tabs/GroupTypesContent";
 import TrainingLocationsContent from "./tabs/TrainingLocationsContent";
-import { CurrencyTypes } from "@/entities/common/Types";
 
 export default function OrganizationDetailPage({
   params,
@@ -37,9 +34,7 @@ export default function OrganizationDetailPage({
                 <TabsTrigger value="profile" className="text-sm">
                   Profile
                 </TabsTrigger>
-                <TabsTrigger value="seasons" className="text-sm">
-                  Seasons
-                </TabsTrigger>
+
                 <TabsTrigger value="memberships" className="text-sm">
                   Memberships
                 </TabsTrigger>
@@ -58,12 +53,7 @@ export default function OrganizationDetailPage({
             <TabsContent value="profile">
               <ProfileContent tenant={tenant} />
             </TabsContent>
-            <TabsContent value="seasons">
-              <SeasonsContent
-                tenantId={tenant?.id}
-                currency={CurrencyTypes.GBP}
-              />
-            </TabsContent>
+
             <TabsContent value="memberships">
               <MembershipCategoriesContent tenantId={tenant?.id} />
             </TabsContent>

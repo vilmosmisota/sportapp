@@ -4,13 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { format } from "date-fns";
-import { Edit2Icon, MoreVertical, SquarePen, Trash2 } from "lucide-react";
+import { MoreVertical, SquarePen, Trash2 } from "lucide-react";
 import { useState } from "react";
-import SeasonEditForm from "../forms/SeasonEditForm";
 import { Season } from "@/entities/season/Season.schema";
-import { CurrencyTypes } from "@/entities/common/Types";
 import { cn } from "@/libs/tailwind/utils";
 import { Badge } from "@/components/ui/badge";
+import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
+import { getCurrencySymbol } from "@/entities/player-fee-category/PlayerFeeCategory.utils";
 
 import {
   DropdownMenu,
@@ -19,34 +19,23 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { getCurrencySymbol } from "@/entities/player-fee-category/PlayerFeeCategory.utils";
 import { useDeleteSeason } from "@/entities/season/Season.actions.client";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
 import { toast } from "sonner";
+import { SeasonEditForm } from "../forms/SeasonEditForm";
 
 type SeasonItemProps = {
   season: Season;
-  currency: CurrencyTypes;
-  canManage: boolean;
+  tenantId: string;
+  domain: string;
 };
 
-export default function SeasonItem({
-  season,
-  currency,
-  canManage,
-}: SeasonItemProps) {
+export function SeasonItem({ season, tenantId, domain }: SeasonItemProps) {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const { data: tenant } = useTenantByDomain(domain);
 
-  const deleteSeason = useDeleteSeason(season.tenantId.toString());
+  const deleteSeason = useDeleteSeason(tenantId);
 
   const handleDelete = (seasonId: string) => {
     deleteSeason.mutate(seasonId, {
@@ -111,9 +100,10 @@ export default function SeasonItem({
       >
         <SeasonEditForm
           season={season}
+          tenantId={tenantId}
+          domain={domain}
           setSheetOpen={setIsEditOpen}
           setIsParentModalOpen={setIsEditOpen}
-          currency={currency}
         />
       </ResponsiveSheet>
 
@@ -152,7 +142,7 @@ export default function SeasonItem({
                 </span>
               </CardTitle>
             </div>
-            {canManage && <ActionMenu />}
+            <ActionMenu />
           </div>
         </CardHeader>
         <CardContent className="pt-4 md:pt-6 px-4 md:px-6">
@@ -177,7 +167,8 @@ export default function SeasonItem({
                         {price.membershipCategory.name}
                       </span>
                       <span className="text-sm font-medium">
-                        {getCurrencySymbol(currency)}
+                        {tenant?.membershipCurrency &&
+                          getCurrencySymbol(tenant.membershipCurrency)}
                         {price.price}
                       </span>
                     </div>

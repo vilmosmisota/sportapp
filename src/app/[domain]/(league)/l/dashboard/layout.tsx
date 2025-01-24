@@ -2,24 +2,29 @@ import Dashboard from "@/app/[domain]/(components)/Dashboard";
 
 const navItems = [
   {
-    name: "League",
-    href: "/l/dashboard/league",
-    iconName: "Building",
-  },
-  {
-    name: "Clubs",
-    href: "/l/dashboard/clubs",
-    iconName: "Store",
-  },
-  {
-    name: "Divisions",
-    href: "/l/dashboard/divisions",
-    iconName: "Medal",
-  },
-  {
-    name: "Games",
-    href: "/l/dashboard/games",
-    iconName: "Shield",
+    section: "League Management",
+    items: [
+      {
+        name: "League",
+        href: "/l/dashboard/league",
+        iconName: "Building",
+      },
+      {
+        name: "Clubs",
+        href: "/l/dashboard/clubs",
+        iconName: "Store",
+      },
+      {
+        name: "Divisions",
+        href: "/l/dashboard/divisions",
+        iconName: "Medal",
+      },
+      {
+        name: "Games",
+        href: "/l/dashboard/games",
+        iconName: "Shield",
+      },
+    ],
   },
 ];
 

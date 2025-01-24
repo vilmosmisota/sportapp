@@ -69,6 +69,13 @@ export const Permissions = {
         requiredAdminRoles: [AdminRole.ADMIN],
       }),
   },
+  Seasons: {
+    manage: (userEntity?: UserEntity | null) =>
+      checkPermission({
+        userEntity,
+        requiredAdminRoles: [AdminRole.ADMIN],
+      }),
+  },
   Attendance: {
     manage: (userEntity?: UserEntity | null) =>
       checkPermission({

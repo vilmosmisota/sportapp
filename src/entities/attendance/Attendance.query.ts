@@ -93,34 +93,3 @@ export const useTeamAttendanceStats = (
     enabled: !!teamId && !!tenantId,
   });
 };
-
-// SQL Query for reference
-const PLAYER_ATTENDANCE_STATS_QUERY = `
-  WITH player_stats AS (
-    SELECT 
-      p.id as "playerId",
-      p."firstName",
-      p."lastName",
-      COUNT(DISTINCT ar.id) as "totalAttendance",
-      COUNT(DISTINCT CASE WHEN ar."isLate" = true THEN ar.id END) as "totalLate",
-      COUNT(DISTINCT CASE WHEN ar.status = 'absent' THEN ar.id END) as "totalAbsent",
-      COUNT(DISTINCT ats.id) as "totalSessions"
-    FROM 
-      users p
-      JOIN "userEntities" ue ON p.id = ue."userId" AND ue."teamId" = :teamId
-      LEFT JOIN "attendanceRecords" ar ON ar."playerId"::text = p.id::text AND ar."tenantId" = :tenantId
-      LEFT JOIN "attendanceSession" ats ON ats.id = ar."attendanceSessionId" AND ats."tenantId" = :tenantId
-    WHERE 
-      ue."tenantId" = :tenantId
-    GROUP BY 
-      p.id, p."firstName", p."lastName"
-  )
-  SELECT 
-    *,
-    CASE 
-      WHEN "totalSessions" = 0 THEN 0
-      ELSE ROUND(("totalAttendance"::numeric / "totalSessions"::numeric) * 100, 2)
-    END as "attendancePercentage"
-  FROM player_stats
-  ORDER BY "totalAttendance" DESC, "lastName" ASC
-`;

@@ -33,6 +33,11 @@ const navItems = [
         iconName: "Building2",
       },
       {
+        name: "Seasons",
+        href: "/o/dashboard/seasons",
+        iconName: "GraduationCap",
+      },
+      {
         name: "Users",
         href: "/o/dashboard/users",
         iconName: "Users2",
