@@ -27,7 +27,6 @@ export const attendanceSessionSchema = z.object({
   startTime: z.string().nullable(),
   endTime: z.string().nullable(),
   isActive: z.boolean().nullable(),
-  isTouched: z.boolean().nullable().default(true),
   training: trainingSchema.nullable(),
 });
 

@@ -55,7 +55,7 @@ export default function AttendancePage({
   const { data: trainings, isLoading: isTrainingsLoading } =
     useTrainingsByDayRange(
       tenant?.id?.toString() ?? "",
-      8 // Fetch trainings for the next 7 days
+      7 // Fetch trainings for the next 7 days
     );
   const { data: activeSessions } = useActiveAttendanceSessions(
     tenant?.id?.toString() ?? ""
@@ -69,17 +69,30 @@ export default function AttendancePage({
   // Get all upcoming trainings sorted by date
   const upcomingTrainings =
     trainings
-      ?.filter((training) => isFuture(training.date))
+      ?.filter((training) => {
+        const trainingDateTime = new Date(training.date);
+        trainingDateTime.setHours(
+          parseInt(training.startTime.split(":")[0]),
+          parseInt(training.startTime.split(":")[1])
+        );
+        return trainingDateTime > new Date();
+      })
       .sort((a, b) => a.date.getTime() - b.date.getTime()) ?? [];
 
   // Get past trainings with active sessions
   const pastTrainingsWithActiveSessions =
     trainings
-      ?.filter(
-        (training) =>
-          isPast(training.date) &&
+      ?.filter((training) => {
+        const trainingDateTime = new Date(training.date);
+        trainingDateTime.setHours(
+          parseInt(training.startTime.split(":")[0]),
+          parseInt(training.startTime.split(":")[1])
+        );
+        return (
+          trainingDateTime <= new Date() &&
           activeSessions?.some((session) => session.trainingId === training.id)
-      )
+        );
+      })
       .sort((a, b) => b.date.getTime() - a.date.getTime()) ?? [];
 
   if (isLoading) {

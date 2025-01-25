@@ -158,48 +158,56 @@ function TeamCard({
 
   return (
     <Card className="hover:bg-accent/50 transition-colors">
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-xl font-bold">
-            {team.name ||
-              [team.age, getDisplayGender(team.gender, team.age), team.skill]
-                .filter(Boolean)
-                .join(" • ")}
-          </CardTitle>
-          <div className="flex gap-2">
-            <Badge variant="secondary" className="capitalize">
-              {team.age}
-            </Badge>
-            {team.gender && (
-              <Badge variant="outline" className="capitalize">
-                {team.gender.toLowerCase()}
-              </Badge>
-            )}
-            {team.skill && (
-              <Badge variant="secondary" className="capitalize">
-                {team.skill}
-              </Badge>
-            )}
+      <CardHeader className="pb-6">
+        <div className="flex items-start justify-between">
+          <div className="space-y-3">
+            <CardTitle className="text-2xl font-bold">
+              {team.name ||
+                [team.age, getDisplayGender(team.gender, team.age), team.skill]
+                  .filter(Boolean)
+                  .join(" • ")}
+            </CardTitle>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Users className="h-4 w-4" />
+                <span>
+                  {team.playerTeamConnections?.length ?? 0} Players • Coach:{" "}
+                  <span className="text-foreground capitalize">
+                    {team.coach
+                      ? `${team.coach.firstName} ${team.coach.lastName}`
+                      : "No coach assigned"}
+                  </span>
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <Badge variant="secondary" className="capitalize">
+                  {team.age}
+                </Badge>
+                {team.gender && (
+                  <Badge variant="outline" className="capitalize">
+                    {team.gender.toLowerCase()}
+                  </Badge>
+                )}
+                {team.skill && (
+                  <Badge variant="secondary" className="capitalize">
+                    {team.skill}
+                  </Badge>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-        <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-          <Users className="h-4 w-4" />
-          <span>
-            {team.playerTeamConnections?.length ?? 0} Player
-            {(team.playerTeamConnections?.length ?? 0) !== 1 ? "s" : ""} •{" "}
-            Coach:{" "}
-            <span className="text-foreground capitalize">
-              {team.coach
-                ? `${team.coach.firstName} ${team.coach.lastName}`
-                : "No coach assigned"}
-            </span>
-          </span>
+          <Link href={`attendance/statistics/${team.id}`}>
+            <Button variant="default" size="default" className="gap-2">
+              <BarChart3 className="h-4 w-4" />
+              View Player Details
+            </Button>
+          </Link>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-8">
         {hasStats ? (
           <>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-4 gap-4">
               <StatItem
                 icon={Calendar}
                 label="Total Sessions"
@@ -207,232 +215,225 @@ function TeamCard({
               />
               <StatItem
                 icon={Users}
-                label="Avg Players"
+                label="Average Players"
                 value={Math.round(stats.averagePlayersPerSession ?? 0)}
               />
               <StatItem
-                icon={Clock}
-                label="Late Rate"
-                value={`${Math.round(stats.lateArrivalRate ?? 0)}%`}
+                icon={BarChart3}
+                label="Attendance Accuracy"
+                value={`${Math.round(stats.averageAttendanceRate ?? 0)}%`}
               />
               <StatItem
                 icon={Trophy}
-                label="Best Streak"
+                label="Full Attendance Streak"
                 value={stats.mostConsecutiveFullAttendance}
               />
             </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base font-semibold">
-                  Recent Attendance Trend
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[240px]">
-                  <ChartContainer
-                    config={{
-                      attendance: {
-                        label: "Attendance Rate",
-                        theme: {
-                          light: "hsl(var(--primary))",
-                          dark: "hsl(var(--primary))",
+            <div className="grid grid-cols-2 gap-6">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base font-semibold">
+                    Recent Attendance Trend
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div>
+                    <ChartContainer
+                      config={{
+                        attendance: {
+                          label: "Attendance Rate",
+                          theme: {
+                            light: "hsl(var(--primary))",
+                            dark: "hsl(var(--primary))",
+                          },
                         },
-                      },
-                    }}
-                  >
-                    <LineChart data={recentTrendData}>
-                      <defs>
-                        <linearGradient
-                          id="gradient"
-                          x1="0"
-                          y1="0"
-                          x2="0"
-                          y2="1"
-                        >
-                          <stop
-                            offset="0%"
-                            stopColor="hsl(var(--primary))"
-                            stopOpacity={0.2}
-                          />
-                          <stop
-                            offset="100%"
-                            stopColor="hsl(var(--primary))"
-                            stopOpacity={0}
-                          />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid
-                        strokeDasharray="8"
-                        stroke="hsl(var(--border))"
-                        horizontal={true}
-                        vertical={false}
-                      />
-                      <XAxis
-                        dataKey="dateFormatted"
-                        stroke="hsl(var(--muted-foreground))"
-                        fontSize={12}
-                        tickLine={false}
-                        axisLine={false}
-                        tickFormatter={(value) => value.slice(0, 5)}
-                        dy={10}
-                        padding={{ left: 10, right: 10 }}
-                      />
-                      <YAxis
-                        stroke="hsl(var(--muted-foreground))"
-                        fontSize={12}
-                        tickLine={false}
-                        axisLine={false}
-                        tickFormatter={(value) => `${value}%`}
-                        domain={[0, 100]}
-                        ticks={[0, 25, 50, 75, 100]}
-                        dx={-10}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="attendance"
-                        strokeWidth={2}
-                        dot={false}
-                        stroke="hsl(var(--primary))"
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="attendance"
-                        stroke="none"
-                        fill="url(#gradient)"
-                        fillOpacity={1}
-                      />
-                      <ChartTooltip
-                        content={({ active, payload }) => {
-                          if (!active || !payload?.length) return null;
-                          return (
-                            <div className="rounded-lg border bg-background p-2 shadow-sm">
-                              <div className="grid grid-cols-2 gap-2">
-                                <div className="flex flex-col">
-                                  <span className="text-[0.70rem] uppercase text-muted-foreground">
-                                    Date
-                                  </span>
-                                  <span className="font-bold">
-                                    {payload[0].payload.dateFormatted}
-                                  </span>
-                                </div>
-                                <div className="flex flex-col">
-                                  <span className="text-[0.70rem] uppercase text-muted-foreground">
-                                    Attendance
-                                  </span>
-                                  <span className="font-bold">
-                                    {payload[0].value}%
-                                  </span>
+                      }}
+                    >
+                      <LineChart data={recentTrendData}>
+                        <defs>
+                          <linearGradient
+                            id="gradient"
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="0%"
+                              stopColor="hsl(var(--primary))"
+                              stopOpacity={0.2}
+                            />
+                            <stop
+                              offset="100%"
+                              stopColor="hsl(var(--primary))"
+                              stopOpacity={0}
+                            />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid
+                          strokeDasharray="8"
+                          stroke="hsl(var(--border))"
+                          horizontal={true}
+                          vertical={false}
+                        />
+                        <XAxis
+                          dataKey="dateFormatted"
+                          stroke="hsl(var(--muted-foreground))"
+                          fontSize={12}
+                          tickLine={false}
+                          axisLine={false}
+                          tickFormatter={(value) => value.slice(0, 5)}
+                          dy={8}
+                          padding={{ left: 0, right: 0 }}
+                        />
+                        <YAxis
+                          stroke="hsl(var(--muted-foreground))"
+                          fontSize={12}
+                          tickLine={false}
+                          axisLine={false}
+                          tickFormatter={(value) => `${value}%`}
+                          domain={[0, 100]}
+                          ticks={[0, 25, 50, 75, 100]}
+                          dx={-8}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="attendance"
+                          strokeWidth={2}
+                          dot={false}
+                          stroke="hsl(var(--primary))"
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="attendance"
+                          stroke="none"
+                          fill="url(#gradient)"
+                          fillOpacity={1}
+                        />
+                        <ChartTooltip
+                          content={({ active, payload }) => {
+                            if (!active || !payload?.length) return null;
+                            return (
+                              <div className="rounded-lg border bg-background p-2 shadow-sm">
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="flex flex-col">
+                                    <span className="text-[0.70rem] uppercase text-muted-foreground">
+                                      Date
+                                    </span>
+                                    <span className="font-bold">
+                                      {payload[0].payload.dateFormatted}
+                                    </span>
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-[0.70rem] uppercase text-muted-foreground">
+                                      Attendance
+                                    </span>
+                                    <span className="font-bold">
+                                      {payload[0].value}%
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          );
-                        }}
-                      />
-                    </LineChart>
-                  </ChartContainer>
-                </div>
-              </CardContent>
-            </Card>
+                            );
+                          }}
+                        />
+                      </LineChart>
+                    </ChartContainer>
+                  </div>
+                </CardContent>
+              </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base font-semibold">
-                  Attendance by Day
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[240px]">
-                  <ChartContainer
-                    config={{
-                      attendance: {
-                        label: "Attendance Rate",
-                        theme: {
-                          light: "hsl(var(--primary))",
-                          dark: "hsl(var(--primary))",
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base font-semibold">
+                    Attendance by Day
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[240px]">
+                    <ChartContainer
+                      config={{
+                        attendance: {
+                          label: "Attendance Rate",
+                          theme: {
+                            light: "hsl(var(--primary))",
+                            dark: "hsl(var(--primary))",
+                          },
                         },
-                      },
-                    }}
-                  >
-                    <BarChart data={dayOfWeekData}>
-                      <CartesianGrid
-                        strokeDasharray="8"
-                        stroke="hsl(var(--border))"
-                        horizontal={true}
-                        vertical={false}
-                      />
-                      <XAxis
-                        dataKey="day"
-                        stroke="hsl(var(--muted-foreground))"
-                        fontSize={12}
-                        tickLine={false}
-                        axisLine={false}
-                        dy={10}
-                        padding={{ left: 10, right: 10 }}
-                      />
-                      <YAxis
-                        stroke="hsl(var(--muted-foreground))"
-                        fontSize={12}
-                        tickLine={false}
-                        axisLine={false}
-                        tickFormatter={(value) => `${value}%`}
-                        domain={[0, 100]}
-                        ticks={[0, 25, 50, 75, 100]}
-                        dx={-10}
-                      />
-                      <Bar
-                        dataKey="attendance"
-                        fill="hsl(var(--primary))"
-                        radius={[4, 4, 0, 0]}
-                        maxBarSize={40}
-                      />
-                      <ChartTooltip
-                        content={({ active, payload }) => {
-                          if (!active || !payload?.length) return null;
-                          return (
-                            <div className="rounded-lg border bg-background p-2 shadow-sm">
-                              <div className="grid grid-cols-2 gap-2">
-                                <div className="flex flex-col">
-                                  <span className="text-[0.70rem] uppercase text-muted-foreground">
-                                    Day
-                                  </span>
-                                  <span className="font-bold">
-                                    {payload[0].payload.day}
-                                  </span>
-                                </div>
-                                <div className="flex flex-col">
-                                  <span className="text-[0.70rem] uppercase text-muted-foreground">
-                                    Attendance
-                                  </span>
-                                  <span className="font-bold">
-                                    {payload[0].value}%
-                                  </span>
+                      }}
+                    >
+                      <BarChart data={dayOfWeekData}>
+                        <CartesianGrid
+                          strokeDasharray="8"
+                          stroke="hsl(var(--border))"
+                          horizontal={true}
+                          vertical={false}
+                        />
+                        <XAxis
+                          dataKey="day"
+                          stroke="hsl(var(--muted-foreground))"
+                          fontSize={12}
+                          tickLine={false}
+                          axisLine={false}
+                          dy={8}
+                          padding={{ left: 0, right: 0 }}
+                        />
+                        <YAxis
+                          stroke="hsl(var(--muted-foreground))"
+                          fontSize={12}
+                          tickLine={false}
+                          axisLine={false}
+                          tickFormatter={(value) => `${value}%`}
+                          domain={[0, 100]}
+                          ticks={[0, 25, 50, 75, 100]}
+                          dx={-8}
+                        />
+                        <Bar
+                          dataKey="attendance"
+                          fill="hsl(var(--primary))"
+                          radius={[4, 4, 0, 0]}
+                          maxBarSize={40}
+                        />
+                        <ChartTooltip
+                          content={({ active, payload }) => {
+                            if (!active || !payload?.length) return null;
+                            return (
+                              <div className="rounded-lg border bg-background p-2 shadow-sm">
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="flex flex-col">
+                                    <span className="text-[0.70rem] uppercase text-muted-foreground">
+                                      Day
+                                    </span>
+                                    <span className="font-bold">
+                                      {payload[0].payload.day}
+                                    </span>
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-[0.70rem] uppercase text-muted-foreground">
+                                      Attendance
+                                    </span>
+                                    <span className="font-bold">
+                                      {payload[0].value}%
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          );
-                        }}
-                      />
-                    </BarChart>
-                  </ChartContainer>
-                </div>
-              </CardContent>
-            </Card>
+                            );
+                          }}
+                        />
+                      </BarChart>
+                    </ChartContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </>
         ) : (
           <Alert>
             <AlertDescription>No attendance data available</AlertDescription>
           </Alert>
         )}
-
-        <div className="flex items-center justify-end">
-          <Link href={`attendance/statistics/${team.id}`}>
-            <Button variant="outline" size="sm" className="gap-2">
-              <BarChart3 className="h-4 w-4" />
-              View Statistics
-            </Button>
-          </Link>
-        </div>
       </CardContent>
     </Card>
   );
@@ -533,7 +534,7 @@ export default function AttendanceStatisticsPage({
           />
         </div>
       </div>
-      <div className={`grid gap-6 ${gridCols}`}>
+      <div className="space-y-6">
         {filteredTeams.map((team) => (
           <TeamCard
             key={team.id}

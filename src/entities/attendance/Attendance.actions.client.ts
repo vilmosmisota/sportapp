@@ -49,7 +49,6 @@ export const useCreateAttendanceSession = () => {
           startTime: formattedCurrentTime,
           endTime,
           isActive: true,
-          isTouched: true,
         },
         tenantId
       );
@@ -137,7 +136,6 @@ export const useCloseAttendanceSession = () => {
         {
           isActive: false,
           endTime: formattedCurrentTime,
-          isTouched: true,
         },
         tenantId
       );

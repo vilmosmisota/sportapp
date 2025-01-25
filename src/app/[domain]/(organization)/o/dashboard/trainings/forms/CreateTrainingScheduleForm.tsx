@@ -314,7 +314,7 @@ export default function CreateTrainingScheduleForm({
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select team (optional)" />
+                          <SelectValue placeholder="Select team" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -333,8 +333,7 @@ export default function CreateTrainingScheduleForm({
                       </SelectContent>
                     </Select>
                     <FormDescription>
-                      Optionally assign this training schedule to a specific
-                      team
+                      Assign this training schedule to a specific team
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

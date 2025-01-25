@@ -78,6 +78,7 @@ export default function EditLocationForm({
         trainingLocations: tenant.trainingLocations?.map((loc) =>
           loc.id === location.id ? updatedLocation : loc
         ) || [updatedLocation],
+        lateThresholdMinutes: tenant.lateThresholdMinutes,
       });
 
       toast.success("Location updated successfully");

@@ -328,22 +328,52 @@ export const getTrainingsByDayRange = async (
 ) => {
   try {
     const today = new Date();
+    const todayStr = today.toISOString().split("T")[0]; // Get UTC date
     const endDate = new Date();
     endDate.setDate(today.getDate() + days);
-
-    const todayStr = today.toISOString().split("T")[0];
     const endDateStr = endDate.toISOString().split("T")[0];
+
+    // Get current time in HH:mm format
+    const currentHour = today.getHours().toString().padStart(2, "0");
+    const currentMinute = today.getMinutes().toString().padStart(2, "0");
+    const currentTime = `${currentHour}:${currentMinute}`;
+
+    console.log("Debug - Date Range:", { todayStr, endDateStr, currentTime });
 
     const { data, error } = await client
       .from("trainings")
       .select(TRAINING_QUERY_WITH_RELATIONS)
       .eq("tenantId", tenantId)
       .gte("date", todayStr)
-      .lt("date", endDateStr)
-      .order("date", { ascending: true });
+      .lte("date", endDateStr)
+      .order("date", { ascending: true })
+      .order("startTime", { ascending: true });
 
     if (error) throw error;
-    return data.map((training) => TrainingSchema.parse(training));
+
+    console.log("Debug - Raw Data from DB:", data);
+
+    // Filter in memory for today's trainings based on time
+    const parsedData = data.map((training) => TrainingSchema.parse(training));
+    console.log("Debug - Parsed Data:", parsedData);
+
+    const filteredData = parsedData.filter((training) => {
+      const trainingDate = training.date.toISOString().split("T")[0];
+      const shouldInclude =
+        trainingDate !== todayStr || training.startTime >= currentTime;
+      console.log("Debug - Training Filter:", {
+        trainingId: training.id,
+        trainingDate,
+        trainingTime: training.startTime,
+        todayStr,
+        currentTime,
+        shouldInclude,
+      });
+      return shouldInclude;
+    });
+
+    console.log("Debug - Final Filtered Data:", filteredData);
+    return filteredData;
   } catch (error) {
     console.error("Error in getTrainingsByDayRange:", error);
     throw error;
