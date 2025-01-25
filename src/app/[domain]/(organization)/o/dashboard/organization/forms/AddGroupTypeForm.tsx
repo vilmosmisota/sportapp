@@ -89,6 +89,7 @@ export default function AddGroupTypeForm({
       domain: tenant.domain,
       sport: tenant.sport,
       membershipCurrency: tenant.membershipCurrency,
+      lateThresholdMinutes: tenant.lateThresholdMinutes,
       groupTypes,
     };
 

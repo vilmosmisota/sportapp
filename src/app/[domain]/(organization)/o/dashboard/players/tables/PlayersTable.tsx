@@ -11,7 +11,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { columns } from "./columns";
 import { DataTablePagination } from "@/components/ui/data-table/DataTablePagination";
 import { PlayersTableToolbar } from "./PlayersTableToolbar";
@@ -21,6 +21,14 @@ import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { DataTable } from "@/components/ui/data-table/DataTable";
 import { ErrorBoundary } from "../../../../../../../components/ui/error-boundary";
 import EditPlayerForm from "../forms/EditPlayerForm";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { MoreHorizontal } from "lucide-react";
 
 interface PlayersTableProps {
   players: Player[];
@@ -43,19 +51,22 @@ export default function PlayersTable({
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const deletePlayer = useDeletePlayer(tenantId);
 
-  const handleEdit = (player: Player) => {
+  const handleEdit = useCallback((player: Player) => {
     setSelectedPlayer(player);
     setIsEditOpen(true);
-  };
+  }, []);
 
-  const handleDelete = async (playerId: number) => {
-    try {
-      await deletePlayer.mutateAsync(playerId);
-      toast.success("Player deleted successfully");
-    } catch (error) {
-      toast.error("Failed to delete player");
-    }
-  };
+  const handleDelete = useCallback(
+    async (playerId: number) => {
+      try {
+        await deletePlayer.mutateAsync(playerId);
+        toast.success("Player deleted successfully");
+      } catch (error) {
+        toast.error("Failed to delete player");
+      }
+    },
+    [deletePlayer]
+  );
 
   const tableColumns = useMemo(
     () =>
@@ -66,7 +77,7 @@ export default function PlayersTable({
         domain,
         tenantId,
       }),
-    [canManagePlayers, domain, tenantId]
+    [canManagePlayers, domain, handleDelete, handleEdit, tenantId]
   );
 
   const table = useReactTable({

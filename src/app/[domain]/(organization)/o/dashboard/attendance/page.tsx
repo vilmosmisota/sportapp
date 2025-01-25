@@ -327,7 +327,7 @@ function TrainingCard({
           </div>
         )}
         {!hasActiveSession && canManageAttendance && !isPastTraining && (
-          <div className="mt-4">
+          <div className="mt-4 py-4">
             <Button
               variant="outline"
               className="w-full"
