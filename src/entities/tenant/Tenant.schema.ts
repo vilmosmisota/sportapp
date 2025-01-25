@@ -51,6 +51,7 @@ export const TenantSchema = z.object({
   membershipCurrency: z.nativeEnum(CurrencyTypes),
   groupTypes: GroupTypeSchema.nullable(),
   trainingLocations: z.array(TrainingLocationSchema).nullable(),
+  lateThresholdMinutes: z.number().min(0).default(5),
 });
 
 export type Tenant = z.infer<typeof TenantSchema>;

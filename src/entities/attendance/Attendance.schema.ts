@@ -4,6 +4,13 @@ const baseSchema = {
   id: z.number(),
 };
 
+export enum AttendanceStatus {
+  PENDING = "pending",
+  PRESENT = "present",
+  LATE = "late",
+  ABSENT = "absent",
+}
+
 const trainingSchema = z.object({
   id: z.number(),
   date: z.string(),
@@ -20,6 +27,7 @@ export const attendanceSessionSchema = z.object({
   startTime: z.string().nullable(),
   endTime: z.string().nullable(),
   isActive: z.boolean().nullable(),
+  isTouched: z.boolean().nullable().default(true),
   training: trainingSchema.nullable(),
 });
 
@@ -29,8 +37,7 @@ export const attendanceRecordSchema = z.object({
   playerId: z.number().nullable(),
   tenantId: z.number().nullable(),
   checkInTime: z.string().nullable(),
-  isLate: z.boolean().nullable(),
-  status: z.string().nullable(),
+  status: z.nativeEnum(AttendanceStatus).default(AttendanceStatus.PENDING),
 });
 
 // New schemas for team statistics

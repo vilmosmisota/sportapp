@@ -14,6 +14,7 @@ type ConfirmAlertProps = {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
   onConfirm: (categoryId: string) => void;
+  buttonText?: string;
 };
 
 export const ConfirmDeleteDialog: React.FC<ConfirmAlertProps> = ({
@@ -22,6 +23,7 @@ export const ConfirmDeleteDialog: React.FC<ConfirmAlertProps> = ({
   setIsOpen,
   onConfirm,
   categoryId,
+  buttonText = "Delete",
 }) => {
   const handleConfirm = () => {
     onConfirm(categoryId.toString());
@@ -43,7 +45,7 @@ export const ConfirmDeleteDialog: React.FC<ConfirmAlertProps> = ({
             Cancel
           </Button>
           <Button variant="destructive" onClick={handleConfirm}>
-            Delete
+            {buttonText}
           </Button>
         </div>
       </AlertDialogContent>

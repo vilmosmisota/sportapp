@@ -12,6 +12,7 @@ import {
   PlayerAttendanceStats,
   teamAttendanceStatsSchema,
   playerAttendanceStatsSchema,
+  AttendanceStatus,
 } from "./Attendance.schema";
 
 const ATTENDANCE_SESSION_QUERY_WITH_RELATIONS = `
@@ -41,6 +42,28 @@ const ATTENDANCE_RECORD_QUERY_WITH_RELATIONS = `
     endTime
   )
 `;
+
+// Domain logic for calculating attendance status
+export const calculateAttendanceStatus = (
+  trainingStartTime: string,
+  checkInTime: string,
+  lateThresholdMinutes: number
+): AttendanceStatus => {
+  // Parse training start time and check-in time
+  const [trainingHours, trainingMinutes] = trainingStartTime
+    .split(":")
+    .map(Number);
+  const [checkInHours, checkInMinutes] = checkInTime.split(":").map(Number);
+
+  // Calculate minutes difference
+  const trainingTimeInMinutes = trainingHours * 60 + trainingMinutes;
+  const checkInTimeInMinutes = checkInHours * 60 + checkInMinutes;
+  const minutesDifference = checkInTimeInMinutes - trainingTimeInMinutes;
+
+  return minutesDifference <= lateThresholdMinutes
+    ? AttendanceStatus.PRESENT
+    : AttendanceStatus.LATE;
+};
 
 // AttendanceSession Services
 export const getAttendanceSessions = async (
@@ -208,7 +231,6 @@ export const createAttendanceRecord = async (
           minute: "2-digit",
           second: "2-digit",
         }),
-        isLate: false, // TODO: Calculate based on training start time
       })
       .select(ATTENDANCE_RECORD_QUERY_WITH_RELATIONS)
       .single();
@@ -303,6 +325,56 @@ export const getTeamAttendanceStats = async (
     return teamAttendanceStatsSchema.parse(data);
   } catch (error) {
     console.error("Error in getTeamAttendanceStats:", error);
+    throw error;
+  }
+};
+
+export const createAbsentRecords = async (
+  client: TypedClient,
+  sessionId: number,
+  notCheckedInPlayerIds: number[],
+  tenantId: string
+) => {
+  try {
+    // Create absent records for players who haven't checked in
+    if (notCheckedInPlayerIds.length > 0) {
+      const { error: insertError } = await client
+        .from("attendanceRecords")
+        .insert(
+          notCheckedInPlayerIds.map((playerId) => ({
+            attendanceSessionId: sessionId,
+            playerId,
+            tenantId: Number(tenantId),
+            status: "absent",
+          }))
+        );
+
+      if (insertError) throw insertError;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error in updateAbsentRecords:", error);
+    throw error;
+  }
+};
+
+export const restoreAttendanceRecords = async (
+  client: TypedClient,
+  sessionId: number
+) => {
+  try {
+    // Delete all absent records for this session
+    const { error } = await client
+      .from("attendanceRecords")
+      .delete()
+      .eq("attendanceSessionId", sessionId)
+      .eq("status", "absent");
+
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error("Error in restoreAttendanceRecords:", error);
     throw error;
   }
 };

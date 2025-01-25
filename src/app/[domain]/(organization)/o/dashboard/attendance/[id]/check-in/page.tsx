@@ -25,6 +25,7 @@ import {
 import { useCreateAttendanceRecord } from "@/entities/attendance/Attendance.actions.client";
 import { Player } from "@/entities/player/Player.schema";
 import { toast } from "sonner";
+import { calculateAttendanceStatus } from "@/entities/attendance/Attendance.services";
 
 function NumericKeypad({
   onKeyPress,
@@ -255,11 +256,31 @@ export default function CheckInPage() {
   };
 
   const handleConfirmCheckIn = async () => {
-    if (!matchedPlayer) return;
+    if (
+      !matchedPlayer ||
+      !session?.training?.startTime ||
+      !tenant?.lateThresholdMinutes
+    )
+      return;
 
     try {
+      const now = new Date();
+      const checkInTime = now.toLocaleTimeString("en-GB", {
+        hour12: false,
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+
+      const status = calculateAttendanceStatus(
+        session.training.startTime,
+        checkInTime,
+        tenant.lateThresholdMinutes
+      );
+
       await createAttendanceRecord.mutateAsync({
         playerId: matchedPlayer.id,
+        status,
       });
 
       toast.success("Successfully checked in!");

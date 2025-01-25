@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProfileContent from "./tabs/ProfileContent";
 import MembershipCategoriesContent from "./tabs/MembershipCategoriesContent";
 import GroupTypesContent from "./tabs/GroupTypesContent";
-import TrainingLocationsContent from "./tabs/TrainingLocationsContent";
+import TrainingSettingsContent from "./tabs/TrainingSettingsContent";
 
 export default function OrganizationDetailPage({
   params,
@@ -34,37 +34,32 @@ export default function OrganizationDetailPage({
                 <TabsTrigger value="profile" className="text-sm">
                   Profile
                 </TabsTrigger>
-
                 <TabsTrigger value="memberships" className="text-sm">
                   Memberships
                 </TabsTrigger>
                 <TabsTrigger value="group-types" className="text-sm">
                   Group Types
                 </TabsTrigger>
-                <TabsTrigger value="training-locations" className="text-sm">
-                  Training Locations
+                <TabsTrigger value="training-settings" className="text-sm">
+                  Training Settings
                 </TabsTrigger>
               </TabsList>
               <ScrollBar orientation="horizontal" className="invisible" />
             </ScrollArea>
           </div>
 
-          <div className="mt-4  md:px-0">
+          <div className="mt-4 md:px-0">
             <TabsContent value="profile">
               <ProfileContent tenant={tenant} />
             </TabsContent>
-
             <TabsContent value="memberships">
               <MembershipCategoriesContent tenantId={tenant?.id} />
             </TabsContent>
             <TabsContent value="group-types">
               <GroupTypesContent tenant={tenant} domain={params.domain} />
             </TabsContent>
-            <TabsContent value="training-locations">
-              <TrainingLocationsContent
-                tenant={tenant}
-                domain={params.domain}
-              />
+            <TabsContent value="training-settings">
+              <TrainingSettingsContent tenant={tenant} domain={params.domain} />
             </TabsContent>
           </div>
         </Tabs>

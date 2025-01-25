@@ -684,6 +684,12 @@ export type Database = {
           }[];
         };
       };
+      update_absent_records: {
+        Args: {
+          session_id: number;
+        };
+        Returns: void;
+      };
     };
     Enums: {
       [_ in never]: never;

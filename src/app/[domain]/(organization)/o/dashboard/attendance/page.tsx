@@ -21,6 +21,9 @@ import { toast } from "sonner";
 import Link from "next/link";
 import { getDisplayGender } from "@/entities/team/Team.schema";
 import { useParams } from "next/navigation";
+import { useSupabase } from "@/libs/supabase/useSupabase";
+import { useAttendanceRecords } from "@/entities/attendance/Attendance.query";
+import { usePlayersByTeamId } from "@/entities/team/Team.query";
 
 function formatTimeString(timeStr: string) {
   try {
@@ -217,6 +220,13 @@ function TrainingCard({
   const closeSession = useCloseAttendanceSession();
   const params = useParams();
 
+  const { data: records } = useAttendanceRecords(
+    activeSessionId ?? 0,
+    tenantId
+  );
+
+  const { data: players } = usePlayersByTeamId(training?.teamId ?? 0, tenantId);
+
   const handleStartSession = async () => {
     try {
       await createSession.mutateAsync({
@@ -232,11 +242,17 @@ function TrainingCard({
   };
 
   const handleCloseSession = async () => {
-    if (!activeSessionId) return;
+    if (!activeSessionId || !training?.teamId) return;
     try {
+      // Find players who haven't checked in
+      const notCheckedInPlayerIds = (players ?? [])
+        .filter((p) => !records?.some((r) => r.playerId === p.player.id))
+        .map((p) => p.player.id);
+
       await closeSession.mutateAsync({
         sessionId: activeSessionId,
         tenantId,
+        notCheckedInPlayerIds,
       });
       toast.success("Session closed successfully");
     } catch (error) {
