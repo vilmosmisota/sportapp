@@ -13,7 +13,7 @@ import { BarChart3, Users, Clock, Trophy, Calendar } from "lucide-react";
 import Link from "next/link";
 import { getDisplayGender } from "@/entities/team/Team.schema";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
-import { useTeamAttendanceStats } from "@/entities/attendance/Attendance.query";
+import { useTeamAttendanceAggregates } from "@/entities/attendance/Attendance.actions.client";
 import { Progress } from "@/components/ui/progress";
 import {
   ChartContainer,
@@ -30,6 +30,8 @@ import {
   YAxis,
   CartesianGrid,
   Area,
+  Tooltip,
+  Legend,
 } from "recharts";
 import SeasonSelect from "../../trainings/components/SeasonSelect";
 import { format } from "date-fns";
@@ -41,6 +43,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useState } from "react";
+import { AttendanceSessionAggregate } from "@/entities/attendance/Attendance.schema";
 
 function StatItem({
   icon: Icon,
@@ -70,6 +73,24 @@ function StatItem({
   );
 }
 
+type SessionData = {
+  sessionId: number;
+  trainingId: number;
+  date: string;
+  startTime: string;
+  endTime: string;
+  presentCount: number;
+  lateCount: number;
+  absentCount: number;
+};
+
+type DayStats = {
+  total: number;
+  present: number;
+  late: number;
+  absent: number;
+};
+
 function TeamCard({
   team,
   tenantId,
@@ -94,7 +115,7 @@ function TeamCard({
     data: stats,
     isLoading: isStatsLoading,
     isError,
-  } = useTeamAttendanceStats(team.id, tenantId, seasonId);
+  } = useTeamAttendanceAggregates(team.id, Number(seasonId), tenantId);
 
   if (isStatsLoading) {
     return (
@@ -141,20 +162,112 @@ function TeamCard({
 
   const hasStats = stats && stats.totalSessions > 0;
 
-  // Format recent trend data for the line chart
-  const recentTrendData = stats?.recentTrend
-    ?.map((trend: any) => ({
-      date: trend.date,
-      dateFormatted: format(new Date(trend.date), "dd MMM yyyy"),
-      attendance: trend.attendanceRate,
-    }))
-    .reverse();
+  // Get the last 10 sessions for recent stats
+  const recentSessions = stats?.sessions
+    ? (stats.sessions as SessionData[])
+        .slice(0, 10)
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    : [];
 
-  // Format day of week data for the bar chart
-  const dayOfWeekData = stats?.dayOfWeekStats?.map((day: any) => ({
-    day: day.dayOfWeek.slice(0, 3),
-    attendance: day.attendanceRate,
+  // Format recent trend data for the line chart
+  const recentTrendData = recentSessions.map((session) => {
+    const totalAttendees =
+      session.presentCount + session.lateCount + session.absentCount;
+    const attendanceRate = Math.round(
+      ((session.presentCount + session.lateCount) / totalAttendees) * 100
+    );
+    const accuracyRate = Math.round(
+      (session.presentCount / totalAttendees) * 100
+    );
+
+    return {
+      date: session.date,
+      dateFormatted: format(new Date(session.date), "dd MMM yyyy"),
+      attendance: attendanceRate,
+      accuracy: accuracyRate,
+    };
+  });
+
+  // Calculate recent stats
+  const recentStats = recentSessions.reduce(
+    (acc, session) => {
+      acc.totalPresent += session.presentCount;
+      acc.totalLate += session.lateCount;
+      acc.totalAbsent += session.absentCount;
+      acc.totalPlayers +=
+        session.presentCount + session.lateCount + session.absentCount;
+      acc.sessions++;
+      return acc;
+    },
+    {
+      totalPresent: 0,
+      totalLate: 0,
+      totalAbsent: 0,
+      totalPlayers: 0,
+      sessions: 0,
+    }
+  );
+
+  const recentAttendanceRate = Math.round(
+    ((recentStats.totalPresent + recentStats.totalLate) /
+      recentStats.totalPlayers) *
+      100
+  );
+
+  const recentAveragePlayers = Math.round(
+    recentStats.totalPlayers / recentStats.sessions
+  );
+
+  // Calculate day of week stats from recent sessions
+  const dayOfWeekStats = recentSessions.reduce(
+    (acc: Record<string, DayStats>, session) => {
+      const day = format(new Date(session.date), "EEE");
+      if (!acc[day]) {
+        acc[day] = { total: 0, present: 0, late: 0, absent: 0 };
+      }
+      acc[day].total++;
+      acc[day].present += session.presentCount;
+      acc[day].late += session.lateCount;
+      acc[day].absent += session.absentCount;
+      return acc;
+    },
+    {}
+  );
+
+  const dayOfWeekData = Object.entries(dayOfWeekStats).map(([day, data]) => ({
+    day,
+    attendance: Math.round(
+      ((data.present + data.late) / (data.present + data.late + data.absent)) *
+        100
+    ),
+    accuracy: Math.round(
+      (data.present / (data.present + data.late + data.absent)) * 100
+    ),
   }));
+
+  // Calculate consecutive full attendance from recent sessions
+  const consecutiveFullAttendance = recentSessions.reduce(
+    (acc: { current: number; max: number }, session) => {
+      const isFullAttendance =
+        session.absentCount === 0 && session.lateCount === 0;
+      if (isFullAttendance) {
+        acc.current++;
+        acc.max = Math.max(acc.max, acc.current);
+      } else {
+        acc.current = 0;
+      }
+      return acc;
+    },
+    { current: 0, max: 0 }
+  ).max;
+
+  const dateRange = recentSessions.length > 0 && {
+    start: format(new Date(recentSessions[0].date), "dd MMM yyyy"),
+    end: format(
+      new Date(recentSessions[recentSessions.length - 1].date),
+      "dd MMM yyyy"
+    ),
+  };
 
   return (
     <Card className="hover:bg-accent/50 transition-colors">
@@ -207,35 +320,56 @@ function TeamCard({
       <CardContent className="space-y-8">
         {hasStats ? (
           <>
-            <div className="grid grid-cols-4 gap-4">
-              <StatItem
-                icon={Calendar}
-                label="Total Sessions"
-                value={stats.totalSessions}
-              />
-              <StatItem
-                icon={Users}
-                label="Average Players"
-                value={Math.round(stats.averagePlayersPerSession ?? 0)}
-              />
-              <StatItem
-                icon={BarChart3}
-                label="Attendance Accuracy"
-                value={`${Math.round(stats.averageAttendanceRate ?? 0)}%`}
-              />
-              <StatItem
-                icon={Trophy}
-                label="Full Attendance Streak"
-                value={stats.mostConsecutiveFullAttendance}
-              />
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  All-Time Stats
+                </h3>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <StatItem
+                  icon={Calendar}
+                  label="Total Sessions"
+                  value={stats.totalSessions}
+                />
+                <StatItem
+                  icon={BarChart3}
+                  label="Overall Attendance Rate"
+                  value={`${Math.round(stats.averageAttendanceRate)}%`}
+                />
+                <StatItem
+                  icon={Clock}
+                  label="Late Arrival Rate"
+                  value={`${Math.round(
+                    (stats.totalLate / (stats.totalPresent + stats.totalLate)) *
+                      100
+                  )}%`}
+                />
+                <StatItem
+                  icon={Trophy}
+                  label="On-Time Rate"
+                  value={`${Math.round(
+                    (stats.totalPresent /
+                      (stats.totalPresent +
+                        stats.totalLate +
+                        stats.totalAbsent)) *
+                      100
+                  )}%`}
+                />
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base font-semibold">
-                    Recent Attendance Trend
-                  </CardTitle>
+                  <div className="space-y-1">
+                    <CardTitle className="text-base font-semibold">
+                      Attendance & Accuracy Trends
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Last 10 sessions performance
+                    </p>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div>
@@ -248,97 +382,104 @@ function TeamCard({
                             dark: "hsl(var(--primary))",
                           },
                         },
+                        accuracy: {
+                          label: "Accuracy Rate",
+                          theme: {
+                            light: "hsl(var(--destructive))",
+                            dark: "hsl(var(--destructive))",
+                          },
+                        },
                       }}
                     >
-                      <LineChart data={recentTrendData}>
-                        <defs>
-                          <linearGradient
-                            id="gradient"
-                            x1="0"
-                            y1="0"
-                            x2="0"
-                            y2="1"
-                          >
-                            <stop
-                              offset="0%"
-                              stopColor="hsl(var(--primary))"
-                              stopOpacity={0.2}
-                            />
-                            <stop
-                              offset="100%"
-                              stopColor="hsl(var(--primary))"
-                              stopOpacity={0}
-                            />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid
-                          strokeDasharray="8"
-                          stroke="hsl(var(--border))"
-                          horizontal={true}
-                          vertical={false}
-                        />
-                        <XAxis
-                          dataKey="dateFormatted"
-                          stroke="hsl(var(--muted-foreground))"
-                          fontSize={12}
-                          tickLine={false}
-                          axisLine={false}
-                          tickFormatter={(value) => value.slice(0, 5)}
-                          dy={8}
-                          padding={{ left: 0, right: 0 }}
-                        />
-                        <YAxis
-                          stroke="hsl(var(--muted-foreground))"
-                          fontSize={12}
-                          tickLine={false}
-                          axisLine={false}
-                          tickFormatter={(value) => `${value}%`}
-                          domain={[0, 100]}
-                          ticks={[0, 25, 50, 75, 100]}
-                          dx={-8}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="attendance"
-                          strokeWidth={2}
-                          dot={false}
-                          stroke="hsl(var(--primary))"
-                        />
-                        <Area
-                          type="monotone"
-                          dataKey="attendance"
-                          stroke="none"
-                          fill="url(#gradient)"
-                          fillOpacity={1}
-                        />
-                        <ChartTooltip
-                          content={({ active, payload }) => {
-                            if (!active || !payload?.length) return null;
-                            return (
-                              <div className="rounded-lg border bg-background p-2 shadow-sm">
-                                <div className="grid grid-cols-2 gap-2">
-                                  <div className="flex flex-col">
+                      <ResponsiveContainer width="100%" height={240}>
+                        <LineChart data={recentTrendData}>
+                          <XAxis
+                            dataKey="dateFormatted"
+                            stroke="hsl(var(--muted-foreground))"
+                            fontSize={12}
+                            tickLine={false}
+                            axisLine={false}
+                          />
+                          <YAxis
+                            stroke="hsl(var(--muted-foreground))"
+                            fontSize={12}
+                            tickLine={false}
+                            axisLine={false}
+                            tickFormatter={(value) => `${value}%`}
+                          />
+                          <CartesianGrid
+                            stroke="hsl(var(--border))"
+                            strokeDasharray="4 4"
+                          />
+                          <Tooltip
+                            content={({ active, payload }) => {
+                              if (!active || !payload?.length) return null;
+                              return (
+                                <div className="rounded-lg border bg-background p-2 shadow-sm">
+                                  <div className="flex flex-col gap-2">
                                     <span className="text-[0.70rem] uppercase text-muted-foreground">
-                                      Date
-                                    </span>
-                                    <span className="font-bold">
                                       {payload[0].payload.dateFormatted}
                                     </span>
+                                    <div className="flex flex-col gap-1">
+                                      <div className="flex items-center gap-2">
+                                        <div className="h-2 w-2 rounded-full bg-primary" />
+                                        <span className="font-bold">
+                                          {payload[0].value}% Attendance
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <div className="h-2 w-2 rounded-full bg-destructive" />
+                                        <span className="font-bold">
+                                          {payload[1].value}% Accuracy
+                                        </span>
+                                      </div>
+                                    </div>
                                   </div>
-                                  <div className="flex flex-col">
-                                    <span className="text-[0.70rem] uppercase text-muted-foreground">
-                                      Attendance
+                                </div>
+                              );
+                            }}
+                          />
+                          <Legend
+                            verticalAlign="top"
+                            height={36}
+                            content={({ payload }) => {
+                              if (!payload?.length) return null;
+                              return (
+                                <div className="flex justify-center gap-6">
+                                  <div className="flex items-center gap-2">
+                                    <div className="h-2 w-2 rounded-full bg-primary" />
+                                    <span className="text-sm text-muted-foreground">
+                                      Attendance Rate
                                     </span>
-                                    <span className="font-bold">
-                                      {payload[0].value}%
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <div className="h-2 w-2 rounded-full bg-destructive" />
+                                    <span className="text-sm text-muted-foreground">
+                                      Accuracy Rate
                                     </span>
                                   </div>
                                 </div>
-                              </div>
-                            );
-                          }}
-                        />
-                      </LineChart>
+                              );
+                            }}
+                          />
+                          <Line
+                            name="Attendance Rate"
+                            type="monotone"
+                            dataKey="attendance"
+                            stroke="hsl(var(--primary))"
+                            strokeWidth={2}
+                            dot={true}
+                          />
+                          <Line
+                            name="Accuracy Rate"
+                            type="monotone"
+                            dataKey="accuracy"
+                            stroke="hsl(var(--destructive))"
+                            strokeWidth={2}
+                            dot={true}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
                     </ChartContainer>
                   </div>
                 </CardContent>
@@ -346,12 +487,17 @@ function TeamCard({
 
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base font-semibold">
-                    Attendance by Day
-                  </CardTitle>
+                  <div className="space-y-1">
+                    <CardTitle className="text-base font-semibold">
+                      Attendance & Accuracy by Day
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Last 10 sessions performance
+                    </p>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-[240px]">
+                  <div>
                     <ChartContainer
                       config={{
                         attendance: {
@@ -361,68 +507,100 @@ function TeamCard({
                             dark: "hsl(var(--primary))",
                           },
                         },
+                        accuracy: {
+                          label: "Accuracy Rate",
+                          theme: {
+                            light: "hsl(var(--destructive))",
+                            dark: "hsl(var(--destructive))",
+                          },
+                        },
                       }}
                     >
-                      <BarChart data={dayOfWeekData}>
-                        <CartesianGrid
-                          strokeDasharray="8"
-                          stroke="hsl(var(--border))"
-                          horizontal={true}
-                          vertical={false}
-                        />
-                        <XAxis
-                          dataKey="day"
-                          stroke="hsl(var(--muted-foreground))"
-                          fontSize={12}
-                          tickLine={false}
-                          axisLine={false}
-                          dy={8}
-                          padding={{ left: 0, right: 0 }}
-                        />
-                        <YAxis
-                          stroke="hsl(var(--muted-foreground))"
-                          fontSize={12}
-                          tickLine={false}
-                          axisLine={false}
-                          tickFormatter={(value) => `${value}%`}
-                          domain={[0, 100]}
-                          ticks={[0, 25, 50, 75, 100]}
-                          dx={-8}
-                        />
-                        <Bar
-                          dataKey="attendance"
-                          fill="hsl(var(--primary))"
-                          radius={[4, 4, 0, 0]}
-                          maxBarSize={40}
-                        />
-                        <ChartTooltip
-                          content={({ active, payload }) => {
-                            if (!active || !payload?.length) return null;
-                            return (
-                              <div className="rounded-lg border bg-background p-2 shadow-sm">
-                                <div className="grid grid-cols-2 gap-2">
-                                  <div className="flex flex-col">
+                      <ResponsiveContainer width="100%" height={240}>
+                        <BarChart data={dayOfWeekData}>
+                          <XAxis
+                            dataKey="day"
+                            stroke="hsl(var(--muted-foreground))"
+                            fontSize={12}
+                            tickLine={false}
+                            axisLine={false}
+                          />
+                          <YAxis
+                            stroke="hsl(var(--muted-foreground))"
+                            fontSize={12}
+                            tickLine={false}
+                            axisLine={false}
+                            tickFormatter={(value) => `${value}%`}
+                          />
+                          <CartesianGrid
+                            stroke="hsl(var(--border))"
+                            strokeDasharray="4 4"
+                          />
+                          <Tooltip
+                            content={({ active, payload }) => {
+                              if (!active || !payload?.length) return null;
+                              return (
+                                <div className="rounded-lg border bg-background p-2 shadow-sm">
+                                  <div className="flex flex-col gap-2">
                                     <span className="text-[0.70rem] uppercase text-muted-foreground">
-                                      Day
-                                    </span>
-                                    <span className="font-bold">
                                       {payload[0].payload.day}
                                     </span>
+                                    <div className="flex flex-col gap-1">
+                                      <div className="flex items-center gap-2">
+                                        <div className="h-2 w-2 rounded-full bg-primary" />
+                                        <span className="font-bold">
+                                          {payload[0].value}% Attendance
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <div className="h-2 w-2 rounded-full bg-destructive" />
+                                        <span className="font-bold">
+                                          {payload[1].value}% Accuracy
+                                        </span>
+                                      </div>
+                                    </div>
                                   </div>
-                                  <div className="flex flex-col">
-                                    <span className="text-[0.70rem] uppercase text-muted-foreground">
-                                      Attendance
+                                </div>
+                              );
+                            }}
+                          />
+                          <Legend
+                            verticalAlign="top"
+                            height={36}
+                            content={({ payload }) => {
+                              if (!payload?.length) return null;
+                              return (
+                                <div className="flex justify-center gap-6">
+                                  <div className="flex items-center gap-2">
+                                    <div className="h-2 w-2 rounded-full bg-primary" />
+                                    <span className="text-sm text-muted-foreground">
+                                      Attendance Rate
                                     </span>
-                                    <span className="font-bold">
-                                      {payload[0].value}%
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <div className="h-2 w-2 rounded-full bg-destructive" />
+                                    <span className="text-sm text-muted-foreground">
+                                      Accuracy Rate
                                     </span>
                                   </div>
                                 </div>
-                              </div>
-                            );
-                          }}
-                        />
-                      </BarChart>
+                              );
+                            }}
+                          />
+                          <Bar
+                            name="Attendance Rate"
+                            dataKey="attendance"
+                            fill="hsl(var(--primary))"
+                            radius={[4, 4, 0, 0]}
+                          />
+                          <Bar
+                            name="Accuracy Rate"
+                            dataKey="accuracy"
+                            fill="hsl(var(--destructive))"
+                            radius={[4, 4, 0, 0]}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
                     </ChartContainer>
                   </div>
                 </CardContent>

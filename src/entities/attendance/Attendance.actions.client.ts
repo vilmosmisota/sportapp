@@ -1,6 +1,6 @@
 import { TypedClient } from "@/libs/supabase/type";
 import { useSupabase } from "@/libs/supabase/useSupabase";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import {
   createAttendanceSession,
   updateAttendanceSession,
@@ -8,6 +8,10 @@ import {
   restoreAttendanceRecords,
   createAbsentRecords,
   deleteAttendanceSession,
+  getTeamAttendanceAggregates,
+  getPlayerAttendanceAggregates,
+  getAllTeamPlayerAttendanceAggregates,
+  closeAttendanceSession,
 } from "./Attendance.services";
 import { queryKeys } from "@/cacheKeys/cacheKeys";
 import { useRouter } from "next/navigation";
@@ -121,34 +125,12 @@ export const useCloseAttendanceSession = () => {
       tenantId: string;
       notCheckedInPlayerIds: number[];
     }) => {
-      const currentTime = new Date();
-      const formattedCurrentTime = currentTime.toLocaleTimeString("en-GB", {
-        hour12: false,
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      });
-
-      // First update the session status
-      const session = await updateAttendanceSession(
+      await closeAttendanceSession(
         client,
         sessionId,
-        {
-          isActive: false,
-          endTime: formattedCurrentTime,
-        },
-        tenantId
+        tenantId,
+        notCheckedInPlayerIds
       );
-
-      // Then update all pending records to absent and create new absent records
-      await createAbsentRecords(
-        client,
-        sessionId,
-        notCheckedInPlayerIds,
-        tenantId
-      );
-
-      return session;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -159,6 +141,16 @@ export const useCloseAttendanceSession = () => {
       });
       queryClient.invalidateQueries({
         queryKey: [queryKeys.attendance.records],
+      });
+      // Add invalidation for aggregate stats
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.attendance.teamStats],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.attendance.stats],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.attendance.aggregates],
       });
     },
   });
@@ -233,5 +225,57 @@ export const useDeleteAttendanceSession = () => {
       });
       router.push("/o/dashboard/attendance");
     },
+  });
+};
+
+export const useTeamAttendanceAggregates = (
+  teamId: number,
+  seasonId: number,
+  tenantId: string
+) => {
+  const client = useSupabase();
+  const queryClient = useQueryClient();
+
+  return useQuery({
+    queryKey: [queryKeys.attendance.aggregates, teamId, seasonId],
+    queryFn: () =>
+      getTeamAttendanceAggregates(client, teamId, seasonId, tenantId),
+  });
+};
+
+export const usePlayerAttendanceAggregates = (
+  playerId: number,
+  teamId: number,
+  seasonId: number,
+  tenantId: string
+) => {
+  const client = useSupabase();
+  const queryClient = useQueryClient();
+
+  return useQuery({
+    queryKey: [queryKeys.attendance.aggregates, playerId, teamId, seasonId],
+    queryFn: () =>
+      getPlayerAttendanceAggregates(
+        client,
+        playerId,
+        teamId,
+        seasonId,
+        tenantId
+      ),
+  });
+};
+
+export const useAllTeamPlayerAttendanceAggregates = (
+  teamId: number,
+  seasonId: number,
+  tenantId: string
+) => {
+  const client = useSupabase();
+  const queryClient = useQueryClient();
+
+  return useQuery({
+    queryKey: [queryKeys.attendance.aggregates, "team", teamId, seasonId],
+    queryFn: () =>
+      getAllTeamPlayerAttendanceAggregates(client, teamId, seasonId, tenantId),
   });
 };

@@ -112,5 +112,6 @@ export const queryKeys = {
       ["attendance", "stats", tenantId, teamId] as const,
     teamStats: (tenantId?: string, teamId?: number) =>
       ["attendance", "teamStats", tenantId, teamId] as const,
+    aggregates: ["attendance", "aggregates"] as const,
   },
 } as const;

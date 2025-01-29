@@ -378,3 +378,108 @@ export const restoreAttendanceRecords = async (
     throw error;
   }
 };
+
+export const closeAttendanceSession = async (
+  client: TypedClient,
+  sessionId: number,
+  tenantId: string,
+  notCheckedInPlayerIds: number[]
+) => {
+  try {
+    // First update the session to mark it as inactive
+    const { error: updateError } = await client
+      .from("attendanceSession")
+      .update({ isActive: false })
+      .eq("id", sessionId)
+      .eq("tenantId", tenantId);
+
+    if (updateError) throw updateError;
+
+    // Call the aggregate function which will also handle creating absent records
+    const { error: aggregateError } = await client.rpc(
+      "aggregate_attendance_on_session_close",
+      {
+        session_id: sessionId,
+        tenant_id: Number(tenantId),
+        not_checked_in_player_ids: notCheckedInPlayerIds,
+      }
+    );
+
+    if (aggregateError) throw aggregateError;
+
+    return true;
+  } catch (error) {
+    console.error("Error in closeAttendanceSession:", error);
+    throw error;
+  }
+};
+
+export const getTeamAttendanceAggregates = async (
+  client: TypedClient,
+  teamId: number,
+  seasonId: number,
+  tenantId: string
+) => {
+  try {
+    const { data, error } = await client
+      .from("attendanceSessionAggregates")
+      .select("*")
+      .eq("teamId", teamId)
+      .eq("seasonId", seasonId)
+      .eq("tenantId", tenantId)
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Error in getTeamAttendanceAggregates:", error);
+    throw error;
+  }
+};
+
+export const getPlayerAttendanceAggregates = async (
+  client: TypedClient,
+  playerId: number,
+  teamId: number,
+  seasonId: number,
+  tenantId: string
+) => {
+  try {
+    const { data, error } = await client
+      .from("attendanceRecordAggregates")
+      .select("*")
+      .eq("playerId", playerId)
+      .eq("teamId", teamId)
+      .eq("seasonId", seasonId)
+      .eq("tenantId", tenantId)
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Error in getPlayerAttendanceAggregates:", error);
+    throw error;
+  }
+};
+
+export const getAllTeamPlayerAttendanceAggregates = async (
+  client: TypedClient,
+  teamId: number,
+  seasonId: number,
+  tenantId: string
+) => {
+  try {
+    const { data, error } = await client
+      .from("attendanceRecordAggregates")
+      .select("*")
+      .eq("teamId", teamId)
+      .eq("seasonId", seasonId)
+      .eq("tenantId", tenantId);
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Error in getAllTeamPlayerAttendanceAggregates:", error);
+    throw error;
+  }
+};

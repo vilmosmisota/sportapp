@@ -108,3 +108,57 @@ export type UpdateAttendanceSession = z.infer<
 export type UpdateAttendanceRecord = z.infer<
   typeof updateAttendanceRecordSchema
 >;
+
+export const attendanceSessionAggregateSchema = z.object({
+  ...baseSchema,
+  teamId: z.number(),
+  tenantId: z.number(),
+  seasonId: z.number(),
+  totalSessions: z.number(),
+  totalPresent: z.number(),
+  totalLate: z.number(),
+  totalAbsent: z.number(),
+  averageAttendanceRate: z.number(),
+  sessions: z.array(
+    z.object({
+      sessionId: z.number(),
+      trainingId: z.number(),
+      date: z.string(),
+      startTime: z.string(),
+      endTime: z.string(),
+      presentCount: z.number(),
+      lateCount: z.number(),
+      absentCount: z.number(),
+    })
+  ),
+  aggregatedAt: z.string().nullable(),
+});
+
+export const attendanceRecordAggregateSchema = z.object({
+  ...baseSchema,
+  playerId: z.number(),
+  teamId: z.number(),
+  tenantId: z.number(),
+  seasonId: z.number(),
+  totalAttendance: z.number(),
+  totalLate: z.number(),
+  totalAbsent: z.number(),
+  attendanceRate: z.number(),
+  records: z.array(
+    z.object({
+      sessionId: z.number(),
+      trainingId: z.number(),
+      date: z.string(),
+      status: z.nativeEnum(AttendanceStatus),
+      checkInTime: z.string().nullable(),
+    })
+  ),
+  aggregatedAt: z.string().nullable(),
+});
+
+export type AttendanceSessionAggregate = z.infer<
+  typeof attendanceSessionAggregateSchema
+>;
+export type AttendanceRecordAggregate = z.infer<
+  typeof attendanceRecordAggregateSchema
+>;

@@ -39,6 +39,134 @@ export type Database = {
         };
         Relationships: [];
       };
+      attendanceSessionAggregates: {
+        Row: {
+          id: number;
+          teamId: number;
+          tenantId: number;
+          seasonId: number;
+          totalSessions: number;
+          totalPresent: number;
+          totalLate: number;
+          totalAbsent: number;
+          averageAttendanceRate: number;
+          sessions: Json;
+          aggregatedAt: string | null;
+        };
+        Insert: {
+          id?: number;
+          teamId: number;
+          tenantId: number;
+          seasonId: number;
+          totalSessions: number;
+          totalPresent: number;
+          totalLate: number;
+          totalAbsent: number;
+          averageAttendanceRate: number;
+          sessions: Json;
+          aggregatedAt?: string | null;
+        };
+        Update: {
+          id?: number;
+          teamId?: number;
+          tenantId?: number;
+          seasonId?: number;
+          totalSessions?: number;
+          totalPresent?: number;
+          totalLate?: number;
+          totalAbsent?: number;
+          averageAttendanceRate?: number;
+          sessions?: Json;
+          aggregatedAt?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "attendanceSessionAggregates_teamId_fkey";
+            columns: ["teamId"];
+            isOneToOne: false;
+            referencedRelation: "teams";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "attendanceSessionAggregates_tenantId_fkey";
+            columns: ["tenantId"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "attendanceSessionAggregates_seasonId_fkey";
+            columns: ["seasonId"];
+            isOneToOne: false;
+            referencedRelation: "seasons";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      attendanceRecordAggregates: {
+        Row: {
+          id: number;
+          playerId: number;
+          teamId: number;
+          tenantId: number;
+          seasonId: number;
+          totalAttendance: number;
+          totalLate: number;
+          totalAbsent: number;
+          attendanceRate: number;
+          records: Json;
+          aggregatedAt: string | null;
+        };
+        Insert: {
+          id?: number;
+          playerId: number;
+          teamId: number;
+          tenantId: number;
+          seasonId: number;
+          totalAttendance: number;
+          totalLate: number;
+          totalAbsent: number;
+          attendanceRate: number;
+          records: Json;
+          aggregatedAt?: string | null;
+        };
+        Update: {
+          id?: number;
+          playerId?: number;
+          teamId?: number;
+          tenantId?: number;
+          seasonId?: number;
+          totalAttendance?: number;
+          totalLate?: number;
+          totalAbsent?: number;
+          attendanceRate?: number;
+          records?: Json;
+          aggregatedAt?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "attendanceRecordAggregates_playerId_fkey";
+            columns: ["playerId"];
+            isOneToOne: false;
+            referencedRelation: "players";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "attendanceRecordAggregates_teamId_fkey";
+            columns: ["teamId"];
+            isOneToOne: false;
+            referencedRelation: "teams";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "attendanceRecordAggregates_tenantId_fkey";
+            columns: ["tenantId"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       clubs: {
         Row: {
           contactEmail: string | null;
@@ -687,6 +815,14 @@ export type Database = {
       update_absent_records: {
         Args: {
           session_id: number;
+        };
+        Returns: void;
+      };
+      aggregate_attendance_on_session_close: {
+        Args: {
+          session_id: number;
+          tenant_id: number;
+          not_checked_in_player_ids: number[];
         };
         Returns: void;
       };
