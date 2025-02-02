@@ -188,36 +188,6 @@ function TeamCard({
     };
   });
 
-  // Calculate recent stats
-  const recentStats = recentSessions.reduce(
-    (acc, session) => {
-      acc.totalPresent += session.presentCount;
-      acc.totalLate += session.lateCount;
-      acc.totalAbsent += session.absentCount;
-      acc.totalPlayers +=
-        session.presentCount + session.lateCount + session.absentCount;
-      acc.sessions++;
-      return acc;
-    },
-    {
-      totalPresent: 0,
-      totalLate: 0,
-      totalAbsent: 0,
-      totalPlayers: 0,
-      sessions: 0,
-    }
-  );
-
-  const recentAttendanceRate = Math.round(
-    ((recentStats.totalPresent + recentStats.totalLate) /
-      recentStats.totalPlayers) *
-      100
-  );
-
-  const recentAveragePlayers = Math.round(
-    recentStats.totalPlayers / recentStats.sessions
-  );
-
   // Calculate day of week stats from recent sessions
   const dayOfWeekStats = recentSessions.reduce(
     (acc: Record<string, DayStats>, session) => {
@@ -244,30 +214,6 @@ function TeamCard({
       (data.present / (data.present + data.late + data.absent)) * 100
     ),
   }));
-
-  // Calculate consecutive full attendance from recent sessions
-  const consecutiveFullAttendance = recentSessions.reduce(
-    (acc: { current: number; max: number }, session) => {
-      const isFullAttendance =
-        session.absentCount === 0 && session.lateCount === 0;
-      if (isFullAttendance) {
-        acc.current++;
-        acc.max = Math.max(acc.max, acc.current);
-      } else {
-        acc.current = 0;
-      }
-      return acc;
-    },
-    { current: 0, max: 0 }
-  ).max;
-
-  const dateRange = recentSessions.length > 0 && {
-    start: format(new Date(recentSessions[0].date), "dd MMM yyyy"),
-    end: format(
-      new Date(recentSessions[recentSessions.length - 1].date),
-      "dd MMM yyyy"
-    ),
-  };
 
   return (
     <Card className="hover:bg-accent/50 transition-colors">
@@ -309,7 +255,7 @@ function TeamCard({
               </div>
             </div>
           </div>
-          <Link href={`attendance/statistics/${team.id}`}>
+          <Link href={`/o/dashboard/attendance/statistics/${team.id}`}>
             <Button variant="default" size="default" className="gap-2">
               <BarChart3 className="h-4 w-4" />
               View Player Details
@@ -378,15 +324,15 @@ function TeamCard({
                         attendance: {
                           label: "Attendance Rate",
                           theme: {
-                            light: "hsl(var(--primary))",
-                            dark: "hsl(var(--primary))",
+                            light: "hsl(var(--emerald-500))",
+                            dark: "hsl(var(--emerald-500))",
                           },
                         },
                         accuracy: {
                           label: "Accuracy Rate",
                           theme: {
-                            light: "hsl(var(--destructive))",
-                            dark: "hsl(var(--destructive))",
+                            light: "hsl(var(--sky-500))",
+                            dark: "hsl(var(--sky-500))",
                           },
                         },
                       }}
@@ -422,13 +368,13 @@ function TeamCard({
                                     </span>
                                     <div className="flex flex-col gap-1">
                                       <div className="flex items-center gap-2">
-                                        <div className="h-2 w-2 rounded-full bg-primary" />
+                                        <div className="h-2 w-2 rounded-full bg-emerald-500" />
                                         <span className="font-bold">
                                           {payload[0].value}% Attendance
                                         </span>
                                       </div>
                                       <div className="flex items-center gap-2">
-                                        <div className="h-2 w-2 rounded-full bg-destructive" />
+                                        <div className="h-2 w-2 rounded-full bg-sky-500" />
                                         <span className="font-bold">
                                           {payload[1].value}% Accuracy
                                         </span>
@@ -447,13 +393,13 @@ function TeamCard({
                               return (
                                 <div className="flex justify-center gap-6">
                                   <div className="flex items-center gap-2">
-                                    <div className="h-2 w-2 rounded-full bg-primary" />
+                                    <div className="h-2 w-2 rounded-full bg-emerald-500" />
                                     <span className="text-sm text-muted-foreground">
                                       Attendance Rate
                                     </span>
                                   </div>
                                   <div className="flex items-center gap-2">
-                                    <div className="h-2 w-2 rounded-full bg-destructive" />
+                                    <div className="h-2 w-2 rounded-full bg-sky-500" />
                                     <span className="text-sm text-muted-foreground">
                                       Accuracy Rate
                                     </span>
@@ -466,7 +412,7 @@ function TeamCard({
                             name="Attendance Rate"
                             type="monotone"
                             dataKey="attendance"
-                            stroke="hsl(var(--primary))"
+                            stroke="rgb(16 185 129)"
                             strokeWidth={2}
                             dot={true}
                           />
@@ -474,7 +420,7 @@ function TeamCard({
                             name="Accuracy Rate"
                             type="monotone"
                             dataKey="accuracy"
-                            stroke="hsl(var(--destructive))"
+                            stroke="rgb(14 165 233)"
                             strokeWidth={2}
                             dot={true}
                           />
@@ -503,15 +449,15 @@ function TeamCard({
                         attendance: {
                           label: "Attendance Rate",
                           theme: {
-                            light: "hsl(var(--primary))",
-                            dark: "hsl(var(--primary))",
+                            light: "hsl(var(--emerald-500))",
+                            dark: "hsl(var(--emerald-500))",
                           },
                         },
                         accuracy: {
                           label: "Accuracy Rate",
                           theme: {
-                            light: "hsl(var(--destructive))",
-                            dark: "hsl(var(--destructive))",
+                            light: "hsl(var(--sky-500))",
+                            dark: "hsl(var(--sky-500))",
                           },
                         },
                       }}
@@ -547,13 +493,13 @@ function TeamCard({
                                     </span>
                                     <div className="flex flex-col gap-1">
                                       <div className="flex items-center gap-2">
-                                        <div className="h-2 w-2 rounded-full bg-primary" />
+                                        <div className="h-2 w-2 rounded-full bg-emerald-500" />
                                         <span className="font-bold">
                                           {payload[0].value}% Attendance
                                         </span>
                                       </div>
                                       <div className="flex items-center gap-2">
-                                        <div className="h-2 w-2 rounded-full bg-destructive" />
+                                        <div className="h-2 w-2 rounded-full bg-sky-500" />
                                         <span className="font-bold">
                                           {payload[1].value}% Accuracy
                                         </span>
@@ -572,13 +518,13 @@ function TeamCard({
                               return (
                                 <div className="flex justify-center gap-6">
                                   <div className="flex items-center gap-2">
-                                    <div className="h-2 w-2 rounded-full bg-primary" />
+                                    <div className="h-2 w-2 rounded-full bg-emerald-500" />
                                     <span className="text-sm text-muted-foreground">
                                       Attendance Rate
                                     </span>
                                   </div>
                                   <div className="flex items-center gap-2">
-                                    <div className="h-2 w-2 rounded-full bg-destructive" />
+                                    <div className="h-2 w-2 rounded-full bg-sky-500" />
                                     <span className="text-sm text-muted-foreground">
                                       Accuracy Rate
                                     </span>
@@ -590,14 +536,12 @@ function TeamCard({
                           <Bar
                             name="Attendance Rate"
                             dataKey="attendance"
-                            fill="hsl(var(--primary))"
-                            radius={[4, 4, 0, 0]}
+                            fill="rgb(16 185 129)"
                           />
                           <Bar
                             name="Accuracy Rate"
                             dataKey="accuracy"
-                            fill="hsl(var(--destructive))"
-                            radius={[4, 4, 0, 0]}
+                            fill="rgb(14 165 233)"
                           />
                         </BarChart>
                       </ResponsiveContainer>

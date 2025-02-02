@@ -286,49 +286,6 @@ export const deleteAttendanceRecord = async (
   }
 };
 
-export const getTeamPlayerAttendanceStats = async (
-  client: TypedClient,
-  teamId: number,
-  tenantId: string
-): Promise<PlayerAttendanceStats[]> => {
-  try {
-    const { data, error } = await client.rpc(
-      "get_team_player_attendance_stats",
-      {
-        teamId,
-        tenantId: Number(tenantId),
-      }
-    );
-
-    if (error) throw error;
-    return data.map((stats) => playerAttendanceStatsSchema.parse(stats));
-  } catch (error) {
-    console.error("Error in getTeamPlayerAttendanceStats:", error);
-    throw error;
-  }
-};
-
-export const getTeamAttendanceStats = async (
-  client: TypedClient,
-  teamId: number,
-  tenantId: string,
-  seasonId?: string
-): Promise<TeamAttendanceStats> => {
-  try {
-    const { data, error } = await client.rpc("get_team_attendance_stats", {
-      teamId,
-      tenantId: Number(tenantId),
-      seasonId: seasonId ? Number(seasonId) : null,
-    });
-
-    if (error) throw error;
-    return teamAttendanceStatsSchema.parse(data);
-  } catch (error) {
-    console.error("Error in getTeamAttendanceStats:", error);
-    throw error;
-  }
-};
-
 export const createAbsentRecords = async (
   client: TypedClient,
   sessionId: number,
@@ -355,26 +312,6 @@ export const createAbsentRecords = async (
     return true;
   } catch (error) {
     console.error("Error in updateAbsentRecords:", error);
-    throw error;
-  }
-};
-
-export const restoreAttendanceRecords = async (
-  client: TypedClient,
-  sessionId: number
-) => {
-  try {
-    // Delete all absent records for this session
-    const { error } = await client
-      .from("attendanceRecords")
-      .delete()
-      .eq("attendanceSessionId", sessionId)
-      .eq("status", "absent");
-
-    if (error) throw error;
-    return true;
-  } catch (error) {
-    console.error("Error in restoreAttendanceRecords:", error);
     throw error;
   }
 };

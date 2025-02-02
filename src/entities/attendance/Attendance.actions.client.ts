@@ -4,9 +4,6 @@ import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import {
   createAttendanceSession,
   updateAttendanceSession,
-  getAttendanceSessionById,
-  restoreAttendanceRecords,
-  createAbsentRecords,
   deleteAttendanceSession,
   getTeamAttendanceAggregates,
   getPlayerAttendanceAggregates,
@@ -151,48 +148,6 @@ export const useCloseAttendanceSession = () => {
       });
       queryClient.invalidateQueries({
         queryKey: [queryKeys.attendance.aggregates],
-      });
-    },
-  });
-};
-
-export const useReopenAttendanceSession = () => {
-  const client = useSupabase();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({
-      sessionId,
-      tenantId,
-    }: {
-      sessionId: number;
-      tenantId: string;
-    }) => {
-      // Update the session to be active again
-      const session = await updateAttendanceSession(
-        client,
-        sessionId,
-        {
-          isActive: true,
-          endTime: null,
-        },
-        tenantId
-      );
-
-      // Restore attendance records to their previous state
-      await restoreAttendanceRecords(client, sessionId);
-
-      return session;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.attendance.all,
-      });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.attendance.activeSessions,
-      });
-      queryClient.invalidateQueries({
-        queryKey: [queryKeys.attendance.records],
       });
     },
   });

@@ -6,10 +6,7 @@ import {
   getAttendanceSessions,
   getAttendanceRecords,
   getAttendanceSessionById,
-  getTeamPlayerAttendanceStats,
-  getTeamAttendanceStats,
 } from "./Attendance.services";
-import { TeamAttendanceStats } from "./Attendance.schema";
 
 // Query for getting all attendance sessions
 export const useAttendanceSessions = (tenantId: string) => {
@@ -60,36 +57,5 @@ export const useAttendanceRecords = (sessionId: number, tenantId: string) => {
     queryKey,
     queryFn: () => getAttendanceRecords(client, sessionId, tenantId),
     enabled: !!sessionId && !!tenantId,
-  });
-};
-
-// Query for getting team player attendance statistics
-export const useTeamPlayerAttendanceStats = (
-  teamId: number,
-  tenantId: string
-) => {
-  const client = useSupabase();
-  const queryKey = [queryKeys.attendance.stats(tenantId, teamId)];
-
-  return useQuery({
-    queryKey,
-    queryFn: () => getTeamPlayerAttendanceStats(client, teamId, tenantId),
-    enabled: !!teamId && !!tenantId,
-  });
-};
-
-// Query for getting team attendance statistics
-export const useTeamAttendanceStats = (
-  teamId: number,
-  tenantId: string,
-  seasonId?: string
-) => {
-  const client = useSupabase();
-  const queryKey = [queryKeys.attendance.teamStats(tenantId, teamId), seasonId];
-
-  return useQuery<TeamAttendanceStats>({
-    queryKey,
-    queryFn: () => getTeamAttendanceStats(client, teamId, tenantId, seasonId),
-    enabled: !!teamId && !!tenantId,
   });
 };
