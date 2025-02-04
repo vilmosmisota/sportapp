@@ -279,21 +279,24 @@ function TeamCard({
                   value={stats.totalSessions}
                 />
                 <StatItem
-                  icon={BarChart3}
-                  label="Overall Attendance Rate"
-                  value={`${Math.round(stats.averageAttendanceRate)}%`}
+                  icon={Users}
+                  label="Total Players"
+                  value={team.playerTeamConnections?.length ?? 0}
                 />
                 <StatItem
-                  icon={Clock}
-                  label="Late Arrival Rate"
+                  icon={BarChart3}
+                  label="Attendance Rate"
                   value={`${Math.round(
-                    (stats.totalLate / (stats.totalPresent + stats.totalLate)) *
+                    ((stats.totalPresent + stats.totalLate) /
+                      (stats.totalPresent +
+                        stats.totalLate +
+                        stats.totalAbsent)) *
                       100
                   )}%`}
                 />
                 <StatItem
                   icon={Trophy}
-                  label="On-Time Rate"
+                  label="Accuracy Rate"
                   value={`${Math.round(
                     (stats.totalPresent /
                       (stats.totalPresent +
@@ -337,7 +340,7 @@ function TeamCard({
                         },
                       }}
                     >
-                      <ResponsiveContainer width="100%" height={240}>
+                      <ResponsiveContainer width="100%" aspect={1.8}>
                         <LineChart data={recentTrendData}>
                           <XAxis
                             dataKey="dateFormatted"
@@ -462,7 +465,7 @@ function TeamCard({
                         },
                       }}
                     >
-                      <ResponsiveContainer width="100%" height={240}>
+                      <ResponsiveContainer width="100%" aspect={1.8}>
                         <BarChart data={dayOfWeekData}>
                           <XAxis
                             dataKey="day"

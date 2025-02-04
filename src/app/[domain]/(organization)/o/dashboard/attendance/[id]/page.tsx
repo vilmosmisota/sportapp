@@ -43,7 +43,6 @@ import {
 import { AttendanceStatus } from "@/entities/attendance/Attendance.schema";
 import {
   useCloseAttendanceSession,
-  useReopenAttendanceSession,
   useDeleteAttendanceSession,
 } from "@/entities/attendance/Attendance.actions.client";
 import { toast } from "sonner";
@@ -75,7 +74,7 @@ export default function AttendanceSessionPage() {
   const router = useRouter();
   const { data: tenant } = useTenantByDomain(params.domain as string);
   const closeSession = useCloseAttendanceSession();
-  const reopenSession = useReopenAttendanceSession();
+
   const deleteSession = useDeleteAttendanceSession();
   const [isConfirmCloseOpen, setIsConfirmCloseOpen] = useState(false);
   const [isConfirmReopenOpen, setIsConfirmReopenOpen] = useState(false);
@@ -261,33 +260,6 @@ export default function AttendanceSessionPage() {
     }
   };
 
-  const handleReopenSession = async () => {
-    try {
-      await reopenSession.mutateAsync({
-        sessionId: Number(params.id),
-        tenantId: tenant?.id?.toString() ?? "",
-      });
-      // Manually refetch the session data to update UI
-      await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: [
-            queryKeys.attendance.detail(
-              tenant?.id?.toString() ?? "",
-              params.id as string
-            ),
-          ],
-        }),
-        queryClient.invalidateQueries({
-          queryKey: [queryKeys.attendance.records],
-        }),
-      ]);
-      toast.success("Session reopened successfully");
-    } catch (error) {
-      console.error("Error reopening session:", error);
-      toast.error("Failed to reopen session");
-    }
-  };
-
   const handleDeleteSession = async () => {
     try {
       await deleteSession.mutateAsync({
@@ -363,23 +335,6 @@ export default function AttendanceSessionPage() {
               >
                 Session Closed
               </Badge>
-              <Button
-                variant="outline"
-                onClick={() => setIsConfirmReopenOpen(true)}
-                disabled={reopenSession.isPending}
-              >
-                {reopenSession.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Reopening...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Reopen Session
-                  </>
-                )}
-              </Button>
             </>
           ) : (
             <>
@@ -509,15 +464,6 @@ export default function AttendanceSessionPage() {
         categoryId={params.id as string}
         text="This will close the attendance session. You won't be able to record any more check-ins after this. Are you sure?"
         buttonText="Close Session"
-      />
-
-      <ConfirmDeleteDialog
-        isOpen={isConfirmReopenOpen}
-        setIsOpen={setIsConfirmReopenOpen}
-        onConfirm={() => handleReopenSession()}
-        categoryId={params.id as string}
-        text="This will reopen the attendance session. Players will be able to check in again. Are you sure?"
-        buttonText="Reopen Session"
       />
 
       <ConfirmDeleteDialog

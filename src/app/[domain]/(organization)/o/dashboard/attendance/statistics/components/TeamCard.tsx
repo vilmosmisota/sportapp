@@ -249,7 +249,7 @@ export function TeamCard({ team, tenantId, seasonId }: TeamCardProps) {
                         },
                       }}
                     >
-                      <ResponsiveContainer width="100%" height={240}>
+                      <ResponsiveContainer width="100%" aspect={1.8}>
                         <LineChart data={recentTrendData}>
                           <XAxis
                             dataKey="dateFormatted"
@@ -333,7 +333,7 @@ export function TeamCard({ team, tenantId, seasonId }: TeamCardProps) {
                         },
                       }}
                     >
-                      <ResponsiveContainer width="100%" height={240}>
+                      <ResponsiveContainer width="100%" aspect={1.8}>
                         <BarChart data={dayOfWeekData}>
                           <XAxis
                             dataKey="day"

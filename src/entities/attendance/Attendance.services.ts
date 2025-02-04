@@ -366,7 +366,21 @@ export const getTeamAttendanceAggregates = async (
       .eq("tenantId", tenantId)
       .single();
 
-    if (error) throw error;
+    if (error) {
+      // Handle the specific case where no data is found
+      if (error.code === "PGRST116") {
+        return {
+          totalSessions: 0,
+          totalPresent: 0,
+          totalLate: 0,
+          totalAbsent: 0,
+          averageAttendanceRate: 0,
+          sessions: [],
+          aggregatedAt: null,
+        };
+      }
+      throw error;
+    }
     return data;
   } catch (error) {
     console.error("Error in getTeamAttendanceAggregates:", error);
