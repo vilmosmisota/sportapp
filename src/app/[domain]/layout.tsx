@@ -1,4 +1,5 @@
-import { Menu } from "./(components)/Menu";
+import { SiteMenu } from "./(components)/SiteMenu";
+import { SiteMenuWrapper } from "./(components)/SiteMenuWrapper";
 
 export default function Layout({
   children,
@@ -9,8 +10,10 @@ export default function Layout({
 }) {
   return (
     <div className="flex min-h-screen flex-col overflow-x-hidden">
-      <Menu domain={params.domain} />
-      <div className="flex-1 mx-auto w-full max-w-screen-2xl">{children}</div>
+      <SiteMenuWrapper>
+        <SiteMenu domain={params.domain} />
+      </SiteMenuWrapper>
+      {children}
     </div>
   );
 }

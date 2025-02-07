@@ -55,7 +55,7 @@ const organizationNavItems = [
   },
 ];
 
-export async function Menu({ domain }: { domain: string }) {
+export async function SiteMenu({ domain }: { domain: string }) {
   const serverClient = getServerClient();
   const tenant = await getTenantByDomain(domain, serverClient);
 
@@ -65,7 +65,7 @@ export async function Menu({ domain }: { domain: string }) {
   return (
     <div className="max-w-screen-2xl bg-muted/40 flex items-center justify-between space-x-1 h-12 px-5 border-b shadow-sm">
       <div className="flex items-center gap-2">
-        <TenantLogo logoUrl={tenant?.logo} />
+        <TenantLogo logoUrl={tenant?.logo} name={tenant?.name} />
         <nav className={cn("md:flex items-center gap-6 hidden")}>
           {navItems.map((item) => (
             <NavLink
