@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
+import { PageHeader } from "@/components/ui/page-header";
 import TeamsTable from "./tables/TeamsTable";
 import AddTeamForm from "./forms/AddTeamForm";
 import { useUserRoles } from "@/entities/user/hooks/useUserRoles";
@@ -22,15 +23,18 @@ export default function TeamsPage({ params }: { params: { domain: string } }) {
 
   return (
     <div className="w-full space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-2xl font-semibold tracking-tight">Teams</h3>
-        {canManageTeams && (
-          <Button onClick={() => setIsAddTeamOpen(true)} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Add Team
-          </Button>
-        )}
-      </div>
+      <PageHeader
+        title="Teams"
+        description="Manage your organization's teams and their settings"
+        actions={
+          canManageTeams && (
+            <Button onClick={() => setIsAddTeamOpen(true)} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Add Team
+            </Button>
+          )
+        }
+      />
 
       {error && <div className="text-red-500">{error.message}</div>}
 

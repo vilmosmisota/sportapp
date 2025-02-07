@@ -221,7 +221,7 @@ export default function Dashboard({ items, children }: DashboardProps) {
                             Dashboard
                           </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
+                        <DropdownMenuItem asChild disabled>
                           <Link
                             href="/o/dashboard/website"
                             className={cn(

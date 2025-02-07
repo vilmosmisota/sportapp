@@ -44,6 +44,8 @@ import {
 } from "@/components/ui/select";
 import { useState } from "react";
 import { AttendanceSessionAggregate } from "@/entities/attendance/Attendance.schema";
+import { PageHeader } from "@/components/ui/page-header";
+import { Season } from "@/entities/season/Season.schema";
 
 function StatItem({
   icon: Icon,
@@ -580,7 +582,7 @@ export default function AttendanceStatisticsPage({
   const { data: selectedSeason } = useSeasonsByTenantId(
     tenant?.id.toString() ?? ""
   );
-  const activeSeason = selectedSeason?.find((s) => s.isActive) ?? null;
+  const activeSeason = selectedSeason?.find((s: Season) => s.isActive) ?? null;
 
   const isLoading = isTenantLoading || isTeamsLoading;
 
@@ -601,87 +603,80 @@ export default function AttendanceStatisticsPage({
       ? teams
       : teams.filter((team) => team.id.toString() === selectedTeamId);
 
-  const gridCols = filteredTeams.length === 1 ? "" : "md:grid-cols-2";
-
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col md:flex-row justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Team Statistics</h1>
-          <p className="text-muted-foreground">
-            {activeSeason ? (
-              <>
-                Attendance statistics for{" "}
-                <span className="font-medium">
-                  {activeSeason.customName ??
-                    `${format(
-                      new Date(activeSeason.startDate),
-                      "dd MMM yyyy"
-                    )} - ${format(
-                      new Date(activeSeason.endDate),
-                      "dd MMM yyyy"
-                    )}`}
-                </span>
-              </>
-            ) : (
-              "View attendance statistics for each team"
-            )}
-          </p>
-        </div>
-        <div className="flex items-center gap-4">
-          <Select
-            value={selectedTeamId}
-            onValueChange={(value) => setSelectedTeamId(value)}
-          >
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="All Teams" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Teams</SelectItem>
-              {teams.map((team) => (
-                <SelectItem key={team.id} value={team.id.toString()}>
-                  {team.name ||
-                    [
-                      team.age,
-                      getDisplayGender(team.gender, team.age),
-                      team.skill,
-                    ]
-                      .filter(Boolean)
-                      .join(" • ")}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <SeasonSelect
-            seasons={seasons ?? []}
-            selectedSeason={activeSeason}
-            tenantId={tenant?.id.toString() ?? ""}
-          />
+    <ErrorBoundary>
+      <div className="w-full space-y-6">
+        <PageHeader
+          title="Attendance Statistics"
+          description={
+            activeSeason
+              ? `Attendance statistics for ${
+                  activeSeason.customName ??
+                  `${format(
+                    new Date(activeSeason.startDate),
+                    "dd MMM yyyy"
+                  )} - ${format(new Date(activeSeason.endDate), "dd MMM yyyy")}`
+                }`
+              : "View attendance statistics for all teams"
+          }
+          actions={
+            <div className="flex items-center gap-4">
+              <Select
+                value={selectedTeamId}
+                onValueChange={(value) => setSelectedTeamId(value)}
+              >
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="All Teams" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Teams</SelectItem>
+                  {teams.map((team) => (
+                    <SelectItem key={team.id} value={team.id.toString()}>
+                      {team.name ||
+                        [
+                          team.age,
+                          getDisplayGender(team.gender, team.age),
+                          team.skill,
+                        ]
+                          .filter(Boolean)
+                          .join(" • ")}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <SeasonSelect
+                seasons={seasons ?? []}
+                selectedSeason={activeSeason}
+                tenantId={tenant?.id.toString() ?? ""}
+              />
+            </div>
+          }
+        />
+
+        <div className="space-y-6">
+          {filteredTeams.map((team) => (
+            <TeamCard
+              key={team.id}
+              team={{
+                id: team.id,
+                name: team.name ?? null,
+                age: team.age ?? null,
+                gender: team.gender ?? null,
+                skill: team.skill ?? null,
+                playerTeamConnections: team.playerTeamConnections ?? undefined,
+                coach: team.coach
+                  ? {
+                      firstName: team.coach.firstName ?? null,
+                      lastName: team.coach.lastName ?? null,
+                    }
+                  : null,
+              }}
+              tenantId={tenant?.id.toString() ?? ""}
+              seasonId={activeSeason?.id.toString()}
+            />
+          ))}
         </div>
       </div>
-      <div className="space-y-6">
-        {filteredTeams.map((team) => (
-          <TeamCard
-            key={team.id}
-            team={{
-              id: team.id,
-              name: team.name ?? null,
-              age: team.age ?? null,
-              gender: team.gender ?? null,
-              skill: team.skill ?? null,
-              playerTeamConnections: team.playerTeamConnections ?? undefined,
-              coach: team.coach
-                ? {
-                    firstName: team.coach.firstName ?? null,
-                    lastName: team.coach.lastName ?? null,
-                  }
-                : null,
-            }}
-            tenantId={tenant?.id.toString() ?? ""}
-            seasonId={activeSeason?.id.toString()}
-          />
-        ))}
-      </div>
-    </div>
+    </ErrorBoundary>
   );
 }

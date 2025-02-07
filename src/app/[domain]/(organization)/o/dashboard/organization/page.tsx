@@ -3,6 +3,7 @@
 import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PageHeader } from "@/components/ui/page-header";
 import ProfileContent from "./tabs/ProfileContent";
 import MembershipCategoriesContent from "./tabs/MembershipCategoriesContent";
 import GroupTypesContent from "./tabs/GroupTypesContent";
@@ -21,11 +22,10 @@ export default function OrganizationDetailPage({
 
   return (
     <div className="w-full space-y-4 md:space-y-6">
-      <div className="flex items-center justify-between px-4 md:px-0">
-        <h3 className="text-xl md:text-2xl font-semibold tracking-tight">
-          Organisation
-        </h3>
-      </div>
+      <PageHeader
+        title="Organisation"
+        description="Manage your organization settings and preferences"
+      />
       <div className="px-0">
         <Tabs defaultValue="profile" className="w-full">
           <div className="w-[calc(100vw-2rem)] md:w-fit">

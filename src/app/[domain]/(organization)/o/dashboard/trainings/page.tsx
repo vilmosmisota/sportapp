@@ -19,6 +19,7 @@ import {
   useDeleteTrainingPattern,
 } from "@/entities/training/Training.actions.client";
 import { toast } from "sonner";
+import { PageHeader } from "@/components/ui/page-header";
 
 export default function TrainingsPage({
   params,
@@ -108,44 +109,36 @@ export default function TrainingsPage({
   if (!tenant) return null;
 
   return (
-    <>
-      <div className="flex flex-col md:flex-row justify-between gap-4 space-y-6">
-        <div>
-          <h3 className="text-2xl font-semibold tracking-tight">Trainings</h3>
-          <p className="text-muted-foreground">
-            {activeSeason ? (
-              <>
-                Training schedule for{" "}
-                <span className="font-medium">
-                  {activeSeason.customName ??
-                    `${format(
-                      new Date(activeSeason.startDate),
-                      "dd/MM/yyyy"
-                    )} - ${format(
-                      new Date(activeSeason.endDate),
-                      "dd/MM/yyyy"
-                    )}`}
-                </span>
-              </>
-            ) : (
-              "Manage your training schedules and sessions"
-            )}
-          </p>
-        </div>
-        <div className="flex items-center gap-4">
-          <SeasonSelect
-            seasons={seasons ?? []}
-            selectedSeason={activeSeason}
-            tenantId={tenant.id.toString()}
-          />
-          <CreateTrainingButton
-            domain={params.domain}
-            selectedSeason={activeSeason}
-            teams={teams ?? []}
-            tenantId={tenant.id.toString()}
-          />
-        </div>
-      </div>
+    <div className="w-full space-y-6">
+      <PageHeader
+        title="Trainings"
+        description={
+          activeSeason
+            ? `Training schedule for ${
+                activeSeason.customName ??
+                `${format(
+                  new Date(activeSeason.startDate),
+                  "dd/MM/yyyy"
+                )} - ${format(new Date(activeSeason.endDate), "dd/MM/yyyy")}`
+              }`
+            : "Manage your training schedules and sessions"
+        }
+        actions={
+          <div className="flex items-center gap-4">
+            <SeasonSelect
+              seasons={seasons ?? []}
+              selectedSeason={activeSeason}
+              tenantId={tenant.id.toString()}
+            />
+            <CreateTrainingButton
+              domain={params.domain}
+              selectedSeason={activeSeason}
+              teams={teams ?? []}
+              tenantId={tenant.id.toString()}
+            />
+          </div>
+        }
+      />
 
       <CalendarWeekView
         trainings={groupedTrainings ?? []}
@@ -182,6 +175,6 @@ export default function TrainingsPage({
           }
         }}
       />
-    </>
+    </div>
   );
 }

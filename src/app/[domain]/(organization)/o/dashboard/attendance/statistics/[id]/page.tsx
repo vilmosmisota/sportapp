@@ -1,9 +1,8 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, Users, BarChart3, Trophy } from "lucide-react";
-import Link from "next/link";
+import { Calendar, Users, BarChart3, Trophy } from "lucide-react";
+
 import { useGetTeamsByTenantId } from "@/entities/team/Team.query";
 import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 import { useSeasonsByTenantId } from "@/entities/season/Season.query";
@@ -16,11 +15,13 @@ import { AttendanceCharts } from "./components/AttendanceCharts";
 import { PerformanceOverview } from "./components/PerformanceOverview";
 import { AttendanceTable } from "./components/AttendanceTable";
 import SeasonSelect from "../../../trainings/components/SeasonSelect";
+import { PageHeader } from "@/components/ui/page-header";
 import {
   AttendanceRecordAggregate,
   AttendanceStatus,
 } from "@/entities/attendance/Attendance.schema";
 import { Card } from "@/components/ui/card";
+import { Team, PlayerTeamConnectionSchema } from "@/entities/team/Team.schema";
 
 export default function TeamAttendanceStatisticsPage() {
   const params = useParams<{ domain: string; id: string }>();
@@ -42,14 +43,13 @@ export default function TeamAttendanceStatisticsPage() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Link href="/o/dashboard/attendance">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <h1 className="text-2xl font-semibold">Team Attendance Statistics</h1>
-        </div>
+        <PageHeader
+          title="Team Attendance Statistics"
+          backButton={{
+            href: "/o/dashboard/attendance/statistics",
+            label: "Back to Statistics",
+          }}
+        />
         <div className="grid gap-6">
           <div className="grid gap-6 md:grid-cols-2">
             <Skeleton className="h-[400px]" />
@@ -68,14 +68,13 @@ export default function TeamAttendanceStatisticsPage() {
   if (!tenant || !team || !currentSeason) {
     return (
       <div className="space-y-4">
-        <div className="flex items-center gap-4">
-          <Link href="/o/dashboard/attendance">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <h1 className="text-2xl font-semibold">Team Attendance Statistics</h1>
-        </div>
+        <PageHeader
+          title="Team Attendance Statistics"
+          backButton={{
+            href: "/o/dashboard/attendance/statistics",
+            label: "Back to Statistics",
+          }}
+        />
         <Alert variant="destructive">
           <AlertDescription>
             {!tenant
@@ -95,6 +94,7 @@ export default function TeamAttendanceStatisticsPage() {
         teamId={teamId}
         seasonId={currentSeason.id}
         tenantId={tenant.id.toString()}
+        team={team}
       />
     </ErrorBoundary>
   );
@@ -104,37 +104,36 @@ function TeamAttendanceStatisticsContent({
   teamId,
   seasonId,
   tenantId,
+  team,
 }: {
   teamId: number;
   seasonId: number;
   tenantId: string;
+  team: Team;
 }) {
-  const { data: teams } = useGetTeamsByTenantId(tenantId);
   const { data: seasons } = useSeasonsByTenantId(tenantId);
   const { data: playerStats } = useAllTeamPlayerAttendanceAggregates(
     teamId,
     seasonId,
     tenantId
   );
-  const team = teams?.find((t) => t.id === teamId);
   const selectedSeason = seasons?.find((s) => s.id === seasonId) || null;
 
-  if (!team || !playerStats) {
+  if (!playerStats) {
     return (
       <div className="space-y-4">
-        <div className="flex items-center gap-4">
-          <Link href="/o/dashboard/attendance">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <h1 className="text-2xl font-semibold">Team Attendance Statistics</h1>
-        </div>
+        <PageHeader
+          title={`${team.name || team.age} Statistics`}
+          description="View detailed attendance statistics for this team"
+          backButton={{
+            href: "/o/dashboard/attendance/statistics",
+            label: "Back to Statistics",
+          }}
+        />
         <Alert>
           <AlertDescription>
-            {!team
-              ? "Team not found"
-              : "No attendance data available for this team yet. Start taking attendance to see statistics."}
+            No attendance data available for this team yet. Start taking
+            attendance to see statistics.
           </AlertDescription>
         </Alert>
       </div>
@@ -224,7 +223,8 @@ function TeamAttendanceStatisticsContent({
       );
 
       const playerConnection = team.playerTeamConnections?.find(
-        (p) => p.player?.id === stats.playerId
+        (p: typeof PlayerTeamConnectionSchema._type) =>
+          p.player?.id === stats.playerId
       );
       if (!playerConnection?.player) return null;
 
@@ -278,21 +278,21 @@ function TeamAttendanceStatisticsContent({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Link href="/o/dashboard/attendance/statistics">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <h1 className="text-2xl font-semibold">Team Attendance Statistics</h1>
-        </div>
-        <SeasonSelect
-          seasons={seasons || []}
-          selectedSeason={selectedSeason}
-          tenantId={tenantId}
-        />
-      </div>
+      <PageHeader
+        title={`${team.name || team.age} Statistics`}
+        description="View detailed attendance statistics for this team"
+        backButton={{
+          href: "/o/dashboard/attendance/statistics",
+          label: "Back to Statistics",
+        }}
+        actions={
+          <SeasonSelect
+            seasons={seasons ?? []}
+            selectedSeason={selectedSeason}
+            tenantId={tenantId}
+          />
+        }
+      />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="p-4">

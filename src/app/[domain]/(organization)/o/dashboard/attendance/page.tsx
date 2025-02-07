@@ -24,6 +24,7 @@ import { useParams } from "next/navigation";
 import { useSupabase } from "@/libs/supabase/useSupabase";
 import { useAttendanceRecords } from "@/entities/attendance/Attendance.query";
 import { usePlayersByTeamId } from "@/entities/team/Team.query";
+import { PageHeader } from "@/components/ui/page-header";
 
 function formatTimeString(timeStr: string) {
   try {
@@ -117,25 +118,22 @@ export default function AttendancePage({
   return (
     <ErrorBoundary>
       <div className="w-full space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <h3 className="text-2xl font-semibold tracking-tight">
-              Attendance
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Manage attendance for upcoming training sessions.
-            </p>
-          </div>
-          {canManageAttendance && upcomingTrainings.length > 0 && (
-            <Button
-              onClick={() => setIsCreateSessionOpen(true)}
-              className="gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Create Session
-            </Button>
-          )}
-        </div>
+        <PageHeader
+          title="Attendance"
+          description="Manage attendance for upcoming training sessions."
+          actions={
+            canManageAttendance &&
+            upcomingTrainings.length > 0 && (
+              <Button
+                onClick={() => setIsCreateSessionOpen(true)}
+                className="gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Create Session
+              </Button>
+            )
+          }
+        />
 
         {/* Upcoming Trainings */}
         <div className="space-y-4">

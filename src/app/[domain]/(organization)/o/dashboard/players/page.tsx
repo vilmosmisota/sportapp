@@ -8,6 +8,7 @@ import { useState } from "react";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { useUserRoles } from "@/entities/user/hooks/useUserRoles";
 import { Permissions } from "@/libs/permissions/permissions";
+import { PageHeader } from "@/components/ui/page-header";
 import AddPlayerForm from "./forms/AddPlayerForm";
 import PlayersTable from "./tables/PlayersTable";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
@@ -53,20 +54,21 @@ export default function PlayersPage({
   return (
     <ErrorBoundary>
       <div className="w-full space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <h3 className="text-2xl font-semibold tracking-tight">Players</h3>
-            <p className="text-sm text-muted-foreground">
-              Manage your organization&apos;s players and their teams.
-            </p>
-          </div>
-          {canManagePlayers && (
-            <Button onClick={() => setIsAddPlayerOpen(true)} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add Player
-            </Button>
-          )}
-        </div>
+        <PageHeader
+          title="Players"
+          description="Manage your organization's players and their teams."
+          actions={
+            canManagePlayers && (
+              <Button
+                onClick={() => setIsAddPlayerOpen(true)}
+                className="gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Add Player
+              </Button>
+            )
+          }
+        />
 
         {error && (
           <div className="rounded-lg bg-destructive/10 p-4 text-sm text-destructive">

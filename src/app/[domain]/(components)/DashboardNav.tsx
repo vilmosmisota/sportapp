@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LucideIcon } from "lucide-react";
 import { cn } from "@/libs/tailwind/utils";
-import { iconMap } from "./Dashboard";
+import iconMap from "./Dashboard";
 import {
   Tooltip,
   TooltipContent,

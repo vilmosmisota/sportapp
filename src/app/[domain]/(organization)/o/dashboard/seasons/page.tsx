@@ -8,6 +8,7 @@ import { useUserRoles } from "@/entities/user/hooks/useUserRoles";
 import { Permissions } from "@/libs/permissions/permissions";
 import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 import { useSeasons } from "@/entities/season/Season.actions.client";
+import { PageHeader } from "@/components/ui/page-header";
 import { AddSeasonForm } from "./forms/AddSeasonForm";
 import { SeasonItem } from "./items/SeasonItem";
 
@@ -25,20 +26,18 @@ export default function SeasonsPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Seasons</h1>
-          <p className="text-muted-foreground">
-            Manage your organization&apos;s seasons and their settings
-          </p>
-        </div>
-        {canManageSeasons && (
-          <Button onClick={() => setIsAddOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Season
-          </Button>
-        )}
-      </div>
+      <PageHeader
+        title="Seasons"
+        description="Manage your organization's seasons and their settings"
+        actions={
+          canManageSeasons && (
+            <Button onClick={() => setIsAddOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Season
+            </Button>
+          )
+        }
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {seasons?.map((season) => (

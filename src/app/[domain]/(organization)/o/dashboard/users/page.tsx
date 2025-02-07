@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
+import { PageHeader } from "@/components/ui/page-header";
 import UsersTable from "./tables/UsersTable";
 import AddUserForm from "./forms/AddUserForm";
 import { useUserRoles } from "@/entities/user/hooks/useUserRoles";
@@ -22,15 +23,18 @@ export default function UsersPage({ params }: { params: { domain: string } }) {
 
   return (
     <div className="w-full space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-2xl font-semibold tracking-tight">Users</h3>
-        {canManageUsers && (
-          <Button onClick={() => setIsAddUserOpen(true)} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Add User
-          </Button>
-        )}
-      </div>
+      <PageHeader
+        title="Users"
+        description="Manage your organization's users and their permissions"
+        actions={
+          canManageUsers && (
+            <Button onClick={() => setIsAddUserOpen(true)} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Add User
+            </Button>
+          )
+        }
+      />
 
       {users && (
         <UsersTable
