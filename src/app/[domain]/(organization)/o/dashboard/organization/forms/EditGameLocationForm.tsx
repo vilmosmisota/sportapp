@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button";
-import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
+"use client";
+
 import {
   Form,
   FormControl,
@@ -8,103 +8,103 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import FormButtons from "@/components/ui/form-buttons";
 import { Input } from "@/components/ui/input";
-import { Tenant } from "@/entities/tenant/Tenant.schema";
+import { useUpdateTenant } from "@/entities/tenant/Tenant.actions.client";
+import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
+import { LocationSchema } from "@/entities/common/Location.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { nanoid } from "nanoid";
-import { useUpdateTenant } from "@/entities/tenant/Tenant.actions.client";
 import { toast } from "sonner";
-import FormButtons from "@/components/ui/form-buttons";
-import { Dispatch, SetStateAction } from "react";
-import { LocationSchema } from "../../../../../../../entities/common/Location.schema";
+import { z } from "zod";
+import { Location } from "@/entities/common/Location.schema";
 
-const formSchema = LocationSchema.omit({ id: true });
+const formSchema = LocationSchema;
 type FormValues = z.infer<typeof formSchema>;
 
-interface AddTrainingLocationFormProps {
-  open: boolean;
-  onOpenChange: Dispatch<SetStateAction<boolean>>;
-  tenant: Tenant;
+interface EditGameLocationFormProps {
+  location: Location;
+  tenantId: string;
   domain: string;
+  setIsOpen: (value: boolean) => void;
 }
 
-export default function AddTrainingLocationForm({
-  open,
-  onOpenChange,
-  tenant,
+export default function EditGameLocationForm({
+  location,
+  tenantId,
   domain,
-}: AddTrainingLocationFormProps) {
-  const { mutateAsync: updateTenant } = useUpdateTenant(
-    tenant.id.toString(),
-    domain
-  );
+  setIsOpen,
+}: EditGameLocationFormProps) {
+  const { data: tenant } = useTenantByDomain(domain);
+  const updateTenant = useUpdateTenant(tenantId, domain);
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      postcode: "",
-      streetAddress: "",
-      city: "",
-      mapLink: "",
+      id: location.id,
+      name: location.name,
+      postcode: location.postcode,
+      streetAddress: location.streetAddress,
+      city: location.city,
+      mapLink: location.mapLink,
     },
   });
 
+  const { handleSubmit } = form;
+  const { isDirty, isLoading } = form.formState;
+
   const onSubmit = async (data: FormValues) => {
+    if (!tenant) return;
+
     try {
-      const newLocation = {
-        ...data,
-        id: nanoid(),
-        postcode: data.postcode.toUpperCase(),
-      };
+      const currentLocations = tenant.gameLocations ?? [];
+      const updatedLocations = currentLocations.map((loc) =>
+        loc.id === location.id ? { ...data } : loc
+      );
 
-      const updatedLocations = [
-        ...(tenant.trainingLocations || []),
-        newLocation,
-      ];
-
-      const formData = {
+      const updateData = {
         name: tenant.name,
         type: tenant.type,
         domain: tenant.domain,
         sport: tenant.sport,
         membershipCurrency: tenant.membershipCurrency,
-        trainingLocations: updatedLocations,
+        lateThresholdMinutes: tenant.lateThresholdMinutes,
         email: tenant.email ?? undefined,
         description: tenant.description ?? undefined,
         logo: tenant.logo ?? undefined,
         location: tenant.location ?? undefined,
         phoneNumber: tenant.phoneNumber ?? undefined,
         groupTypes: tenant.groupTypes ?? undefined,
-        lateThresholdMinutes: tenant.lateThresholdMinutes,
+        trainingLocations: tenant.trainingLocations ?? undefined,
+        gameLocations: updatedLocations,
       };
 
-      await updateTenant(formData);
-
-      toast.success("Training location added successfully");
-      onOpenChange(false);
-      form.reset();
+      await updateTenant.mutateAsync(updateData);
+      toast.success("Game location updated successfully");
+      setIsOpen(false);
     } catch (error) {
-      toast.error("Failed to add training location");
+      toast.error("Failed to update game location");
     }
   };
 
+  const onCancel = () => {
+    form.reset();
+    setIsOpen(false);
+  };
+
   return (
-    <ResponsiveSheet
-      isOpen={open}
-      setIsOpen={onOpenChange}
-      title="Add Training Location"
-      description="Add a new location where training sessions take place"
-    >
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+    <Form {...form}>
+      <form
+        className="flex flex-col gap-6 relative"
+        onSubmit={handleSubmit(onSubmit)}
+      >
+        <div className="space-y-4">
           <FormField
             control={form.control}
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Name</FormLabel>
+                <FormLabel>Location Name</FormLabel>
                 <FormControl>
                   <Input placeholder="Enter location name" {...field} />
                 </FormControl>
@@ -170,16 +170,17 @@ export default function AddTrainingLocationForm({
               </FormItem>
             )}
           />
-          <div className="bg-background sticky h-[100px] flex items-center justify-end bottom-0 left-0 right-0 border-t">
-            <FormButtons
-              isLoading={form.formState.isSubmitting}
-              onCancel={() => onOpenChange(false)}
-              buttonText="Add Location"
-              isDirty={form.formState.isDirty}
-            />
-          </div>
-        </form>
-      </Form>
-    </ResponsiveSheet>
+        </div>
+
+        <div className="bg-background sticky h-[100px] flex items-center justify-end bottom-0 left-0 right-0 border-t">
+          <FormButtons
+            buttonText="Update"
+            isLoading={isLoading}
+            isDirty={isDirty}
+            onCancel={onCancel}
+          />
+        </div>
+      </form>
+    </Form>
   );
 }

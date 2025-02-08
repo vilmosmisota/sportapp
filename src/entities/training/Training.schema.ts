@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { TrainingLocationSchema } from "../tenant/Tenant.schema";
 import { TeamSchema } from "../team/Team.schema";
 import { SeasonSchema } from "../season/Season.schema";
+import { LocationSchema } from "../common/Location.schema";
 
 export const TrainingSeasonConnectionSchema = z.object({
   id: z.number(),
@@ -23,7 +23,7 @@ export const TrainingSchema = z.object({
   date: z.string().transform((str) => new Date(str)),
   startTime: z.string(),
   endTime: z.string(),
-  location: TrainingLocationSchema.nullable(),
+  location: LocationSchema.nullable(),
   tenantId: z.number(),
   teamId: z.number().nullable(),
   team: TeamSchema.omit({
@@ -44,7 +44,7 @@ export const createTrainingFormSchema = z.object({
   date: z.string().min(1, "Date is required"),
   startTime: z.string().min(1, "Start time is required"),
   endTime: z.string().min(1, "End time is required"),
-  location: TrainingLocationSchema,
+  location: LocationSchema,
   teamId: z.number().nullable(),
   seasonIds: z.array(z.number()),
 });
@@ -56,7 +56,7 @@ export const GroupedTrainingSchema = z.object({
   dayOfWeek: z.number(),
   startTime: z.string(),
   endTime: z.string(),
-  location: TrainingLocationSchema,
+  location: LocationSchema,
   teamId: z.number().nullable(),
   teamName: z.string().nullable(),
   trainingCount: z.number(),
@@ -72,7 +72,7 @@ export const UpdateTrainingPatternSchema = z.object({
   updates: z.object({
     startTime: z.string().optional(),
     endTime: z.string().optional(),
-    location: TrainingLocationSchema.optional(),
+    location: LocationSchema.optional(),
     seasonId: z.number().optional(),
     fromDate: z.string().optional(),
     originalStartTime: z.string(),
@@ -94,3 +94,30 @@ export const DeleteTrainingPatternSchema = z.object({
 });
 
 export type DeleteTrainingPattern = z.infer<typeof DeleteTrainingPatternSchema>;
+
+export const TrainingCreateSchema = z.object({
+  date: z.string().min(1, "Date is required"),
+  startTime: z.string().min(1, "Start time is required"),
+  endTime: z.string().min(1, "End time is required"),
+  location: LocationSchema,
+  teamId: z.number().nullable(),
+  seasonIds: z.array(z.number()),
+});
+
+export const TrainingUpdateSchema = z.object({
+  date: z.string().min(1, "Date is required"),
+  startTime: z.string().min(1, "Start time is required"),
+  endTime: z.string().min(1, "End time is required"),
+  location: LocationSchema,
+  teamId: z.number().nullable(),
+  seasonIds: z.array(z.number()),
+});
+
+export const TrainingUpdateFormSchema = z.object({
+  date: z.string().min(1, "Date is required"),
+  startTime: z.string().min(1, "Start time is required"),
+  endTime: z.string().min(1, "End time is required"),
+  location: LocationSchema.optional(),
+  teamId: z.number().nullable(),
+  seasonIds: z.array(z.number()),
+});

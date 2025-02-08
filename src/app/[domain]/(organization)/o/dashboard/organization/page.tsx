@@ -8,6 +8,7 @@ import ProfileContent from "./tabs/ProfileContent";
 import MembershipCategoriesContent from "./tabs/MembershipCategoriesContent";
 import GroupTypesContent from "./tabs/GroupTypesContent";
 import TrainingSettingsContent from "./tabs/TrainingSettingsContent";
+import GameSettingsContent from "./tabs/GameSettingsContent";
 
 export default function OrganizationDetailPage({
   params,
@@ -43,6 +44,9 @@ export default function OrganizationDetailPage({
                 <TabsTrigger value="training-settings" className="text-sm">
                   Training Settings
                 </TabsTrigger>
+                <TabsTrigger value="game-settings" className="text-sm">
+                  Game Settings
+                </TabsTrigger>
               </TabsList>
               <ScrollBar orientation="horizontal" className="invisible" />
             </ScrollArea>
@@ -60,6 +64,9 @@ export default function OrganizationDetailPage({
             </TabsContent>
             <TabsContent value="training-settings">
               <TrainingSettingsContent tenant={tenant} domain={params.domain} />
+            </TabsContent>
+            <TabsContent value="game-settings">
+              <GameSettingsContent domain={params.domain} />
             </TabsContent>
           </div>
         </Tabs>

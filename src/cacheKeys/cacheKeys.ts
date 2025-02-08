@@ -114,4 +114,9 @@ export const queryKeys = {
       ["attendance", "teamStats", tenantId, teamId] as const,
     aggregates: ["attendance", "aggregates"] as const,
   },
+  opponent: {
+    all: ["opponent"] as const,
+    detail: (tenantId: string | undefined, opponentId: string | undefined) =>
+      [...queryKeys.opponent.all, tenantId, opponentId] as const,
+  },
 } as const;

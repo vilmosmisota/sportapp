@@ -1,6 +1,7 @@
 import { baseUrl, removeBaseUrl } from "@/utils/url.config";
 import { z } from "zod";
 import { CurrencyTypes } from "../common/Types";
+import { LocationSchema } from "../common/Location.schema";
 
 export enum TenantType {
   LEAGUE = "league",
@@ -25,16 +26,8 @@ export const GroupTypeSchema = z.object({
 
 export type GroupType = z.infer<typeof GroupTypeSchema>;
 
-export const TrainingLocationSchema = z.object({
-  id: z.string(),
-  name: z.string().min(1, { message: "Name is required" }),
-  postcode: z.string().min(1, { message: "Postcode is required" }),
-  streetAddress: z.string().min(1, { message: "Street address is required" }),
-  city: z.string().min(1, { message: "City is required" }),
-  mapLink: z.string().url({ message: "Must be a valid URL" }).optional(),
-});
-
-export type TrainingLocation = z.infer<typeof TrainingLocationSchema>;
+export type TrainingLocation = z.infer<typeof LocationSchema>;
+export type GameLocation = z.infer<typeof LocationSchema>;
 
 export const TenantSchema = z.object({
   id: z.number(),
@@ -50,7 +43,8 @@ export const TenantSchema = z.object({
   sport: z.nativeEnum(TenantSportType),
   membershipCurrency: z.nativeEnum(CurrencyTypes),
   groupTypes: GroupTypeSchema.nullable(),
-  trainingLocations: z.array(TrainingLocationSchema).nullable(),
+  trainingLocations: z.array(LocationSchema).nullable(),
+  gameLocations: z.array(LocationSchema).nullable(),
   lateThresholdMinutes: z.number().min(0).default(5),
 });
 
@@ -66,7 +60,8 @@ export const TenantFormSchema = TenantSchema.omit({
   location: z.string().optional(),
   phoneNumber: z.string().optional(),
   groupTypes: GroupTypeSchema.optional(),
-  trainingLocations: z.array(TrainingLocationSchema).optional(),
+  trainingLocations: z.array(LocationSchema).optional(),
+  gameLocations: z.array(LocationSchema).optional(),
 });
 
 export type TenantForm = z.infer<typeof TenantFormSchema>;

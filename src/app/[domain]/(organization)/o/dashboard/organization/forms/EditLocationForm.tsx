@@ -8,11 +8,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Tenant,
-  TrainingLocation,
-  TrainingLocationSchema,
-} from "@/entities/tenant/Tenant.schema";
+import { Tenant, TrainingLocation } from "@/entities/tenant/Tenant.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -22,8 +18,9 @@ import FormButtons from "@/components/ui/form-buttons";
 import { Dispatch, SetStateAction } from "react";
 import { queryKeys } from "../../../../../../../cacheKeys/cacheKeys";
 import { useQueryClient } from "@tanstack/react-query";
+import { LocationSchema } from "../../../../../../../entities/common/Location.schema";
 
-const formSchema = TrainingLocationSchema.omit({ id: true });
+const formSchema = LocationSchema.omit({ id: true });
 type FormValues = z.infer<typeof formSchema>;
 
 interface EditLocationFormProps {
