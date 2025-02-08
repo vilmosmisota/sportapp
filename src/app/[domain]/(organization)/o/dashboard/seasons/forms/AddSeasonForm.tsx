@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { DateInput } from "@/components/ui/date-input/DateInput";
 import MembershipFeeEditor from "./MembershipFeeEditor";
 import BreaksEditor from "./BreaksEditor";
+import PhasesEditor from "./PhasesEditor";
 import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 import { CurrencyTypes } from "@/entities/common/Types";
 
@@ -45,6 +46,7 @@ export function AddSeasonForm({
     []
   );
   const [membershipFees, setMembershipFees] = useState<any[]>([]);
+  const [phases, setPhases] = useState<string[]>([]);
 
   const form = useForm<SeasonForm>({
     defaultValues: {
@@ -54,6 +56,7 @@ export function AddSeasonForm({
       isActive: false,
       customName: "",
       membershipPrices: [],
+      phases: null,
     },
   });
 
@@ -80,6 +83,7 @@ export function AddSeasonForm({
       membershipPrices: formattedMembershipPrices,
       customName: data.customName,
       isActive: data.isActive,
+      phases: phases.length > 0 ? phases : null,
     };
 
     addSeason.mutate(formData, {
@@ -89,6 +93,7 @@ export function AddSeasonForm({
         form.reset();
         setBreaks([]);
         setMembershipFees([]);
+        setPhases([]);
       },
       onError: (error) => {
         toast.error("Failed to add season");
@@ -101,6 +106,7 @@ export function AddSeasonForm({
     form.reset();
     setBreaks([]);
     setMembershipFees([]);
+    setPhases([]);
     setIsParentModalOpen(false);
   };
 
@@ -235,6 +241,19 @@ export function AddSeasonForm({
                 minDate={form.getValues("startDate")}
                 maxDate={form.getValues("endDate")}
               />
+            </CardContent>
+          </Card>
+
+          {/* Season Phases */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-medium flex items-center gap-2">
+                <CalendarDays className="h-4 w-4" />
+                Season Phases
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PhasesEditor phases={phases} onUpdate={setPhases} />
             </CardContent>
           </Card>
         </div>

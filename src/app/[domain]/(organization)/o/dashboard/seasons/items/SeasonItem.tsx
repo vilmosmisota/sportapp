@@ -222,6 +222,29 @@ export function SeasonItem({ season, tenantId, domain }: SeasonItemProps) {
                 </p>
               )}
             </div>
+
+            <div>
+              <div className="pb-3 md:pb-4">
+                <h3 className="font-semibold text-sm text-foreground">
+                  Season Phases
+                </h3>
+              </div>
+              {season.phases && season.phases.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {season.phases.map((phase, index) => (
+                    <Badge
+                      key={index}
+                      variant="secondary"
+                      className="text-xs bg-secondary/80 hover:bg-secondary/80"
+                    >
+                      {phase}
+                    </Badge>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">No phases set</p>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>

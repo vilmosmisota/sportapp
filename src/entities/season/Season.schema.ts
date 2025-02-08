@@ -24,6 +24,7 @@ export const SeasonSchema = z.object({
   isActive: z.boolean().default(false),
   breaks: z.array(BreakSchema).default([]),
   membershipPrices: z.array(SeasonMembershipPriceSchema).default([]),
+  phases: z.array(z.string()).nullable().default(null),
 });
 
 export type Season = z.infer<typeof SeasonSchema>;
@@ -37,6 +38,7 @@ export const SeasonFormSchema = z.object({
   membershipPrices: z.array(
     z.object({ membershipCategoryId: z.number(), price: z.number().positive() })
   ),
+  phases: z.array(z.string()).nullable().default(null),
 });
 
 export type SeasonForm = z.infer<typeof SeasonFormSchema>;

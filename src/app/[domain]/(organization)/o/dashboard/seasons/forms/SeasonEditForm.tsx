@@ -37,6 +37,7 @@ import { DateInput } from "@/components/ui/date-input/DateInput";
 import { parseISO } from "date-fns";
 import MembershipFeeEditor from "./MembershipFeeEditor";
 import BreaksEditor from "./BreaksEditor";
+import PhasesEditor from "./PhasesEditor";
 import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 import { CurrencyTypes } from "@/entities/common/Types";
 
@@ -66,6 +67,9 @@ export function SeasonEditForm({
       to: br.to,
     }))
   );
+
+  const [initialPhases] = useState(season.phases);
+  const [phases, setPhases] = useState(season.phases);
 
   const [initialMembershipFees] = useState(
     season.membershipPrices.map((mf) => ({
@@ -97,6 +101,7 @@ export function SeasonEditForm({
       isActive: season.isActive,
       customName: season.customName,
       membershipPrices: season.membershipPrices,
+      phases: season.phases,
     },
   });
 
@@ -106,7 +111,9 @@ export function SeasonEditForm({
       JSON.stringify(breaks) !== JSON.stringify(initialBreaks);
     const feesChanged =
       JSON.stringify(membershipFees) !== JSON.stringify(initialMembershipFees);
-    return breaksChanged || feesChanged;
+    const phasesChanged =
+      JSON.stringify(phases) !== JSON.stringify(initialPhases);
+    return breaksChanged || feesChanged || phasesChanged;
   };
 
   const { handleSubmit } = form;
@@ -135,6 +142,7 @@ export function SeasonEditForm({
       membershipPrices: formattedMembershipPrices,
       customName: data.customName,
       isActive: data.isActive,
+      phases: phases,
     };
 
     seasonMutation.mutate(formData, {
@@ -145,6 +153,7 @@ export function SeasonEditForm({
         form.reset();
         setBreaks(initialBreaks);
         setMembershipFees(initialMembershipFees);
+        setPhases(initialPhases);
       },
       onError: (error) => {
         toast.error("Failed to update season");
@@ -156,6 +165,7 @@ export function SeasonEditForm({
   const onCancel = () => {
     setBreaks(initialBreaks);
     setMembershipFees(initialMembershipFees);
+    setPhases(initialPhases);
     form.reset();
     setIsParentModalOpen?.(false);
   };
@@ -291,6 +301,19 @@ export function SeasonEditForm({
                 minDate={form.getValues("startDate")}
                 maxDate={form.getValues("endDate")}
               />
+            </CardContent>
+          </Card>
+
+          {/* Season Phases */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-medium flex items-center gap-2">
+                <CalendarDays className="h-4 w-4" />
+                Season Phases
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PhasesEditor phases={phases} onUpdate={setPhases} />
             </CardContent>
           </Card>
         </div>
