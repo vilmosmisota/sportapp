@@ -51,6 +51,12 @@ const navItems = [
         description: "Manage teams and rosters",
       },
       {
+        name: "Opponents",
+        href: "/o/dashboard/opponents",
+        iconName: "Swords",
+        description: "Manage competing teams",
+      },
+      {
         name: "Trainings",
         href: "/o/dashboard/trainings",
         iconName: "Dumbbell",

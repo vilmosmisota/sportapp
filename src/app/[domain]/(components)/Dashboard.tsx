@@ -7,7 +7,6 @@ import { cn } from "@/libs/tailwind/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Building2,
-  UsersRound,
   UserRound,
   Dumbbell,
   BarChart3,
@@ -18,9 +17,8 @@ import {
   ShieldCheck,
   ClipboardCheck,
   Users2,
-  ChevronRight,
-  ChevronLeft,
   X,
+  Swords,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
@@ -55,6 +53,7 @@ const iconMap = {
   Dumbbell,
   ClipboardCheck,
   BarChart3,
+  Swords,
 };
 
 interface NavItem {
