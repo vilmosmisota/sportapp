@@ -1,4 +1,7 @@
-import { getDisplayGender } from "@/entities/team/Team.schema";
+import {
+  getDisplayGender,
+  getDisplayAgeGroup,
+} from "@/entities/team/Team.schema";
 
 export const formatTeamName = (teamName: string | null): string => {
   if (!teamName) return "Unnamed Training";
@@ -8,6 +11,7 @@ export const formatTeamName = (teamName: string | null): string => {
 
   const [age, gender, level] = parts;
   const displayGender = getDisplayGender(gender, age);
+  const displayAge = getDisplayAgeGroup(age);
 
-  return `${age} • ${displayGender} • ${level}`;
+  return `${displayAge} • ${displayGender} • ${level}`;
 };

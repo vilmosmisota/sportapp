@@ -11,11 +11,28 @@ import { Badge } from "@/components/ui/badge";
 import AddGroupTypeForm from "../forms/AddGroupTypeForm";
 import { useUserRoles } from "@/entities/user/hooks/useUserRoles";
 import { Permissions } from "@/libs/permissions/permissions";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { getDisplayAgeGroup } from "@/entities/team/Team.schema";
 
 interface GroupTypesContentProps {
   tenant: Tenant | undefined;
   domain: string;
 }
+
+// Helper function to parse age group string
+const parseAgeGroup = (group: string) => {
+  const [name, range] = group.split("#");
+  if (range) {
+    const [min, max] = range.split("-").map(Number);
+    return { name, min, max };
+  }
+  return { name: group, min: 0, max: parseInt(group.replace(/\D/g, "")) || 0 };
+};
 
 export default function GroupTypesContent({
   tenant,
@@ -58,8 +75,8 @@ export default function GroupTypesContent({
                 </p>
               ) : (
                 ageGroups.map((group) => (
-                  <Badge key={group} variant="secondary" className="capitalize">
-                    {group}
+                  <Badge key={group} variant="secondary">
+                    {getDisplayAgeGroup(group)}
                   </Badge>
                 ))
               )}

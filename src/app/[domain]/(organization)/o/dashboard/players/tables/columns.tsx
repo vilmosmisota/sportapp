@@ -30,7 +30,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { getDisplayGender } from "../../../../../../../entities/team/Team.schema";
+import {
+  getDisplayGender,
+  getDisplayAgeGroup,
+} from "@/entities/team/Team.schema";
 
 const TeamsCell = ({ player }: { player: Player }) => {
   if (!player.teamConnections?.length) {
@@ -49,7 +52,11 @@ const TeamsCell = ({ player }: { player: Player }) => {
     <div className="flex flex-wrap gap-2 flex-col items-start justify-start">
       {teams.map((team) => (
         <Badge key={team.id} variant="secondary" className="whitespace-nowrap">
-          {[team.age, getDisplayGender(team.gender, team.age), team.skill]
+          {[
+            getDisplayAgeGroup(team.age),
+            getDisplayGender(team.gender, team.age),
+            team.skill,
+          ]
             .filter(
               (value): value is string =>
                 typeof value === "string" && value.length > 0

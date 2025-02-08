@@ -20,6 +20,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { getDisplayAgeGroup } from "@/entities/team/Team.schema";
 
 interface TeamsTableActionsProps {
   team: Team;
@@ -158,7 +159,7 @@ export const columns = ({
     cell: ({ row }) => (
       <div className="flex items-center gap-2">
         <Badge variant="outline" className="font-medium whitespace-nowrap">
-          {row.getValue("age")}
+          {getDisplayAgeGroup(row.getValue("age"))}
         </Badge>
       </div>
     ),

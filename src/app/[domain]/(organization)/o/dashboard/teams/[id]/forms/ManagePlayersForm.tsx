@@ -40,19 +40,23 @@ interface Props {
 }
 
 // Helper functions
-const parseTeamAge = (teamAge: string | null): number | null => {
-  if (!teamAge) return null;
-  const match = teamAge.match(/u(\d+)/i);
-  return match ? parseInt(match[1], 10) : null;
+const parseAgeGroup = (group: string) => {
+  const [name, range] = group.split("#");
+  if (range) {
+    const [min, max] = range.split("-").map(Number);
+    return { name, min, max };
+  }
+  // Fallback for legacy format (e.g., "U12")
+  const maxAge = parseInt(group.replace(/\D/g, "")) || 0;
+  return { name: group, min: 0, max: maxAge };
 };
 
 const isPlayerAgeCompatible = (
   playerAge: number,
-  teamAge: string | null
+  teamAgeGroup: string
 ): boolean => {
-  const parsedTeamAge = parseTeamAge(teamAge);
-  if (parsedTeamAge === null) return false;
-  return playerAge <= parsedTeamAge;
+  const { min, max } = parseAgeGroup(teamAgeGroup);
+  return playerAge >= min && playerAge <= max;
 };
 
 const mapPlayerToTeamGender = (playerGender: PlayerGender): string => {
@@ -179,7 +183,7 @@ export default function ManagePlayersForm({
         ? differenceInYears(new Date(), parseISO(player.dateOfBirth))
         : null;
 
-      if (age !== null && isPlayerAgeCompatible(age, team.age)) {
+      if (age !== null && team.age && isPlayerAgeCompatible(age, team.age)) {
         // Check gender compatibility
         if (
           team.gender === "Mixed" ||
@@ -193,6 +197,21 @@ export default function ManagePlayersForm({
         others.push(player);
       }
     });
+
+    // Sort recommended players by age proximity to team's age range
+    if (team.age) {
+      const { min, max } = parseAgeGroup(team.age);
+      const targetAge = (min + max) / 2;
+      recommended.sort((a, b) => {
+        const aAge = a.dateOfBirth
+          ? differenceInYears(new Date(), parseISO(a.dateOfBirth))
+          : 0;
+        const bAge = b.dateOfBirth
+          ? differenceInYears(new Date(), parseISO(b.dateOfBirth))
+          : 0;
+        return Math.abs(aAge - targetAge) - Math.abs(bAge - targetAge);
+      });
+    }
 
     return {
       recommendedPlayers: recommended,

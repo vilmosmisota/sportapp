@@ -15,7 +15,10 @@ import {
 import { useUserRoles } from "@/entities/user/hooks/useUserRoles";
 import { Permissions } from "@/libs/permissions/permissions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getDisplayGender } from "@/entities/team/Team.schema";
+import {
+  getDisplayGender,
+  getDisplayAgeGroup,
+} from "@/entities/team/Team.schema";
 import { Separator } from "@/components/ui/separator";
 import { playerColumns, TeamPlayer } from "./columns";
 import { DataTable } from "@/components/ui/data-table/DataTable";
@@ -140,7 +143,9 @@ export default function TeamPage({
         <PageHeader
           title={
             team.name ||
-            `${getDisplayGender(team.gender, team.age)} ${team.age}`
+            `${getDisplayGender(team.gender, team.age)} ${getDisplayAgeGroup(
+              team.age
+            )}`
           }
           description="Team details and player management"
           backButton={{
@@ -188,7 +193,9 @@ export default function TeamPage({
                     Category
                   </h4>
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline">{team.age}</Badge>
+                    <Badge variant="outline">
+                      {getDisplayAgeGroup(team.age)}
+                    </Badge>
                     <Badge variant="secondary" className="capitalize">
                       {team.gender?.toLowerCase()}
                     </Badge>

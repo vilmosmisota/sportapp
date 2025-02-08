@@ -30,6 +30,13 @@ export const getDisplayGender = (
   return gender;
 };
 
+export const getDisplayAgeGroup = (
+  ageGroup: string | null | undefined
+): string => {
+  if (!ageGroup) return "";
+  return ageGroup.split("#")[0];
+};
+
 export const PlayerTeamConnectionSchema = z.object({
   id: z.number(),
   player: z.object({

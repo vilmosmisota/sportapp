@@ -90,19 +90,23 @@ const PinCheckIndicator = ({ isValid }: { isValid: boolean }) => (
 );
 
 // Add helper functions at the top
-const parseTeamAge = (teamAge: string | null): number | null => {
-  if (!teamAge) return null;
-  const match = teamAge.match(/u(\d+)/i);
-  return match ? parseInt(match[1], 10) : null;
+const parseAgeGroup = (group: string) => {
+  const [name, range] = group.split("#");
+  if (range) {
+    const [min, max] = range.split("-").map(Number);
+    return { name, min, max };
+  }
+  // Fallback for legacy format (e.g., "U12")
+  const maxAge = parseInt(group.replace(/\D/g, "")) || 0;
+  return { name: group, min: 0, max: maxAge };
 };
 
-const isTeamAgeCompatible = (
+const isPlayerAgeCompatible = (
   playerAge: number,
-  teamAge: string | null
+  teamAgeGroup: string
 ): boolean => {
-  const parsedTeamAge = parseTeamAge(teamAge);
-  if (parsedTeamAge === null) return false;
-  return playerAge <= parsedTeamAge;
+  const { min, max } = parseAgeGroup(teamAgeGroup);
+  return playerAge >= min && playerAge <= max;
 };
 
 const mapPlayerToTeamGender = (playerGender: PlayerGender): TeamGender => {
@@ -170,21 +174,18 @@ export default function AddPlayerForm({
     const recommended: Team[] = [];
     const available: Team[] = [];
 
-    // Only process teams if we have all required player details
     const hasRequiredDetails = Boolean(
       firstName && lastName && gender && position
     );
 
     if (hasRequiredDetails) {
       teams.forEach((team) => {
-        // Skip teams without age information
         if (!team.age) {
           available.push(team);
           return;
         }
 
-        if (isTeamAgeCompatible(playerAge, team.age)) {
-          // Check gender compatibility if specified
+        if (isPlayerAgeCompatible(playerAge, team.age)) {
           if (
             team.gender === TeamGender.Mixed ||
             team.gender === mapPlayerToTeamGender(gender as PlayerGender)
@@ -198,14 +199,15 @@ export default function AddPlayerForm({
         }
       });
 
-      // Sort recommended teams by age (closest to player's age first)
+      // Sort recommended teams by age proximity to player's age
       recommended.sort((a, b) => {
-        const ageA = parseTeamAge(a.age) || 0;
-        const ageB = parseTeamAge(b.age) || 0;
-        return ageA - ageB;
+        const aGroup = parseAgeGroup(a.age || "");
+        const bGroup = parseAgeGroup(b.age || "");
+        const aDiff = Math.abs((aGroup.min + aGroup.max) / 2 - playerAge);
+        const bDiff = Math.abs((bGroup.min + bGroup.max) / 2 - playerAge);
+        return aDiff - bDiff;
       });
     } else {
-      // If required details are missing, all teams go to available
       available.push(...teams);
     }
 
