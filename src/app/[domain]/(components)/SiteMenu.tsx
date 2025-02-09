@@ -1,4 +1,3 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/libs/tailwind/utils";
 import { getTenantByDomain } from "@/entities/tenant/Tenant.services";
 import { getServerClient } from "@/libs/supabase/server";

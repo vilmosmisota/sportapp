@@ -45,7 +45,7 @@ export const TenantSchema = z.object({
   groupTypes: GroupTypeSchema.nullable(),
   trainingLocations: z.array(LocationSchema).nullable(),
   gameLocations: z.array(LocationSchema).nullable(),
-  lateThresholdMinutes: z.number().min(0).default(5),
+  lateThresholdMinutes: z.number().min(0).nullable().default(5),
 });
 
 export type Tenant = z.infer<typeof TenantSchema>;

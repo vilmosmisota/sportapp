@@ -58,7 +58,7 @@ export default function LocationItem({
         location: tenant.location ?? undefined,
         phoneNumber: tenant.phoneNumber ?? undefined,
         groupTypes: tenant.groupTypes ?? undefined,
-        lateThresholdMinutes: tenant.lateThresholdMinutes ?? undefined,
+        lateThresholdMinutes: tenant.lateThresholdMinutes ?? null,
       };
 
       await updateTenant(formData);
