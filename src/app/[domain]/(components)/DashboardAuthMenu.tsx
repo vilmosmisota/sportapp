@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useLogOut } from "@/entities/user/User.actions.client";
 import { useCurrentUser } from "@/entities/user/User.query";
-import { LogOut, Settings, User } from "lucide-react";
+import { LogOut, Settings, UserRound, Bell, HelpCircle } from "lucide-react";
 import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -86,15 +86,27 @@ export function DashboardAuthMenu({
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/profile" className="flex items-center">
-            <User className="mr-2 h-4 w-4" />
+          <Link href="/auth/profile" className="flex items-center">
+            <UserRound className="mr-2 h-4 w-4" />
             Profile
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/settings" className="flex items-center">
+          <Link href="/auth/settings" className="flex items-center">
             <Settings className="mr-2 h-4 w-4" />
             Settings
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/auth/notifications" className="flex items-center">
+            <Bell className="mr-2 h-4 w-4" />
+            Notifications
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/auth/help" className="flex items-center">
+            <HelpCircle className="mr-2 h-4 w-4" />
+            Help & Support
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />

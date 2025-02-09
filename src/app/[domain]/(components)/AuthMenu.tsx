@@ -73,16 +73,16 @@ export default function AuthMenu({
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
-            <Link href="/profile">Profile</Link>
+            <Link href="/auth/profile">Profile</Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/notifications">Notifications</Link>
+            <Link href="/auth/notifications">Notifications</Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/settings">Settings</Link>
+            <Link href="/auth/settings">Settings</Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/help">Help & Support</Link>
+            <Link href="/auth/help">Help & Support</Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem

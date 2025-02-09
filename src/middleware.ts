@@ -91,10 +91,7 @@ export default async function middleware(req: NextRequest) {
 
   // Protected routes check
   if (
-    req.nextUrl.pathname.startsWith("/settings") ||
-    req.nextUrl.pathname.startsWith("/profile") ||
-    req.nextUrl.pathname.startsWith("/notifications") ||
-    req.nextUrl.pathname.startsWith("/help") ||
+    req.nextUrl.pathname.startsWith("/auth") ||
     req.nextUrl.pathname.startsWith(orgTenantUrl) ||
     req.nextUrl.pathname.startsWith(leagueTenantUrl)
   ) {
@@ -109,12 +106,7 @@ export default async function middleware(req: NextRequest) {
     }
 
     // If it's a settings, profile, or notifications route, check if user belongs to this tenant
-    if (
-      req.nextUrl.pathname.startsWith("/settings") ||
-      req.nextUrl.pathname.startsWith("/profile") ||
-      req.nextUrl.pathname.startsWith("/notifications") ||
-      req.nextUrl.pathname.startsWith("/help")
-    ) {
+    if (req.nextUrl.pathname.startsWith("/auth")) {
       const { data, error } = await supabase
         .from("userEntities")
         .select("tenantId")

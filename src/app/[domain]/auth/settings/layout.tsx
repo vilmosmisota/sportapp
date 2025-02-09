@@ -4,15 +4,15 @@ import { SidebarNav } from "./components/SidebarNav";
 const sidebarNavItems = [
   {
     title: "Account",
-    href: "/settings",
+    href: "/auth/settings",
   },
   {
     title: "Password",
-    href: "/settings/password",
+    href: "/auth/settings/password",
   },
   {
     title: "Notifications",
-    href: "/settings/notifications",
+    href: "/auth/settings/notifications",
   },
 ];
 
