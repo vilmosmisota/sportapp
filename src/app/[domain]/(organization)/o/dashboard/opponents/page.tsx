@@ -10,7 +10,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { useUserRoles } from "@/entities/user/hooks/useUserRoles";
 import { Permissions } from "@/libs/permissions/permissions";
 import OpponentForm from "./components/OpponentForm";
-import { OpponentsDataTable } from "./components/OpponentsDataTable";
+import OpponentsDataTable from "./components/OpponentsDataTable";
 
 export default function OpponentsPage({
   params,
@@ -48,6 +48,7 @@ export default function OpponentsPage({
           data={opponents}
           tenantId={tenant?.id.toString() ?? ""}
           canManage={canManageOpponents}
+          tenant={tenant!}
         />
       )}
 
@@ -60,6 +61,7 @@ export default function OpponentsPage({
           <OpponentForm
             tenantId={tenant?.id.toString() ?? ""}
             setIsOpen={setIsAddOpponentOpen}
+            tenant={tenant!}
           />
         </div>
       </ResponsiveSheet>
