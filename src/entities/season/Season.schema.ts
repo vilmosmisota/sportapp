@@ -35,9 +35,14 @@ export const SeasonFormSchema = z.object({
   customName: z.string().optional(),
   isActive: z.boolean().default(false),
   breaks: z.array(BreakSchema).default([]),
-  membershipPrices: z.array(
-    z.object({ membershipCategoryId: z.number(), price: z.number().positive() })
-  ),
+  membershipPrices: z
+    .array(
+      z.object({
+        membershipCategoryId: z.number(),
+        price: z.number().positive(),
+      })
+    )
+    .default([]),
   phases: z.array(z.string()).nullable().default(null),
 });
 

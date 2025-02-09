@@ -21,12 +21,7 @@ import { useUpdateSeason } from "@/entities/season/Season.actions.client";
 import { Season, SeasonForm } from "@/entities/season/Season.schema";
 import { cn } from "@/libs/tailwind/utils";
 import { format } from "date-fns";
-import {
-  CalendarIcon,
-  Calendar as CalendarDays,
-  Clock,
-  Banknote,
-} from "lucide-react";
+import { CalendarIcon, Calendar as CalendarDays, Clock } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -35,11 +30,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { DateInput } from "@/components/ui/date-input/DateInput";
 import { parseISO } from "date-fns";
-import MembershipFeeEditor from "./MembershipFeeEditor";
 import BreaksEditor from "./BreaksEditor";
 import PhasesEditor from "./PhasesEditor";
 import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
-import { CurrencyTypes } from "@/entities/common/Types";
 
 type SeasonEditFormProps = {
   season: Season;
@@ -71,25 +64,11 @@ export function SeasonEditForm({
   const [initialPhases] = useState(season.phases);
   const [phases, setPhases] = useState(season.phases);
 
-  const [initialMembershipFees] = useState(
-    season.membershipPrices.map((mf) => ({
-      ...mf,
-      membershipCategory: { ...mf.membershipCategory },
-    }))
-  );
-
   const [breaks, setBreaks] = useState(
     season.breaks.map((br, index) => ({
       id: index + 1,
       from: br.from,
       to: br.to,
-    }))
-  );
-
-  const [membershipFees, setMembershipFees] = useState(
-    season.membershipPrices.map((mf) => ({
-      ...mf,
-      membershipCategory: { ...mf.membershipCategory },
     }))
   );
 
@@ -100,20 +79,18 @@ export function SeasonEditForm({
       breaks: season.breaks,
       isActive: season.isActive,
       customName: season.customName,
-      membershipPrices: season.membershipPrices,
+      membershipPrices: [],
       phases: season.phases,
     },
   });
 
-  // Function to check if breaks or membership fees have changed
+  // Function to check if breaks or phases have changed
   const isComponentsDirty = () => {
     const breaksChanged =
       JSON.stringify(breaks) !== JSON.stringify(initialBreaks);
-    const feesChanged =
-      JSON.stringify(membershipFees) !== JSON.stringify(initialMembershipFees);
     const phasesChanged =
       JSON.stringify(phases) !== JSON.stringify(initialPhases);
-    return breaksChanged || feesChanged || phasesChanged;
+    return breaksChanged || phasesChanged;
   };
 
   const { handleSubmit } = form;
@@ -123,12 +100,6 @@ export function SeasonEditForm({
   const isDirty = isFormDirty || isComponentsDirty();
 
   const onSubmit = (data: SeasonForm) => {
-    // Format the membership prices according to the schema
-    const formattedMembershipPrices = membershipFees.map((fee) => ({
-      membershipCategoryId: fee.membershipCategoryId,
-      price: fee.price,
-    }));
-
     // Format the breaks according to the schema
     const formattedBreaks = breaks.map((breakItem) => ({
       from: breakItem.from,
@@ -139,7 +110,7 @@ export function SeasonEditForm({
       startDate: data.startDate,
       endDate: data.endDate,
       breaks: formattedBreaks,
-      membershipPrices: formattedMembershipPrices,
+      membershipPrices: [],
       customName: data.customName,
       isActive: data.isActive,
       phases: phases,
@@ -152,7 +123,6 @@ export function SeasonEditForm({
         // Reset all form states
         form.reset();
         setBreaks(initialBreaks);
-        setMembershipFees(initialMembershipFees);
         setPhases(initialPhases);
       },
       onError: (error) => {
@@ -164,7 +134,6 @@ export function SeasonEditForm({
 
   const onCancel = () => {
     setBreaks(initialBreaks);
-    setMembershipFees(initialMembershipFees);
     setPhases(initialPhases);
     form.reset();
     setIsParentModalOpen?.(false);
@@ -268,24 +237,6 @@ export function SeasonEditForm({
             </CardContent>
           </Card>
 
-          {/* Membership Fees */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base font-medium flex items-center gap-2">
-                <Banknote className="h-4 w-4" />
-                Membership Fees
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <MembershipFeeEditor
-                tenantId={tenantId}
-                initialMembershipFees={membershipFees}
-                onUpdate={setMembershipFees}
-                currency={tenant?.membershipCurrency || CurrencyTypes.GBP}
-              />
-            </CardContent>
-          </Card>
-
           {/* Season Breaks */}
           <Card>
             <CardHeader className="pb-3">
@@ -308,7 +259,7 @@ export function SeasonEditForm({
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-medium flex items-center gap-2">
-                <CalendarDays className="h-4 w-4" />
+                <Clock className="h-4 w-4" />
                 Season Phases
               </CardTitle>
             </CardHeader>
@@ -318,13 +269,12 @@ export function SeasonEditForm({
           </Card>
         </div>
 
-        <div className="bg-background sticky bottom-0 left-0 right-0 p-4 md:pt-3 border-t mt-auto">
+        <div className="bg-background sticky h-[100px] flex items-center justify-end bottom-0 left-0 right-0 border-t">
           <FormButtons
-            buttonText="Save"
+            buttonText="Update"
             isLoading={isLoading}
             isDirty={isDirty}
             onCancel={onCancel}
-            className="w-full md:w-auto"
           />
         </div>
       </form>

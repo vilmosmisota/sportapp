@@ -5,7 +5,6 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/ui/page-header";
 import ProfileContent from "./tabs/ProfileContent";
-import MembershipCategoriesContent from "./tabs/MembershipCategoriesContent";
 import GroupTypesContent from "./tabs/GroupTypesContent";
 import TrainingSettingsContent from "./tabs/TrainingSettingsContent";
 import GameSettingsContent from "./tabs/GameSettingsContent";
@@ -35,9 +34,6 @@ export default function OrganizationDetailPage({
                 <TabsTrigger value="profile" className="text-sm">
                   Profile
                 </TabsTrigger>
-                <TabsTrigger value="memberships" className="text-sm">
-                  Memberships
-                </TabsTrigger>
                 <TabsTrigger value="group-types" className="text-sm">
                   Group Types
                 </TabsTrigger>
@@ -55,9 +51,6 @@ export default function OrganizationDetailPage({
           <div className="mt-4 md:px-0">
             <TabsContent value="profile">
               <ProfileContent tenant={tenant} />
-            </TabsContent>
-            <TabsContent value="memberships">
-              <MembershipCategoriesContent tenantId={tenant?.id} />
             </TabsContent>
             <TabsContent value="group-types">
               <GroupTypesContent tenant={tenant} domain={params.domain} />

@@ -2,7 +2,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/libs/tailwind/utils";
 import { getTenantByDomain } from "@/entities/tenant/Tenant.services";
 import { getServerClient } from "@/libs/supabase/server";
-import { TenantLogo } from "../(league)/components/TenantLogo";
 import NavLink from "./NavLink";
 import MobileMenu from "./MobileMenu";
 import AuthMenu from "./AuthMenu";
@@ -65,7 +64,7 @@ export async function SiteMenu({ domain }: { domain: string }) {
   return (
     <div className="max-w-screen-2xl bg-muted/40 flex items-center justify-between space-x-1 h-12 px-5 border-b shadow-sm">
       <div className="flex items-center gap-2">
-        <TenantLogo logoUrl={tenant?.logo} name={tenant?.name} />
+        <p>Logo</p>
         <nav className={cn("md:flex items-center gap-6 hidden")}>
           {navItems.map((item) => (
             <NavLink

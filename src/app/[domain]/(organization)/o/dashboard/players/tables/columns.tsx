@@ -68,25 +68,15 @@ const TeamsCell = ({ player }: { player: Player }) => {
   );
 };
 
-const MembershipCell = ({ player }: { player: Player }) => {
-  if (!player.membershipCategory) {
-    return <div className="text-muted-foreground text-sm">No membership</div>;
-  }
-
-  return (
-    <Badge variant="secondary" className="whitespace-nowrap">
-      {player.membershipCategory.name}
-    </Badge>
-  );
-};
-
 const ParentsCell = ({ player }: { player: Player }) => {
   const [isOpen, setIsOpen] = useState(false);
   const parents =
     player.userConnections?.filter((c) => c.isParent && c.user) || [];
 
   if (!parents.length) {
-    return <div className="text-muted-foreground text-sm">No parents</div>;
+    return (
+      <div className="text-muted-foreground text-sm">No parents/guardians</div>
+    );
   }
 
   return (
@@ -377,21 +367,9 @@ export const columns = ({
     maxSize: 300,
   },
   {
-    id: "membership",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Membership" />
-    ),
-    cell: ({ row }) => <MembershipCell player={row.original} />,
-    accessorFn: (row) => row.membershipCategory?.name,
-    enableSorting: true,
-    minSize: 100,
-    size: 120,
-    maxSize: 150,
-  },
-  {
     id: "parents",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Parents" />
+      <DataTableColumnHeader column={column} title="Parents/Guardians" />
     ),
     cell: ({ row }) => <ParentsCell player={row.original} />,
     accessorFn: (row) => {

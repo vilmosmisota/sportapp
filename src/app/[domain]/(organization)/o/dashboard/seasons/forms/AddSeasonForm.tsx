@@ -14,7 +14,7 @@ import FormButtons from "@/components/ui/form-buttons";
 import { useAddSeason } from "@/entities/season/Season.actions.client";
 import { SeasonForm } from "@/entities/season/Season.schema";
 import { format } from "date-fns";
-import { CalendarDays, Clock, Banknote } from "lucide-react";
+import { CalendarDays, Clock } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -22,11 +22,9 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { DateInput } from "@/components/ui/date-input/DateInput";
-import MembershipFeeEditor from "./MembershipFeeEditor";
 import BreaksEditor from "./BreaksEditor";
 import PhasesEditor from "./PhasesEditor";
 import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
-import { CurrencyTypes } from "@/entities/common/Types";
 
 type AddSeasonFormProps = {
   tenantId: string;
@@ -45,7 +43,6 @@ export function AddSeasonForm({
   const [breaks, setBreaks] = useState<{ id: number; from: Date; to: Date }[]>(
     []
   );
-  const [membershipFees, setMembershipFees] = useState<any[]>([]);
   const [phases, setPhases] = useState<string[]>([]);
 
   const form = useForm<SeasonForm>({
@@ -55,7 +52,6 @@ export function AddSeasonForm({
       breaks: [],
       isActive: false,
       customName: "",
-      membershipPrices: [],
       phases: null,
     },
   });
@@ -64,12 +60,6 @@ export function AddSeasonForm({
   const { isDirty, isLoading } = form.formState;
 
   const onSubmit = (data: SeasonForm) => {
-    // Format the membership prices according to the schema
-    const formattedMembershipPrices = membershipFees.map((fee) => ({
-      membershipCategoryId: fee.membershipCategoryId,
-      price: fee.price,
-    }));
-
     // Format the breaks according to the schema
     const formattedBreaks = breaks.map((breakItem) => ({
       from: breakItem.from,
@@ -80,10 +70,10 @@ export function AddSeasonForm({
       startDate: data.startDate,
       endDate: data.endDate,
       breaks: formattedBreaks,
-      membershipPrices: formattedMembershipPrices,
       customName: data.customName,
       isActive: data.isActive,
       phases: phases.length > 0 ? phases : null,
+      membershipPrices: [],
     };
 
     addSeason.mutate(formData, {
@@ -92,7 +82,6 @@ export function AddSeasonForm({
         setIsParentModalOpen(false);
         form.reset();
         setBreaks([]);
-        setMembershipFees([]);
         setPhases([]);
       },
       onError: (error) => {
@@ -105,7 +94,6 @@ export function AddSeasonForm({
   const onCancel = () => {
     form.reset();
     setBreaks([]);
-    setMembershipFees([]);
     setPhases([]);
     setIsParentModalOpen(false);
   };
@@ -208,24 +196,6 @@ export function AddSeasonForm({
             </CardContent>
           </Card>
 
-          {/* Membership Fees */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base font-medium flex items-center gap-2">
-                <Banknote className="h-4 w-4" />
-                Membership Fees
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <MembershipFeeEditor
-                tenantId={tenantId}
-                initialMembershipFees={membershipFees}
-                onUpdate={setMembershipFees}
-                currency={tenant?.membershipCurrency || CurrencyTypes.GBP}
-              />
-            </CardContent>
-          </Card>
-
           {/* Season Breaks */}
           <Card>
             <CardHeader className="pb-3">
@@ -248,7 +218,7 @@ export function AddSeasonForm({
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-medium flex items-center gap-2">
-                <CalendarDays className="h-4 w-4" />
+                <Clock className="h-4 w-4" />
                 Season Phases
               </CardTitle>
             </CardHeader>
@@ -258,13 +228,12 @@ export function AddSeasonForm({
           </Card>
         </div>
 
-        <div className="bg-background sticky bottom-0 left-0 right-0 p-4 md:pt-3 border-t mt-auto">
+        <div className="bg-background sticky h-[100px] flex items-center justify-end bottom-0 left-0 right-0 border-t">
           <FormButtons
             buttonText="Add"
             isLoading={isLoading}
             isDirty={isDirty}
             onCancel={onCancel}
-            className="w-full md:w-auto"
           />
         </div>
       </form>

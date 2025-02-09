@@ -1,4 +1,3 @@
-import LeagueLandingPage from "./(league)/Landing.page";
 import { TenantType } from "@/entities/tenant/Tenant.schema";
 import OrganizationLandingPage from "./(organization)/OrganizationLanding.page";
 import { getTenantByDomain } from "@/entities/tenant/Tenant.services";
@@ -20,9 +19,7 @@ export default async function TenantLandingPage({
 
   return (
     <div className="my-5 px-5">
-      {tenantType === TenantType.LEAGUE && (
-        <LeagueLandingPage params={params} />
-      )}
+      {tenantType === TenantType.LEAGUE && <></>}
       {tenantType === TenantType.ORGANIZATION && <OrganizationLandingPage />}
     </div>
   );

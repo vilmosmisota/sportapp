@@ -35,7 +35,6 @@ import {
   RefreshCw,
   Users,
   UserCog,
-  ShieldCheck,
   Shirt,
   X,
   PlusCircle,
@@ -48,7 +47,6 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/libs/tailwind/utils";
 import { z } from "zod";
 import { DatePicker } from "@/components/ui/date-picker/DatePicker";
-import { useMembershipCategories } from "@/entities/membership-category/MembershipCategory.query";
 import { useParentUsers } from "@/entities/user/hooks/useParentUsers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -131,7 +129,6 @@ export default function AddPlayerForm({
   const { data: teams } = useGetTeamsByTenantId(tenantId);
   const { data: existingPlayers } = usePlayers(tenantId);
   const { ageGroups, skillLevels, positions } = useTenantGroupTypes(domain);
-  const { data: membershipCategories } = useMembershipCategories(tenantId);
   const { data: parentUsers } = useParentUsers(tenantId);
   const { data: playerUsers } = usePlayerUsers(tenantId);
 
@@ -145,7 +142,6 @@ export default function AddPlayerForm({
       gender: undefined,
       position: undefined,
       joinDate: "",
-      membershipCategoryId: undefined,
       teamIds: [],
       parentUserIds: [],
       ownerUserId: undefined,
@@ -248,7 +244,6 @@ export default function AddPlayerForm({
     form.setValue("gender", "" as any);
     form.setValue("position", "" as any);
     form.setValue("joinDate", "");
-    form.setValue("membershipCategoryId", undefined);
     form.setValue("teamIds", []);
     form.setValue("parentUserIds", []);
     form.setValue("ownerUserId", undefined);
@@ -494,75 +489,6 @@ export default function AddPlayerForm({
                           <FormDescription>
                             Used for player identification
                           </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Membership Information */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base font-medium flex items-center gap-2">
-                    <ShieldCheck className="h-4 w-4" />
-                    Membership Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="membershipCategoryId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Membership Category</FormLabel>
-                          <Select
-                            onValueChange={(value) =>
-                              field.onChange(Number(value))
-                            }
-                            value={field.value?.toString() || undefined}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select category" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {membershipCategories?.map((category) => (
-                                <SelectItem
-                                  key={category.id}
-                                  value={category.id.toString()}
-                                >
-                                  {category.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="joinDate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Join Date</FormLabel>
-                          <FormControl>
-                            <DateInput
-                              value={
-                                field.value ? parseISO(field.value) : undefined
-                              }
-                              onChange={(date) =>
-                                field.onChange(
-                                  date ? format(date, "yyyy-MM-dd") : ""
-                                )
-                              }
-                            />
-                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}

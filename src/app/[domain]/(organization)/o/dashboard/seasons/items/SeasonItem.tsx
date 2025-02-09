@@ -150,40 +150,6 @@ export function SeasonItem({ season, tenantId, domain }: SeasonItemProps) {
             <div>
               <div className="pb-3 md:pb-4">
                 <h3 className="font-semibold text-sm text-foreground">
-                  Membership Fees
-                </h3>
-              </div>
-              {season.membershipPrices.length > 0 ? (
-                <div className="space-y-2 divide-y divide-border">
-                  {season.membershipPrices.map((price) => (
-                    <div
-                      key={price.id}
-                      className={cn(
-                        "flex flex-col md:flex-row md:items-center justify-between",
-                        "py-2 gap-1 md:gap-4"
-                      )}
-                    >
-                      <span className="text-sm text-muted-foreground">
-                        {price.membershipCategory.name}
-                      </span>
-                      <span className="text-sm font-medium">
-                        {tenant?.membershipCurrency &&
-                          getCurrencySymbol(tenant.membershipCurrency)}
-                        {price.price}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  No membership prices set
-                </p>
-              )}
-            </div>
-
-            <div>
-              <div className="pb-3 md:pb-4">
-                <h3 className="font-semibold text-sm text-foreground">
                   Season Breaks
                 </h3>
               </div>
