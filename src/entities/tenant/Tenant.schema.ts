@@ -29,6 +29,15 @@ export type GroupType = z.infer<typeof GroupTypeSchema>;
 export type TrainingLocation = z.infer<typeof LocationSchema>;
 export type GameLocation = z.infer<typeof LocationSchema>;
 
+export const TenantCapabilitiesSchema = z.object({
+  id: z.number(),
+  tenantId: z.number().nullable(),
+  membership: z.boolean().nullable(),
+  websiteBuilder: z.boolean().nullable(),
+});
+
+export type TenantCapabilities = z.infer<typeof TenantCapabilitiesSchema>;
+
 export const TenantSchema = z.object({
   id: z.number(),
   name: z.string().min(1, { message: "Name is required" }),
