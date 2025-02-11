@@ -52,6 +52,7 @@ export default function TrainingSettingsContent({
         phoneNumber: tenant.phoneNumber ?? undefined,
         groupTypes: tenant.groupTypes ?? undefined,
         trainingLocations: tenant.trainingLocations ?? undefined,
+        isPublicSitePublished: tenant.isPublicSitePublished,
       };
 
       await updateTenant.mutateAsync(updateData);

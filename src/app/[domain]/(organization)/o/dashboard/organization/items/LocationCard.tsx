@@ -61,6 +61,7 @@ export function LocationCard({
           : tenant.trainingLocations ?? undefined,
       gameLocations:
         type === "game" ? updatedLocations : tenant.gameLocations ?? undefined,
+      isPublicSitePublished: tenant.isPublicSitePublished,
     };
 
     try {

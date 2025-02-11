@@ -59,6 +59,7 @@ export default function LocationItem({
         phoneNumber: tenant.phoneNumber ?? undefined,
         groupTypes: tenant.groupTypes ?? undefined,
         lateThresholdMinutes: tenant.lateThresholdMinutes ?? null,
+        isPublicSitePublished: tenant.isPublicSitePublished,
       };
 
       await updateTenant(formData);

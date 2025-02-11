@@ -25,7 +25,7 @@ export const getTenantInfoByDomain = async (
 ) => {
   const { data, error } = await typedClient
     .from("tenants")
-    .select("type, id")
+    .select("type, id, isPublicSitePublished")
     .eq("domain", `${domain}`)
     .single();
 
@@ -38,6 +38,7 @@ export const getTenantInfoByDomain = async (
   return {
     tenantType: validatedData.type,
     tenantId: validatedData.id,
+    isPublicSitePublished: validatedData.isPublicSitePublished,
   };
 };
 

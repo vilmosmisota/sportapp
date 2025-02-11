@@ -57,6 +57,11 @@ export async function SiteMenu({ domain }: { domain: string }) {
   const serverClient = getServerClient();
   const tenant = await getTenantByDomain(domain, serverClient);
 
+  // Don't render the menu if the site is not published
+  if (!tenant?.isPublicSitePublished) {
+    return null;
+  }
+
   const navItems =
     tenant?.type === TenantType.LEAGUE ? leagueNavItems : organizationNavItems;
 

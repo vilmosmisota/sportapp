@@ -55,6 +55,7 @@ export const TenantSchema = z.object({
   trainingLocations: z.array(LocationSchema).nullable(),
   gameLocations: z.array(LocationSchema).nullable(),
   lateThresholdMinutes: z.number().min(0).nullable().default(5),
+  isPublicSitePublished: z.boolean().nullable().default(false),
 });
 
 export type Tenant = z.infer<typeof TenantSchema>;
@@ -78,4 +79,5 @@ export type TenantForm = z.infer<typeof TenantFormSchema>;
 export const TenantInfoSchema = z.object({
   type: z.nativeEnum(TenantType),
   id: z.number(),
+  isPublicSitePublished: z.boolean().nullable(),
 });

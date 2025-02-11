@@ -8,8 +8,10 @@ interface SiteMenuWrapperProps {
 
 export function SiteMenuWrapper({ children }: SiteMenuWrapperProps) {
   const pathname = usePathname();
-  const showChildren =
-    !pathname.includes("/dashboard") && !pathname.includes("/auth");
+  const hideMenu =
+    pathname.includes("/dashboard") ||
+    pathname.includes("/auth") ||
+    pathname.includes("/login");
 
-  return <>{showChildren && children}</>;
+  return <>{!hideMenu && children}</>;
 }

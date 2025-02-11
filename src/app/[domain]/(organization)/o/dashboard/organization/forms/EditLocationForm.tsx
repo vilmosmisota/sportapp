@@ -76,6 +76,7 @@ export default function EditLocationForm({
           loc.id === location.id ? updatedLocation : loc
         ) || [updatedLocation],
         lateThresholdMinutes: tenant.lateThresholdMinutes,
+        isPublicSitePublished: tenant.isPublicSitePublished,
       });
 
       toast.success("Location updated successfully");

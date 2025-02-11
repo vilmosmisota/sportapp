@@ -77,6 +77,7 @@ export default function AddGameLocationForm({
         groupTypes: tenant.groupTypes ?? undefined,
         trainingLocations: tenant.trainingLocations ?? undefined,
         gameLocations: updatedLocations,
+        isPublicSitePublished: tenant.isPublicSitePublished,
       };
 
       await updateTenant.mutateAsync(updateData);

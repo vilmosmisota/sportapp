@@ -540,37 +540,37 @@ export type Database = {
       };
       userEntities: {
         Row: {
-          clubId: number | null;
-          createdAt: string;
-          divisionId: number | null;
-          entityName: string | null;
           id: number;
-          role: string | null;
-          teamId: number | null;
+          createdAt: string;
+          adminRole: string | null;
           tenantId: number | null;
+          clubId: number | null;
+          divisionId: number | null;
+          teamId: number | null;
           userId: string | null;
+          domainRole: string | null;
         };
         Insert: {
-          clubId?: number | null;
-          createdAt?: string;
-          divisionId?: number | null;
-          entityName?: string | null;
           id?: number;
-          role?: string | null;
-          teamId?: number | null;
+          createdAt?: string;
+          adminRole?: string | null;
           tenantId?: number | null;
+          clubId?: number | null;
+          divisionId?: number | null;
+          teamId?: number | null;
           userId?: string | null;
+          domainRole?: string | null;
         };
         Update: {
-          clubId?: number | null;
-          createdAt?: string;
-          divisionId?: number | null;
-          entityName?: string | null;
           id?: number;
-          role?: string | null;
-          teamId?: number | null;
+          createdAt?: string;
+          adminRole?: string | null;
           tenantId?: number | null;
+          clubId?: number | null;
+          divisionId?: number | null;
+          teamId?: number | null;
           userId?: string | null;
+          domainRole?: string | null;
         };
         Relationships: [
           {

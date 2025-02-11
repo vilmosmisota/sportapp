@@ -115,6 +115,7 @@ export default function AddGroupTypeForm({
       membershipCurrency: tenant.membershipCurrency,
       lateThresholdMinutes: tenant.lateThresholdMinutes,
       groupTypes,
+      isPublicSitePublished: tenant.isPublicSitePublished,
     };
 
     updateTenant.mutate(updateData, {

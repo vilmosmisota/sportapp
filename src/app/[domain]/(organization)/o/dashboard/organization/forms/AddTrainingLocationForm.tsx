@@ -78,6 +78,7 @@ export default function AddTrainingLocationForm({
         phoneNumber: tenant.phoneNumber ?? undefined,
         groupTypes: tenant.groupTypes ?? undefined,
         lateThresholdMinutes: tenant.lateThresholdMinutes,
+        isPublicSitePublished: tenant.isPublicSitePublished,
       };
 
       await updateTenant(formData);
