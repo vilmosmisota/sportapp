@@ -105,10 +105,6 @@ export function validateUserAccess(
   pathname: string,
   domainRole: DomainRole | null
 ): boolean {
-  console.log("=== validateUserAccess ===");
-  console.log("Checking path:", pathname);
-  console.log("User domain role:", domainRole);
-
   if (!domainRole) {
     console.log("No domain role - access denied");
     return false;

@@ -9,6 +9,7 @@ import { getTenantByDomain } from "@/entities/tenant/Tenant.services";
 import LoginForm from "./components/LoginForm";
 import Image from "next/image";
 import { getServerClient } from "@/libs/supabase/server";
+import { baseUrl } from "@/utils/url.config";
 
 export default async function LoginPage({
   params,
@@ -33,7 +34,7 @@ export default async function LoginPage({
             {tenant?.logo && (
               <div className="flex justify-center mb-4">
                 <Image
-                  src={tenant.logo}
+                  src={baseUrl(tenant.logo)}
                   alt={`${tenant.name} logo`}
                   width={80}
                   height={80}
