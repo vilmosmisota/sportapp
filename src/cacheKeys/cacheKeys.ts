@@ -121,4 +121,9 @@ export const queryKeys = {
     detail: (tenantId: string | undefined, opponentId: string | undefined) =>
       [...queryKeys.opponent.all, tenantId, opponentId] as const,
   },
+  role: {
+    all: ["role"] as const,
+    list: ["role", "list"] as const,
+    userDomains: ["role", "userDomains"] as const,
+  },
 } as const;

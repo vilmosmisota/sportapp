@@ -28,6 +28,12 @@ const navItems = [
         description: "Manage seasons and programs",
       },
       {
+        name: "Roles",
+        href: "/o/dashboard/roles",
+        iconName: "ShieldCheck",
+        description: "Manage roles and permissions",
+      },
+      {
         name: "Users",
         href: "/o/dashboard/users",
         iconName: "Users2",
