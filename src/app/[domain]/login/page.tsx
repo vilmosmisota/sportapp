@@ -34,7 +34,7 @@ export default async function LoginPage({
             {tenant?.logo && (
               <div className="flex justify-center mb-4">
                 <Image
-                  src={baseUrl(tenant.logo)}
+                  src={tenant.logo}
                   alt={`${tenant.name} logo`}
                   width={80}
                   height={80}
