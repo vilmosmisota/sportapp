@@ -5,8 +5,6 @@ import { useState } from "react";
 import { Season } from "@/entities/season/Season.schema";
 import { Team } from "@/entities/team/Team.schema";
 import CreateTrainingScheduleForm from "../forms/CreateTrainingScheduleForm";
-import { useUserRoles } from "../../../../../../../entities/user/hooks/useUserRoles";
-import { Permissions } from "../../../../../../../libs/permissions/permissions";
 
 interface Props {
   domain: string;
@@ -22,10 +20,6 @@ export default function CreateTrainingButton({
   tenantId,
 }: Props) {
   const [isOpen, setIsOpen] = useState(false);
-  const userEntity = useUserRoles();
-  const canManageTrainings = Permissions.Teams.manage(userEntity);
-
-  if (!canManageTrainings) return null;
 
   return (
     <>

@@ -141,7 +141,6 @@ export default function EditPlayerForm({
       pin: player.pin || "",
       gender: player.gender || undefined,
       position: player.position || undefined,
-      joinDate: player.joinDate || "",
       teamIds: player.teamConnections?.map((tc) => tc.teamId) || [],
       parentUserIds:
         player.userConnections

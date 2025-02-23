@@ -25,14 +25,12 @@ interface TeamsTableProps {
   teams?: Team[];
   tenantId: string;
   domain: string;
-  canManageTeams: boolean;
 }
 
 export default function TeamsTable({
   teams = [],
   tenantId,
   domain,
-  canManageTeams,
 }: TeamsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([
     { id: "age", desc: false },
@@ -85,11 +83,10 @@ export default function TeamsTable({
     return columns({
       onEdit: handleEditTeam,
       onDelete: handleDeleteTeam,
-      canManageTeams,
+
       domain,
-      tenantId,
     });
-  }, [canManageTeams, handleEditTeam, handleDeleteTeam, domain, tenantId]);
+  }, [handleEditTeam, handleDeleteTeam, domain]);
 
   const table = useReactTable({
     data: teams,

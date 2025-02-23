@@ -2,6 +2,46 @@ import { TypedClient } from "@/libs/supabase/type";
 import { User, UserForm, UserSchema, UserUpdateForm } from "./User.schema";
 import { getAdminClient } from "@/libs/supabase/admin";
 
+// Get current authenticated user with roles
+export const getCurrentUser = async (client: TypedClient) => {
+  const {
+    data: { user },
+  } = await client.auth.getUser();
+
+  if (!user) return null;
+
+  const { data, error } = await client
+    .from("users")
+    .select(
+      `
+      *,
+      tenantUsers(id, tenantId, userId),
+      roles:userRoles(
+        id,
+        roleId,
+        tenantId,
+        role:roles(
+          id,
+          name,
+          domain,
+          permissions,
+          tenantId
+        )
+      )
+    `
+    )
+    .eq("id", user.id)
+    .single();
+
+  if (error || !data) return null;
+
+  return UserSchema.parse({
+    ...data,
+    roles: data.roles || [],
+    tenantUsers: data.tenantUsers || [],
+  });
+};
+
 // Keep the original function for middleware
 export const getUserOnClient = async (typedClient: TypedClient) => {
   const {
@@ -15,7 +55,7 @@ export const getUserOnClient = async (typedClient: TypedClient) => {
   return user;
 };
 
-// Get all users for a tenant with their entity
+// Get all users for a tenant with their roles
 export const getUsersByTenantId = async (
   client: TypedClient,
   tenantId: string
@@ -25,32 +65,35 @@ export const getUsersByTenantId = async (
     .select(
       `
       *,
-      entity:userEntities!inner (
+      tenantUsers!inner(id, tenantId, userId),
+      roles:userRoles(
         id,
-        createdAt,
-        adminRole,
-        domainRole,
+        roleId,
         tenantId,
-        clubId,
-        divisionId,
-        teamId
+        role:roles(
+          id,
+          name,
+          domain,
+          permissions,
+          tenantId
+        )
       )
     `
     )
-    .eq("userEntities.tenantId", tenantId);
+    .eq("tenantUsers.tenantId", Number(tenantId));
 
   if (error) throw new Error(error.message);
 
-  return data.map((user) => {
-    const entity = Array.isArray(user.entity) ? user.entity[0] : user.entity;
-    return UserSchema.parse({
+  return data.map((user) =>
+    UserSchema.parse({
       ...user,
-      entity: entity || null,
-    });
-  });
+      roles: user.roles || [],
+      tenantUsers: user.tenantUsers || [],
+    })
+  );
 };
 
-// Create a new user with their entity
+// Create a new user with their roles
 export const createUser = async (
   client: TypedClient,
   userData: UserForm,
@@ -78,38 +121,66 @@ export const createUser = async (
 
   if (userError) throw new Error(userError.message);
 
-  // Create user entity
-  const { data: entity, error: entityError } = await client
-    .from("userEntities")
-    .insert({
+  // Add user to tenant
+  const { error: tenantUserError } = await client.from("tenantUsers").insert({
+    userId: authData.user.id,
+    tenantId: Number(tenantId),
+  });
+
+  if (tenantUserError) throw new Error(tenantUserError.message);
+
+  // Create user roles
+  if (userData.roleIds?.length) {
+    const userRoles = userData.roleIds.map((roleId) => ({
       userId: authData.user.id,
+      roleId,
       tenantId: Number(tenantId),
-      adminRole: userData.adminRole,
-      domainRole: userData.domainRole,
-      clubId: userData.clubId,
-      divisionId: userData.divisionId,
-      teamId: userData.teamId,
-    })
-    .select()
+    }));
+
+    const { error: rolesError } = await client
+      .from("userRoles")
+      .insert(userRoles);
+
+    if (rolesError) throw new Error(rolesError.message);
+  }
+
+  // Fetch the created user with roles
+  const { data: user, error: fetchError } = await client
+    .from("users")
+    .select(
+      `
+      *,
+      roles:userRoles(
+        id,
+        roleId,
+        tenantId,
+        role:roles(
+          id,
+          name,
+          domain,
+          permissions,
+          tenantId
+        )
+      )
+    `
+    )
+    .eq("id", authData.user.id)
     .single();
 
-  if (entityError) throw new Error(entityError.message);
+  if (fetchError || !user)
+    throw new Error(fetchError?.message ?? "Failed to fetch created user");
 
-  return {
-    id: authData.user.id,
-    email: userData.email,
-    firstName: userData.firstName,
-    lastName: userData.lastName,
-    entity,
-  };
+  return UserSchema.parse({
+    ...user,
+    roles: user.roles || [],
+  });
 };
 
-// Update user and their entity
+// Update user and their roles
 export const updateUser = async (
   client: TypedClient,
   userId: string,
   userData: UserUpdateForm,
-  entityId: number,
   tenantId: string
 ) => {
   const adminClient = getAdminClient();
@@ -135,29 +206,63 @@ export const updateUser = async (
 
   if (userError) throw new Error(userError.message);
 
-  // Update entity
-  const { data: entity, error: entityError } = await client
-    .from("userEntities")
-    .update({
-      adminRole: userData.adminRole,
-      domainRole: userData.domainRole,
-      clubId: userData.clubId,
-      divisionId: userData.divisionId,
-      teamId: userData.teamId,
-    })
-    .eq("id", entityId)
-    .select()
+  // Update user roles if provided
+  if (userData.roleIds) {
+    // First delete existing roles for this tenant
+    const { error: deleteError } = await client
+      .from("userRoles")
+      .delete()
+      .eq("userId", userId)
+      .eq("tenantId", Number(tenantId));
+
+    if (deleteError) throw new Error(deleteError.message);
+
+    // Then insert new roles if any
+    if (userData.roleIds.length > 0) {
+      const userRoles = userData.roleIds.map((roleId) => ({
+        userId,
+        roleId,
+        tenantId: Number(tenantId),
+      }));
+
+      const { error: rolesError } = await client
+        .from("userRoles")
+        .insert(userRoles);
+
+      if (rolesError) throw new Error(rolesError.message);
+    }
+  }
+
+  // Fetch the updated user with roles
+  const { data: user, error: fetchError } = await client
+    .from("users")
+    .select(
+      `
+      *,
+      roles:userRoles(
+        id,
+        roleId,
+        tenantId,
+        role:roles(
+          id,
+          name,
+          domain,
+          permissions,
+          tenantId
+        )
+      )
+    `
+    )
+    .eq("id", userId)
     .single();
 
-  if (entityError) throw new Error(entityError.message);
+  if (fetchError || !user)
+    throw new Error(fetchError?.message ?? "Failed to fetch updated user");
 
-  return {
-    id: userId,
-    email: userData.email,
-    firstName: userData.firstName,
-    lastName: userData.lastName,
-    entity,
-  };
+  return UserSchema.parse({
+    ...user,
+    roles: user.roles || [],
+  });
 };
 
 // Check if user has access to tenant
@@ -167,8 +272,8 @@ export const checkTenantUserByIds = async (
   userId: string
 ) => {
   const { data, error } = await client
-    .from("userEntities")
-    .select("*")
+    .from("tenantUsers")
+    .select("id")
     .eq("userId", userId)
     .eq("tenantId", tenantId)
     .single();
@@ -182,11 +287,44 @@ export const checkTenantUserByIds = async (
 };
 
 // Delete user (this will cascade delete their entities)
-export const deleteUser = async (client: TypedClient, userId: string) => {
-  const adminClient = getAdminClient();
+export const deleteUser = async (
+  client: TypedClient,
+  userId: string,
+  tenantId: string
+) => {
+  // First remove user from tenant
+  const { error: tenantUserError } = await client
+    .from("tenantUsers")
+    .delete()
+    .eq("userId", userId)
+    .eq("tenantId", Number(tenantId));
 
-  const { error } = await adminClient.auth.admin.deleteUser(userId);
-  if (error) throw new Error(error.message);
+  if (tenantUserError) throw new Error(tenantUserError.message);
+
+  // Then delete user roles for this tenant
+  const { error: rolesError } = await client
+    .from("userRoles")
+    .delete()
+    .eq("userId", userId)
+    .eq("tenantId", Number(tenantId));
+
+  if (rolesError) throw new Error(rolesError.message);
+
+  // Check if user exists in any other tenants
+  const { data: otherTenants, error: tenantsError } = await client
+    .from("tenantUsers")
+    .select("id")
+    .eq("userId", userId);
+
+  if (tenantsError) throw new Error(tenantsError.message);
+
+  // Only delete the user completely if they don't belong to any other tenants
+  if (!otherTenants?.length) {
+    const adminClient = getAdminClient();
+    const { error } = await adminClient.auth.admin.deleteUser(userId);
+    if (error) throw new Error(error.message);
+  }
+
   return true;
 };
 

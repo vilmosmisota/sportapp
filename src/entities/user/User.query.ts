@@ -1,7 +1,7 @@
 import { queryKeys } from "@/cacheKeys/cacheKeys";
 import { useSupabase } from "@/libs/supabase/useSupabase";
 import { useQuery } from "@tanstack/react-query";
-import { getUserOnClient, getUsersByTenantId } from "./User.services";
+import { getCurrentUser, getUsersByTenantId } from "./User.services";
 import { UserSchema } from "@/entities/user/User.schema";
 
 // Query for getting the current authenticated user
@@ -11,41 +11,7 @@ export const useCurrentUser = () => {
 
   return useQuery({
     queryKey,
-    queryFn: async () => {
-      const {
-        data: { user },
-      } = await client.auth.getUser();
-      if (!user) return null;
-
-      const { data, error } = await client
-        .from("users")
-        .select(
-          `
-          *,
-          entity:userEntities!inner (
-            id,
-            createdAt,
-            adminRole,
-            domainRole,
-            tenantId,
-            clubId,
-            divisionId,
-            teamId
-          )
-        `
-        )
-        .eq("id", user.id)
-        .single();
-
-      if (error || !data) return null;
-
-      const entity = Array.isArray(data.entity) ? data.entity[0] : data.entity;
-
-      return UserSchema.parse({
-        ...data,
-        entity: entity || null,
-      });
-    },
+    queryFn: () => getCurrentUser(client),
   });
 };
 

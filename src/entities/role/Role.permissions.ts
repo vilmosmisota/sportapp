@@ -1,4 +1,12 @@
-import { Domain, UserDomainWithRoles } from "./Role.schema";
+import { UserRole } from "./Role.schema";
+
+// Define role domains
+export enum RoleDomain {
+  MANAGEMENT = "management",
+  FAMILY = "family",
+  SYSTEM = "system",
+  PLAYER = "player",
+}
 
 // Define all possible permissions
 export enum Permission {
@@ -35,8 +43,8 @@ export enum Permission {
 }
 
 // Define which permissions are available for each domain
-export const DomainPermissions: Record<Domain, Permission[]> = {
-  [Domain.MANAGEMENT]: [
+export const DomainPermissions: Record<RoleDomain, Permission[]> = {
+  [RoleDomain.MANAGEMENT]: [
     Permission.VIEW_DASHBOARD,
     Permission.VIEW_USERS,
     Permission.MANAGE_USERS,
@@ -53,12 +61,13 @@ export const DomainPermissions: Record<Domain, Permission[]> = {
     Permission.VIEW_TRAINING,
     Permission.MANAGE_TRAINING,
   ],
-  [Domain.FAMILY]: [], // No permissions needed - access is controlled by domain
-  [Domain.SYSTEM]: [
+  [RoleDomain.FAMILY]: [], // No permissions needed - access is controlled by domain
+  [RoleDomain.SYSTEM]: [
     Permission.VIEW_DASHBOARD,
     Permission.MANAGE_ORGANIZATION,
     Permission.MANAGE_USERS,
   ],
+  [RoleDomain.PLAYER]: [], // No permissions needed - access is controlled by domain, similar to family
 };
 
 // Helper to get permissions description
@@ -81,12 +90,12 @@ export const PermissionDescriptions: Record<Permission, string> = {
 };
 
 // Helper to get available permissions for a domain
-export const getPermissionsForDomain = (domain: Domain): Permission[] => {
+export const getPermissionsForDomain = (domain: RoleDomain): Permission[] => {
   return DomainPermissions[domain] || [];
 };
 
 // Helper to group permissions by type (view/manage) for a specific domain
-export const groupPermissionsByType = (domain: Domain) => {
+export const groupPermissionsByType = (domain: RoleDomain) => {
   const domainPermissions = getPermissionsForDomain(domain);
   const viewPermissions = domainPermissions.filter((p) =>
     p.startsWith("view_")
@@ -98,8 +107,8 @@ export const groupPermissionsByType = (domain: Domain) => {
 };
 
 type PermissionCheck = {
-  userDomains?: UserDomainWithRoles[] | null;
-  domain?: Domain;
+  userDomains?: UserRole[] | null;
+  domain?: RoleDomain;
   requiredPermissions?: Permission[];
 };
 
@@ -116,22 +125,15 @@ export const checkPermissions = ({
 
   // If domain is specified, only check permissions for that domain
   const relevantDomains = domain
-    ? userDomains.filter((ud) => ud.domain === domain)
+    ? userDomains.filter((ud) => ud.role?.domain === domain)
     : userDomains;
 
   if (!relevantDomains.length) return false;
 
   // Get all permissions from all roles in relevant domains
   const allPermissions = relevantDomains.reduce((acc: Permission[], ud) => {
-    if (!ud.roles?.length) return acc;
-    const domainPermissions = ud.roles.reduce(
-      (roleAcc: Permission[], role) => [
-        ...roleAcc,
-        ...(role.permissions as Permission[]),
-      ],
-      []
-    );
-    return [...acc, ...domainPermissions];
+    if (!ud.role) return acc;
+    return [...acc, ...ud.role.permissions];
   }, []);
 
   // Check if user has all required permissions
@@ -143,128 +145,94 @@ export const checkPermissions = ({
 // Common permission checks grouped by feature
 export const RolePermissions = {
   Users: {
-    manage: (userDomains?: UserDomainWithRoles[] | null) =>
+    manage: (userDomains?: UserRole[] | null) =>
       checkPermissions({
         userDomains,
-        domain: Domain.MANAGEMENT,
+        domain: RoleDomain.MANAGEMENT,
         requiredPermissions: [Permission.MANAGE_USERS],
       }),
-    view: (userDomains?: UserDomainWithRoles[] | null) =>
+    view: (userDomains?: UserRole[] | null) =>
       checkPermissions({
         userDomains,
         requiredPermissions: [Permission.VIEW_USERS],
       }),
   },
   Teams: {
-    manage: (userDomains?: UserDomainWithRoles[] | null) =>
+    manage: (userDomains?: UserRole[] | null) =>
       checkPermissions({
         userDomains,
-        domain: Domain.MANAGEMENT,
+        domain: RoleDomain.MANAGEMENT,
         requiredPermissions: [Permission.MANAGE_TEAM],
       }),
-    view: (userDomains?: UserDomainWithRoles[] | null) =>
+    view: (userDomains?: UserRole[] | null) =>
       checkPermissions({
         userDomains,
         requiredPermissions: [Permission.VIEW_TEAM],
       }),
   },
   Players: {
-    manage: (userDomains?: UserDomainWithRoles[] | null) =>
+    manage: (userDomains?: UserRole[] | null) =>
       checkPermissions({
         userDomains,
-        domain: Domain.MANAGEMENT,
+        domain: RoleDomain.MANAGEMENT,
         requiredPermissions: [Permission.MANAGE_PLAYERS],
       }),
-    view: (userDomains?: UserDomainWithRoles[] | null) =>
+    view: (userDomains?: UserRole[] | null) =>
       checkPermissions({
         userDomains,
         requiredPermissions: [Permission.VIEW_PLAYERS],
       }),
   },
   Organization: {
-    manage: (userDomains?: UserDomainWithRoles[] | null) =>
+    manage: (userDomains?: UserRole[] | null) =>
       checkPermissions({
         userDomains,
-        domain: Domain.MANAGEMENT,
+        domain: RoleDomain.MANAGEMENT,
         requiredPermissions: [Permission.MANAGE_ORGANIZATION],
       }),
-    view: (userDomains?: UserDomainWithRoles[] | null) =>
+    view: (userDomains?: UserRole[] | null) =>
       checkPermissions({
         userDomains,
         requiredPermissions: [Permission.VIEW_ORGANIZATION],
       }),
   },
   Seasons: {
-    manage: (userDomains?: UserDomainWithRoles[] | null) =>
+    manage: (userDomains?: UserRole[] | null) =>
       checkPermissions({
         userDomains,
-        domain: Domain.MANAGEMENT,
+        domain: RoleDomain.MANAGEMENT,
         requiredPermissions: [Permission.MANAGE_SEASONS],
       }),
-    view: (userDomains?: UserDomainWithRoles[] | null) =>
+    view: (userDomains?: UserRole[] | null) =>
       checkPermissions({
         userDomains,
         requiredPermissions: [Permission.VIEW_SEASONS],
       }),
   },
   Attendance: {
-    manage: (userDomains?: UserDomainWithRoles[] | null) =>
+    manage: (userDomains?: UserRole[] | null) =>
       checkPermissions({
         userDomains,
-        domain: Domain.MANAGEMENT,
+        domain: RoleDomain.MANAGEMENT,
         requiredPermissions: [Permission.MANAGE_ATTENDANCE],
       }),
-    view: (userDomains?: UserDomainWithRoles[] | null) =>
+    view: (userDomains?: UserRole[] | null) =>
       checkPermissions({
         userDomains,
         requiredPermissions: [Permission.VIEW_ATTENDANCE],
       }),
   },
   Training: {
-    manage: (userDomains?: UserDomainWithRoles[] | null) =>
+    manage: (userDomains?: UserRole[] | null) =>
       checkPermissions({
         userDomains,
-        domain: Domain.MANAGEMENT,
+        domain: RoleDomain.MANAGEMENT,
         requiredPermissions: [Permission.MANAGE_TRAINING],
       }),
-    view: (userDomains?: UserDomainWithRoles[] | null) =>
+    view: (userDomains?: UserRole[] | null) =>
       checkPermissions({
         userDomains,
         requiredPermissions: [Permission.VIEW_TRAINING],
       }),
   },
-};
-
-// Default role permissions
-export const DefaultRolePermissions: Record<string, Permission[]> = {
-  "Head Coach": [
-    Permission.VIEW_DASHBOARD,
-    Permission.MANAGE_TEAM,
-    Permission.MANAGE_ATTENDANCE,
-    Permission.MANAGE_TRAINING,
-    Permission.MANAGE_PLAYERS,
-    Permission.VIEW_ORGANIZATION,
-    Permission.VIEW_SEASONS,
-  ],
-  "Team Manager": [
-    Permission.VIEW_DASHBOARD,
-    Permission.MANAGE_TEAM,
-    Permission.MANAGE_ATTENDANCE,
-    Permission.VIEW_PLAYERS,
-    Permission.VIEW_ORGANIZATION,
-    Permission.VIEW_SEASONS,
-  ],
-  "Sports Parent": [
-    Permission.VIEW_DASHBOARD,
-    Permission.VIEW_ATTENDANCE,
-    Permission.VIEW_TRAINING,
-  ],
-  "System Admin": [
-    Permission.MANAGE_USERS,
-    Permission.MANAGE_ORGANIZATION,
-    Permission.MANAGE_SEASONS,
-    Permission.VIEW_DASHBOARD,
-    Permission.VIEW_TEAM,
-    Permission.VIEW_PLAYERS,
-  ],
 };

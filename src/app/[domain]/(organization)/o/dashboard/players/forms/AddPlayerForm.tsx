@@ -141,7 +141,6 @@ export default function AddPlayerForm({
       pin: "",
       gender: undefined,
       position: undefined,
-      joinDate: "",
       teamIds: [],
       parentUserIds: [],
       ownerUserId: undefined,
@@ -243,7 +242,6 @@ export default function AddPlayerForm({
     form.setValue("pin", "");
     form.setValue("gender", "" as any);
     form.setValue("position", "" as any);
-    form.setValue("joinDate", "");
     form.setValue("teamIds", []);
     form.setValue("parentUserIds", []);
     form.setValue("ownerUserId", undefined);

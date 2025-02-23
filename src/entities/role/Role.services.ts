@@ -3,52 +3,43 @@ import {
   Role,
   RoleForm,
   RoleSchema,
-  UserDomain,
-  UserDomainSchema,
-  UserDomainWithRoles,
+  UserRole,
+  UserRoleSchema,
+  UserWithRoles,
 } from "./Role.schema";
 
-// Get all roles for a specific domain and tenant type
-export const getRolesByDomainAndTenantType = async (
+// Get all roles for a tenant (including global roles)
+export const getRolesByTenant = async (
   client: TypedClient,
-  domain: string,
-  tenantType?: string
+  tenantId?: number
 ): Promise<Role[]> => {
-  let query = client.from("roles").select("*").eq("domain", domain);
-
-  if (tenantType) {
-    query = query.eq("tenantType", tenantType);
-  }
-
-  const { data, error } = await query;
+  const { data, error } = await client
+    .from("roles")
+    .select("*")
+    .or(`tenantId.is.null,tenantId.eq.${tenantId}`);
 
   if (error) throw new Error(error.message);
   return data.map((role) => RoleSchema.parse(role));
 };
 
-// Get user domains with roles for a specific user
-export const getUserDomainsWithRoles = async (
+// Get user roles for a specific user
+export const getUserRoles = async (
   client: TypedClient,
   userId: string
-): Promise<UserDomainWithRoles[]> => {
+): Promise<UserRole[]> => {
   const { data, error } = await client
-    .from("userDomains")
+    .from("userRoles")
     .select(
       `
       *,
-      roles:userDomainRoles(
-        role:roles(*)
-      )
+      role:roles(*)
     `
     )
     .eq("userId", userId);
 
   if (error) throw new Error(error.message);
 
-  return data.map((ud) => ({
-    ...UserDomainSchema.parse(ud),
-    roles: ud.roles.map((r: any) => RoleSchema.parse(r.role)),
-  }));
+  return data.map((ur) => UserRoleSchema.parse(ur));
 };
 
 // Create a new role
@@ -69,7 +60,7 @@ export const createRole = async (
 // Update an existing role
 export const updateRole = async (
   client: TypedClient,
-  roleId: string,
+  roleId: number,
   roleData: Partial<RoleForm>
 ): Promise<Role> => {
   const { data, error } = await client
@@ -86,62 +77,39 @@ export const updateRole = async (
 // Delete a role
 export const deleteRole = async (
   client: TypedClient,
-  roleId: string
+  roleId: number
 ): Promise<void> => {
   const { error } = await client.from("roles").delete().eq("id", roleId);
   if (error) throw new Error(error.message);
 };
 
-// Assign a role to a user domain
-export const assignRoleToUserDomain = async (
+// Assign a role to a user
+export const assignRoleToUser = async (
   client: TypedClient,
-  userDomainId: number,
-  roleId: string
+  userId: string,
+  roleId: number,
+  tenantId: number
 ): Promise<void> => {
-  const { error } = await client.from("userDomainRoles").insert({
-    userDomainId,
+  const { error } = await client.from("userRoles").insert({
+    userId,
     roleId,
+    tenantId,
   });
 
   if (error) throw new Error(error.message);
 };
 
-// Remove a role from a user domain
-export const removeRoleFromUserDomain = async (
-  client: TypedClient,
-  userDomainId: number,
-  roleId: string
-): Promise<void> => {
-  const { error } = await client
-    .from("userDomainRoles")
-    .delete()
-    .eq("userDomainId", userDomainId)
-    .eq("roleId", roleId);
-
-  if (error) throw new Error(error.message);
-};
-
-// Create a user domain
-export const createUserDomain = async (
+// Remove a role from a user
+export const removeRoleFromUser = async (
   client: TypedClient,
   userId: string,
-  tenantId: number,
-  domain: string,
-  isPrimary: boolean = false,
-  teamId?: number
-): Promise<UserDomain> => {
-  const { data, error } = await client
-    .from("userDomains")
-    .insert({
-      userId,
-      tenantId,
-      domain,
-      isPrimary,
-      teamId,
-    })
-    .select()
-    .single();
+  roleId: number,
+  tenantId: number
+): Promise<void> => {
+  const { error } = await client
+    .from("userRoles")
+    .delete()
+    .match({ userId, roleId, tenantId });
 
   if (error) throw new Error(error.message);
-  return UserDomainSchema.parse(data);
 };

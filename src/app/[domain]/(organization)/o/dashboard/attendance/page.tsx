@@ -7,8 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Loader2, CalendarClock } from "lucide-react";
 import { useState } from "react";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
-import { useUserRoles } from "@/entities/user/hooks/useUserRoles";
-import { Permissions } from "@/libs/permissions/permissions";
+
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { format, isToday, isFuture, parseISO, isPast } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,8 +19,7 @@ import {
 import { toast } from "sonner";
 import Link from "next/link";
 import { getDisplayGender } from "@/entities/team/Team.schema";
-import { useParams } from "next/navigation";
-import { useSupabase } from "@/libs/supabase/useSupabase";
+
 import { useAttendanceRecords } from "@/entities/attendance/Attendance.query";
 import { usePlayersByTeamId } from "@/entities/team/Team.query";
 import { PageHeader } from "@/components/ui/page-header";
@@ -62,8 +60,6 @@ export default function AttendancePage({
     tenant?.id?.toString() ?? ""
   );
   const [isCreateSessionOpen, setIsCreateSessionOpen] = useState(false);
-  const userEntity = useUserRoles();
-  const canManageAttendance = Permissions.Attendance.manage(userEntity);
 
   const isLoading = isTenantLoading || isTrainingsLoading;
 
@@ -122,7 +118,6 @@ export default function AttendancePage({
           title="Attendance"
           description="Manage attendance for upcoming training sessions."
           actions={
-            canManageAttendance &&
             upcomingTrainings.length > 0 && (
               <Button
                 onClick={() => setIsCreateSessionOpen(true)}
@@ -164,7 +159,6 @@ export default function AttendancePage({
                     ) ?? false
                   }
                   tenantId={tenant.id.toString()}
-                  canManageAttendance={canManageAttendance}
                   isPastTraining={false}
                 />
               ))}
@@ -190,7 +184,6 @@ export default function AttendancePage({
                   }
                   hasActiveSession={true}
                   tenantId={tenant.id.toString()}
-                  canManageAttendance={canManageAttendance}
                   isPastTraining={true}
                 />
               ))}
@@ -216,20 +209,18 @@ function TrainingCard({
   training,
   hasActiveSession,
   tenantId,
-  canManageAttendance,
+
   activeSessionId,
   isPastTraining,
 }: {
   training: Training;
   hasActiveSession: boolean;
   tenantId: string;
-  canManageAttendance: boolean;
   activeSessionId: number | undefined;
   isPastTraining: boolean;
 }) {
   const createSession = useCreateAttendanceSession();
   const closeSession = useCloseAttendanceSession();
-  const params = useParams();
 
   const { data: records } = useAttendanceRecords(
     activeSessionId ?? 0,
@@ -303,7 +294,7 @@ function TrainingCard({
           <span className="text-muted-foreground">Location:</span>
           <span className="font-medium">{training.location?.name}</span>
         </div>
-        {hasActiveSession && canManageAttendance && (
+        {hasActiveSession && (
           <div className="pt-4 space-y-2">
             <div className="flex gap-2">
               <Link
@@ -337,7 +328,7 @@ function TrainingCard({
             )}
           </div>
         )}
-        {!hasActiveSession && canManageAttendance && !isPastTraining && (
+        {!hasActiveSession && !isPastTraining && (
           <div className="mt-4 py-4">
             <Button
               variant="outline"

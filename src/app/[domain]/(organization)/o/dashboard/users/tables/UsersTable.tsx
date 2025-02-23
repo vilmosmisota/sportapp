@@ -24,14 +24,9 @@ import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
 interface UsersTableProps {
   users?: User[];
   tenantId: string;
-  canManageUsers: boolean;
 }
 
-export default function UsersTable({
-  users = [],
-  tenantId,
-  canManageUsers,
-}: UsersTableProps) {
+export default function UsersTable({ users = [], tenantId }: UsersTableProps) {
   const [sorting, setSorting] = useState<SortingState>([
     { id: "name", desc: false },
   ]);
@@ -83,9 +78,8 @@ export default function UsersTable({
     return columns({
       onEdit: handleEditUser,
       onDelete: handleDeleteUser,
-      canManageUsers,
     });
-  }, [canManageUsers, handleEditUser, handleDeleteUser]);
+  }, [handleEditUser, handleDeleteUser]);
 
   const table = useReactTable({
     data: users,

@@ -9,14 +9,7 @@ import { useTenantGroupTypes } from "@/entities/tenant/hooks/useGroupTypes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import AddGroupTypeForm from "../forms/AddGroupTypeForm";
-import { useUserRoles } from "@/entities/user/hooks/useUserRoles";
-import { Permissions } from "@/libs/permissions/permissions";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+
 import { getDisplayAgeGroup } from "@/entities/team/Team.schema";
 
 interface GroupTypesContentProps {
@@ -24,24 +17,12 @@ interface GroupTypesContentProps {
   domain: string;
 }
 
-// Helper function to parse age group string
-const parseAgeGroup = (group: string) => {
-  const [name, range] = group.split("#");
-  if (range) {
-    const [min, max] = range.split("-").map(Number);
-    return { name, min, max };
-  }
-  return { name: group, min: 0, max: parseInt(group.replace(/\D/g, "")) || 0 };
-};
-
 export default function GroupTypesContent({
   tenant,
   domain,
 }: GroupTypesContentProps) {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const { ageGroups, skillLevels, positions } = useTenantGroupTypes(domain);
-  const userEntity = useUserRoles();
-  const canManage = Permissions.Organization.manage(userEntity);
 
   return (
     <div className="space-y-6">
@@ -52,12 +33,11 @@ export default function GroupTypesContent({
             positions for teams.
           </h3>
         </div>
-        {canManage && (
-          <Button onClick={() => setIsAddOpen(true)} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Manage Group Types
-          </Button>
-        )}
+
+        <Button onClick={() => setIsAddOpen(true)} className="gap-2">
+          <Plus className="h-4 w-4" />
+          Manage Group Types
+        </Button>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">

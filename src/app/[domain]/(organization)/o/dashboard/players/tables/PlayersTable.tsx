@@ -21,27 +21,18 @@ import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { DataTable } from "@/components/ui/data-table/DataTable";
 import { ErrorBoundary } from "../../../../../../../components/ui/error-boundary";
 import EditPlayerForm from "../forms/EditPlayerForm";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { MoreHorizontal } from "lucide-react";
+import ConnectedUsersDialog from "./ConnectedUsersDialog";
 
 interface PlayersTableProps {
   players: Player[];
   tenantId: string;
   domain: string;
-  canManagePlayers: boolean;
 }
 
 export default function PlayersTable({
   players,
   tenantId,
   domain,
-  canManagePlayers,
 }: PlayersTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -49,6 +40,7 @@ export default function PlayersTable({
   const [rowSelection, setRowSelection] = useState({});
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+  const [isConnectedUsersOpen, setIsConnectedUsersOpen] = useState(false);
   const deletePlayer = useDeletePlayer(tenantId);
 
   const handleEdit = useCallback((player: Player) => {
@@ -68,16 +60,23 @@ export default function PlayersTable({
     [deletePlayer]
   );
 
+  const handleShowConnectedUsers = (player: Player) => {
+    setSelectedPlayer(player);
+    setIsConnectedUsersOpen(true);
+  };
+
   const tableColumns = useMemo(
     () =>
       columns({
-        onEdit: handleEdit,
+        onEdit: (player) => {
+          setSelectedPlayer(player);
+          setIsEditOpen(true);
+        },
         onDelete: handleDelete,
-        canManagePlayers,
+        onShowConnectedUsers: handleShowConnectedUsers,
         domain,
-        tenantId,
       }),
-    [canManagePlayers, domain, handleDelete, handleEdit, tenantId]
+    [domain, handleDelete, handleShowConnectedUsers]
   );
 
   const table = useReactTable({
@@ -123,18 +122,26 @@ export default function PlayersTable({
         <DataTablePagination table={table} />
 
         {selectedPlayer && (
-          <ResponsiveSheet
-            isOpen={isEditOpen}
-            setIsOpen={setIsEditOpen}
-            title="Edit Player"
-          >
-            <EditPlayerForm
+          <>
+            <ResponsiveSheet
+              isOpen={isEditOpen}
+              setIsOpen={setIsEditOpen}
+              title="Edit Player"
+            >
+              <EditPlayerForm
+                player={selectedPlayer}
+                tenantId={tenantId}
+                domain={domain}
+                setIsParentModalOpen={setIsEditOpen}
+              />
+            </ResponsiveSheet>
+
+            <ConnectedUsersDialog
               player={selectedPlayer}
-              tenantId={tenantId}
-              domain={domain}
-              setIsParentModalOpen={setIsEditOpen}
+              isOpen={isConnectedUsersOpen}
+              setIsOpen={setIsConnectedUsersOpen}
             />
-          </ResponsiveSheet>
+          </>
         )}
       </div>
     </ErrorBoundary>

@@ -7,6 +7,7 @@ import { X } from "lucide-react";
 import { User } from "@/entities/user/User.schema";
 import DataTableViewOptions from "@/components/ui/data-table/DataTableViewOptions";
 import { MultiSelectFilters } from "@/components/ui/multi-select-filters";
+import { RoleDomain } from "@/entities/role/Role.permissions";
 
 interface UsersTableToolbarProps {
   table: Table<User>;
@@ -41,53 +42,39 @@ export default function UsersTableToolbar({ table }: UsersTableToolbarProps) {
     const valueMap = new Map<string, number>();
 
     filteredRows.forEach((row) => {
-      const value = row.getValue(columnId) as string;
-      if (value) {
-        valueMap.set(value, (valueMap.get(value) || 0) + 1);
+      const userRoles = row.getValue(columnId) as User["roles"];
+      if (userRoles) {
+        userRoles.forEach((userRole) => {
+          if (userRole.role?.domain) {
+            valueMap.set(
+              userRole.role.domain,
+              (valueMap.get(userRole.role.domain) || 0) + 1
+            );
+          }
+        });
       }
     });
 
-    const allValues = Array.from(
-      new Set(
-        table
-          .getPreFilteredRowModel()
-          .rows.map((row) => row.getValue(columnId))
-          .filter(Boolean)
-      )
-    ) as string[];
-
-    return allValues.map((value) => ({
-      label: value.replace("-", " "),
-      value: value,
-      count: valueMap.get(value) || 0,
-      disabled: !valueMap.has(value),
+    return Object.values(RoleDomain).map((domain) => ({
+      label: domain.charAt(0).toUpperCase() + domain.slice(1),
+      value: domain,
+      count: valueMap.get(domain) || 0,
+      disabled: !valueMap.has(domain),
     }));
   };
 
-  // Get filtered rows for each column
-  const adminRoleRows = getFilteredRowsExcluding("adminRole");
-  const domainRoleRows = getFilteredRowsExcluding("domainRole");
+  // Get filtered rows for roles
+  const roleRows = getFilteredRowsExcluding("roles");
 
   const filterGroups = [
     {
-      title: "Admin Role",
-      options: getOptionsWithCounts("adminRole", adminRoleRows),
+      title: "Role Type",
+      options: getOptionsWithCounts("roles", roleRows),
       selectedValues:
-        (table.getColumn("adminRole")?.getFilterValue() as string[]) || [],
+        (table.getColumn("roles")?.getFilterValue() as string[]) || [],
       onSelectionChange: (values: string[]) => {
         table
-          .getColumn("adminRole")
-          ?.setFilterValue(values.length ? values : undefined);
-      },
-    },
-    {
-      title: "Domain Role",
-      options: getOptionsWithCounts("domainRole", domainRoleRows),
-      selectedValues:
-        (table.getColumn("domainRole")?.getFilterValue() as string[]) || [],
-      onSelectionChange: (values: string[]) => {
-        table
-          .getColumn("domainRole")
+          .getColumn("roles")
           ?.setFilterValue(values.length ? values : undefined);
       },
     },
@@ -97,7 +84,7 @@ export default function UsersTableToolbar({ table }: UsersTableToolbarProps) {
     <div className="flex flex-col md:flex-row gap-4 w-full">
       <div className="flex flex-1 items-center space-x-4">
         <Input
-          placeholder="Search by Name..."
+          placeholder="Search by name..."
           value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
             table.getColumn("name")?.setFilterValue(event.target.value)

@@ -17,12 +17,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAddUser } from "@/entities/user/User.actions.client";
-import {
-  UserForm,
-  UserFormSchema,
-  AdminRole,
-  DomainRole,
-} from "@/entities/user/User.schema";
+import { UserForm, UserFormSchema } from "@/entities/user/User.schema";
+import { RoleDomain } from "@/entities/role/Role.permissions";
+import { useRolesByTenant } from "@/entities/role/Role.query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -37,6 +34,7 @@ export default function AddUserForm({
   setIsParentModalOpen,
 }: AddUserFormProps) {
   const addUser = useAddUser(tenantId);
+  const { data: roles } = useRolesByTenant(Number(tenantId));
 
   const form = useForm<UserForm>({
     resolver: zodResolver(UserFormSchema),
@@ -45,8 +43,7 @@ export default function AddUserForm({
       firstName: "",
       lastName: "",
       password: "",
-      adminRole: null,
-      domainRole: null,
+      roleIds: [],
     },
   });
 
@@ -171,55 +168,23 @@ export default function AddUserForm({
 
             <FormField
               control={form.control}
-              name="adminRole"
+              name="roleIds"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Admin Role</FormLabel>
+                  <FormLabel>Role</FormLabel>
                   <Select
-                    onValueChange={field.onChange}
-                    value={field.value ?? undefined}
+                    onValueChange={(value) => field.onChange([parseInt(value)])}
+                    value={field.value?.[0]?.toString()}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select admin role" />
+                        <SelectValue placeholder="Select role" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {Object.values(AdminRole).map((role) => (
-                        <SelectItem key={role} value={role}>
-                          <span className="capitalize">
-                            {role.replace("-", " ")}
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="domainRole"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Domain Role</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value ?? undefined}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select domain role" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {Object.values(DomainRole).map((role) => (
-                        <SelectItem key={role} value={role}>
-                          <span className="capitalize">
-                            {role.replace("-", " ")}
-                          </span>
+                      {roles?.map((role) => (
+                        <SelectItem key={role.id} value={role.id.toString()}>
+                          {role.name}
                         </SelectItem>
                       ))}
                     </SelectContent>

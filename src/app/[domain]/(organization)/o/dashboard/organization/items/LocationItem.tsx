@@ -24,14 +24,12 @@ type LocationItemProps = {
   location: TrainingLocation;
   tenant: Tenant;
   domain: string;
-  canManage: boolean;
 };
 
 export default function LocationItem({
   location,
   tenant,
   domain,
-  canManage,
 }: LocationItemProps) {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -144,7 +142,7 @@ export default function LocationItem({
                 {location.streetAddress}, {location.city}, {location.postcode}
               </span>
             </div>
-            {canManage && <ActionMenu />}
+            <ActionMenu />
           </div>
         </CardHeader>
         <CardContent className="pt-4 md:pt-6 px-4 md:px-6">

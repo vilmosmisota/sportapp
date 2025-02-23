@@ -9,8 +9,6 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 import AddTrainingLocationForm from "../forms/AddTrainingLocationForm";
 import LocationItem from "../items/LocationItem";
-import { useUserRoles } from "@/entities/user/hooks/useUserRoles";
-import { Permissions } from "@/libs/permissions/permissions";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -30,8 +28,7 @@ export default function TrainingSettingsContent({
   const [lateThreshold, setLateThreshold] = useState(
     tenant?.lateThresholdMinutes?.toString() ?? "5"
   );
-  const userEntity = useUserRoles();
-  const canManage = Permissions.Organization.manage(userEntity);
+
   const updateTenant = useUpdateTenant(tenant?.id?.toString() ?? "", domain);
 
   if (!tenant) return null;
@@ -89,11 +86,9 @@ export default function TrainingSettingsContent({
                   className="w-24"
                   type="number"
                   min="0"
-                  disabled={!canManage}
                 />
-                {canManage && (
-                  <Button onClick={handleLateThresholdChange}>Save</Button>
-                )}
+
+                <Button onClick={handleLateThresholdChange}>Save</Button>
               </div>
             </div>
           </CardContent>
@@ -108,15 +103,11 @@ export default function TrainingSettingsContent({
           <h3 className="text-sm font-medium text-muted-foreground">
             Training Locations
           </h3>
-          {canManage && (
-            <Button
-              onClick={() => setIsAddLocationOpen(true)}
-              className="gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Add Location
-            </Button>
-          )}
+
+          <Button onClick={() => setIsAddLocationOpen(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Add Location
+          </Button>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
@@ -126,7 +117,6 @@ export default function TrainingSettingsContent({
               location={location}
               tenant={tenant}
               domain={domain}
-              canManage={canManage}
             />
           ))}
           {(!tenant.trainingLocations ||

@@ -22,14 +22,14 @@ import { Tenant } from "@/entities/tenant/Tenant.schema";
 interface LocationCardProps {
   location: Location;
   tenant: Tenant;
-  canManage: boolean;
+
   type: "training" | "game";
 }
 
 export function LocationCard({
   location,
   tenant,
-  canManage,
+
   type,
 }: LocationCardProps) {
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -117,37 +117,36 @@ export function LocationCard({
                 {location.streetAddress}, {location.city}, {location.postcode}
               </span>
             </div>
-            {canManage && (
-              <DropdownMenu modal={false}>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="h-8 w-8 p-0 hover:bg-background/20 data-[state=open]:bg-background/20"
-                    size="sm"
-                  >
-                    <MoreVertical className="h-4 w-4" />
-                    <span className="sr-only">Open menu</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-[160px] z-50">
-                  <DropdownMenuItem
-                    onClick={() => setIsEditOpen(true)}
-                    className="flex items-center gap-2 cursor-pointer"
-                  >
-                    <SquarePen className="h-4 w-4" />
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => setIsDeleteOpen(true)}
-                    className="flex items-center gap-2 cursor-pointer text-red-500"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+
+            <DropdownMenu modal={false}>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="h-8 w-8 p-0 hover:bg-background/20 data-[state=open]:bg-background/20"
+                  size="sm"
+                >
+                  <MoreVertical className="h-4 w-4" />
+                  <span className="sr-only">Open menu</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[160px] z-50">
+                <DropdownMenuItem
+                  onClick={() => setIsEditOpen(true)}
+                  className="flex items-center gap-2 cursor-pointer"
+                >
+                  <SquarePen className="h-4 w-4" />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => setIsDeleteOpen(true)}
+                  className="flex items-center gap-2 cursor-pointer text-red-500"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </CardHeader>
         <CardContent className="pt-4 md:pt-6 px-4 md:px-6">

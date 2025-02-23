@@ -9,15 +9,11 @@ import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { PageHeader } from "@/components/ui/page-header";
 import UsersTable from "./tables/UsersTable";
 import AddUserForm from "./forms/AddUserForm";
-import { useUserRoles } from "@/entities/user/hooks/useUserRoles";
-import { Permissions } from "@/libs/permissions/permissions";
 
 export default function UsersPage({ params }: { params: { domain: string } }) {
   const { data: tenant } = useTenantByDomain(params.domain);
   const { data: users, error } = useUsers(tenant?.id.toString() ?? "");
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
-  const userEntity = useUserRoles();
-  const canManageUsers = Permissions.Users.manage(userEntity);
 
   if (error) return <div>{error.message}</div>;
 
@@ -27,21 +23,15 @@ export default function UsersPage({ params }: { params: { domain: string } }) {
         title="Users"
         description="Manage your organization's users and their permissions"
         actions={
-          canManageUsers && (
-            <Button onClick={() => setIsAddUserOpen(true)} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add User
-            </Button>
-          )
+          <Button onClick={() => setIsAddUserOpen(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Add User
+          </Button>
         }
       />
 
       {users && (
-        <UsersTable
-          users={users}
-          tenantId={tenant?.id.toString() ?? ""}
-          canManageUsers={canManageUsers}
-        />
+        <UsersTable users={users} tenantId={tenant?.id.toString() ?? ""} />
       )}
 
       <ResponsiveSheet

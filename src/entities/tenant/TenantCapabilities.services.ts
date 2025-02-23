@@ -1,46 +1,46 @@
 import { TypedClient } from "@/libs/supabase/type";
-import { TenantCapabilities, TenantCapabilitiesSchema } from "./Tenant.schema";
+import { TenantFeatures, TenantFeaturesSchema } from "./Tenant.schema";
 
-export const getTenantCapabilities = async (
+export const getTenantFeatures = async (
   client: TypedClient,
   tenantId: number
 ) => {
   const { data, error } = await client
-    .from("tenantCapabilities")
+    .from("tenantFeatures")
     .select("*")
     .eq("tenantId", tenantId)
     .single();
 
   if (error) throw new Error(error.message);
-  return TenantCapabilitiesSchema.parse(data);
+  return TenantFeaturesSchema.parse(data);
 };
 
-export const updateTenantCapabilities = async (
+export const updateTenantFeatures = async (
   client: TypedClient,
   tenantId: number,
-  capabilities: Partial<TenantCapabilities>
+  capabilities: Partial<TenantFeatures>
 ) => {
   const { data, error } = await client
-    .from("tenantCapabilities")
+    .from("tenantFeatures")
     .update(capabilities)
     .eq("tenantId", tenantId)
     .select()
     .single();
 
   if (error) throw new Error(error.message);
-  return TenantCapabilitiesSchema.parse(data);
+  return TenantFeaturesSchema.parse(data);
 };
 
-export const createTenantCapabilities = async (
+export const createTenantFeatures = async (
   client: TypedClient,
-  capabilities: Omit<TenantCapabilities, "id">
+  capabilities: Omit<TenantFeatures, "id">
 ) => {
   const { data, error } = await client
-    .from("tenantCapabilities")
+    .from("tenantFeatures")
     .insert(capabilities)
     .select()
     .single();
 
   if (error) throw new Error(error.message);
-  return TenantCapabilitiesSchema.parse(data);
+  return TenantFeaturesSchema.parse(data);
 };

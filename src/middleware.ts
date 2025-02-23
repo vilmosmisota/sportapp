@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { updateSession } from "./libs/supabase/middleware";
 import { TenantType } from "./entities/tenant/Tenant.schema";
 import { getTenantInfoByDomain } from "./entities/tenant/Tenant.services";
-import { DomainRole } from "./entities/user/User.schema";
+import { UserRole } from "./entities/user/User.schema";
 import {
   parseDomain,
   isRootDomain,
@@ -13,7 +13,6 @@ import {
   shouldRedirectForWebsiteBuilder,
   getDashboardRedirect,
   constructRedirectUrl,
-  UserEntity,
 } from "./middleware.logic";
 
 /**
@@ -28,7 +27,11 @@ import {
  * 2. Access Control:
  *    - Protects routes based on authentication status
  *    - Validates tenant-specific access (organization vs league)
- *    - Enforces role-based access control (coach vs parent)
+ *    - Enforces role-based access control with four domains:
+ *      * Management roles for organization/league dashboards
+ *      * Family roles for parent dashboard
+ *      * Player roles for player dashboard
+ *      * System roles have access to all routes
  *    - Allows public access to login page
  *
  * 3. Website Builder Control:
@@ -43,15 +46,24 @@ import {
  *
  * Protected Routes:
  * - /auth/* (settings, profile)
- * - /o/dashboard/* (organization routes, requires COACH role)
- * - /l/dashboard/* (league routes, requires COACH role)
- * - /p/dashboard/* (parent routes, requires PARENT role)
+ * - /o/dashboard/* (organization routes, requires management role)
+ * - /l/dashboard/* (league routes, requires management role)
+ * - /p/dashboard/* (parent routes, requires family role)
+ * - /player/dashboard/* (player routes, requires player role)
  *
  * Public Routes:
  * - /login (always accessible)
  * - / (home page)
  * - /about
  * - /contact
+ *
+ * Role-Based Access:
+ * - System roles: Access to all routes and tenants
+ * - Management roles: Access to organization/league dashboards
+ * - Family roles: Access to parent dashboard
+ * - Player roles: Access to player dashboard
+ * - Global roles (no tenantId): Available across all tenants
+ * - Tenant-specific roles: Only available in their assigned tenant
  *
  * Redirect Logic:
  * 1. Invalid tenant -> Root domain
@@ -95,7 +107,6 @@ export default async function middleware(req: NextRequest) {
   }
 
   // Tenant information management
-  // Handles tenant type, ID, and public site status through cookies or database
   const tenantInfoCookieKey = `${subDomain}-tenant-info`;
   const tenantInfoCookie = req.cookies.get(tenantInfoCookieKey);
 
@@ -145,51 +156,46 @@ export default async function middleware(req: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  let userEntities: UserEntity[] = [];
-  let userEntity = null;
-
-  if (user) {
-    // Fetch and map user entities for role-based access control
-    const { data: rawUserEntities } = await supabase
-      .from("userEntities")
-      .select(
-        `
-        id,
-        tenantId,
-        domainRole,
-        userId
-      `
-      )
-      .eq("userId", user.id);
-
-    userEntities = (rawUserEntities ?? []).map((entity) => ({
-      tenantId: String(entity.tenantId),
-      domainRole: entity.domainRole as DomainRole,
-    }));
-
-    userEntity = userEntities.find((entity) => entity.tenantId === tenantId);
-  }
-
-  // Protected route access control
+  // For protected routes, ensure user is authenticated and has access
   if (shouldRedirectToLogin(req.nextUrl.pathname)) {
-    // Authentication check
     if (!user) {
       return NextResponse.redirect(
         new URL(constructRedirectUrl("/login", subDomain, rootDomain, protocol))
       );
     }
 
-    // Tenant membership validation
-    if (!hasAccessToTenant(userEntities, tenantId)) {
+    // Check if user belongs to this tenant
+    const { data: tenantUser, error: tenantUserError } = await supabase
+      .from("tenantUsers")
+      .select("id")
+      .eq("userId", user.id)
+      .eq("tenantId", Number(tenantId))
+      .single();
+
+    if (tenantUserError || !tenantUser) {
+      // User doesn't belong to this tenant - sign them out and redirect to login
+      await supabase.auth.signOut();
       return NextResponse.redirect(
         new URL(constructRedirectUrl("/login", subDomain, rootDomain, protocol))
       );
     }
 
+    // Fetch user roles for this tenant
+    const { data: userRoles } = await supabase
+      .from("userRoles")
+      .select(
+        `
+        *,
+        role:roles(*)
+      `
+      )
+      .eq("userId", user.id)
+      .eq("tenantId", Number(tenantId));
+
     // Role-based access validation
     const roleValidation = validateUserAccess(
       req.nextUrl.pathname,
-      userEntity?.domainRole ?? null
+      userRoles ?? []
     );
 
     if (!roleValidation) {
@@ -197,63 +203,59 @@ export default async function middleware(req: NextRequest) {
         new URL(constructRedirectUrl("/", subDomain, rootDomain, protocol))
       );
     }
-  }
 
-  // Public site access and redirection logic
-  try {
-    const isLoginPage = req.nextUrl.pathname === "/login";
-
-    // Redirect to appropriate dashboard if public site is not published
+    // Handle website builder redirections
     if (
       shouldRedirectForWebsiteBuilder(
         req.nextUrl.pathname,
         isPublicSitePublished,
-        isLoginPage
+        false
       )
     ) {
-      if (!user) {
+      const redirectPath = getDashboardRedirect(userRoles ?? [], tenantType);
+      if (
+        redirectPath &&
+        !req.nextUrl.pathname.startsWith("/o/dashboard") &&
+        !req.nextUrl.pathname.startsWith("/l/dashboard") &&
+        !req.nextUrl.pathname.startsWith("/p/dashboard") &&
+        !req.nextUrl.pathname.startsWith("/player/dashboard") &&
+        !req.nextUrl.pathname.startsWith("/auth")
+      ) {
         return NextResponse.redirect(
           new URL(
-            constructRedirectUrl("/login", subDomain, rootDomain, protocol)
-          )
-        );
-      }
-
-      if (userEntity?.domainRole) {
-        const redirectPath = getDashboardRedirect(
-          userEntity.domainRole,
-          tenantType
-        );
-
-        // Only redirect if user is not already on a dashboard or auth path
-        if (
-          redirectPath &&
-          !req.nextUrl.pathname.startsWith("/o/dashboard") &&
-          !req.nextUrl.pathname.startsWith("/l/dashboard") &&
-          !req.nextUrl.pathname.startsWith("/p/dashboard") &&
-          !req.nextUrl.pathname.startsWith("/auth")
-        ) {
-          return NextResponse.redirect(
-            new URL(
-              constructRedirectUrl(
-                redirectPath,
-                subDomain,
-                rootDomain,
-                protocol
-              )
-            )
-          );
-        }
-      } else {
-        return NextResponse.redirect(
-          new URL(
-            constructRedirectUrl("/login", subDomain, rootDomain, protocol)
+            constructRedirectUrl(redirectPath, subDomain, rootDomain, protocol)
           )
         );
       }
     }
-  } catch (error) {
-    console.error("Error checking tenant capabilities:", error);
+  } else if (!isPublicSitePublished && req.nextUrl.pathname === "/") {
+    // If public site is not published and user is on home page
+    if (user) {
+      // Get user roles to determine redirect
+      const { data: userRoles } = await supabase
+        .from("userRoles")
+        .select(
+          `
+          *,
+          role:roles(*)
+        `
+        )
+        .eq("userId", user.id)
+        .eq("tenantId", Number(tenantId));
+
+      const redirectPath = getDashboardRedirect(userRoles ?? [], tenantType);
+      if (redirectPath) {
+        return NextResponse.redirect(
+          new URL(
+            constructRedirectUrl(redirectPath, subDomain, rootDomain, protocol)
+          )
+        );
+      }
+    }
+    // If no user or no valid redirect, send to login
+    return NextResponse.redirect(
+      new URL(constructRedirectUrl("/login", subDomain, rootDomain, protocol))
+    );
   }
 
   return response;
@@ -261,12 +263,10 @@ export default async function middleware(req: NextRequest) {
 
 function getUrlToRewrite(req: NextRequest) {
   const url = req.nextUrl;
-
   const hostname = req.headers.get("host")?.split(".").at(0);
   const searchParams = req.nextUrl.searchParams.toString();
   const path = `${url.pathname}${
     searchParams.length > 0 ? `?${searchParams}` : ""
   }`;
-
   return `${hostname}${path}`;
 }

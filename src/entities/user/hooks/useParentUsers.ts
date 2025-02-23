@@ -1,21 +1,12 @@
-import { queryKeys } from "@/cacheKeys/cacheKeys";
-import { useSupabase } from "@/libs/supabase/useSupabase";
-import { useQuery } from "@tanstack/react-query";
-import { DomainRole } from "../User.schema";
-import { getUsersByTenantId } from "../User.services";
+import { RoleDomain } from "../../role/Role.permissions";
+import { useUsers } from "../User.query";
 
 export const useParentUsers = (tenantId: string) => {
-  const client = useSupabase();
-  const queryKey = [queryKeys.user.list, tenantId, "parents"];
+  const { data: users = [], ...rest } = useUsers(tenantId);
 
-  return useQuery({
-    queryKey,
-    queryFn: async () => {
-      const users = await getUsersByTenantId(client, tenantId);
-      return users.filter(
-        (user) => user.entity?.domainRole === DomainRole.PARENT
-      );
-    },
-    enabled: !!tenantId,
-  });
+  const filteredUsers = users.filter((user) =>
+    user.roles.some((role) => role.role?.domain === RoleDomain.FAMILY)
+  );
+
+  return { ...rest, data: filteredUsers };
 };

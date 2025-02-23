@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
-import { useUserRoles } from "@/entities/user/hooks/useUserRoles";
-import { Permissions } from "@/libs/permissions/permissions";
+
 import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 import { useSeasons } from "@/entities/season/Season.actions.client";
 import { PageHeader } from "@/components/ui/page-header";
@@ -19,10 +18,8 @@ export default function SeasonsPage({
 }) {
   const { data: tenant } = useTenantByDomain(params.domain);
   const { data: seasons } = useSeasons(tenant?.id?.toString());
-  const userEntity = useUserRoles();
-  const [isAddOpen, setIsAddOpen] = useState(false);
 
-  const canManageSeasons = Permissions.Seasons.manage(userEntity);
+  const [isAddOpen, setIsAddOpen] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -30,12 +27,10 @@ export default function SeasonsPage({
         title="Seasons"
         description="Manage your organization's seasons and their settings"
         actions={
-          canManageSeasons && (
-            <Button onClick={() => setIsAddOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Season
-            </Button>
-          )
+          <Button onClick={() => setIsAddOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Season
+          </Button>
         }
       />
 

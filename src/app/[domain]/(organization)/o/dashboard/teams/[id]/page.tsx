@@ -12,8 +12,7 @@ import {
   Loader2,
   MoreVertical,
 } from "lucide-react";
-import { useUserRoles } from "@/entities/user/hooks/useUserRoles";
-import { Permissions } from "@/libs/permissions/permissions";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   getDisplayGender,
@@ -46,21 +45,30 @@ import TeamTrainings from "./components/TeamTrainings";
 import { toast } from "sonner";
 import { useRemovePlayerFromTeam } from "@/entities/player/PlayerTeam.actions.client";
 import ManagePlayersForm from "./forms/ManagePlayersForm";
+import { Permission } from "@/entities/role/Role.permissions";
+import { PermissionButton } from "@/components/auth/PermissionButton";
+import { PermissionDropdownMenu } from "@/components/auth/PermissionDropdownMenu";
+import EditTeamForm from "../forms/EditTeamForm";
+import { useRouter } from "next/navigation";
+import { useDeleteTeam } from "@/entities/team/Team.actions.client";
+import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
 
 export default function TeamPage({
   params,
 }: {
   params: { domain: string; id: string };
 }) {
+  const router = useRouter();
   const { data: tenant, isLoading: isTenantLoading } = useTenantByDomain(
     params.domain
   );
   const { data: teams, isLoading: isTeamsLoading } = useGetTeamsByTenantId(
     tenant?.id.toString() ?? ""
   );
-  const userEntity = useUserRoles();
-  const canManageTeams = Permissions.Teams.manage(userEntity);
+
   const [isManagePlayersOpen, setIsManagePlayersOpen] = useState(false);
+  const [isEditTeamOpen, setIsEditTeamOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const isLoading = isTenantLoading || isTeamsLoading || !teams;
   const team = teams?.find((t) => t.id === parseInt(params.id));
@@ -111,12 +119,28 @@ export default function TeamPage({
     data: players,
     columns: playerColumns({
       onRemove: handleRemovePlayer,
-      canManageTeams: canManageTeams,
+      canManageTeams: true,
+      teamGender: team?.gender ?? "",
     }),
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
+
+  const deleteTeam = useDeleteTeam(tenant?.id.toString() ?? "");
+
+  const handleDeleteTeam = useCallback(
+    async (teamId: number) => {
+      try {
+        await deleteTeam.mutateAsync(teamId);
+        toast.success("Team deleted successfully");
+        router.push(`/${params.domain}/o/dashboard/teams`);
+      } catch (error) {
+        toast.error("Failed to delete team");
+      }
+    },
+    [deleteTeam, router, params.domain]
+  );
 
   if (isLoading) {
     return (
@@ -162,30 +186,24 @@ export default function TeamPage({
                 <CardTitle className="text-base font-medium">
                   Team Information
                 </CardTitle>
-                {canManageTeams && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        className="h-8 w-8 p-0 data-[state=open]:bg-muted"
-                      >
-                        <MoreVertical className="h-4 w-4" />
-                        <span className="sr-only">Open menu</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-[160px]">
-                      <DropdownMenuItem className="cursor-pointer">
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit Team
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="cursor-pointer text-destructive">
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete Team
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
+
+                <PermissionDropdownMenu
+                  actions={[
+                    {
+                      label: "Edit",
+                      onClick: () => setIsEditTeamOpen(true),
+                      icon: <Edit className="h-4 w-4" />,
+                      permission: Permission.MANAGE_TEAM,
+                    },
+                    {
+                      label: "Delete",
+                      onClick: () => setIsDeleteDialogOpen(true),
+                      icon: <Trash2 className="h-4 w-4" />,
+                      permission: Permission.MANAGE_TEAM,
+                      variant: "destructive",
+                    },
+                  ]}
+                />
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-1">
@@ -256,16 +274,16 @@ export default function TeamPage({
                 <CardTitle className="text-base font-medium">
                   Team Players
                 </CardTitle>
-                {canManageTeams && (
-                  <Button
-                    size="sm"
-                    className="gap-2"
-                    onClick={() => setIsManagePlayersOpen(true)}
-                  >
-                    <Users className="h-4 w-4" />
-                    Assign Players
-                  </Button>
-                )}
+
+                <PermissionButton
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => setIsManagePlayersOpen(true)}
+                  permission={Permission.MANAGE_TEAM}
+                >
+                  <Users className="h-4 w-4" />
+                  Assign Players
+                </PermissionButton>
               </CardHeader>
               <CardContent>
                 <ScrollArea className="w-[calc(100vw-3rem)] md:w-full">
@@ -274,7 +292,8 @@ export default function TeamPage({
                       table={table}
                       columns={playerColumns({
                         onRemove: handleRemovePlayer,
-                        canManageTeams: canManageTeams,
+                        canManageTeams: true,
+                        teamGender: team?.gender ?? "",
                       })}
                       data={players}
                       rowClassName="group/row"
@@ -291,18 +310,44 @@ export default function TeamPage({
         </div>
       </div>
       {team && tenant && (
-        <ResponsiveSheet
-          isOpen={isManagePlayersOpen}
-          setIsOpen={setIsManagePlayersOpen}
-          title="Assign Players"
-          description="Add or remove players from this team"
-        >
-          <ManagePlayersForm
-            team={team}
-            tenantId={tenant.id.toString()}
+        <>
+          <ResponsiveSheet
+            isOpen={isManagePlayersOpen}
             setIsOpen={setIsManagePlayersOpen}
+            title="Assign Players"
+            description="Add or remove players from this team"
+          >
+            <ManagePlayersForm
+              team={team}
+              tenantId={tenant.id.toString()}
+              setIsOpen={setIsManagePlayersOpen}
+            />
+          </ResponsiveSheet>
+
+          <ResponsiveSheet
+            isOpen={isEditTeamOpen}
+            setIsOpen={setIsEditTeamOpen}
+            title="Edit Team"
+          >
+            <EditTeamForm
+              team={team}
+              tenantId={tenant.id.toString()}
+              domain={params.domain}
+              setIsParentModalOpen={setIsEditTeamOpen}
+            />
+          </ResponsiveSheet>
+
+          <ConfirmDeleteDialog
+            categoryId={team.id}
+            text={`Are you sure you want to delete ${getDisplayGender(
+              team.gender,
+              team.age
+            )} ${getDisplayAgeGroup(team.age)}? This action cannot be undone.`}
+            isOpen={isDeleteDialogOpen}
+            setIsOpen={setIsDeleteDialogOpen}
+            onConfirm={(id) => handleDeleteTeam(Number(id))}
           />
-        </ResponsiveSheet>
+        </>
       )}
     </ErrorBoundary>
   );

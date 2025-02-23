@@ -1,59 +1,39 @@
 import { z } from "zod";
+import { Permission, RoleDomain } from "./Role.permissions";
 
-// Domain enum (used in both Role and UserDomain)
-export enum Domain {
-  MANAGEMENT = "management",
-  FAMILY = "family",
-  SYSTEM = "system",
-}
-
-// Tenant type enum
-export enum TenantType {
-  ORGANIZATION = "organization",
-  LEAGUE = "league",
-}
-
-// Role schema
+// Role schema matching the new database structure
 export const RoleSchema = z.object({
-  id: z.string().uuid(),
+  id: z.number(), // Changed from uuid to bigint
   name: z.string(),
-  domain: z.nativeEnum(Domain),
-  tenantType: z.nativeEnum(TenantType).nullable(),
-  permissions: z.array(z.string()),
+  domain: z.nativeEnum(RoleDomain),
+  permissions: z.array(z.nativeEnum(Permission)),
+  tenantId: z.number().nullable(),
 });
 
-// UserDomain schema
-export const UserDomainSchema = z.object({
+// UserRole schema (junction table)
+export const UserRoleSchema = z.object({
   id: z.number(),
-  userId: z.string().uuid(),
+  roleId: z.number(),
   tenantId: z.number(),
-  domain: z.nativeEnum(Domain),
-  isPrimary: z.boolean().default(false),
-  teamId: z.number().nullable(),
-});
-
-// UserDomainRole schema (junction table)
-export const UserDomainRoleSchema = z.object({
-  id: z.number(),
-  userDomainId: z.number(),
-  roleId: z.string().uuid(),
+  userId: z.string().uuid(),
+  role: RoleSchema.optional(), // For populated role data
 });
 
 // Schema for creating/updating roles
 export const RoleFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  domain: z.nativeEnum(Domain),
-  tenantType: z.nativeEnum(TenantType).nullable(),
-  permissions: z.array(z.string()),
+  domain: z.nativeEnum(RoleDomain),
+  permissions: z.array(z.nativeEnum(Permission)),
+  tenantId: z.number().nullable(),
 });
 
 // Types
 export type Role = z.infer<typeof RoleSchema>;
-export type UserDomain = z.infer<typeof UserDomainSchema>;
-export type UserDomainRole = z.infer<typeof UserDomainRoleSchema>;
+export type UserRole = z.infer<typeof UserRoleSchema>;
 export type RoleForm = z.infer<typeof RoleFormSchema>;
 
-// Extended UserDomain type with populated roles
-export type UserDomainWithRoles = UserDomain & {
-  roles: Role[];
+// Extended User type with populated roles
+export type UserWithRoles = {
+  id: string;
+  roles: UserRole[];
 };

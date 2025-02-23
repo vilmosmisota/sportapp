@@ -34,6 +34,9 @@ import {
   getDisplayGender,
   getDisplayAgeGroup,
 } from "@/entities/team/Team.schema";
+import { MarsIcon, VenusIcon } from "@/components/icons/icons";
+import { PermissionDropdownMenu } from "@/components/auth/PermissionDropdownMenu";
+import { Permission } from "@/entities/role/Role.permissions";
 
 const TeamsCell = ({ player }: { player: Player }) => {
   if (!player.teamConnections?.length) {
@@ -68,88 +71,47 @@ const TeamsCell = ({ player }: { player: Player }) => {
   );
 };
 
-const ParentsCell = ({ player }: { player: Player }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const parents =
-    player.userConnections?.filter((c) => c.isParent && c.user) || [];
+const ParentsCell = ({
+  player,
+  onShowConnectedUsers,
+}: {
+  player: Player;
+  onShowConnectedUsers: (player: Player) => void;
+}) => {
+  const parents = player.userConnections || [];
 
   if (!parents.length) {
     return (
-      <div className="text-muted-foreground text-sm">No parents/guardians</div>
+      <div className="text-muted-foreground text-sm">No connected users</div>
     );
   }
 
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div className="flex items-center gap-2 cursor-pointer">
-            <Users className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium">{parents.length}</span>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent>
-          <div className="space-y-1">
-            {parents.map((connection) => {
-              const parent = connection.user!;
-              return (
-                <Dialog
-                  key={connection.id}
-                  open={isOpen}
-                  onOpenChange={setIsOpen}
-                >
-                  <DialogTrigger asChild>
-                    <Button variant="link" className="h-auto p-0">
-                      {parent.firstName} {parent.lastName}
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent
-                    onPointerDownOutside={(e) => e.preventDefault()}
-                    onInteractOutside={(e) => e.preventDefault()}
-                  >
-                    <DialogHeader>
-                      <DialogTitle>Parent/Guardian Details</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div>
-                        <div className="text-sm font-medium text-muted-foreground">
-                          Name
-                        </div>
-                        <div>
-                          {parent.firstName} {parent.lastName}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-muted-foreground">
-                          Email
-                        </div>
-                        <div>{parent.email}</div>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              );
-            })}
-          </div>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <Button
+      variant="ghost"
+      size="sm"
+      className="p-0 h-auto hover:bg-transparent"
+      onClick={() => onShowConnectedUsers(player)}
+    >
+      <div className="flex items-center gap-2">
+        <Users className="h-4 w-4 text-muted-foreground" />
+        <span className="font-medium">{parents.length}</span>
+      </div>
+    </Button>
   );
 };
 
 interface PlayersTableColumnsProps {
   onEdit: (player: Player) => void;
   onDelete: (playerId: number) => void;
-  canManagePlayers: boolean;
+  onShowConnectedUsers: (player: Player) => void;
   domain: string;
-  tenantId: string;
 }
 
 interface PlayersTableActionsProps {
   player: Player;
   onEdit: (player: Player) => void;
   onDelete: (playerId: number) => void;
-  canManagePlayers: boolean;
   domain: string;
 }
 
@@ -157,7 +119,6 @@ const PlayersTableActions = ({
   player,
   onEdit,
   onDelete,
-  canManagePlayers,
   domain,
 }: PlayersTableActionsProps) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -167,7 +128,7 @@ const PlayersTableActions = ({
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8 opacity-0 md:opacity-0 md:group-hover/row:opacity-100 transition-opacity sm:opacity-100"
+        className="h-8 w-8 opacity-0 group-hover/row:opacity-100 transition-opacity"
         asChild
       >
         <Link href={`/${domain}/o/dashboard/players/${player.id}`}>
@@ -175,46 +136,33 @@ const PlayersTableActions = ({
           <span className="sr-only">View player</span>
         </Link>
       </Button>
-      {canManagePlayers && (
-        <>
-          <DropdownMenu modal={false}>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="h-8 w-8 p-0 opacity-0 md:opacity-0 md:group-hover/row:opacity-100 transition-opacity sm:opacity-100 data-[state=open]:bg-gray-100"
-              >
-                <MoreVertical className="h-4 w-4" />
-                <span className="sr-only">Open menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[160px]">
-              <DropdownMenuItem
-                onClick={() => onEdit(player)}
-                className="cursor-pointer"
-              >
-                <SquarePen className="h-4 w-4 mr-2" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => setIsDeleteDialogOpen(true)}
-                className="cursor-pointer text-red-500"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
 
-          <ConfirmDeleteDialog
-            categoryId={player.id}
-            text={`Are you sure you want to delete ${player.firstName} ${player.lastName}? This action cannot be undone.`}
-            isOpen={isDeleteDialogOpen}
-            setIsOpen={setIsDeleteDialogOpen}
-            onConfirm={(id) => onDelete(Number(id))}
-          />
-        </>
-      )}
+      <PermissionDropdownMenu
+        actions={[
+          {
+            label: "Edit",
+            onClick: () => onEdit(player),
+            icon: <SquarePen className="h-4 w-4" />,
+            permission: Permission.MANAGE_PLAYERS,
+          },
+          {
+            label: "Delete",
+            onClick: () => setIsDeleteDialogOpen(true),
+            icon: <Trash2 className="h-4 w-4" />,
+            permission: Permission.MANAGE_PLAYERS,
+            variant: "destructive",
+          },
+        ]}
+        buttonClassName="opacity-0 group-hover/row:opacity-100 transition-opacity"
+      />
+
+      <ConfirmDeleteDialog
+        categoryId={player.id}
+        text={`Are you sure you want to delete ${player.firstName} ${player.lastName}? This action cannot be undone.`}
+        isOpen={isDeleteDialogOpen}
+        setIsOpen={setIsDeleteDialogOpen}
+        onConfirm={(id) => onDelete(Number(id))}
+      />
     </div>
   );
 };
@@ -222,9 +170,8 @@ const PlayersTableActions = ({
 export const columns = ({
   onEdit,
   onDelete,
-  canManagePlayers,
+  onShowConnectedUsers,
   domain,
-  tenantId,
 }: PlayersTableColumnsProps): ColumnDef<Player>[] => [
   {
     accessorKey: "name",
@@ -279,9 +226,6 @@ export const columns = ({
     size: 100,
     maxSize: 120,
     enableColumnFilter: false,
-    meta: {
-      isVisible: canManagePlayers,
-    },
   },
   {
     accessorKey: "dateOfBirth",
@@ -291,17 +235,8 @@ export const columns = ({
     cell: ({ row }) => {
       const date = row.original.dateOfBirth;
       if (!date) return null;
-
-      const birthDate = new Date(date);
-      const age = differenceInYears(new Date(), birthDate);
-
       return (
-        <div className="flex items-start flex-col gap-2">
-          <div className="text-sm">{format(birthDate, "dd/MM/yyyy")}</div>
-          <Badge variant="secondary" className="text-xs">
-            {age} years
-          </Badge>
-        </div>
+        <div className="text-sm">{format(new Date(date), "dd/MM/yyyy")}</div>
       );
     },
     minSize: 120,
@@ -309,15 +244,48 @@ export const columns = ({
     maxSize: 180,
   },
   {
+    id: "age",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Age" />
+    ),
+    cell: ({ row }) => {
+      const date = row.original.dateOfBirth;
+      if (!date) return null;
+      const age = differenceInYears(new Date(), new Date(date));
+      return <div className="text-sm">{age}</div>;
+    },
+    accessorFn: (row) => {
+      if (!row.dateOfBirth) return 0;
+      return differenceInYears(new Date(), new Date(row.dateOfBirth));
+    },
+    minSize: 80,
+    size: 100,
+    maxSize: 120,
+  },
+  {
     accessorKey: "gender",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Gender" />
     ),
     cell: ({ row }) => {
+      const gender = row.original.gender;
       return (
-        <div className="flex w-[80px]">
-          <Badge variant="secondary">{row.original.gender}</Badge>
-        </div>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center text-muted-foreground">
+                {gender === "Male" ? (
+                  <MarsIcon className="h-4 w-4" />
+                ) : (
+                  <VenusIcon className="h-4 w-4" />
+                )}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{gender}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       );
     },
     filterFn: (row, id, value) => {
@@ -369,15 +337,17 @@ export const columns = ({
   {
     id: "parents",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Parents/Guardians" />
+      <DataTableColumnHeader column={column} title="Connected Users" />
     ),
-    cell: ({ row }) => <ParentsCell player={row.original} />,
+    cell: ({ row }) => (
+      <ParentsCell
+        player={row.original}
+        onShowConnectedUsers={onShowConnectedUsers}
+      />
+    ),
     accessorFn: (row) => {
-      const parents =
-        row.userConnections?.filter((c) => c.isParent && c.user) || [];
-      return parents
-        .map((c) => `${c.user!.firstName} ${c.user!.lastName}`)
-        .join(", ");
+      const connections = row.userConnections || [];
+      return connections.map((c) => c.userId).join(", ");
     },
     enableSorting: true,
     minSize: 80,
@@ -391,7 +361,6 @@ export const columns = ({
         player={row.original}
         onEdit={onEdit}
         onDelete={onDelete}
-        canManagePlayers={canManagePlayers}
         domain={domain}
       />
     ),

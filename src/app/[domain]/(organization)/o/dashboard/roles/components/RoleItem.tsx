@@ -3,70 +3,33 @@
 import { Role } from "@/entities/role/Role.schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { MoreVertical, SquarePen, Trash2, Eye, Settings } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { SquarePen, Trash2, Eye, Settings } from "lucide-react";
 import { formatPermissionName } from "@/entities/role/Role.utils";
 import { useState } from "react";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { RoleForm } from "./RoleForm";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
+import { PermissionDropdownMenu } from "@/components/auth/PermissionDropdownMenu";
+import { Permission } from "@/entities/role/Role.permissions";
 
 interface RoleItemProps {
   role: Role;
-  onDelete: (roleId: string) => void;
+  onDelete: (roleId: number) => void;
+  tenantId: number;
 }
 
-export function RoleItem({ role, onDelete }: RoleItemProps) {
+export function RoleItem({ role, onDelete, tenantId }: RoleItemProps) {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
+  const handleDelete = () => {
+    onDelete(role.id);
+  };
 
   // Group permissions by type
   const viewPermissions = role.permissions.filter((p) => p.startsWith("view_"));
   const managePermissions = role.permissions.filter((p) =>
     p.startsWith("manage_")
-  );
-
-  const ActionMenu = () => (
-    <DropdownMenu modal={false}>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className="h-8 w-8 p-0 hover:bg-background/20 data-[state=open]:bg-background/20"
-          size="sm"
-        >
-          <MoreVertical className="h-4 w-4" />
-          <span className="sr-only">Open menu</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[160px]">
-        <DropdownMenuItem className="group flex w-full items-center justify-between text-left p-0 text-sm font-medium text-neutral-700">
-          <button
-            onClick={() => setIsEditOpen(true)}
-            className="w-full justify-start items-center gap-2 flex rounded-md p-2 transition-all duration-75 hover:bg-gray-100"
-          >
-            <SquarePen className="h-4 w-4" />
-            Edit
-          </button>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem className="group flex w-full items-center justify-between text-left p-0 text-sm font-medium text-neutral-700">
-          <button
-            onClick={() => setIsDeleteOpen(true)}
-            className="w-full justify-start items-center gap-2 flex text-red-500 rounded-md p-2 transition-all duration-75 hover:bg-gray-100"
-          >
-            <Trash2 className="h-4 w-4" />
-            Delete
-          </button>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
   );
 
   return (
@@ -80,17 +43,17 @@ export function RoleItem({ role, onDelete }: RoleItemProps) {
         <RoleForm
           initialData={role}
           domain={role.domain}
-          tenantType={role.tenantType!}
+          tenantId={tenantId}
           setIsParentModalOpen={setIsEditOpen}
         />
       </ResponsiveSheet>
 
       <ConfirmDeleteDialog
-        categoryId={role.id}
+        categoryId={role.id.toString()}
         isOpen={isDeleteOpen}
         setIsOpen={setIsDeleteOpen}
         text="This will permanently delete this role and remove it from all users who have it assigned. Are you sure you want to proceed?"
-        onConfirm={onDelete}
+        onConfirm={handleDelete}
       />
 
       <Card>
@@ -98,29 +61,32 @@ export function RoleItem({ role, onDelete }: RoleItemProps) {
           <div className="flex flex-col gap-1">
             <CardTitle className="text-lg font-semibold">{role.name}</CardTitle>
           </div>
-          <ActionMenu />
+          {role.tenantId && (
+            <PermissionDropdownMenu
+              actions={[
+                {
+                  label: "Edit",
+                  onClick: () => setIsEditOpen(true),
+                  icon: <SquarePen className="h-4 w-4" />,
+                  permission: Permission.MANAGE_USERS,
+                },
+                {
+                  label: "Delete",
+                  onClick: () => setIsDeleteOpen(true),
+                  icon: <Trash2 className="h-4 w-4" />,
+                  permission: Permission.MANAGE_USERS,
+                  variant: "destructive",
+                },
+              ]}
+            />
+          )}
         </CardHeader>
         <CardContent className="pt-4">
           <div className="space-y-6">
-            {role.domain === "family" ? (
-              <div className="rounded-lg border border-dashed p-4">
-                <div className="space-y-2">
-                  <h4 className="font-medium">Family Dashboard Access</h4>
-                  <p className="text-sm text-muted-foreground">
-                    This role grants access to the family dashboard. Users with
-                    this role can:
-                  </p>
-                  <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
-                    <li>View their children&apos;s profiles and information</li>
-                    <li>Access training schedules and attendance records</li>
-                    <li>Submit forms and manage attendance</li>
-                    <li>Receive notifications and updates</li>
-                  </ul>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    No additional permissions are needed as all features are
-                    automatically available in the family dashboard.
-                  </p>
-                </div>
+            {role.domain === "family" || role.domain === "player" ? (
+              <div className="text-sm text-muted-foreground">
+                This is a preset {role.domain} role that provides access to the{" "}
+                {role.domain} dashboard. This role cannot be edited or deleted.
               </div>
             ) : (
               <>
@@ -159,7 +125,7 @@ export function RoleItem({ role, onDelete }: RoleItemProps) {
                         <Badge
                           key={permission}
                           variant="secondary"
-                          className="text-xs bg-purple-50 text-purple-700 hover:bg-purple-100"
+                          className="text-xs bg-green-50 text-green-700 hover:bg-green-100"
                         >
                           {formatPermissionName(permission)}
                         </Badge>

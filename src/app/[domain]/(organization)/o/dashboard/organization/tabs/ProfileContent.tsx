@@ -8,8 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import OrgEditForm from "../forms/OrgEditForm";
 import { useState } from "react";
-import { useUserRoles } from "@/entities/user/hooks/useUserRoles";
-import { Permissions } from "@/libs/permissions/permissions";
 
 type ProfileContentProps = {
   tenant?: Tenant;
@@ -17,13 +15,10 @@ type ProfileContentProps = {
 
 export default function ProfileContent({ tenant }: ProfileContentProps) {
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const userEntity = useUserRoles();
 
   if (!tenant) {
     return null;
   }
-
-  const canManage = Permissions.Organization.manage(userEntity);
 
   return (
     <>
@@ -54,19 +49,17 @@ export default function ProfileContent({ tenant }: ProfileContentProps) {
                 </CardTitle>
               </div>
 
-              {canManage && (
-                <div>
-                  <Button
-                    variant={"ghost"}
-                    className="rounded-full hover:bg-background/80"
-                    size={"icon"}
-                    type="button"
-                    onClick={() => setIsEditOpen(!isEditOpen)}
-                  >
-                    <SquarePen className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
+              <div>
+                <Button
+                  variant={"ghost"}
+                  className="rounded-full hover:bg-background/80"
+                  size={"icon"}
+                  type="button"
+                  onClick={() => setIsEditOpen(!isEditOpen)}
+                >
+                  <SquarePen className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </CardHeader>
 
@@ -126,14 +119,6 @@ export default function ProfileContent({ tenant }: ProfileContentProps) {
                   <div className="flex justify-between py-2">
                     <span className="text-sm text-muted-foreground">Sport</span>
                     <span className="text-sm font-medium">{tenant.sport}</span>
-                  </div>
-                  <div className="flex justify-between py-2">
-                    <span className="text-sm text-muted-foreground">
-                      Membership currency
-                    </span>
-                    <span className="text-sm font-medium">
-                      {tenant.membershipCurrency || "N/A"}
-                    </span>
                   </div>
                 </div>
               </div>

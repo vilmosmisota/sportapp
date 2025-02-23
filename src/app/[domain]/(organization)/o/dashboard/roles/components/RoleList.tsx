@@ -1,22 +1,29 @@
 "use client";
 
-import { Role, Domain } from "@/entities/role/Role.schema";
+import { Role } from "@/entities/role/Role.schema";
 import { useDeleteRole } from "@/entities/role/Role.query";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { RoleItem } from "./RoleItem";
+import { RoleDomain } from "../../../../../../../entities/role/Role.permissions";
 
 interface RoleListProps {
   roles: Role[];
   isLoading: boolean;
-  domain: Domain;
+  domain: RoleDomain;
+  tenantId: number;
 }
 
-export function RoleList({ roles, isLoading, domain }: RoleListProps) {
+export function RoleList({
+  roles,
+  isLoading,
+  domain,
+  tenantId,
+}: RoleListProps) {
   const deleteRole = useDeleteRole();
 
-  const handleDelete = async (roleId: string) => {
+  const handleDelete = async (roleId: number) => {
     try {
       await deleteRole.mutateAsync(roleId);
       toast.success("Role deleted successfully");
@@ -48,7 +55,12 @@ export function RoleList({ roles, isLoading, domain }: RoleListProps) {
   return (
     <div className="space-y-4">
       {roles.map((role) => (
-        <RoleItem key={role.id} role={role} onDelete={handleDelete} />
+        <RoleItem
+          key={role.id}
+          role={role}
+          onDelete={handleDelete}
+          tenantId={tenantId}
+        />
       ))}
     </div>
   );

@@ -1,75 +1,59 @@
-import { ColumnDef, Row } from "@tanstack/react-table";
+import { ColumnDef } from "@tanstack/react-table";
 import { User } from "@/entities/user/User.schema";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { MoreVertical, SquarePen, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import DataTableColumnHeader from "@/components/ui/data-table/DataTableColumnHeader";
-import { cn } from "@/libs/tailwind/utils";
+import { RoleDomain, Permission } from "@/entities/role/Role.permissions";
+import { SquarePen, Trash2 } from "lucide-react";
+import { PermissionDropdownMenu } from "@/components/auth/PermissionDropdownMenu";
 
 interface UsersTableActionsProps {
   user: User;
   onEdit: (user: User) => void;
   onDelete: (userId: string) => void;
-  canManageUsers: boolean;
 }
 
-const UsersTableActions = ({
-  user,
-  onEdit,
-  onDelete,
-  canManageUsers,
-}: UsersTableActionsProps) => {
-  if (!canManageUsers) return null;
-
+function UsersTableActions({ user, onEdit, onDelete }: UsersTableActionsProps) {
   return (
-    <div className="flex items-center justify-end gap-2">
-      <DropdownMenu modal={false}>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className="h-8 w-8 p-0 data-[state=open]:bg-gray-100"
-          >
-            <MoreVertical className="h-4 w-4" />
-            <span className="sr-only">Open menu</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-[160px]">
-          <DropdownMenuItem
-            onClick={() => onEdit(user)}
-            className="cursor-pointer"
-          >
-            <SquarePen className="h-4 w-4 mr-2" />
-            Edit
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={() => onDelete(user.id)}
-            className="cursor-pointer text-red-500"
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+    <PermissionDropdownMenu
+      actions={[
+        {
+          label: "Edit",
+          onClick: () => onEdit(user),
+          icon: <SquarePen className="h-4 w-4" />,
+          permission: Permission.MANAGE_USERS,
+        },
+        {
+          label: "Delete",
+          onClick: () => onDelete(user.id),
+          icon: <Trash2 className="h-4 w-4" />,
+          permission: Permission.MANAGE_USERS,
+          variant: "destructive",
+        },
+      ]}
+    />
   );
-};
+}
+
+function getRoleBadgeVariant(domain: RoleDomain) {
+  switch (domain) {
+    case RoleDomain.MANAGEMENT:
+      return "default";
+    case RoleDomain.FAMILY:
+      return "secondary";
+    case RoleDomain.PLAYER:
+      return "outline";
+    default:
+      return "default";
+  }
+}
 
 export const columns = ({
   onEdit,
   onDelete,
-  canManageUsers,
 }: {
   onEdit: (user: User) => void;
   onDelete: (userId: string) => void;
-  canManageUsers: boolean;
 }): ColumnDef<User>[] => [
   {
     accessorFn: (row) => `${row.firstName} ${row.lastName}`,
@@ -109,48 +93,42 @@ export const columns = ({
     minSize: 250,
   },
   {
-    accessorFn: (row) => row.entity?.adminRole,
-    id: "adminRole",
+    accessorFn: (row) => row.roles ?? [],
+    id: "roles",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Admin Role" />
+      <DataTableColumnHeader column={column} title="Roles" />
     ),
     cell: ({ row }) => {
-      const role = row.original.entity?.adminRole;
-      return role ? (
-        <Badge variant="secondary" className="capitalize whitespace-nowrap">
-          {role.replace("-", " ")}
-        </Badge>
-      ) : null;
+      const roles = row.original.roles ?? [];
+      return (
+        <div className="flex flex-wrap gap-1">
+          {roles.map(
+            (userRole) =>
+              userRole.role && (
+                <Badge
+                  key={userRole.id}
+                  variant={getRoleBadgeVariant(userRole.role.domain)}
+                  className="capitalize whitespace-nowrap"
+                >
+                  {userRole.role.name}
+                </Badge>
+              )
+          )}
+        </div>
+      );
     },
     enableSorting: true,
     enableHiding: true,
     filterFn: (row, id, filterValues) => {
-      const value = row.getValue(id) as string;
-      return !filterValues.length || filterValues.includes(value);
+      const userRoles = row.getValue(id) as User["roles"];
+      return (
+        !filterValues.length ||
+        (userRoles ?? []).some((userRole) =>
+          filterValues.includes(userRole.role?.domain)
+        )
+      );
     },
-    minSize: 130,
-  },
-  {
-    accessorFn: (row) => row.entity?.domainRole,
-    id: "domainRole",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Domain Role" />
-    ),
-    cell: ({ row }) => {
-      const role = row.original.entity?.domainRole;
-      return role ? (
-        <Badge variant="secondary" className="capitalize whitespace-nowrap">
-          {role.replace("-", " ")}
-        </Badge>
-      ) : null;
-    },
-    enableSorting: true,
-    enableHiding: true,
-    filterFn: (row, id, filterValues) => {
-      const value = row.getValue(id) as string;
-      return !filterValues.length || filterValues.includes(value);
-    },
-    minSize: 130,
+    minSize: 300,
   },
   {
     id: "actions",
@@ -159,7 +137,6 @@ export const columns = ({
         user={row.original}
         onEdit={onEdit}
         onDelete={onDelete}
-        canManageUsers={canManageUsers}
       />
     ),
     minSize: 100,

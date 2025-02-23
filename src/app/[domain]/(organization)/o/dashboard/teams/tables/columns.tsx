@@ -2,15 +2,8 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { Team } from "@/entities/team/Team.schema";
-import { Eye, MoreVertical, SquarePen, Trash2, Users } from "lucide-react";
+import { Eye, SquarePen, Trash2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import DataTableColumnHeader from "@/components/ui/data-table/DataTableColumnHeader";
 import Link from "next/link";
@@ -21,12 +14,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { getDisplayAgeGroup } from "@/entities/team/Team.schema";
+import { PermissionDropdownMenu } from "@/components/auth/PermissionDropdownMenu";
+import { Permission } from "@/entities/role/Role.permissions";
 
 interface TeamsTableActionsProps {
   team: Team;
   onEdit: (team: Team) => void;
   onDelete: (teamId: number) => void;
-  canManageTeams: boolean;
   domain: string;
 }
 
@@ -34,7 +28,6 @@ const TeamsTableActions = ({
   team,
   onEdit,
   onDelete,
-  canManageTeams,
   domain,
 }: TeamsTableActionsProps) => {
   return (
@@ -42,7 +35,7 @@ const TeamsTableActions = ({
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8 opacity-0 md:opacity-0 md:group-hover/row:opacity-100 transition-opacity sm:opacity-100"
+        className="h-8 w-8 opacity-0 group-hover/row:opacity-100 transition-opacity"
         asChild
       >
         <Link href={`/o/dashboard/teams/${team.id}`}>
@@ -50,36 +43,25 @@ const TeamsTableActions = ({
           <span className="sr-only">View team</span>
         </Link>
       </Button>
-      {canManageTeams && (
-        <DropdownMenu modal={false}>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              className="h-8 w-8 p-0 opacity-0 md:opacity-0 md:group-hover/row:opacity-100 transition-opacity sm:opacity-100 data-[state=open]:bg-gray-100"
-            >
-              <MoreVertical className="h-4 w-4" />
-              <span className="sr-only">Open menu</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-[160px]">
-            <DropdownMenuItem
-              onClick={() => onEdit(team)}
-              className="cursor-pointer"
-            >
-              <SquarePen className="h-4 w-4 mr-2" />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => onDelete(team.id)}
-              className="cursor-pointer text-red-500"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
+
+      <PermissionDropdownMenu
+        actions={[
+          {
+            label: "Edit",
+            onClick: () => onEdit(team),
+            icon: <SquarePen className="h-4 w-4" />,
+            permission: Permission.MANAGE_TEAM,
+          },
+          {
+            label: "Delete",
+            onClick: () => onDelete(team.id),
+            icon: <Trash2 className="h-4 w-4" />,
+            permission: Permission.MANAGE_TEAM,
+            variant: "destructive",
+          },
+        ]}
+        buttonClassName="opacity-0 group-hover/row:opacity-100 transition-opacity"
+      />
     </div>
   );
 };
@@ -139,17 +121,15 @@ const customCoachFilter = (row: any, columnId: string, filterValue: string) => {
 interface ColumnsProps {
   onEdit: (team: Team) => void;
   onDelete: (teamId: number) => void;
-  canManageTeams: boolean;
+
   domain: string;
-  tenantId: string;
 }
 
 export const columns = ({
   onEdit,
   onDelete,
-  canManageTeams,
+
   domain,
-  tenantId,
 }: ColumnsProps): ColumnDef<Team>[] => [
   {
     accessorKey: "age",
@@ -225,7 +205,6 @@ export const columns = ({
         team={row.original}
         onEdit={onEdit}
         onDelete={onDelete}
-        canManageTeams={canManageTeams}
         domain={domain}
       />
     ),

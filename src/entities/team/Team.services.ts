@@ -4,7 +4,7 @@ import {
   TeamSchema,
   PlayerTeamConnectionSchema,
 } from "./Team.schema";
-import { PlayerSchema } from "../player/Player.schema";
+import { RoleDomain } from "../role/Role.permissions";
 
 export const getTeamsByTenantId = async (
   typedClient: TypedClient,
@@ -26,12 +26,10 @@ export const getTeamsByTenantId = async (
           gender
         )
       ),
-      coach:userEntities!teamId (
-        user:users (
-          id,
-          firstName,
-          lastName
-        )
+      coach:users!coachId(
+        id,
+        firstName,
+        lastName
       )
     `
     )
@@ -44,7 +42,7 @@ export const getTeamsByTenantId = async (
   return data.map((team) =>
     TeamSchema.parse({
       ...team,
-      coach: team.coach?.[0]?.user || null,
+      coach: team.coach || null,
       playerTeamConnections: team.playerTeamConnections || [],
     })
   );
@@ -55,29 +53,31 @@ export const getCoachesByTenantId = async (
   tenantId: string
 ) => {
   const { data, error } = await client
-    .from("userEntities")
+    .from("users")
     .select(
       `
-      userId,
-      user:users (
+      id,
+      firstName,
+      lastName,
+      roles:userRoles!inner(
         id,
-        firstName,
-        lastName
+        role:roles!inner(
+          id,
+          domain
+        )
       )
     `
     )
-    .eq("tenantId", tenantId)
-    .eq("domainRole", "coach");
+    .eq("userRoles.tenantId", tenantId)
+    .eq("userRoles.role.domain", RoleDomain.MANAGEMENT);
 
   if (error) throw new Error(error.message);
 
-  return data
-    .filter((entity) => entity.user)
-    .map((entity) => ({
-      id: entity.user!.id,
-      firstName: entity.user!.firstName,
-      lastName: entity.user!.lastName,
-    }));
+  return data.map((user) => ({
+    id: user.id,
+    firstName: user.firstName,
+    lastName: user.lastName,
+  }));
 };
 
 export const addTeamToTenant = async (
@@ -91,12 +91,10 @@ export const addTeamToTenant = async (
     .select(
       `
       *,
-      coach:userEntities!teamId (
-        user:users (
-          id,
-          firstName,
-          lastName
-        )
+      coach:users!coachId(
+        id,
+        firstName,
+        lastName
       )
     `
     )
@@ -108,7 +106,7 @@ export const addTeamToTenant = async (
 
   return TeamSchema.parse({
     ...team,
-    coach: team.coach?.[0]?.user || null,
+    coach: team.coach || null,
   });
 };
 
@@ -126,12 +124,10 @@ export const updateTeam = async (
     .select(
       `
       *,
-      coach:userEntities!teamId (
-        user:users (
-          id,
-          firstName,
-          lastName
-        )
+      coach:users!coachId(
+        id,
+        firstName,
+        lastName
       )
     `
     )
@@ -143,7 +139,7 @@ export const updateTeam = async (
 
   return TeamSchema.parse({
     ...team,
-    coach: team.coach?.[0]?.user || null,
+    coach: team.coach || null,
   });
 };
 

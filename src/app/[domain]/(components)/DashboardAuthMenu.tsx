@@ -73,7 +73,7 @@ export function DashboardAuthMenu({
             <div className="flex flex-col items-start">
               <span className="text-sm font-medium">{user.email}</span>
               <span className="text-xs text-muted-foreground">
-                {user.entity?.adminRole || user.entity?.domainRole || "Member"}
+                {user.roles[0]?.role?.name || "Member"}
               </span>
             </div>
           )}

@@ -23,15 +23,11 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Domain,
-  TenantType,
-  RoleFormSchema,
-  Role,
-} from "@/entities/role/Role.schema";
+import { RoleFormSchema, Role } from "@/entities/role/Role.schema";
 import {
   Permission,
   PermissionDescriptions,
+  RoleDomain,
   groupPermissionsByType,
 } from "@/entities/role/Role.permissions";
 import { useCreateRole, useUpdateRole } from "@/entities/role/Role.query";
@@ -44,27 +40,27 @@ import { formatPermissionName } from "@/entities/role/Role.utils";
 
 interface RoleFormProps {
   initialData?: Role;
-  domain?: Domain;
-  tenantType: TenantType;
+  domain?: RoleDomain;
+  tenantId: number;
   setIsParentModalOpen?: (value: boolean) => void;
 }
 
 export function RoleForm({
   initialData,
   domain: initialDomain,
-  tenantType,
+  tenantId,
   setIsParentModalOpen,
 }: RoleFormProps) {
   const createRole = useCreateRole();
-  const updateRole = useUpdateRole(initialData?.id || "");
+  const updateRole = useUpdateRole(initialData?.id || 0);
 
   const form = useForm({
     resolver: zodResolver(RoleFormSchema),
     defaultValues: initialData || {
       name: "",
-      domain: initialDomain || Domain.MANAGEMENT,
-      tenantType: tenantType,
+      domain: initialDomain || RoleDomain.MANAGEMENT,
       permissions: [],
+      tenantId,
     },
   });
 
@@ -73,21 +69,19 @@ export function RoleForm({
       const roleData = {
         name: data.name,
         domain: data.domain,
-        tenantType: tenantType,
         permissions: data.permissions,
-      } as const;
+        tenantId,
+      };
 
       if (initialData) {
         await updateRole.mutateAsync(roleData);
         toast.success("Role updated successfully");
       } else {
-        console.log("Creating role with data:", roleData); // Debug log
         await createRole.mutateAsync(roleData);
         toast.success("Role created successfully");
       }
       setIsParentModalOpen?.(false);
     } catch (error: any) {
-      console.error("Error creating/updating role:", error); // Debug log
       toast.error(
         error?.message ||
           (initialData ? "Failed to update role" : "Failed to create role")
@@ -103,10 +97,11 @@ export function RoleForm({
   const handlePresetSelect = (presetName: string) => {
     const preset = rolePresets.find((p) => p.name === presetName);
     if (preset) {
-      form.setValue("name", preset.name);
-      form.setValue("domain", preset.domain, { shouldDirty: true });
-      form.setValue("tenantType", preset.tenantType);
-      form.setValue("permissions", preset.permissions);
+      form.setValue("name", preset.name, { shouldDirty: true });
+      form.setValue("domain", preset.domain as RoleDomain, {
+        shouldDirty: true,
+      });
+      form.setValue("permissions", preset.permissions, { shouldDirty: true });
     }
   };
 
@@ -116,12 +111,14 @@ export function RoleForm({
   );
 
   const { viewPermissions, managePermissions } = groupPermissionsByType(
-    form.watch("domain") as Domain
+    form.watch("domain") as RoleDomain
   );
 
   const showPermissionsSection =
     viewPermissions.length > 0 || managePermissions.length > 0;
-  const isFamily = form.watch("domain") === Domain.FAMILY;
+  const isFamily = form.watch("domain") === RoleDomain.FAMILY;
+  const isPlayer = form.watch("domain") === RoleDomain.PLAYER;
+  const isPresetRole = isFamily || isPlayer;
 
   const handleCheckAllView = (checked: boolean) => {
     const currentPermissions = form.getValues("permissions") || [];
@@ -146,269 +143,289 @@ export function RoleForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        {!initialData && availablePresets.length > 0 && (
+        <div className="space-y-6">
+          {!initialData && availablePresets.length > 0 && (
+            <Card>
+              <CardContent className="pt-6">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Role Preset</FormLabel>
+                      <Select onValueChange={handlePresetSelect}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a preset role" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {availablePresets.map((preset) => (
+                            <SelectItem key={preset.name} value={preset.name}>
+                              {preset.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Choose a preset role or create a custom one
+                      </FormDescription>
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardContent className="pt-6">
-              <FormItem>
-                <FormLabel>Role Template</FormLabel>
-                <Select onValueChange={handlePresetSelect}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a preset role" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {availablePresets.map((preset) => (
-                      <SelectItem key={preset.name} value={preset.name}>
-                        {preset.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  Choose a preset role or create a custom one
-                </FormDescription>
-              </FormItem>
+              <div className="grid gap-6">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Role Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter role name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="domain"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Domain</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        disabled={true}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select domain" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value={RoleDomain.MANAGEMENT}>
+                            Management
+                          </SelectItem>
+                          <SelectItem value={RoleDomain.FAMILY}>
+                            Family
+                          </SelectItem>
+                          <SelectItem value={RoleDomain.PLAYER}>
+                            Player
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Only management roles can be created
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {showPermissionsSection && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <FormLabel className="text-base">Permissions</FormLabel>
+                      <div className="flex items-center gap-4">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleCheckAllView(true)}
+                        >
+                          Select All View
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleCheckAllManage(true)}
+                        >
+                          Select All Manage
+                        </Button>
+                      </div>
+                    </div>
+
+                    {isFamily && (
+                      <Alert>
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertDescription>
+                          Family roles have implicit access to family-specific
+                          features. Additional permissions are not required.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    {isPlayer && (
+                      <Alert>
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertDescription>
+                          Player roles have implicit access to player-specific
+                          features. Additional permissions are not required.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    <FormField
+                      control={form.control}
+                      name="permissions"
+                      render={() => (
+                        <FormItem>
+                          <div className="grid gap-4 md:grid-cols-2">
+                            {/* View Permissions */}
+                            {viewPermissions.length > 0 && (
+                              <Card>
+                                <CardContent className="pt-6">
+                                  <h4 className="mb-4 text-sm font-medium">
+                                    View Permissions
+                                  </h4>
+                                  <div className="space-y-4">
+                                    {viewPermissions.map((permission) => (
+                                      <FormField
+                                        key={permission}
+                                        control={form.control}
+                                        name="permissions"
+                                        render={({ field }) => (
+                                          <FormItem
+                                            key={permission}
+                                            className="flex flex-row items-start space-x-3 space-y-0"
+                                          >
+                                            <FormControl>
+                                              <Checkbox
+                                                checked={field.value?.includes(
+                                                  permission
+                                                )}
+                                                onCheckedChange={(checked) => {
+                                                  const current =
+                                                    field.value || [];
+                                                  const updated = checked
+                                                    ? [...current, permission]
+                                                    : current.filter(
+                                                        (value) =>
+                                                          value !== permission
+                                                      );
+                                                  field.onChange(updated);
+                                                }}
+                                              />
+                                            </FormControl>
+                                            <div className="space-y-1 leading-none">
+                                              <FormLabel
+                                                className={cn(
+                                                  "text-sm font-normal",
+                                                  field.value?.includes(
+                                                    permission
+                                                  ) && "font-medium"
+                                                )}
+                                              >
+                                                {formatPermissionName(
+                                                  permission
+                                                )}
+                                              </FormLabel>
+                                              <FormDescription>
+                                                {
+                                                  PermissionDescriptions[
+                                                    permission as Permission
+                                                  ]
+                                                }
+                                              </FormDescription>
+                                            </div>
+                                          </FormItem>
+                                        )}
+                                      />
+                                    ))}
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            )}
+
+                            {/* Manage Permissions */}
+                            {managePermissions.length > 0 && (
+                              <Card>
+                                <CardContent className="pt-6">
+                                  <h4 className="mb-4 text-sm font-medium">
+                                    Manage Permissions
+                                  </h4>
+                                  <div className="space-y-4">
+                                    {managePermissions.map((permission) => (
+                                      <FormField
+                                        key={permission}
+                                        control={form.control}
+                                        name="permissions"
+                                        render={({ field }) => (
+                                          <FormItem
+                                            key={permission}
+                                            className="flex flex-row items-start space-x-3 space-y-0"
+                                          >
+                                            <FormControl>
+                                              <Checkbox
+                                                checked={field.value?.includes(
+                                                  permission
+                                                )}
+                                                onCheckedChange={(checked) => {
+                                                  const current =
+                                                    field.value || [];
+                                                  const updated = checked
+                                                    ? [...current, permission]
+                                                    : current.filter(
+                                                        (value) =>
+                                                          value !== permission
+                                                      );
+                                                  field.onChange(updated);
+                                                }}
+                                              />
+                                            </FormControl>
+                                            <div className="space-y-1 leading-none">
+                                              <FormLabel
+                                                className={cn(
+                                                  "text-sm font-normal",
+                                                  field.value?.includes(
+                                                    permission
+                                                  ) && "font-medium"
+                                                )}
+                                              >
+                                                {formatPermissionName(
+                                                  permission
+                                                )}
+                                              </FormLabel>
+                                              <FormDescription>
+                                                {
+                                                  PermissionDescriptions[
+                                                    permission as Permission
+                                                  ]
+                                                }
+                                              </FormDescription>
+                                            </div>
+                                          </FormItem>
+                                        )}
+                                      />
+                                    ))}
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            )}
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
-        )}
-
-        {initialData && (
-          <Alert>
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              Editing this role will affect all users who have this role
-              assigned
-            </AlertDescription>
-          </Alert>
-        )}
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="grid gap-6">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Role name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="domain"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Domain</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      disabled={!!initialDomain}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select domain" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {Object.values(Domain).map((domain) => (
-                          <SelectItem key={domain} value={domain}>
-                            {domain}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {isFamily ? (
-                <div className="rounded-lg border border-dashed p-4">
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Family Domain Access</h4>
-                    <p className="text-sm text-muted-foreground">
-                      This role grants access to the family dashboard. Users
-                      with this role will be able to:
-                    </p>
-                    <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
-                      <li>
-                        View their children&apos;s profiles and information
-                      </li>
-                      <li>Access training schedules and attendance records</li>
-                      <li>Submit forms and manage attendance</li>
-                      <li>Receive notifications and updates</li>
-                    </ul>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      No additional permissions are needed as all features are
-                      automatically available in the family dashboard.
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                showPermissionsSection && (
-                  <FormField
-                    control={form.control}
-                    name="permissions"
-                    render={() => (
-                      <FormItem>
-                        <div className="mb-4">
-                          <FormLabel>Permissions</FormLabel>
-                          <FormDescription>
-                            Select the permissions for this role
-                          </FormDescription>
-                        </div>
-                        <div className="grid grid-cols-2 gap-8">
-                          {viewPermissions.length > 0 && (
-                            <div className="space-y-4">
-                              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                                <FormControl>
-                                  <Checkbox
-                                    checked={viewPermissions.every((p) =>
-                                      form.getValues("permissions")?.includes(p)
-                                    )}
-                                    onCheckedChange={handleCheckAllView}
-                                  />
-                                </FormControl>
-                                <div className="space-y-1 leading-none">
-                                  <FormLabel>View Permissions</FormLabel>
-                                  <FormDescription>
-                                    Select all view permissions
-                                  </FormDescription>
-                                </div>
-                              </FormItem>
-                              <div className="space-y-2">
-                                {viewPermissions.map((permission) => (
-                                  <FormField
-                                    key={permission}
-                                    control={form.control}
-                                    name="permissions"
-                                    render={({ field }) => (
-                                      <FormItem
-                                        key={permission}
-                                        className="flex flex-row items-start space-x-3 space-y-0 ml-2"
-                                      >
-                                        <FormControl>
-                                          <Checkbox
-                                            checked={field.value?.includes(
-                                              permission
-                                            )}
-                                            onCheckedChange={(checked) => {
-                                              const value = field.value || [];
-                                              return checked
-                                                ? field.onChange([
-                                                    ...value,
-                                                    permission,
-                                                  ])
-                                                : field.onChange(
-                                                    value.filter(
-                                                      (p) => p !== permission
-                                                    )
-                                                  );
-                                            }}
-                                          />
-                                        </FormControl>
-                                        <div className="space-y-1 leading-none">
-                                          <FormLabel className="font-normal">
-                                            {formatPermissionName(permission)}
-                                          </FormLabel>
-                                          <FormDescription className="text-xs">
-                                            {PermissionDescriptions[permission]}
-                                          </FormDescription>
-                                        </div>
-                                      </FormItem>
-                                    )}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          {managePermissions.length > 0 && (
-                            <div className="space-y-4">
-                              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                                <FormControl>
-                                  <Checkbox
-                                    checked={managePermissions.every((p) =>
-                                      form.getValues("permissions")?.includes(p)
-                                    )}
-                                    onCheckedChange={handleCheckAllManage}
-                                  />
-                                </FormControl>
-                                <div className="space-y-1 leading-none">
-                                  <FormLabel>Manage Permissions</FormLabel>
-                                  <FormDescription>
-                                    Select all manage permissions
-                                  </FormDescription>
-                                </div>
-                              </FormItem>
-                              <div className="space-y-2">
-                                {managePermissions.map((permission) => (
-                                  <FormField
-                                    key={permission}
-                                    control={form.control}
-                                    name="permissions"
-                                    render={({ field }) => (
-                                      <FormItem
-                                        key={permission}
-                                        className="flex flex-row items-start space-x-3 space-y-0 ml-2"
-                                      >
-                                        <FormControl>
-                                          <Checkbox
-                                            checked={field.value?.includes(
-                                              permission
-                                            )}
-                                            onCheckedChange={(checked) => {
-                                              const value = field.value || [];
-                                              return checked
-                                                ? field.onChange([
-                                                    ...value,
-                                                    permission,
-                                                  ])
-                                                : field.onChange(
-                                                    value.filter(
-                                                      (p) => p !== permission
-                                                    )
-                                                  );
-                                            }}
-                                          />
-                                        </FormControl>
-                                        <div className="space-y-1 leading-none">
-                                          <FormLabel className="font-normal">
-                                            {formatPermissionName(permission)}
-                                          </FormLabel>
-                                          <FormDescription className="text-xs">
-                                            {PermissionDescriptions[permission]}
-                                          </FormDescription>
-                                        </div>
-                                      </FormItem>
-                                    )}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        </div>
 
         <div className="bg-background sticky h-[100px] flex items-center justify-end bottom-0 left-0 right-0 border-t">
           <FormButtons
             buttonText={initialData ? "Update Role" : "Create Role"}
-            isLoading={createRole.isPending || updateRole.isPending}
+            isLoading={form.formState.isSubmitting}
             isDirty={form.formState.isDirty}
             onCancel={onCancel}
           />

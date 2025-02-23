@@ -5,8 +5,6 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
-import { useUserRoles } from "@/entities/user/hooks/useUserRoles";
-import { Permissions } from "@/libs/permissions/permissions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LocationCard } from "../items/LocationCard";
 import AddGameLocationForm from "../forms/AddGameLocationForm";
@@ -20,23 +18,17 @@ export default function GameSettingsContent({
 }: GameSettingsContentProps) {
   const { data: tenant } = useTenantByDomain(domain);
   const [isAddLocationOpen, setIsAddLocationOpen] = useState(false);
-  const userEntity = useUserRoles();
-  const canManageSettings = Permissions.Teams.manage(userEntity);
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader className="flex-row items-center justify-between space-y-0">
           <CardTitle className="text-lg font-medium">Game Locations</CardTitle>
-          {canManageSettings && (
-            <Button
-              onClick={() => setIsAddLocationOpen(true)}
-              className="gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Add Location
-            </Button>
-          )}
+
+          <Button onClick={() => setIsAddLocationOpen(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Add Location
+          </Button>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {tenant?.gameLocations && tenant.gameLocations.length > 0 ? (
@@ -45,7 +37,6 @@ export default function GameSettingsContent({
                 key={location.id}
                 location={location}
                 tenant={tenant}
-                canManage={canManageSettings}
                 type="game"
               />
             ))

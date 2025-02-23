@@ -1,9 +1,9 @@
-import { Domain, TenantType } from "./Role.schema";
-import { Permission } from "./Role.permissions";
+import { TenantType } from "../tenant/Tenant.schema";
+import { Permission, RoleDomain } from "./Role.permissions";
 
 export interface RolePreset {
   name: string;
-  domain: Domain;
+  domain: RoleDomain;
   tenantType: TenantType;
   permissions: Permission[];
   description: string;
@@ -12,7 +12,7 @@ export interface RolePreset {
 export const rolePresets: RolePreset[] = [
   {
     name: "Manager",
-    domain: Domain.MANAGEMENT,
+    domain: RoleDomain.MANAGEMENT,
     tenantType: TenantType.ORGANIZATION,
     permissions: [
       Permission.VIEW_DASHBOARD,
@@ -35,7 +35,7 @@ export const rolePresets: RolePreset[] = [
   },
   {
     name: "Coach",
-    domain: Domain.MANAGEMENT,
+    domain: RoleDomain.MANAGEMENT,
     tenantType: TenantType.ORGANIZATION,
     permissions: [
       Permission.VIEW_DASHBOARD,
@@ -52,15 +52,8 @@ export const rolePresets: RolePreset[] = [
     description: "Access to manage teams, players, trainings, and attendance",
   },
   {
-    name: "Parent",
-    domain: Domain.FAMILY,
-    tenantType: TenantType.ORGANIZATION,
-    permissions: [], // No permissions needed - access is controlled by domain
-    description: "Access to family dashboard and all related features",
-  },
-  {
     name: "Helper",
-    domain: Domain.MANAGEMENT, // Changed to MANAGEMENT since they need specific permissions
+    domain: RoleDomain.MANAGEMENT,
     tenantType: TenantType.ORGANIZATION,
     permissions: [
       Permission.VIEW_DASHBOARD,

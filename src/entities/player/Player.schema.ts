@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { UserSchema } from "../user/User.schema";
 
 export enum PlayerGender {
   Male = "Male",
@@ -35,19 +36,12 @@ export const PlayerTeamConnectionSchema = z.object({
 
 export const PlayerUserConnectionSchema = z.object({
   id: z.number(),
-  playerId: z.number(),
-  userId: z.string().uuid(),
-  isOwner: z.boolean().nullable(),
-  isParent: z.boolean().nullable(),
+  playerId: z.number().nullable(),
+  userId: z.string().uuid().nullable(),
   tenantId: z.number().nullable(),
-  user: z
-    .object({
-      id: z.string().uuid(),
-      firstName: z.string().nullable(),
-      lastName: z.string().nullable(),
-      email: z.string().nullable(),
-    })
-    .nullable(),
+  isParent: z.boolean().default(false),
+  isOwner: z.boolean().default(false),
+  user: UserSchema.nullable(),
 });
 
 export const PlayerSchema = z.object({
@@ -65,9 +59,6 @@ export const PlayerSchema = z.object({
   tenantId: z.number().nullable(),
   gender: z.nativeEnum(PlayerGender).nullable(),
   position: z.string().nullable(),
-  joinDate: z.string().nullable(),
-  membershipCategoryId: z.number().nullable(),
-  membershipCategory: MembershipCategorySchema.nullable(),
   teamConnections: z.array(PlayerTeamConnectionSchema).optional().default([]),
   userConnections: z.array(PlayerUserConnectionSchema).optional().default([]),
 });
@@ -93,8 +84,6 @@ export const createPlayerFormSchema = () =>
       required_error: "Gender is required",
     }),
     position: z.string().min(1, "Position is required"),
-    joinDate: z.string().optional(),
-    membershipCategoryId: z.number().optional(),
     teamIds: z.array(z.number()).default([]),
     parentUserIds: z.array(z.string().uuid()).default([]),
     ownerUserId: z.string().uuid().optional(),

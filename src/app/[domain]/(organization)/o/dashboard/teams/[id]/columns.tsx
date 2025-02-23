@@ -12,6 +12,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import DataTableColumnHeader from "@/components/ui/data-table/DataTableColumnHeader";
+import { Permission } from "@/entities/role/Role.permissions";
+import { PermissionDropdownMenu } from "@/components/auth/PermissionDropdownMenu";
 
 export interface TeamPlayer {
   id: number;
@@ -37,26 +39,18 @@ const PlayerTableActions = ({
 
   return (
     <div className="flex items-center justify-end gap-2">
-      <DropdownMenu modal={false}>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className="h-8 w-8 p-0 opacity-0 md:opacity-0 md:group-hover/row:opacity-100 transition-opacity sm:opacity-100 data-[state=open]:bg-gray-100"
-          >
-            <MoreVertical className="h-4 w-4" />
-            <span className="sr-only">Open menu</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-[160px]">
-          <DropdownMenuItem
-            onClick={() => onRemove(player.id)}
-            className="cursor-pointer text-red-500"
-          >
-            <UserMinus className="h-4 w-4 mr-2" />
-            Remove from Team
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <PermissionDropdownMenu
+        actions={[
+          {
+            label: "Remove from Team",
+            onClick: () => onRemove(player.id),
+            icon: <UserMinus className="h-4 w-4" />,
+            permission: Permission.MANAGE_TEAM,
+            variant: "destructive",
+          },
+        ]}
+        buttonClassName="opacity-0 md:opacity-0 md:group-hover/row:opacity-100 transition-opacity sm:opacity-100"
+      />
     </div>
   );
 };
@@ -64,74 +58,84 @@ const PlayerTableActions = ({
 interface PlayersTableColumnsProps {
   onRemove: (playerId: number) => void;
   canManageTeams: boolean;
+  teamGender: string;
 }
 
 export const playerColumns = ({
   onRemove,
   canManageTeams,
-}: PlayersTableColumnsProps): ColumnDef<TeamPlayer>[] => [
-  {
-    accessorKey: "name",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Name" />
-    ),
-    cell: ({ row }) => {
-      const firstName = row.original.firstName;
-      const lastName = row.original.lastName;
-      return (
-        <div className="flex space-x-2">
-          <span className="max-w-[500px] truncate font-medium">
-            {firstName} {lastName}
-          </span>
-        </div>
-      );
+  teamGender,
+}: PlayersTableColumnsProps): ColumnDef<TeamPlayer>[] => {
+  const columns: ColumnDef<TeamPlayer>[] = [
+    {
+      accessorKey: "name",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Name" />
+      ),
+      cell: ({ row }) => {
+        const firstName = row.original.firstName;
+        const lastName = row.original.lastName;
+        return (
+          <div className="flex space-x-2">
+            <span className="max-w-[500px] truncate font-medium">
+              {firstName} {lastName}
+            </span>
+          </div>
+        );
+      },
+      enableSorting: true,
+      enableHiding: false,
     },
-    enableSorting: true,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "dateOfBirth",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Date of Birth" />
-    ),
-    cell: ({ row }) => {
-      return (
-        <div className="flex items-center">
-          <span>{format(new Date(row.getValue("dateOfBirth")), "PP")}</span>
-        </div>
-      );
+    {
+      accessorKey: "dateOfBirth",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Date of Birth" />
+      ),
+      cell: ({ row }) => {
+        return (
+          <div className="flex items-center">
+            <span>{format(new Date(row.getValue("dateOfBirth")), "PP")}</span>
+          </div>
+        );
+      },
+      enableSorting: true,
     },
-    enableSorting: true,
-  },
-  {
-    accessorKey: "position",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Position" />
-    ),
-    cell: ({ row }) => {
-      return (
-        <Badge variant="secondary" className="capitalize">
-          {row.getValue("position")}
-        </Badge>
-      );
+    {
+      accessorKey: "position",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Position" />
+      ),
+      cell: ({ row }) => {
+        return (
+          <Badge variant="secondary" className="capitalize">
+            {row.getValue("position")}
+          </Badge>
+        );
+      },
+      enableSorting: true,
     },
-    enableSorting: true,
-  },
-  {
-    accessorKey: "gender",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Gender" />
-    ),
-    cell: ({ row }) => {
-      return (
-        <Badge variant="secondary" className="capitalize">
-          {row.getValue("gender")}
-        </Badge>
-      );
-    },
-    enableSorting: true,
-  },
-  {
+  ];
+
+  // Only add the gender column if the team is mixed
+  if (teamGender.toLowerCase() === "mixed") {
+    columns.push({
+      accessorKey: "gender",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Gender" />
+      ),
+      cell: ({ row }) => {
+        return (
+          <Badge variant="secondary" className="capitalize">
+            {row.getValue("gender")}
+          </Badge>
+        );
+      },
+      enableSorting: true,
+    });
+  }
+
+  // Add actions column
+  columns.push({
     id: "actions",
     cell: ({ row }) => (
       <PlayerTableActions
@@ -140,5 +144,7 @@ export const playerColumns = ({
         canManageTeams={canManageTeams}
       />
     ),
-  },
-];
+  });
+
+  return columns;
+};

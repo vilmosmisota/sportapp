@@ -1,5 +1,7 @@
 import { TenantType } from "./entities/tenant/Tenant.schema";
-import { DomainRole } from "./entities/user/User.schema";
+import { RoleDomain } from "./entities/role/Role.permissions";
+import { UserRole } from "./entities/user/User.schema";
+import { Permission } from "./entities/role/Role.permissions";
 
 export interface TenantInfo {
   tenantId: string | null;
@@ -7,7 +9,7 @@ export interface TenantInfo {
   isPublicSitePublished: boolean | null;
 }
 
-export interface TenantCapabilities {
+export interface TenantFeatures {
   websiteBuilder: boolean;
 }
 
@@ -19,7 +21,7 @@ export interface DomainInfo {
 
 export interface UserEntity {
   tenantId: string;
-  domainRole: DomainRole;
+  roles: UserRole[];
 }
 
 // Domain parsing and validation
@@ -63,6 +65,7 @@ export function shouldRedirectToLogin(pathname: string): boolean {
     "/o/dashboard",
     "/l/dashboard",
     "/p/dashboard",
+    "/player/dashboard",
   ];
 
   // Check if the path exactly matches or is a sub-path of protected routes
@@ -103,21 +106,80 @@ export function validateTenantAccess(
 // User role and access validation
 export function validateUserAccess(
   pathname: string,
-  domainRole: DomainRole | null
+  userRoles: UserRole[] | null
 ): boolean {
-  if (!domainRole) {
-    console.log("No domain role - access denied");
+  if (!userRoles || userRoles.length === 0) {
+    console.log("No roles - access denied");
     return false;
   }
 
-  if (pathname.startsWith("/o/dashboard") && domainRole !== DomainRole.COACH) {
-    console.log("Organization dashboard requires COACH role");
-    return false;
+  // Check if user has any system roles - they get access to everything
+  const hasSystemRole = userRoles.some(
+    (userRole) => userRole.role?.domain === RoleDomain.SYSTEM
+  );
+
+  if (hasSystemRole) {
+    console.log("System role - access granted to all routes");
+    return true;
   }
 
-  if (pathname.startsWith("/p/dashboard") && domainRole !== DomainRole.PARENT) {
-    console.log("Parent dashboard requires PARENT role");
-    return false;
+  // Organization dashboard routes require management role with appropriate permissions
+  if (pathname.startsWith("/o/dashboard")) {
+    const hasManagementRole = userRoles.some((userRole) => {
+      if (userRole.role?.domain !== RoleDomain.MANAGEMENT) return false;
+
+      // Check specific route permissions
+      if (pathname.includes("/roles")) {
+        return userRole.role.permissions.includes(Permission.MANAGE_USERS);
+      }
+      if (pathname.includes("/users")) {
+        return userRole.role.permissions.includes(Permission.VIEW_USERS);
+      }
+      if (pathname.includes("/teams")) {
+        return userRole.role.permissions.includes(Permission.VIEW_TEAM);
+      }
+      if (pathname.includes("/players")) {
+        return userRole.role.permissions.includes(Permission.VIEW_PLAYERS);
+      }
+      if (pathname.includes("/attendance")) {
+        return userRole.role.permissions.includes(Permission.VIEW_ATTENDANCE);
+      }
+      if (pathname.includes("/training")) {
+        return userRole.role.permissions.includes(Permission.VIEW_TRAINING);
+      }
+
+      // Default to requiring VIEW_DASHBOARD for other dashboard routes
+      return userRole.role.permissions.includes(Permission.VIEW_DASHBOARD);
+    });
+
+    if (!hasManagementRole) {
+      console.log(
+        "Organization dashboard requires management role with appropriate permissions"
+      );
+      return false;
+    }
+  }
+
+  // Parent dashboard routes require family role
+  if (pathname.startsWith("/p/dashboard")) {
+    const hasFamilyRole = userRoles.some(
+      (userRole) => userRole.role?.domain === RoleDomain.FAMILY
+    );
+    if (!hasFamilyRole) {
+      console.log("Parent dashboard requires family role");
+      return false;
+    }
+  }
+
+  // Player dashboard routes require player role
+  if (pathname.startsWith("/player/dashboard")) {
+    const hasPlayerRole = userRoles.some(
+      (userRole) => userRole.role?.domain === RoleDomain.PLAYER
+    );
+    if (!hasPlayerRole) {
+      console.log("Player dashboard requires player role");
+      return false;
+    }
   }
 
   console.log("Access granted");
@@ -125,10 +187,21 @@ export function validateUserAccess(
 }
 
 export function hasAccessToTenant(
-  userEntities: UserEntity[],
+  userRoles: UserRole[],
   tenantId: string
 ): boolean {
-  return userEntities.some((entity) => entity.tenantId === tenantId);
+  // System roles have access to all tenants
+  const hasSystemRole = userRoles.some(
+    (userRole) => userRole.role?.domain === RoleDomain.SYSTEM
+  );
+  if (hasSystemRole) {
+    return true;
+  }
+
+  // Check if user has any role for this tenant
+  return userRoles.some(
+    (userRole) => userRole.tenantId.toString() === tenantId
+  );
 }
 
 // Website builder and redirection logic
@@ -148,6 +221,7 @@ export function shouldRedirectForWebsiteBuilder(
     return false;
   }
 
+  // If site is not published, redirect all other paths
   return !isPublicSitePublished;
 }
 
@@ -165,27 +239,41 @@ export function getRedirectUrl(
 }
 
 export function getDashboardRedirect(
-  domainRole: DomainRole,
+  userRoles: UserRole[],
   tenantType: TenantType
 ): string {
-  if (domainRole === DomainRole.COACH) {
+  const hasManagementRole = userRoles.some(
+    (userRole) => userRole.role?.domain === RoleDomain.MANAGEMENT
+  );
+  const hasFamilyRole = userRoles.some(
+    (userRole) => userRole.role?.domain === RoleDomain.FAMILY
+  );
+  const hasPlayerRole = userRoles.some(
+    (userRole) => userRole.role?.domain === RoleDomain.PLAYER
+  );
+
+  if (hasManagementRole) {
     return tenantType === TenantType.ORGANIZATION
       ? "/o/dashboard"
       : "/l/dashboard";
   }
-  if (domainRole === DomainRole.PARENT) {
+
+  if (hasFamilyRole) {
     return "/p/dashboard";
   }
+
+  if (hasPlayerRole) {
+    return "/player/dashboard";
+  }
+
   return "/";
 }
 
-// URL construction
 export function constructRedirectUrl(
   path: string,
   subDomain: string,
   rootDomain: string,
   protocol: string
 ): string {
-  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  return `${protocol}://${subDomain}.${rootDomain}${normalizedPath}`;
+  return `${protocol}://${subDomain}.${rootDomain}${path}`;
 }

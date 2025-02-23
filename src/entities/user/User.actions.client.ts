@@ -107,20 +107,26 @@ export const useAddUser = (tenantId: string) => {
   });
 };
 
-export const useUpdateUser = (
-  userId: string,
-  entityId: number,
-  tenantId: string
-) => {
+export const useUpdateUser = (userId: string, tenantId: string) => {
   const queryClient = useQueryClient();
   const queryKey = [queryKeys.user.list, tenantId];
 
   return useMutation({
-    mutationFn: async ({ userData }: { userData: UserUpdateForm }) => {
+    mutationFn: async ({
+      userData,
+      roleIds,
+    }: {
+      userData: {
+        email: string;
+        firstName: string;
+        lastName: string;
+      };
+      roleIds?: number[];
+    }) => {
       const response = await fetch("/api/users", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, userData, entityId, tenantId }),
+        body: JSON.stringify({ userId, userData, tenantId, roleIds }),
       });
 
       if (!response.ok) {
@@ -133,6 +139,7 @@ export const useUpdateUser = (
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.user.current });
       queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: queryKeys.role.userRoles });
     },
   });
 };
@@ -145,15 +152,16 @@ export const useDeleteUser = (tenantId: string) => {
       const response = await fetch("/api/users", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId }),
+        body: JSON.stringify({ userId, tenantId }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message);
+        throw new Error(data.error);
       }
 
-      return response.json();
+      return data;
     },
     onSuccess: () => {
       // Invalidate multiple related queries

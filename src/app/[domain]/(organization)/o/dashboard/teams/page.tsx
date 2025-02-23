@@ -2,15 +2,14 @@
 
 import { useGetTeamsByTenantId } from "@/entities/team/Team.query";
 import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
-import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { PageHeader } from "@/components/ui/page-header";
 import TeamsTable from "./tables/TeamsTable";
 import AddTeamForm from "./forms/AddTeamForm";
-import { useUserRoles } from "@/entities/user/hooks/useUserRoles";
-import { Permissions } from "@/libs/permissions/permissions";
+import { PermissionButton } from "@/components/auth/PermissionButton";
+import { Permission } from "@/entities/role/Role.permissions";
 
 export default function TeamsPage({ params }: { params: { domain: string } }) {
   const { data: tenant } = useTenantByDomain(params.domain);
@@ -18,8 +17,6 @@ export default function TeamsPage({ params }: { params: { domain: string } }) {
     tenant?.id.toString() ?? ""
   );
   const [isAddTeamOpen, setIsAddTeamOpen] = useState(false);
-  const userEntity = useUserRoles();
-  const canManageTeams = Permissions.Teams.manage(userEntity);
 
   return (
     <div className="w-full space-y-6">
@@ -27,12 +24,14 @@ export default function TeamsPage({ params }: { params: { domain: string } }) {
         title="Teams"
         description="Manage your organization's teams and their settings"
         actions={
-          canManageTeams && (
-            <Button onClick={() => setIsAddTeamOpen(true)} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add Team
-            </Button>
-          )
+          <PermissionButton
+            onClick={() => setIsAddTeamOpen(true)}
+            className="gap-2"
+            permission={Permission.MANAGE_TEAM}
+          >
+            <Plus className="h-4 w-4" />
+            Add Team
+          </PermissionButton>
         }
       />
 
@@ -43,7 +42,6 @@ export default function TeamsPage({ params }: { params: { domain: string } }) {
           teams={teams}
           tenantId={tenant?.id.toString() ?? ""}
           domain={params.domain}
-          canManageTeams={canManageTeams}
         />
       )}
 

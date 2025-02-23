@@ -4,7 +4,6 @@ import { z } from "zod";
 
 const PLAYER_QUERY_WITH_RELATIONS = `
   *,
-  membershipCategory:membershipCategories(*),
   teamConnections:playerTeamConnections!left(
     *,
     team:teams(*)
@@ -13,9 +12,21 @@ const PLAYER_QUERY_WITH_RELATIONS = `
     *,
     user:users(
       id,
+      email,
       firstName,
       lastName,
-      email
+      roles:userRoles(
+        id,
+        roleId,
+        tenantId,
+        role:roles(
+          id,
+          name,
+          domain,
+          permissions,
+          tenantId
+        )
+      )
     )
   )
 `;
@@ -41,7 +52,8 @@ export const getPlayersByTenantId = async (
   const { data: players, error } = await typedClient
     .from("players")
     .select(PLAYER_QUERY_WITH_RELATIONS)
-    .eq("tenantId", tenantId);
+    .eq("tenantId", tenantId)
+    .order("firstName", { ascending: true });
 
   if (error) {
     throw new Error(error.message);
@@ -56,7 +68,7 @@ export const addPlayerToTenant = async (
   tenantId: string
 ) => {
   try {
-    const { teamIds, parentUserIds, ...playerData } = data;
+    const { teamIds, parentUserIds, ownerUserId, ...playerData } = data;
 
     // Insert the player
     const { data: newPlayer, error: insertError } = await client
@@ -85,20 +97,40 @@ export const addPlayerToTenant = async (
       if (teamError) throw teamError;
     }
 
-    // Add parent user connections if provided
+    // Create user connections array
+    const userConnections = [];
+
+    // Add parent connections if provided
     if (parentUserIds?.length) {
-      const parentConnections = parentUserIds.map((userId) => ({
+      userConnections.push(
+        ...parentUserIds.map((userId) => ({
+          playerId: newPlayer.id,
+          userId,
+          tenantId: Number(tenantId),
+          isParent: true,
+          isOwner: false,
+        }))
+      );
+    }
+
+    // Add owner connection if provided
+    if (ownerUserId) {
+      userConnections.push({
         playerId: newPlayer.id,
-        userId,
-        isParent: true,
+        userId: ownerUserId,
         tenantId: Number(tenantId),
-      }));
+        isParent: false,
+        isOwner: true,
+      });
+    }
 
-      const { error: parentError } = await client
+    // Insert user connections if any
+    if (userConnections.length > 0) {
+      const { error: userError } = await client
         .from("playerUserConnections")
-        .insert(parentConnections);
+        .insert(userConnections);
 
-      if (parentError) throw parentError;
+      if (userError) throw userError;
     }
 
     return getPlayerWithRelations(client, newPlayer.id);
@@ -115,7 +147,7 @@ export const updatePlayer = async (
   tenantId: string
 ) => {
   try {
-    const { teamIds, parentUserIds, ...playerData } = data;
+    const { teamIds, parentUserIds, ownerUserId, ...playerData } = data;
 
     // Update player base data
     const { error: updateError } = await client
@@ -152,32 +184,48 @@ export const updatePlayer = async (
       }
     }
 
-    // Update parent user connections if provided
-    if (parentUserIds !== undefined) {
-      // Delete existing parent connections
-      const { error: deleteParentError } = await client
-        .from("playerUserConnections")
-        .delete()
-        .eq("playerId", playerId)
-        .eq("isParent", true);
+    // Delete all existing user connections
+    const { error: deleteUserError } = await client
+      .from("playerUserConnections")
+      .delete()
+      .eq("playerId", playerId);
 
-      if (deleteParentError) throw deleteParentError;
+    if (deleteUserError) throw deleteUserError;
 
-      // Add new parent connections
-      if (parentUserIds.length > 0) {
-        const parentConnections = parentUserIds.map((userId) => ({
+    // Create new user connections array
+    const userConnections = [];
+
+    // Add parent connections if provided
+    if (parentUserIds?.length) {
+      userConnections.push(
+        ...parentUserIds.map((userId) => ({
           playerId,
           userId,
-          isParent: true,
           tenantId: Number(tenantId),
-        }));
+          isParent: true,
+          isOwner: false,
+        }))
+      );
+    }
 
-        const { error: parentError } = await client
-          .from("playerUserConnections")
-          .insert(parentConnections);
+    // Add owner connection if provided
+    if (ownerUserId) {
+      userConnections.push({
+        playerId,
+        userId: ownerUserId,
+        tenantId: Number(tenantId),
+        isParent: false,
+        isOwner: true,
+      });
+    }
 
-        if (parentError) throw parentError;
-      }
+    // Insert new user connections if any
+    if (userConnections.length > 0) {
+      const { error: userError } = await client
+        .from("playerUserConnections")
+        .insert(userConnections);
+
+      if (userError) throw userError;
     }
 
     return getPlayerWithRelations(client, playerId);

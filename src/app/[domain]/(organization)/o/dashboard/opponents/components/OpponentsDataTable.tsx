@@ -19,14 +19,14 @@ import { OpponentsTableToolbar } from "./OpponentsTableToolbar";
 interface OpponentsDataTableProps {
   data: Opponent[];
   tenantId: string;
-  canManage: boolean;
+
   tenant: Tenant;
 }
 
 export default function OpponentsDataTable({
   data,
   tenantId,
-  canManage,
+
   tenant,
 }: OpponentsDataTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -34,7 +34,7 @@ export default function OpponentsDataTable({
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
 
-  const tableColumns = columns({ tenantId, canManage, tenant });
+  const tableColumns = columns({ tenantId, tenant });
 
   const table = useReactTable({
     data,

@@ -29,14 +29,13 @@ export type GroupType = z.infer<typeof GroupTypeSchema>;
 export type TrainingLocation = z.infer<typeof LocationSchema>;
 export type GameLocation = z.infer<typeof LocationSchema>;
 
-export const TenantCapabilitiesSchema = z.object({
+export const TenantFeaturesSchema = z.object({
   id: z.number(),
   tenantId: z.number().nullable(),
-  membership: z.boolean().nullable(),
   websiteBuilder: z.boolean().nullable(),
 });
 
-export type TenantCapabilities = z.infer<typeof TenantCapabilitiesSchema>;
+export type TenantFeatures = z.infer<typeof TenantFeaturesSchema>;
 
 export const TenantSchema = z.object({
   id: z.number(),

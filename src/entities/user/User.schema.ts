@@ -1,16 +1,5 @@
 import { z } from "zod";
-
-export enum AdminRole {
-  ADMIN = "admin",
-  EDITOR = "editor",
-  MEMBER = "member",
-}
-
-export enum DomainRole {
-  COACH = "coach",
-  PLAYER = "player",
-  PARENT = "parent",
-}
+import { RoleSchema } from "../role/Role.schema";
 
 // Original schemas for login
 export const UserLoginSchema = z.object({
@@ -20,25 +9,30 @@ export const UserLoginSchema = z.object({
 
 export type UserLogin = z.infer<typeof UserLoginSchema>;
 
-// Schema for user entity (single entity per user)
-export const UserEntitySchema = z.object({
+// Schema for user roles (junction table)
+export const UserRoleSchema = z.object({
   id: z.number(),
-  createdAt: z.string(),
-  adminRole: z.nativeEnum(AdminRole).nullable(),
-  domainRole: z.nativeEnum(DomainRole).nullable(),
-  tenantId: z.number().nullable(),
-  clubId: z.number().nullable(),
-  divisionId: z.number().nullable(),
-  teamId: z.number().nullable(),
+  roleId: z.number(),
+  tenantId: z.number(),
+  role: RoleSchema.optional(), // For populated role data
 });
 
-// Base user schema
+// Schema for tenant users (junction table)
+export const TenantUserSchema = z.object({
+  id: z.number(),
+  tenantId: z.number(),
+  // Make userId optional since it might not be included in some queries
+  userId: z.string().uuid().optional(),
+});
+
+// Schema for users
 export const UserSchema = z.object({
   id: z.string().uuid(),
   email: z.string().email().nullable(),
   firstName: z.string().nullable(),
   lastName: z.string().nullable(),
-  entity: UserEntitySchema.nullable(), // Changed from entities array to single entity
+  roles: z.array(UserRoleSchema).optional(),
+  tenantUsers: z.array(TenantUserSchema).optional(),
 });
 
 // Schema for creating/updating users
@@ -47,11 +41,7 @@ export const UserFormSchema = z.object({
   firstName: z.string().min(1),
   lastName: z.string().min(1),
   password: z.string().min(8, "Password must be at least 8 characters"),
-  adminRole: z.nativeEnum(AdminRole).nullable(),
-  domainRole: z.nativeEnum(DomainRole).nullable(),
-  clubId: z.number().optional(),
-  divisionId: z.number().optional(),
-  teamId: z.number().optional(),
+  roleIds: z.array(z.number()).optional(),
 });
 
 // Add a separate schema for updates
@@ -59,19 +49,11 @@ export const UserUpdateFormSchema = z.object({
   email: z.string().email(),
   firstName: z.string().min(1),
   lastName: z.string().min(1),
-  // Password is optional for updates
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .optional(),
-  adminRole: z.nativeEnum(AdminRole).nullable(),
-  domainRole: z.nativeEnum(DomainRole).nullable(),
-  clubId: z.number().optional(),
-  divisionId: z.number().optional(),
-  teamId: z.number().optional(),
+  roleIds: z.array(z.number()).optional(),
 });
 
+// Types
 export type User = z.infer<typeof UserSchema>;
 export type UserForm = z.infer<typeof UserFormSchema>;
-export type UserEntity = z.infer<typeof UserEntitySchema>;
+export type UserRole = z.infer<typeof UserRoleSchema>;
 export type UserUpdateForm = z.infer<typeof UserUpdateFormSchema>;

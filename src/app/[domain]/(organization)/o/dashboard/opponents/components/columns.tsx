@@ -26,14 +26,12 @@ import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
 interface OpponentTableActionsProps {
   opponent: Opponent;
   tenantId: string;
-  canManage: boolean;
   tenant: Tenant;
 }
 
 const OpponentTableActions = ({
   opponent,
   tenantId,
-  canManage,
   tenant,
 }: OpponentTableActionsProps) => {
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -52,8 +50,6 @@ const OpponentTableActions = ({
       },
     });
   };
-
-  if (!canManage) return null;
 
   return (
     <>
@@ -114,11 +110,9 @@ const OpponentTableActions = ({
 
 export const columns = ({
   tenantId,
-  canManage,
   tenant,
 }: {
   tenantId: string;
-  canManage: boolean;
   tenant: Tenant;
 }): ColumnDef<Opponent>[] => [
   {
@@ -203,7 +197,6 @@ export const columns = ({
       <OpponentTableActions
         opponent={row.original}
         tenantId={tenantId}
-        canManage={canManage}
         tenant={tenant}
       />
     ),

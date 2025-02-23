@@ -5,8 +5,6 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 import AddTrainingLocationForm from "../forms/AddTrainingLocationForm";
 import LocationItem from "../items/LocationItem";
-import { useUserRoles } from "@/entities/user/hooks/useUserRoles";
-import { Permissions } from "@/libs/permissions/permissions";
 
 interface TrainingLocationsContentProps {
   tenant: Tenant | undefined;
@@ -18,8 +16,6 @@ export default function TrainingLocationsContent({
   domain,
 }: TrainingLocationsContentProps) {
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const userEntity = useUserRoles();
-  const canManage = Permissions.Organization.manage(userEntity);
 
   if (!tenant) return null;
 
@@ -29,12 +25,11 @@ export default function TrainingLocationsContent({
         <h3 className="text-sm font-medium text-muted-foreground">
           Training Locations
         </h3>
-        {canManage && (
-          <Button onClick={() => setIsAddOpen(true)} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Add Location
-          </Button>
-        )}
+
+        <Button onClick={() => setIsAddOpen(true)} className="gap-2">
+          <Plus className="h-4 w-4" />
+          Add Location
+        </Button>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -44,7 +39,6 @@ export default function TrainingLocationsContent({
             location={location}
             tenant={tenant}
             domain={domain}
-            canManage={canManage}
           />
         ))}
         {(!tenant.trainingLocations ||

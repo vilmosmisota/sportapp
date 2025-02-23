@@ -2,39 +2,36 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSupabase } from "@/libs/supabase/useSupabase";
 import { queryKeys } from "@/cacheKeys/cacheKeys";
 import {
-  getRolesByDomainAndTenantType,
-  getUserDomainsWithRoles,
+  getRolesByTenant,
+  getUserRoles,
   createRole,
   updateRole,
   deleteRole,
-  assignRoleToUserDomain,
-  removeRoleFromUserDomain,
+  assignRoleToUser,
+  removeRoleFromUser,
 } from "./Role.services";
 import { RoleForm } from "./Role.schema";
 
-// Query hook for getting roles by domain and tenant type
-export const useRolesByDomainAndTenantType = (
-  domain: string,
-  tenantType?: string
-) => {
+// Query hook for getting all roles for a tenant (including global roles)
+export const useRolesByTenant = (tenantId?: number) => {
   const client = useSupabase();
-  const queryKey = [...queryKeys.role.list, domain, tenantType];
+  const queryKey = [...queryKeys.role.list, tenantId];
 
   return useQuery({
     queryKey,
-    queryFn: () => getRolesByDomainAndTenantType(client, domain, tenantType),
+    queryFn: () => getRolesByTenant(client, tenantId),
+    enabled: !!tenantId,
   });
 };
 
-// Query hook for getting user domains with roles
-export const useUserDomainsWithRoles = (userId: string) => {
+// Query hook for getting user roles
+export const useUserRoles = (userId: string) => {
   const client = useSupabase();
-  const queryKey = [...queryKeys.role.userDomains, userId];
+  const queryKey = [...queryKeys.role.userRoles, userId];
 
   return useQuery({
     queryKey,
-    queryFn: () => getUserDomainsWithRoles(client, userId),
-    enabled: !!userId,
+    queryFn: () => getUserRoles(client, userId),
   });
 };
 
@@ -45,39 +42,22 @@ export const useCreateRole = () => {
 
   return useMutation({
     mutationFn: (roleData: RoleForm) => createRole(client, roleData),
-    onSuccess: (_, variables) => {
-      // Invalidate relevant queries
-      queryClient.invalidateQueries({
-        queryKey: [
-          ...queryKeys.role.list,
-          variables.domain,
-          variables.tenantType,
-        ],
-      });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.role.list });
     },
   });
 };
 
 // Mutation hook for updating a role
-export const useUpdateRole = (roleId: string) => {
+export const useUpdateRole = (roleId: number) => {
   const client = useSupabase();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (roleData: Partial<RoleForm>) =>
       updateRole(client, roleId, roleData),
-    onSuccess: (_, variables) => {
-      // Invalidate relevant queries
-      queryClient.invalidateQueries({
-        queryKey: [
-          ...queryKeys.role.list,
-          variables.domain,
-          variables.tenantType,
-        ],
-      });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.role.userDomains,
-      });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.role.list });
     },
   });
 };
@@ -88,56 +68,54 @@ export const useDeleteRole = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (roleId: string) => deleteRole(client, roleId),
+    mutationFn: (roleId: number) => deleteRole(client, roleId),
     onSuccess: () => {
-      // Invalidate all role-related queries
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.role.list,
-      });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.role.userDomains,
-      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.role.list });
     },
   });
 };
 
-// Mutation hook for assigning a role to a user domain
-export const useAssignRoleToUserDomain = (userId: string) => {
+// Mutation hook for assigning a role to a user
+export const useAssignRoleToUser = () => {
   const client = useSupabase();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({
-      userDomainId,
+      userId,
       roleId,
+      tenantId,
     }: {
-      userDomainId: number;
-      roleId: string;
-    }) => assignRoleToUserDomain(client, userDomainId, roleId),
-    onSuccess: () => {
+      userId: string;
+      roleId: number;
+      tenantId: number;
+    }) => assignRoleToUser(client, userId, roleId, tenantId),
+    onSuccess: (_, { userId }) => {
       queryClient.invalidateQueries({
-        queryKey: [...queryKeys.role.userDomains, userId],
+        queryKey: [...queryKeys.role.userRoles, userId],
       });
     },
   });
 };
 
-// Mutation hook for removing a role from a user domain
-export const useRemoveRoleFromUserDomain = (userId: string) => {
+// Mutation hook for removing a role from a user
+export const useRemoveRoleFromUser = () => {
   const client = useSupabase();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({
-      userDomainId,
+      userId,
       roleId,
+      tenantId,
     }: {
-      userDomainId: number;
-      roleId: string;
-    }) => removeRoleFromUserDomain(client, userDomainId, roleId),
-    onSuccess: () => {
+      userId: string;
+      roleId: number;
+      tenantId: number;
+    }) => removeRoleFromUser(client, userId, roleId, tenantId),
+    onSuccess: (_, { userId }) => {
       queryClient.invalidateQueries({
-        queryKey: [...queryKeys.role.userDomains, userId],
+        queryKey: [...queryKeys.role.userRoles, userId],
       });
     },
   });
