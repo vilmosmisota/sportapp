@@ -3,19 +3,26 @@ import {
   TeamForm,
   TeamSchema,
   PlayerTeamConnectionSchema,
+  type Team,
 } from "./Team.schema";
 import { RoleDomain } from "../role/Role.permissions";
 
 export const getTeamsByTenantId = async (
-  typedClient: TypedClient,
-  tenantId: string
-) => {
-  const { data, error } = await typedClient
+  client: TypedClient,
+  tenantId: string,
+  options?: { includeOpponents?: boolean }
+): Promise<Team[]> => {
+  let query = client
     .from("teams")
     .select(
       `
       *,
-      playerTeamConnections:playerTeamConnections(
+      coach:users!coachId(
+        id,
+        firstName,
+        lastName
+      ),
+      playerTeamConnections(
         id,
         player:players(
           id,
@@ -23,29 +30,26 @@ export const getTeamsByTenantId = async (
           lastName,
           dateOfBirth,
           position,
-          gender
+          gender,
+          pin
         )
-      ),
-      coach:users!coachId(
-        id,
-        firstName,
-        lastName
       )
     `
     )
     .eq("tenantId", tenantId);
 
+  // If we don't want to include opponents, filter them out
+  if (!options?.includeOpponents) {
+    query = query.or("isOpponent.is.null,isOpponent.eq.false");
+  }
+
+  const { data, error } = await query;
+
   if (error) {
     throw new Error(error.message);
   }
 
-  return data.map((team) =>
-    TeamSchema.parse({
-      ...team,
-      coach: team.coach || null,
-      playerTeamConnections: team.playerTeamConnections || [],
-    })
-  );
+  return data.map((team) => TeamSchema.parse(team));
 };
 
 export const getCoachesByTenantId = async (
@@ -80,14 +84,19 @@ export const getCoachesByTenantId = async (
   }));
 };
 
-export const addTeamToTenant = async (
+export const createTeam = async (
   client: TypedClient,
   data: TeamForm,
-  tenantId: string
-) => {
+  tenantId: string,
+  isOpponent: boolean = false
+): Promise<Team> => {
   const { data: team, error } = await client
     .from("teams")
-    .insert({ ...data, tenantId: Number(tenantId) })
+    .insert({
+      ...data,
+      tenantId: Number(tenantId),
+      isOpponent,
+    })
     .select(
       `
       *,
@@ -95,6 +104,18 @@ export const addTeamToTenant = async (
         id,
         firstName,
         lastName
+      ),
+      playerTeamConnections(
+        id,
+        player:players(
+          id,
+          firstName,
+          lastName,
+          dateOfBirth,
+          position,
+          gender,
+          pin
+        )
       )
     `
     )
@@ -104,10 +125,7 @@ export const addTeamToTenant = async (
     throw new Error(error.message);
   }
 
-  return TeamSchema.parse({
-    ...team,
-    coach: team.coach || null,
-  });
+  return TeamSchema.parse(team);
 };
 
 export const updateTeam = async (

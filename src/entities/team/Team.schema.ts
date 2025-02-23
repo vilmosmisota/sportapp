@@ -64,6 +64,7 @@ export const TeamSchema = z.object({
   playerCount: z.number().nullable().optional(),
   tenantId: z.number(),
   coachId: z.string().nullable().optional(),
+  isOpponent: z.boolean().nullable().optional(),
   coach: z
     .object({
       id: z.string(),

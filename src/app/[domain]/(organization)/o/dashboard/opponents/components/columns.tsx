@@ -1,15 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { MoreVertical, SquarePen, Trash2 } from "lucide-react";
+import { SquarePen, Trash2 } from "lucide-react";
 import DataTableColumnHeader from "@/components/ui/data-table/DataTableColumnHeader";
-import { Opponent, OpponentGroup } from "@/entities/opponent/Opponent.schema";
+import { Opponent } from "@/entities/opponent/Opponent.schema";
 import { useState } from "react";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import OpponentForm from "./OpponentForm";
@@ -22,6 +14,8 @@ import {
 } from "@/entities/team/Team.schema";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
+import { PermissionDropdownMenu } from "@/components/auth/PermissionDropdownMenu";
+import { Permission } from "@/entities/role/Role.permissions";
 
 interface OpponentTableActionsProps {
   opponent: Opponent;
@@ -51,36 +45,25 @@ const OpponentTableActions = ({
     });
   };
 
+  const actions = [
+    {
+      label: "Edit",
+      onClick: () => setIsEditOpen(true),
+      icon: <SquarePen className="h-4 w-4" />,
+      permission: Permission.MANAGE_TEAM,
+    },
+    {
+      label: "Delete",
+      onClick: () => setIsDeleteOpen(true),
+      icon: <Trash2 className="h-4 w-4" />,
+      variant: "destructive" as const,
+      permission: Permission.MANAGE_TEAM,
+    },
+  ];
+
   return (
     <>
-      <DropdownMenu modal={false}>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className="h-8 w-8 p-0 data-[state=open]:bg-gray-100"
-          >
-            <MoreVertical className="h-4 w-4" />
-            <span className="sr-only">Open menu</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-[160px]">
-          <DropdownMenuItem
-            onClick={() => setIsEditOpen(true)}
-            className="cursor-pointer"
-          >
-            <SquarePen className="h-4 w-4 mr-2" />
-            Edit
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={() => setIsDeleteOpen(true)}
-            className="cursor-pointer text-red-500"
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <PermissionDropdownMenu actions={actions} />
 
       <ResponsiveSheet
         isOpen={isEditOpen}
@@ -134,38 +117,34 @@ export const columns = ({
     minSize: 200,
   },
   {
-    accessorKey: "groups",
+    accessorKey: "teams",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Groups" />
+      <DataTableColumnHeader column={column} title="Teams" />
     ),
     cell: ({ row }) => {
-      const groups = row.getValue("groups") as OpponentGroup[] | null;
-      if (!groups?.length) return null;
+      const teams = row.getValue("teams") as any[] | null;
+      if (!teams?.length) return null;
 
       return (
         <div className="flex flex-wrap gap-2">
-          {groups.map((group, index) => {
-            const capitalizedGender =
-              group.gender.charAt(0).toUpperCase() + group.gender.slice(1);
-            return (
-              <Badge
-                key={index}
-                variant="secondary"
-                className="whitespace-nowrap"
-              >
-                {[
-                  getDisplayAgeGroup(group.age),
-                  getDisplayGender(capitalizedGender, group.age),
-                  group.skill,
-                ]
-                  .filter(
-                    (value): value is string =>
-                      typeof value === "string" && value.length > 0
-                  )
-                  .join(" • ")}
-              </Badge>
-            );
-          })}
+          {teams.map((team, index) => (
+            <Badge
+              key={index}
+              variant="secondary"
+              className="whitespace-nowrap"
+            >
+              {[
+                getDisplayAgeGroup(team.age),
+                getDisplayGender(team.gender, team.age),
+                team.skill,
+              ]
+                .filter(
+                  (value): value is string =>
+                    typeof value === "string" && value.length > 0
+                )
+                .join(" • ")}
+            </Badge>
+          ))}
         </div>
       );
     },

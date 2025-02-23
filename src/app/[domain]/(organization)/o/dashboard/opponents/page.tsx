@@ -2,11 +2,12 @@
 
 import { useOpponents } from "@/entities/opponent/Opponent.query";
 import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
-import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { PageHeader } from "@/components/ui/page-header";
+import { PermissionButton } from "@/components/auth/PermissionButton";
+import { Permission } from "@/entities/role/Role.permissions";
 
 import OpponentForm from "./components/OpponentForm";
 import OpponentsDataTable from "./components/OpponentsDataTable";
@@ -26,10 +27,14 @@ export default function OpponentsPage({
         title="Opponents"
         description="Manage your organization's opponents"
         actions={
-          <Button onClick={() => setIsAddOpponentOpen(true)} className="gap-2">
+          <PermissionButton
+            onClick={() => setIsAddOpponentOpen(true)}
+            className="gap-2"
+            permission={Permission.MANAGE_TEAM}
+          >
             <Plus className="h-4 w-4" />
             Add Opponent
-          </Button>
+          </PermissionButton>
         }
       />
 

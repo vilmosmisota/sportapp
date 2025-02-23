@@ -16,7 +16,6 @@ import {
   Opponent,
   OpponentFormSchema,
   type OpponentForm,
-  OpponentGroup,
 } from "@/entities/opponent/Opponent.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -53,70 +52,17 @@ interface OpponentFormProps {
   tenant: Tenant;
 }
 
-interface GroupTableProps {
-  teams: {
-    age: string | null;
-    gender: string | null;
-    skill: string | null;
-  }[];
-  selectedGroups: OpponentGroup[];
-  onToggleGroup: (group: OpponentGroup) => void;
+interface TeamTableProps {
+  teams: any[];
+  selectedTeamIds: number[];
+  onToggleTeam: (teamId: number) => void;
 }
 
-const GroupTable = ({
+const TeamTable = ({
   teams,
-  selectedGroups,
-  onToggleGroup,
-}: GroupTableProps) => {
-  // Create unique groups from teams
-  const uniqueGroups = useMemo(() => {
-    const groupSet = new Set<string>();
-    const groups: OpponentGroup[] = [];
-
-    teams.forEach((team) => {
-      if (!team.age || !team.gender || !team.skill) return;
-
-      const groupKey = `${team.age}-${team.gender}-${team.skill}`;
-      if (!groupSet.has(groupKey)) {
-        groupSet.add(groupKey);
-        // Remove lowercase conversion and directly use the team gender
-        const gender = team.gender;
-        // Convert gender to TeamGender enum
-        let teamGender: TeamGender;
-        switch (gender) {
-          case "Male":
-            teamGender = TeamGender.Male;
-            break;
-          case "Female":
-            teamGender = TeamGender.Female;
-            break;
-          case "Mixed":
-            teamGender = TeamGender.Mixed;
-            break;
-          default:
-            return; // Skip invalid genders
-        }
-
-        groups.push({
-          age: team.age,
-          gender: teamGender,
-          skill: team.skill,
-        });
-      }
-    });
-
-    return groups;
-  }, [teams]);
-
-  const isGroupSelected = (group: OpponentGroup) => {
-    return selectedGroups.some(
-      (g) =>
-        g.age === group.age &&
-        g.gender === group.gender &&
-        g.skill === group.skill
-    );
-  };
-
+  selectedTeamIds,
+  onToggleTeam,
+}: TeamTableProps) => {
   return (
     <Table>
       <TableHeader>
@@ -128,35 +74,35 @@ const GroupTable = ({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {uniqueGroups.map((group, index) => (
-          <TableRow key={index}>
+        {teams.map((team) => (
+          <TableRow key={team.id}>
             <TableCell>
               <Checkbox
-                checked={isGroupSelected(group)}
-                onCheckedChange={() => onToggleGroup(group)}
+                checked={selectedTeamIds.includes(team.id)}
+                onCheckedChange={() => onToggleTeam(team.id)}
               />
             </TableCell>
             <TableCell>
               <Badge variant="outline" className="font-medium">
-                {getDisplayAgeGroup(group.age)}
+                {getDisplayAgeGroup(team.age)}
               </Badge>
             </TableCell>
             <TableCell>
               <Badge variant="secondary" className="capitalize">
-                {getDisplayGender(group.gender, group.age)}
+                {getDisplayGender(team.gender, team.age)}
               </Badge>
             </TableCell>
             <TableCell>
               <Badge variant="secondary" className="capitalize">
-                {group.skill}
+                {team.skill}
               </Badge>
             </TableCell>
           </TableRow>
         ))}
-        {uniqueGroups.length === 0 && (
+        {teams.length === 0 && (
           <TableRow>
             <TableCell colSpan={4} className="h-24 text-center">
-              No groups available
+              No teams available
             </TableCell>
           </TableRow>
         )}
@@ -175,7 +121,13 @@ export default function OpponentForm({
   const [forceReset, setForceReset] = useState(false);
   const createOpponent = useCreateOpponent(tenantId);
   const updateOpponent = useUpdateOpponent(opponent?.id ?? 0, tenantId);
-  const { data: teams } = useGetTeamsByTenantId(tenantId);
+  const { data: allTeams } = useGetTeamsByTenantId(tenantId);
+
+  // Filter out teams that are already opponents
+  const teams = useMemo(() => {
+    if (!allTeams) return [];
+    return allTeams.filter((team) => !team.isOpponent);
+  }, [allTeams]);
 
   const form = useForm<OpponentForm>({
     resolver: zodResolver(OpponentFormSchema),
@@ -184,37 +136,33 @@ export default function OpponentForm({
           name: opponent.name ?? "",
           location: opponent.location,
           tenantId: Number(tenantId),
-          groups: opponent.groups ?? [],
+          teamIds: opponent.teams?.map((t) => t.id) ?? null,
+          teams: opponent.teams ?? null,
         }
       : {
           name: "",
           location: null,
           tenantId: Number(tenantId),
-          groups: [],
+          teamIds: null,
+          teams: null,
         },
   });
 
   const { handleSubmit, watch } = form;
   const { isDirty, isLoading } = form.formState;
   const hasLocation = watch("location") !== null;
-  const groups = watch("groups") ?? [];
+  const selectedTeamIds = watch("teamIds") ?? [];
 
   const resetFormCompletely = () => {
-    // Reset all form fields explicitly
     form.setValue("name", "");
     form.setValue("location", null);
-    form.setValue("groups", []);
+    form.setValue("teamIds", null);
     form.setValue("tenantId", Number(tenantId));
-
-    // Then trigger the form reset
     form.reset();
-
-    // Force a re-render
     setFormKey((prev) => prev + 1);
     setForceReset(true);
   };
 
-  // Add effect to handle force reset
   useEffect(() => {
     if (forceReset) {
       form.reset();
@@ -223,34 +171,53 @@ export default function OpponentForm({
   }, [forceReset, form]);
 
   const onSubmit = async (data: OpponentForm) => {
-    if (opponent) {
-      updateOpponent.mutate(data, {
-        onSuccess: () => {
-          toast.success("Opponent updated successfully");
-          form.reset();
-          setIsOpen(false);
-        },
-        onError: () => {
-          toast.error("Failed to update opponent");
-        },
-      });
-    } else {
-      createOpponent.mutate(data, {
-        onSuccess: () => {
-          toast.success("Opponent added successfully");
-          form.reset();
-          setIsOpen(false);
-        },
-        onError: () => {
-          toast.error("Failed to add opponent");
-        },
-      });
+    try {
+      // Get the selected teams data
+      const selectedTeams = teams.filter((team) =>
+        data.teamIds?.includes(team.id)
+      );
+      const formData = {
+        ...data,
+        teams: selectedTeams.map((team) => ({
+          age: team.age,
+          gender: team.gender,
+          skill: team.skill,
+        })),
+      };
+
+      if (opponent) {
+        await updateOpponent.mutateAsync(formData);
+        toast.success("Opponent updated successfully");
+        form.reset();
+        setIsOpen(false);
+      } else {
+        await createOpponent.mutateAsync(formData);
+        toast.success("Opponent added successfully");
+        form.reset();
+        setIsOpen(false);
+      }
+    } catch (error: any) {
+      console.error("Error submitting form:", error);
+      toast.error(error.message || "Failed to submit form");
     }
   };
 
   const onSubmitAndAddAnother = async (data: OpponentForm) => {
     try {
-      await createOpponent.mutateAsync(data);
+      // Get the selected teams data
+      const selectedTeams = teams.filter((team) =>
+        data.teamIds?.includes(team.id)
+      );
+      const formData = {
+        ...data,
+        teams: selectedTeams.map((team) => ({
+          age: team.age,
+          gender: team.gender,
+          skill: team.skill,
+        })),
+      };
+
+      await createOpponent.mutateAsync(formData);
       toast.success("Opponent added successfully");
       resetFormCompletely();
     } catch (error: any) {
@@ -278,30 +245,20 @@ export default function OpponentForm({
     }
   };
 
-  const toggleGroup = (group: OpponentGroup) => {
-    const currentGroups = form.getValues("groups") ?? [];
-    const isSelected = currentGroups.some(
-      (g) =>
-        g.age === group.age &&
-        g.gender === group.gender &&
-        g.skill === group.skill
-    );
+  const toggleTeam = (teamId: number) => {
+    const currentTeamIds = form.getValues("teamIds") ?? [];
+    const isSelected = currentTeamIds.includes(teamId);
 
     if (isSelected) {
       form.setValue(
-        "groups",
-        currentGroups.filter(
-          (g) =>
-            !(
-              g.age === group.age &&
-              g.gender === group.gender &&
-              g.skill === group.skill
-            )
-        ),
+        "teamIds",
+        currentTeamIds.filter((id) => id !== teamId),
         { shouldDirty: true }
       );
     } else {
-      form.setValue("groups", [...currentGroups, group], { shouldDirty: true });
+      form.setValue("teamIds", [...currentTeamIds, teamId], {
+        shouldDirty: true,
+      });
     }
   };
 
@@ -313,7 +270,6 @@ export default function OpponentForm({
         onSubmit={handleSubmit(onSubmit)}
       >
         <div className="space-y-6">
-          {/* Basic Information */}
           <div className="space-y-4">
             <div className="border-b pb-2">
               <h4 className="text-sm font-medium text-muted-foreground">
@@ -336,7 +292,6 @@ export default function OpponentForm({
             />
           </div>
 
-          {/* Location Information */}
           <div className="space-y-4">
             <div className="border-b pb-2">
               <div className="flex items-center justify-between">
@@ -413,21 +368,20 @@ export default function OpponentForm({
             )}
           </div>
 
-          {/* Groups Information */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-medium flex items-center gap-2">
                 <Users className="h-4 w-4" />
-                Groups
+                Teams
               </CardTitle>
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[300px] w-[calc(100vw-3rem)] md:w-full rounded-md border">
                 {teams && (
-                  <GroupTable
+                  <TeamTable
                     teams={teams}
-                    selectedGroups={groups}
-                    onToggleGroup={toggleGroup}
+                    selectedTeamIds={selectedTeamIds}
+                    onToggleTeam={toggleTeam}
                   />
                 )}
               </ScrollArea>

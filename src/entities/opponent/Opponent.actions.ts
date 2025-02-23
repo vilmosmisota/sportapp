@@ -1,7 +1,7 @@
 import { queryKeys } from "@/cacheKeys/cacheKeys";
 import { useSupabase } from "@/libs/supabase/useSupabase";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { type Opponent } from "./Opponent.schema";
+import { type OpponentForm } from "./Opponent.schema";
 import {
   createOpponent,
   updateOpponent,
@@ -13,8 +13,7 @@ export const useCreateOpponent = (tenantId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: Omit<Opponent, "id">) =>
-      createOpponent(client, data, tenantId),
+    mutationFn: (data: OpponentForm) => createOpponent(client, data, tenantId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.opponent.all });
     },
@@ -26,7 +25,7 @@ export const useUpdateOpponent = (opponentId: number, tenantId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: Partial<Omit<Opponent, "id">>) =>
+    mutationFn: (data: Partial<OpponentForm>) =>
       updateOpponent(client, opponentId, data, tenantId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.opponent.all });
