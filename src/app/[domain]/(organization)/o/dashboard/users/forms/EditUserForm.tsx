@@ -9,7 +9,11 @@ import {
 import FormButtons from "@/components/ui/form-buttons";
 import { Input } from "@/components/ui/input";
 import { useUpdateUser } from "@/entities/user/User.actions.client";
-import { User, UserUpdateFormSchema } from "@/entities/user/User.schema";
+import {
+  User,
+  UserUpdateFormSchema,
+  UserRole,
+} from "@/entities/user/User.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -44,6 +48,11 @@ type EditUserFormProps = {
   setIsParentModalOpen?: (value: boolean) => void;
 };
 
+// Extended schema to include roleIds
+const ExtendedUserUpdateFormSchema = UserUpdateFormSchema.extend({
+  roleIds: z.array(z.number()).optional(),
+});
+
 export default function EditUserForm({
   user,
   tenantId,
@@ -52,25 +61,34 @@ export default function EditUserForm({
   const updateUser = useUpdateUser(user.id, tenantId);
   const { data: roles = [], isLoading } = useRolesByTenant(Number(tenantId));
   const [selectedRoleIds, setSelectedRoleIds] = useState<number[]>(
-    user.roles.map((r) => r.roleId)
+    user.roles?.map((r) => r.roleId) ?? []
   );
+  const initialRoleIds = user.roles?.map((r) => r.roleId) ?? [];
 
-  const form = useForm<z.infer<typeof UserUpdateFormSchema>>({
-    resolver: zodResolver(UserUpdateFormSchema),
+  // Track if roles have changed
+  const hasRolesChanged =
+    JSON.stringify(selectedRoleIds.sort()) !==
+    JSON.stringify(initialRoleIds.sort());
+
+  const form = useForm<z.infer<typeof ExtendedUserUpdateFormSchema>>({
+    resolver: zodResolver(ExtendedUserUpdateFormSchema),
     defaultValues: {
       email: user.email ?? "",
       firstName: user.firstName ?? "",
       lastName: user.lastName ?? "",
+      roleIds: selectedRoleIds,
     },
   });
 
-  const onSubmit = (data: z.infer<typeof UserUpdateFormSchema>) => {
+  // Form is dirty if either regular fields or roles have changed
+  const isFormDirty = form.formState.isDirty || hasRolesChanged;
+
+  const onSubmit = (data: z.infer<typeof ExtendedUserUpdateFormSchema>) => {
+    const { roleIds, ...userData } = data;
     updateUser.mutate(
       {
-        userData: {
-          ...data,
-          roleIds: selectedRoleIds,
-        },
+        userData,
+        roleIds: selectedRoleIds,
       },
       {
         onSuccess: () => {
@@ -85,72 +103,44 @@ export default function EditUserForm({
   };
 
   const onCancel = () => {
-    // Reset both form and role changes
     form.reset();
-    setSelectedRoleIds(user.roles.map((r) => r.roleId));
+    setSelectedRoleIds(user.roles?.map((r) => r.roleId) ?? []);
     setIsParentModalOpen?.(false);
   };
 
-  const handleAssignRole = (
-    e: React.MouseEvent,
-    roleId: string,
-    domain: FormDomain
-  ) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleAssignRole = (roleId: number, domain: FormDomain) => {
+    const currentDomainRoles = selectedRoleIds.filter((id) => {
+      const role = roles.find((r) => r.id === id);
+      return role?.domain === domain;
+    });
 
-    let userRole = user.roles.find((r) => r.roleId === parseInt(roleId));
-    const currentRoleCount = userRole?.roles?.length ?? 0;
-
-    if (currentRoleCount >= DOMAIN_ROLE_LIMITS[domain]) {
+    if (currentDomainRoles.length >= DOMAIN_ROLE_LIMITS[domain]) {
       toast.error(
         `Users can only have ${DOMAIN_ROLE_LIMITS[domain]} ${DOMAIN_LABELS[domain]} role`
       );
       return;
     }
 
-    // If role doesn't exist, create it
-    if (!userRole) {
-      userRole = {
-        id: Date.now(),
-        userId: user.id,
-        tenantId: parseInt(tenantId),
-        role: { id: parseInt(roleId), name: "" },
-        roles: [],
-      };
-    }
-
-    // Update local state
-    setSelectedRoleIds((prev) => {
-      if (userRole) {
-        const otherRoles = prev.filter((r) => r !== parseInt(roleId));
-        return [...otherRoles, parseInt(roleId)];
-      }
-      return prev;
-    });
+    setSelectedRoleIds((prev) => [...prev, roleId]);
   };
 
-  const handleRemoveRole = (
-    e: React.MouseEvent,
-    roleId: string,
-    domain: FormDomain
-  ) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    setSelectedRoleIds((prev) => prev.filter((r) => r !== parseInt(roleId)));
+  const handleRemoveRole = (roleId: number) => {
+    setSelectedRoleIds((prev) => prev.filter((id) => id !== roleId));
   };
 
   const availableRoles: Record<FormDomain, Role[]> = {
-    [RoleDomain.MANAGEMENT]: roles.filter((r) => r.role.id.startsWith("M")),
-    [RoleDomain.FAMILY]: roles.filter((r) => r.role.id.startsWith("F")),
+    [RoleDomain.MANAGEMENT]: roles.filter(
+      (r) => r.domain === RoleDomain.MANAGEMENT
+    ),
+    [RoleDomain.FAMILY]: roles.filter((r) => r.domain === RoleDomain.FAMILY),
   };
 
   const renderRoleSection = (domain: FormDomain) => {
-    const userRole = user.roles.find((r) => r.roleId === domain);
-    const assignedRoleIds = userRole?.roles?.map((r) => r.id) ?? [];
     const domainRoles = availableRoles[domain];
-    const currentRoleCount = userRole?.roles?.length ?? 0;
+    const selectedDomainRoleIds = selectedRoleIds.filter((id) => {
+      const role = roles.find((r) => r.id === id);
+      return role?.domain === domain;
+    });
 
     return (
       <Card key={domain}>
@@ -165,27 +155,28 @@ export default function EditUserForm({
           <div className="space-y-2">
             <FormLabel>Current Roles</FormLabel>
             <div className="flex flex-wrap gap-2">
-              {userRole?.roles?.length ? (
-                userRole.roles.map((role: Role) => (
-                  <Badge
-                    key={role.id}
-                    variant="secondary"
-                    className="pl-2 pr-1 py-1 flex items-center gap-1"
-                  >
-                    {role.name}
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-4 w-4 rounded-full hover:bg-destructive"
-                      onClick={(e) =>
-                        handleRemoveRole(e, role.id.toString(), domain)
-                      }
+              {selectedDomainRoleIds.length > 0 ? (
+                selectedDomainRoleIds.map((roleId) => {
+                  const role = roles.find((r) => r.id === roleId);
+                  return role ? (
+                    <Badge
+                      key={role.id}
+                      variant="secondary"
+                      className="pl-2 pr-1 py-1 flex items-center gap-1"
                     >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </Badge>
-                ))
+                      {role.name}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-4 w-4 rounded-full hover:bg-destructive"
+                        onClick={() => handleRemoveRole(role.id)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </Badge>
+                  ) : null;
+                })
               ) : (
                 <p className="text-sm text-muted-foreground">
                   No roles assigned
@@ -205,17 +196,18 @@ export default function EditUserForm({
             ) : domainRoles.length ? (
               <div className="flex flex-wrap gap-2">
                 {domainRoles
-                  .filter((role: Role) => !assignedRoleIds.includes(role.id))
-                  .map((role: Role) => (
+                  .filter((role) => !selectedRoleIds.includes(role.id))
+                  .map((role) => (
                     <Button
                       key={role.id}
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={(e) =>
-                        handleAssignRole(e, role.id.toString(), domain)
+                      onClick={() => handleAssignRole(role.id, domain)}
+                      disabled={
+                        selectedDomainRoleIds.length >=
+                        DOMAIN_ROLE_LIMITS[domain]
                       }
-                      disabled={currentRoleCount >= DOMAIN_ROLE_LIMITS[domain]}
                     >
                       {role.name}
                     </Button>
@@ -226,7 +218,7 @@ export default function EditUserForm({
                 No roles available
               </p>
             )}
-            {currentRoleCount >= DOMAIN_ROLE_LIMITS[domain] && (
+            {selectedDomainRoleIds.length >= DOMAIN_ROLE_LIMITS[domain] && (
               <p className="text-xs text-muted-foreground mt-2">
                 Maximum {DOMAIN_ROLE_LIMITS[domain]} {DOMAIN_LABELS[domain]}{" "}
                 role allowed
@@ -248,95 +240,69 @@ export default function EditUserForm({
           <Tabs defaultValue="details" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="details" className="text-sm">
-                User Details
+                <Mail className="h-4 w-4 mr-2" />
+                Details
               </TabsTrigger>
               <TabsTrigger value="roles" className="text-sm">
-                Roles & Permissions
+                <Users className="h-4 w-4 mr-2" />
+                Roles
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="details" className="space-y-6 mt-6">
-              {/* Personal Information */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base font-medium flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    Personal Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="firstName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>First Name</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="lastName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Last Name</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Account Information */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base font-medium flex items-center gap-2">
-                    <Mail className="h-4 w-4" />
-                    Account Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="email" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </CardContent>
-              </Card>
+            <TabsContent value="details" className="space-y-4 mt-4">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="firstName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>First Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="lastName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Last Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </TabsContent>
 
-            <TabsContent value="roles" className="space-y-6 mt-6">
+            <TabsContent value="roles" className="space-y-4 mt-4">
               {FORM_DOMAINS.map((domain) => renderRoleSection(domain))}
             </TabsContent>
           </Tabs>
         </div>
 
-        <div className="bg-background sticky h-[100px] flex items-center justify-end bottom-0 left-0 right-0 border-t">
-          <FormButtons
-            buttonText="Save"
-            isLoading={form.formState.isSubmitting}
-            isDirty={form.formState.isDirty}
-            onCancel={onCancel}
-          />
-        </div>
+        <FormButtons
+          buttonText="Save Changes"
+          onCancel={onCancel}
+          isLoading={updateUser.isPending}
+          isDirty={isFormDirty}
+        />
       </form>
     </Form>
   );

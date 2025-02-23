@@ -13,6 +13,7 @@ import {
   shouldRedirectForWebsiteBuilder,
   getDashboardRedirect,
   constructRedirectUrl,
+  getRedirectUrl,
 } from "./middleware.logic";
 
 /**
@@ -148,6 +149,16 @@ export default async function middleware(req: NextRequest) {
   if (!validateTenantAccess(req.nextUrl.pathname, tenantType)) {
     return NextResponse.redirect(
       new URL(constructRedirectUrl("/", subDomain, rootDomain, protocol))
+    );
+  }
+
+  // Check for root path redirects
+  const redirectPath = getRedirectUrl(req.nextUrl.pathname, tenantType);
+  if (redirectPath !== req.nextUrl.pathname) {
+    return NextResponse.redirect(
+      new URL(
+        constructRedirectUrl(redirectPath, subDomain, rootDomain, protocol)
+      )
     );
   }
 

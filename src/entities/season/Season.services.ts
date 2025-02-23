@@ -7,15 +7,7 @@ export const getSeasonsByTenantId = async (
 ) => {
   const { data, error } = await typedClient
     .from("seasons")
-    .select(
-      `
-      *,
-      membershipPrices:seasonMembershipPrices(
-        *,
-        membershipCategory:membershipCategories(*)
-      )
-    `
-    )
+    .select("*")
     .eq("tenantId", tenantId);
 
   if (error) {
@@ -32,7 +24,6 @@ export const updateSeasonById = async (
   data: Partial<SeasonForm>,
   seasonId: string
 ) => {
-  // Start a Supabase transaction
   const { data: season, error: seasonError } = await client
     .from("seasons")
     .update({
@@ -51,34 +42,6 @@ export const updateSeasonById = async (
     throw new Error(seasonError.message);
   }
 
-  // If there are membership prices to update
-  if (data.membershipPrices && data.membershipPrices.length > 0) {
-    // First, delete existing prices for this season
-    const { error: deleteError } = await client
-      .from("seasonMembershipPrices")
-      .delete()
-      .eq("seasonId", seasonId);
-
-    if (deleteError) {
-      throw new Error(deleteError.message);
-    }
-
-    // Then insert new prices
-    const { error: insertError } = await client
-      .from("seasonMembershipPrices")
-      .insert(
-        data.membershipPrices.map((price) => ({
-          seasonId: Number(seasonId),
-          membershipCategoryId: price.membershipCategoryId,
-          price: price.price,
-        }))
-      );
-
-    if (insertError) {
-      throw new Error(insertError.message);
-    }
-  }
-
   return season;
 };
 
@@ -87,42 +50,25 @@ export const addSeasonById = async (
   data: SeasonForm,
   tenantId: string
 ) => {
-  // First create the season
-  const { data: season, error } = await client
+  const { data: season, error: seasonError } = await client
     .from("seasons")
     .insert({
-      tenantId: Number(tenantId),
       startDate: data.startDate,
       endDate: data.endDate,
-      breaks: data.breaks || [],
+      breaks: data.breaks,
       customName: data.customName,
+      isActive: data.isActive,
       phases: data.phases,
+      tenantId,
     })
     .select()
     .single();
 
-  if (error) {
-    throw new Error(error.message);
+  if (seasonError) {
+    throw new Error(seasonError.message);
   }
 
-  // If there are membership prices, insert them
-  if (data.membershipPrices && data.membershipPrices.length > 0) {
-    const { error: pricesError } = await client
-      .from("seasonMembershipPrices")
-      .insert(
-        data.membershipPrices.map((price) => ({
-          seasonId: season.id,
-          membershipCategoryId: price.membershipCategoryId,
-          price: price.price,
-        }))
-      );
-
-    if (pricesError) {
-      throw new Error(pricesError.message);
-    }
-  }
-
-  return SeasonSchema.parse(season);
+  return season;
 };
 
 export const deleteSeasonById = async (

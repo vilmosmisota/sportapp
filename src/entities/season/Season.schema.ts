@@ -1,19 +1,9 @@
 import { z } from "zod";
-import { MembershipCategorySchema } from "../membership-category/MembershipCategory.schema";
 
 export const BreakSchema = z.object({
   from: z.string().transform((item) => new Date(item)),
   to: z.string().transform((item) => new Date(item)),
 });
-
-export const SeasonMembershipPriceSchema = z.object({
-  id: z.number(),
-  membershipCategoryId: z.number(),
-  price: z.number().positive(),
-  createdAt: z.string().transform((item) => new Date(item)),
-  membershipCategory: MembershipCategorySchema.omit({ tenantId: true }),
-});
-export type SeasonMembershipPrice = z.infer<typeof SeasonMembershipPriceSchema>;
 
 export const SeasonSchema = z.object({
   id: z.number(),
@@ -23,7 +13,6 @@ export const SeasonSchema = z.object({
   tenantId: z.number(),
   isActive: z.boolean().default(false),
   breaks: z.array(BreakSchema).default([]),
-  membershipPrices: z.array(SeasonMembershipPriceSchema).default([]),
   phases: z.array(z.string()).nullable().default(null),
 });
 
@@ -35,14 +24,6 @@ export const SeasonFormSchema = z.object({
   customName: z.string().optional(),
   isActive: z.boolean().default(false),
   breaks: z.array(BreakSchema).default([]),
-  membershipPrices: z
-    .array(
-      z.object({
-        membershipCategoryId: z.number(),
-        price: z.number().positive(),
-      })
-    )
-    .default([]),
   phases: z.array(z.string()).nullable().default(null),
 });
 

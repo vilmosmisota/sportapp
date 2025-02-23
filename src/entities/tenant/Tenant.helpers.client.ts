@@ -6,7 +6,8 @@ export const getTenantInfoFromClientCookie = (tenantSlug: string) => {
   const cookieKey = getTenantInfoCookieKey(tenantSlug);
   const tenantInfo = getCookie(cookieKey) ?? "";
 
-  const [tenantId, tenantTypeFromCookie] = tenantInfo.split(":");
+  const [tenantId, tenantTypeFromCookie, isPublicSitePublished] =
+    tenantInfo.split(":");
 
   if (!tenantId || !tenantTypeFromCookie) {
     return undefined;
@@ -17,5 +18,6 @@ export const getTenantInfoFromClientCookie = (tenantSlug: string) => {
   return {
     tenantType,
     tenantId,
+    isPublicSitePublished: isPublicSitePublished === "true",
   };
 };

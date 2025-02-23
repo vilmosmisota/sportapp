@@ -88,12 +88,14 @@ export const assignRoleToUser = async (
   client: TypedClient,
   userId: string,
   roleId: number,
-  tenantId: number
+  tenantId: number,
+  isPrimary: boolean = false
 ): Promise<void> => {
   const { error } = await client.from("userRoles").insert({
     userId,
     roleId,
     tenantId,
+    isPrimary,
   });
 
   if (error) throw new Error(error.message);
@@ -112,4 +114,83 @@ export const removeRoleFromUser = async (
     .match({ userId, roleId, tenantId });
 
   if (error) throw new Error(error.message);
+};
+
+// Update primary status of a user role
+export const updateUserRolePrimaryStatus = async (
+  client: TypedClient,
+  userId: string,
+  roleId: number,
+  tenantId: number,
+  isPrimary: boolean
+): Promise<void> => {
+  // If setting as primary, first unset any existing primary roles for this user in this tenant
+  if (isPrimary) {
+    await client
+      .from("userRoles")
+      .update({ isPrimary: false })
+      .match({ userId, tenantId, isPrimary: true });
+  }
+
+  // Update the specified role
+  const { error } = await client
+    .from("userRoles")
+    .update({ isPrimary })
+    .match({ userId, roleId, tenantId });
+
+  if (error) throw new Error(error.message);
+};
+
+// Toggle primary status of a user role
+export const toggleUserRolePrimary = async (
+  client: TypedClient,
+  roleId: number,
+  tenantId: number,
+  userId: string
+): Promise<void> => {
+  // Get current role status
+  const { data: currentRole, error: fetchError } = await client
+    .from("userRoles")
+    .select("isPrimary")
+    .match({ roleId, tenantId, userId })
+    .single();
+
+  if (fetchError) throw new Error(fetchError.message);
+
+  // If setting as primary, first unset any existing primary roles for this user in this tenant
+  if (!currentRole.isPrimary) {
+    await client
+      .from("userRoles")
+      .update({ isPrimary: false })
+      .match({ userId, tenantId, isPrimary: true });
+  }
+
+  // Toggle the primary status
+  const { error } = await client
+    .from("userRoles")
+    .update({ isPrimary: !currentRole.isPrimary })
+    .match({ roleId, tenantId, userId });
+
+  if (error) throw new Error(error.message);
+};
+
+// Get user roles for a specific user in a tenant
+export const getUserRolesByTenant = async (
+  client: TypedClient,
+  userId: string,
+  tenantId: number
+): Promise<UserRole[]> => {
+  const { data, error } = await client
+    .from("userRoles")
+    .select(
+      `
+      *,
+      role:roles(*)
+    `
+    )
+    .match({ userId, tenantId });
+
+  if (error) throw new Error(error.message);
+
+  return data.map((ur) => UserRoleSchema.parse(ur));
 };

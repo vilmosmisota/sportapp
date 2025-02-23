@@ -11,13 +11,13 @@ import { cn } from "@/libs/tailwind/utils";
 import { Badge } from "@/components/ui/badge";
 import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 import { getCurrencySymbol } from "@/entities/player-fee-category/PlayerFeeCategory.utils";
+import { PermissionDropdownMenu } from "@/components/auth/PermissionDropdownMenu";
+import { Permission } from "@/entities/role/Role.permissions";
 
 import {
-  DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useDeleteSeason } from "@/entities/season/Season.actions.client";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
@@ -51,9 +51,26 @@ export function SeasonItem({ season, tenantId, domain }: SeasonItemProps) {
     });
   };
 
+  const actions = [
+    {
+      label: "Edit",
+      onClick: () => setIsEditOpen(true),
+      icon: <SquarePen className="h-4 w-4 mr-2" />,
+      permission: Permission.MANAGE_SEASONS,
+    },
+    {
+      label: "Delete",
+      onClick: () => setIsDeleteOpen(true),
+      icon: <Trash2 className="h-4 w-4 mr-2" />,
+      permission: Permission.MANAGE_SEASONS,
+      variant: "destructive" as const,
+    },
+  ];
+
   const ActionMenu = () => (
-    <DropdownMenu modal={false}>
-      <DropdownMenuTrigger asChild>
+    <PermissionDropdownMenu
+      actions={actions}
+      trigger={
         <Button
           variant="ghost"
           className="h-8 w-8 p-0 hover:bg-background/20 data-[state=open]:bg-background/20"
@@ -62,33 +79,8 @@ export function SeasonItem({ season, tenantId, domain }: SeasonItemProps) {
           <MoreVertical className="h-4 w-4" />
           <span className="sr-only">Open menu</span>
         </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[160px] z-50">
-        <DropdownMenuItem className="group flex w-full items-center justify-between text-left p-0 text-sm font-medium text-neutral-700">
-          <button
-            onClick={() => {
-              setIsEditOpen(true);
-            }}
-            className="w-full justify-start items-center gap-2 flex rounded-md p-2 transition-all duration-75 hover:bg-gray-100"
-          >
-            <SquarePen className="h-4 w-4" />
-            Edit
-          </button>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem className="group flex w-full items-center justify-between text-left p-0 text-sm font-medium text-neutral-700">
-          <button
-            onClick={() => {
-              setIsDeleteOpen(true);
-            }}
-            className="w-full justify-start items-center gap-2 flex text-red-500 rounded-md p-2 transition-all duration-75 hover:bg-gray-100"
-          >
-            <Trash2 className="h-4 w-4" />
-            Delete
-          </button>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+      }
+    />
   );
 
   return (

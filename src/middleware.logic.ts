@@ -229,12 +229,26 @@ export function getRedirectUrl(
   pathname: string,
   tenantType: TenantType
 ): string {
-  if (tenantType === TenantType.ORGANIZATION) {
+  // Redirect organization root to dashboard
+  if (pathname === "/o") {
     return "/o/dashboard";
   }
-  if (tenantType === TenantType.LEAGUE) {
+
+  // Redirect league root to dashboard
+  if (pathname === "/l") {
     return "/l/dashboard";
   }
+
+  // Redirect parent root to dashboard
+  if (pathname === "/p") {
+    return "/p/dashboard";
+  }
+
+  // Redirect player root to dashboard
+  if (pathname === "/player") {
+    return "/player/dashboard";
+  }
+
   return pathname;
 }
 

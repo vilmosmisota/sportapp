@@ -16,6 +16,7 @@ export const UserRoleSchema = z.object({
   roleId: z.number(),
   tenantId: z.number(),
   userId: z.string().uuid(),
+  isPrimary: z.boolean().default(false),
   role: RoleSchema.optional(), // For populated role data
 });
 

@@ -1,15 +1,15 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
-
 import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 import { useSeasons } from "@/entities/season/Season.actions.client";
 import { PageHeader } from "@/components/ui/page-header";
 import { AddSeasonForm } from "./forms/AddSeasonForm";
 import { SeasonItem } from "./items/SeasonItem";
+import { PermissionButton } from "@/components/auth/PermissionButton";
+import { Permission } from "@/entities/role/Role.permissions";
 
 export default function SeasonsPage({
   params,
@@ -27,10 +27,13 @@ export default function SeasonsPage({
         title="Seasons"
         description="Manage your organization's seasons and their settings"
         actions={
-          <Button onClick={() => setIsAddOpen(true)}>
+          <PermissionButton
+            onClick={() => setIsAddOpen(true)}
+            permission={Permission.MANAGE_SEASONS}
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add Season
-          </Button>
+          </PermissionButton>
         }
       />
 
