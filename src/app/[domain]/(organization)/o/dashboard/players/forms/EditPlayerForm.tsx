@@ -144,8 +144,8 @@ export default function EditPlayerForm({
       teamIds: player.teamConnections?.map((tc) => tc.teamId) || [],
       parentUserIds:
         player.userConnections
-          ?.filter((uc) => uc.isParent)
-          .map((uc) => uc.userId) || [],
+          ?.filter((uc) => uc.isParent && uc.userId)
+          .map((uc) => uc.userId as string) || [],
       ownerUserId:
         player.userConnections?.find((uc) => uc.isOwner)?.userId || undefined,
     },

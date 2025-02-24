@@ -104,6 +104,10 @@ export default function AuthDashboard({ items, children }: AuthDashboardProps) {
         .toUpperCase()
     : "N/A";
 
+  // Get primary role or fall back to first role
+  const primaryRole = user.roles?.find((role) => role.isPrimary);
+  const displayRole = primaryRole || user.roles?.[0];
+
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}
@@ -135,9 +139,7 @@ export default function AuthDashboard({ items, children }: AuthDashboardProps) {
                         {user.email}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        {user.entity?.adminRole ||
-                          user.entity?.domainRole ||
-                          "Member"}
+                        {displayRole?.role?.name || "Member"}
                       </span>
                     </div>
                   </div>
@@ -159,9 +161,7 @@ export default function AuthDashboard({ items, children }: AuthDashboardProps) {
                               {user.email}
                             </p>
                             <p className="text-xs leading-none text-muted-foreground">
-                              {user.entity?.adminRole ||
-                                user.entity?.domainRole ||
-                                "Member"}
+                              {displayRole?.role?.name || "Member"}
                             </p>
                           </div>
                         </DropdownMenuLabel>
@@ -212,9 +212,7 @@ export default function AuthDashboard({ items, children }: AuthDashboardProps) {
                           {user.email}
                         </p>
                         <p className="text-xs leading-none text-muted-foreground">
-                          {user.entity?.adminRole ||
-                            user.entity?.domainRole ||
-                            "Member"}
+                          {displayRole?.role?.name || "Member"}
                         </p>
                       </div>
                     </DropdownMenuLabel>
@@ -402,9 +400,7 @@ export default function AuthDashboard({ items, children }: AuthDashboardProps) {
                       {user.email}
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {user.entity?.adminRole ||
-                        user.entity?.domainRole ||
-                        "Member"}
+                      {displayRole?.role?.name || "Member"}
                     </span>
                   </div>
                 </div>

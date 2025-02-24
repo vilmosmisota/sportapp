@@ -20,6 +20,7 @@ export const getCurrentUser = async (client: TypedClient) => {
         id,
         roleId,
         tenantId,
+        isPrimary,
         role:roles(
           id,
           name,
@@ -70,6 +71,7 @@ export const getUsersByTenantId = async (
         id,
         roleId,
         tenantId,
+        isPrimary,
         role:roles(
           id,
           name,
@@ -131,10 +133,12 @@ export const createUser = async (
 
   // Create user roles
   if (userData.roleIds?.length) {
-    const userRoles = userData.roleIds.map((roleId) => ({
+    // Make the first role primary by default
+    const userRoles = userData.roleIds.map((roleId, index) => ({
       userId: authData.user.id,
       roleId,
       tenantId: Number(tenantId),
+      isPrimary: index === 0, // First role is primary
     }));
 
     const { error: rolesError } = await client
@@ -154,6 +158,7 @@ export const createUser = async (
         id,
         roleId,
         tenantId,
+        isPrimary,
         role:roles(
           id,
           name,
@@ -208,7 +213,14 @@ export const updateUser = async (
 
   // Update user roles if provided
   if (userData.roleIds) {
-    // First delete existing roles for this tenant
+    // First get existing roles to preserve primary status
+    const { data: existingRoles } = await client
+      .from("userRoles")
+      .select("roleId, isPrimary")
+      .eq("userId", userId)
+      .eq("tenantId", Number(tenantId));
+
+    // Delete existing roles for this tenant
     const { error: deleteError } = await client
       .from("userRoles")
       .delete()
@@ -219,11 +231,21 @@ export const updateUser = async (
 
     // Then insert new roles if any
     if (userData.roleIds.length > 0) {
-      const userRoles = userData.roleIds.map((roleId) => ({
-        userId,
-        roleId,
-        tenantId: Number(tenantId),
-      }));
+      const userRoles = userData.roleIds.map((roleId) => {
+        // Check if this role was primary before
+        const existingRole = existingRoles?.find((r) => r.roleId === roleId);
+        return {
+          userId,
+          roleId,
+          tenantId: Number(tenantId),
+          isPrimary: existingRole?.isPrimary ?? false,
+        };
+      });
+
+      // Ensure at least one role is primary
+      if (!userRoles.some((role) => role.isPrimary)) {
+        userRoles[0].isPrimary = true;
+      }
 
       const { error: rolesError } = await client
         .from("userRoles")
@@ -243,6 +265,7 @@ export const updateUser = async (
         id,
         roleId,
         tenantId,
+        isPrimary,
         role:roles(
           id,
           name,

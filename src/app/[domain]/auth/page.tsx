@@ -24,6 +24,10 @@ export default function AuthPage() {
         .toUpperCase()
     : "N/A";
 
+  // Get primary role or fall back to first role
+  const primaryRole = user?.roles?.find((role) => role.isPrimary);
+  const displayRole = primaryRole || user?.roles?.[0];
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -47,9 +51,7 @@ export default function AuthPage() {
               <div className="space-y-1">
                 <p className="text-sm font-medium">{user?.email}</p>
                 <p className="text-xs text-muted-foreground">
-                  {user?.entity?.adminRole ||
-                    user?.entity?.domainRole ||
-                    "Member"}
+                  {displayRole?.role?.name || "Member"}
                 </p>
               </div>
             </div>

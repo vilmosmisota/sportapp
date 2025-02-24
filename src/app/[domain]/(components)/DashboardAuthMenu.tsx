@@ -52,6 +52,10 @@ export function DashboardAuthMenu({
     .join("")
     .toUpperCase();
 
+  // Get primary role or fall back to first role
+  const primaryRole = user.roles?.find((role) => role.isPrimary);
+  const displayRole = primaryRole || user.roles?.[0];
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -73,7 +77,7 @@ export function DashboardAuthMenu({
             <div className="flex flex-col items-start">
               <span className="text-sm font-medium">{user.email}</span>
               <span className="text-xs text-muted-foreground">
-                {user.roles[0]?.role?.name || "Member"}
+                {displayRole?.role?.name || "Member"}
               </span>
             </div>
           )}

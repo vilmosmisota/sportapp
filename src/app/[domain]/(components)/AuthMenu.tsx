@@ -47,6 +47,10 @@ export default function AuthMenu({
     return null;
   }
 
+  // Get primary role or fall back to first role
+  const primaryRole = user?.roles?.find((role) => role.isPrimary);
+  const displayRole = primaryRole || user?.roles?.[0];
+
   return user ? (
     <div className="flex items-center gap-3">
       <DropdownMenu>
@@ -61,7 +65,7 @@ export default function AuthMenu({
             <div className="flex flex-col space-y-1">
               <p className="text-sm font-medium leading-none">{user.email}</p>
               <p className="text-xs leading-none text-muted-foreground">
-                {user.roles[0]?.role?.name || "Member"}
+                {displayRole?.role?.name || "Member"}
               </p>
             </div>
           </DropdownMenuLabel>

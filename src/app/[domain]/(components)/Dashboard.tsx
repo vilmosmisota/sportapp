@@ -40,6 +40,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { DomainSwitcher } from "./DomainSwitcher";
+import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 
 const iconMap = {
   Globe,
@@ -77,9 +79,13 @@ export default function Dashboard({ items, children }: DashboardProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [openTooltip, setOpenTooltip] = useState<string | null>(null);
+
   const pathname = usePathname();
   const params = useParams();
   const domain = params.domain as string;
+
+  const { data: tenant, isLoading: isTenantLoading } =
+    useTenantByDomain(domain);
 
   const handleCollapse = () => {
     setIsCollapsed(!isCollapsed);
@@ -110,130 +116,23 @@ export default function Dashboard({ items, children }: DashboardProps) {
               )}
             >
               {isCollapsed ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-10 h-10 p-0 hover:bg-accent/50"
-                    >
-                      <MenuIcon className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-56">
-                    <DropdownMenuLabel className="font-normal">
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">
-                          {domain}
-                        </p>
-                        <p className="text-xs leading-none text-muted-foreground">
-                          Organization
-                        </p>
-                      </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link
-                        href="/"
-                        className={cn(
-                          "flex items-center",
-                          pathname === "/" && "bg-accent"
-                        )}
-                      >
-                        <Globe className="mr-2 h-4 w-4" />
-                        Public Site
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link
-                        href="/o/dashboard"
-                        className={cn(
-                          "flex items-center",
-                          pathname.includes("/o/dashboard") && "bg-accent"
-                        )}
-                      >
-                        <LayoutDashboard className="mr-2 h-4 w-4" />
-                        Dashboard
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link
-                        href="/o/dashboard/website"
-                        className={cn(
-                          "flex items-center",
-                          pathname === "/o/dashboard/website" && "bg-accent"
-                        )}
-                      >
-                        <Hammer className="mr-2 h-4 w-4" />
-                        Website Builder
-                      </Link>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <DomainSwitcher
+                  currentDomain={domain}
+                  tenantId={tenant?.id}
+                  collapsed
+                />
               ) : (
                 <>
-                  <DashboardBranding domain={domain} />
-                  <div className="border-l h-full  flex items-center">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="px-2 hover:bg-accent/50"
-                        >
-                          <MenuIcon className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-56">
-                        <DropdownMenuLabel className="font-normal">
-                          <div className="flex flex-col space-y-1">
-                            <p className="text-sm font-medium leading-none">
-                              {domain}
-                            </p>
-                            <p className="text-xs leading-none text-muted-foreground">
-                              Organization
-                            </p>
-                          </div>
-                        </DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem asChild>
-                          <Link
-                            href="/"
-                            className={cn(
-                              "flex items-center",
-                              pathname === "/" && "bg-accent"
-                            )}
-                          >
-                            <Globe className="mr-2 h-4 w-4" />
-                            Public Site
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link
-                            href="/o/dashboard"
-                            className={cn(
-                              "flex items-center",
-                              pathname.includes("/o/dashboard") && "bg-accent"
-                            )}
-                          >
-                            <LayoutDashboard className="mr-2 h-4 w-4" />
-                            Dashboard
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild disabled>
-                          <Link
-                            href="/o/dashboard/website"
-                            className={cn(
-                              "flex items-center",
-                              pathname === "/o/dashboard/website" && "bg-accent"
-                            )}
-                          >
-                            <Hammer className="mr-2 h-4 w-4" />
-                            Website Builder
-                          </Link>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                  <DashboardBranding
+                    domain={domain}
+                    tenant={tenant}
+                    isLoading={isTenantLoading}
+                  />
+                  <div className="border-l h-full flex items-center">
+                    <DomainSwitcher
+                      currentDomain={domain}
+                      tenantId={tenant?.id}
+                    />
                   </div>
                 </>
               )}
@@ -377,7 +276,11 @@ export default function Dashboard({ items, children }: DashboardProps) {
             <div className="flex h-full flex-col">
               {/* Mobile Header */}
               <div className="h-14 flex items-center justify-between px-4 border-b bg-muted/40">
-                <DashboardBranding domain={domain} />
+                <DashboardBranding
+                  domain={domain}
+                  tenant={tenant}
+                  isLoading={isTenantLoading}
+                />
                 <div className="border-l h-8 pl-2 ml-2 flex items-center">
                   <Button
                     variant="ghost"

@@ -79,7 +79,6 @@ export function SeasonEditForm({
       breaks: season.breaks,
       isActive: season.isActive,
       customName: season.customName,
-      membershipPrices: [],
       phases: season.phases,
     },
   });
@@ -110,7 +109,6 @@ export function SeasonEditForm({
       startDate: data.startDate,
       endDate: data.endDate,
       breaks: formattedBreaks,
-      membershipPrices: [],
       customName: data.customName,
       isActive: data.isActive,
       phases: phases,

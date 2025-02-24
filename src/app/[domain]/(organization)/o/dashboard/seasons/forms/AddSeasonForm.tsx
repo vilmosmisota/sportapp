@@ -73,7 +73,6 @@ export function AddSeasonForm({
       customName: data.customName,
       isActive: data.isActive,
       phases: phases.length > 0 ? phases : null,
-      membershipPrices: [],
     };
 
     addSeason.mutate(formData, {

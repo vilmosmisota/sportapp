@@ -35,9 +35,10 @@ export function PermissionButton({
   }
 
   // Check if user has system role
-  const hasSystemRole = user.roles.some(
-    (userRole) => userRole.role?.domain === RoleDomain.SYSTEM
-  );
+  const hasSystemRole =
+    user.roles?.some(
+      (userRole) => userRole.role?.domain === RoleDomain.SYSTEM
+    ) ?? false;
 
   console.log("Has system role:", hasSystemRole);
 
@@ -47,9 +48,10 @@ export function PermissionButton({
   }
 
   // Otherwise check specific permission
-  const hasPermission = user.roles.some((userRole) =>
-    userRole.role?.permissions.includes(permission)
-  );
+  const hasPermission =
+    user.roles?.some((userRole) =>
+      userRole.role?.permissions.includes(permission)
+    ) ?? false;
 
   console.log("Has permission:", hasPermission);
 

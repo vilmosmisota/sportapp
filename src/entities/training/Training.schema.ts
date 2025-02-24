@@ -10,7 +10,6 @@ export const TrainingSeasonConnectionSchema = z.object({
   tenantId: z.number(),
   season: SeasonSchema.omit({
     tenantId: true,
-    membershipPrices: true,
   }).nullable(),
 });
 

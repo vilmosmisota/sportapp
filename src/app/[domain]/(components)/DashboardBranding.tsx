@@ -1,6 +1,6 @@
 "use client";
 
-import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
+import { Tenant } from "@/entities/tenant/Tenant.schema";
 import {
   Avatar,
   AvatarFallback,
@@ -10,14 +10,16 @@ import {
 interface DashboardBrandingProps {
   domain: string;
   className?: string;
+  tenant?: Tenant;
+  isLoading?: boolean;
 }
 
 export function DashboardBranding({
   domain,
   className,
+  tenant,
+  isLoading = false,
 }: DashboardBrandingProps) {
-  const { data: tenant, isLoading } = useTenantByDomain(domain);
-
   return (
     <div className="flex items-center h-full">
       <div className="flex items-center gap-3">
