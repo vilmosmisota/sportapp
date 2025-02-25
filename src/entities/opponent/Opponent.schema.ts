@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { LocationSchema } from "../common/Location.schema";
 import { TeamSchema } from "../team/Team.schema";
+import { AppearanceSchema } from "../common/Appearance.schema";
 
 // Base opponent schema
 export const OpponentSchema = z.object({
@@ -8,6 +9,7 @@ export const OpponentSchema = z.object({
   name: z.string().nullable(),
   location: LocationSchema.nullable(),
   tenantId: z.number().nullable(),
+  appearance: AppearanceSchema.nullable().optional(),
   teams: z.array(TeamSchema).nullable(),
 });
 
@@ -16,6 +18,7 @@ export const OpponentFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
   location: LocationSchema.nullable(),
   tenantId: z.number(),
+  appearance: AppearanceSchema.nullable().optional(),
   teamIds: z.array(z.number()).nullable(),
   teams: z
     .array(
@@ -23,6 +26,7 @@ export const OpponentFormSchema = z.object({
         age: z.string().nullable(),
         gender: z.string().nullable(),
         skill: z.string().nullable(),
+        appearance: AppearanceSchema.nullable().optional(),
       })
     )
     .nullable(),

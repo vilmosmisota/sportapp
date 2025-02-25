@@ -16,6 +16,7 @@ import {
 import { getDisplayAgeGroup } from "@/entities/team/Team.schema";
 import { PermissionDropdownMenu } from "@/components/auth/PermissionDropdownMenu";
 import { Permission } from "@/entities/role/Role.permissions";
+import { TeamBadge } from "@/components/ui/team-badge";
 
 interface TeamsTableActionsProps {
   team: Team;
@@ -169,6 +170,14 @@ export const columns = ({
       </Badge>
     ),
     minSize: 100,
+  },
+  {
+    id: "display",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Display" />
+    ),
+    cell: ({ row }) => <TeamBadge team={row.original} size="sm" />,
+    minSize: 200,
   },
   {
     accessorKey: "coach",

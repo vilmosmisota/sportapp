@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { AppearanceSchema } from "../common/Appearance.schema";
 
 export enum TeamGender {
   Male = "Male",
@@ -65,6 +66,7 @@ export const TeamSchema = z.object({
   tenantId: z.number(),
   coachId: z.string().nullable().optional(),
   isOpponent: z.boolean().nullable().optional(),
+  appearance: AppearanceSchema.nullable().optional(),
   coach: z
     .object({
       id: z.string(),
@@ -87,6 +89,7 @@ export const createTeamFormSchema = (
     gender: z.nativeEnum(TeamGender),
     skill: z.enum([...skillLevels] as [string, ...string[]]),
     coachId: z.string().nullable().optional(),
+    appearance: AppearanceSchema.nullable().optional(),
   });
 
 export type TeamFormSchema = ReturnType<typeof createTeamFormSchema>;

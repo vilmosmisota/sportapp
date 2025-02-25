@@ -256,26 +256,52 @@ export function getDashboardRedirect(
   userRoles: UserRole[],
   tenantType: TenantType
 ): string {
+  // Check for system role first - they get organization/league dashboard
+  const hasSystemRole = userRoles.some(
+    (userRole) => userRole.role?.domain === RoleDomain.SYSTEM
+  );
+  if (hasSystemRole) {
+    return tenantType === TenantType.ORGANIZATION
+      ? "/o/dashboard"
+      : "/l/dashboard";
+  }
+
+  // Get primary role first
+  const primaryRole = userRoles.find((role) => role.isPrimary);
+  if (primaryRole?.role?.domain) {
+    switch (primaryRole.role.domain) {
+      case RoleDomain.MANAGEMENT:
+        return tenantType === TenantType.ORGANIZATION
+          ? "/o/dashboard"
+          : "/l/dashboard";
+      case RoleDomain.FAMILY:
+        return "/p/dashboard";
+      case RoleDomain.PLAYER:
+        return "/player/dashboard";
+    }
+  }
+
+  // If no primary role, check for management role based on tenant type
   const hasManagementRole = userRoles.some(
     (userRole) => userRole.role?.domain === RoleDomain.MANAGEMENT
   );
-  const hasFamilyRole = userRoles.some(
-    (userRole) => userRole.role?.domain === RoleDomain.FAMILY
-  );
-  const hasPlayerRole = userRoles.some(
-    (userRole) => userRole.role?.domain === RoleDomain.PLAYER
-  );
-
   if (hasManagementRole) {
     return tenantType === TenantType.ORGANIZATION
       ? "/o/dashboard"
       : "/l/dashboard";
   }
 
+  // Then check for other roles in priority order
+  const hasFamilyRole = userRoles.some(
+    (userRole) => userRole.role?.domain === RoleDomain.FAMILY
+  );
   if (hasFamilyRole) {
     return "/p/dashboard";
   }
 
+  const hasPlayerRole = userRoles.some(
+    (userRole) => userRole.role?.domain === RoleDomain.PLAYER
+  );
   if (hasPlayerRole) {
     return "/player/dashboard";
   }

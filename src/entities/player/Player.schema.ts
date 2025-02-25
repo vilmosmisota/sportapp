@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { UserSchema } from "../user/User.schema";
+import { AppearanceSchema } from "../common/Appearance.schema";
 
 export enum PlayerGender {
   Male = "Male",
@@ -22,6 +23,7 @@ const TeamSchema = z
     clubId: z.number().nullish(),
     coachId: z.string().uuid().nullish(),
     tenantId: z.number().nullish(),
+    appearance: AppearanceSchema.nullable().optional(),
   })
   .nullable();
 

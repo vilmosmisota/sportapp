@@ -37,6 +37,7 @@ import {
 import { MarsIcon, VenusIcon } from "@/components/icons/icons";
 import { PermissionDropdownMenu } from "@/components/auth/PermissionDropdownMenu";
 import { Permission } from "@/entities/role/Role.permissions";
+import { TeamBadge } from "@/components/ui/team-badge";
 
 const TeamsCell = ({ player }: { player: Player }) => {
   if (!player.teamConnections?.length) {
@@ -54,18 +55,7 @@ const TeamsCell = ({ player }: { player: Player }) => {
   return (
     <div className="flex flex-wrap gap-2 flex-col items-start justify-start">
       {teams.map((team) => (
-        <Badge key={team.id} variant="secondary" className="whitespace-nowrap">
-          {[
-            getDisplayAgeGroup(team.age),
-            getDisplayGender(team.gender, team.age),
-            team.skill,
-          ]
-            .filter(
-              (value): value is string =>
-                typeof value === "string" && value.length > 0
-            )
-            .join(" • ")}
-        </Badge>
+        <TeamBadge key={team.id} team={team} size="sm" />
       ))}
     </div>
   );
@@ -125,7 +115,8 @@ const PlayersTableActions = ({
 
   return (
     <div className="flex items-center justify-end gap-2">
-      <Button
+      {/* Temporarily hidden until player details page is ready */}
+      {/* <Button
         variant="ghost"
         size="icon"
         className="h-8 w-8 opacity-0 group-hover/row:opacity-100 transition-opacity"
@@ -135,7 +126,7 @@ const PlayersTableActions = ({
           <Eye className="h-4 w-4" />
           <span className="sr-only">View player</span>
         </Link>
-      </Button>
+      </Button> */}
 
       <PermissionDropdownMenu
         actions={[

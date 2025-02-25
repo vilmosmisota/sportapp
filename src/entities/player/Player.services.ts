@@ -6,7 +6,13 @@ const PLAYER_QUERY_WITH_RELATIONS = `
   *,
   teamConnections:playerTeamConnections!left(
     *,
-    team:teams(*)
+    team:teams(
+      id,
+      age,
+      gender,
+      skill,
+      appearance
+    )
   ),
   userConnections:playerUserConnections!left(
     *,
