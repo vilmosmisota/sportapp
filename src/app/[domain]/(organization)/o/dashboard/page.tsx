@@ -79,8 +79,8 @@ export default function OrgDashboardPage({
           Organization Dashboard
         </h1>
         <p className="text-muted-foreground text-sm">
-          Welcome to your organization's command center. Here's what you can
-          manage:
+          Welcome to your organization&apos;s command center. Here&apos;s what
+          you can manage:
         </p>
       </div>
 

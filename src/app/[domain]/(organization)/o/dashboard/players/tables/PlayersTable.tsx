@@ -60,23 +60,20 @@ export default function PlayersTable({
     [deletePlayer]
   );
 
-  const handleShowConnectedUsers = (player: Player) => {
+  const handleShowConnectedUsers = useCallback((player: Player) => {
     setSelectedPlayer(player);
     setIsConnectedUsersOpen(true);
-  };
+  }, []);
 
   const tableColumns = useMemo(
     () =>
       columns({
-        onEdit: (player) => {
-          setSelectedPlayer(player);
-          setIsEditOpen(true);
-        },
+        onEdit: handleEdit,
         onDelete: handleDelete,
         onShowConnectedUsers: handleShowConnectedUsers,
         domain,
       }),
-    [domain, handleDelete, handleShowConnectedUsers]
+    [domain, handleDelete, handleShowConnectedUsers, handleEdit]
   );
 
   const table = useReactTable({
