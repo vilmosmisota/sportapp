@@ -67,7 +67,7 @@ export const getUsersByTenantId = async (
       `
       *,
       tenantUsers!inner(id, tenantId, userId),
-      roles:userRoles(
+      roles:userRoles!inner(
         id,
         roleId,
         tenantId,
@@ -82,7 +82,8 @@ export const getUsersByTenantId = async (
       )
     `
     )
-    .eq("tenantUsers.tenantId", Number(tenantId));
+    .eq("tenantUsers.tenantId", Number(tenantId))
+    .eq("roles.tenantId", Number(tenantId));
 
   if (error) throw new Error(error.message);
 
