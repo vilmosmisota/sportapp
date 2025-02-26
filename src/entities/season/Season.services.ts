@@ -76,17 +76,7 @@ export const deleteSeasonById = async (
   seasonId: string,
   tenantId: string
 ) => {
-  // First delete related membership prices
-  const { error: pricesError } = await client
-    .from("seasonMembershipPrices")
-    .delete()
-    .eq("seasonId", seasonId);
-
-  if (pricesError) {
-    throw new Error(pricesError.message);
-  }
-
-  // Then delete the season
+  // Delete the season
   const { error } = await client
     .from("seasons")
     .delete()

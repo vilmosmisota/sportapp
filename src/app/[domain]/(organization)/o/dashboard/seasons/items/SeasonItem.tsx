@@ -103,7 +103,7 @@ export function SeasonItem({ season, tenantId, domain }: SeasonItemProps) {
         categoryId={season.id.toString()}
         isOpen={isDeleteOpen}
         setIsOpen={setIsDeleteOpen}
-        text="This will permanently delete this season and all associated membership prices. Are you sure you want to proceed?"
+        text="Are you sure you want to delete this season? This action cannot be undone."
         onConfirm={handleDelete}
       />
 

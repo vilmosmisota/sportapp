@@ -40,8 +40,6 @@ export function PermissionButton({
       (userRole) => userRole.role?.domain === RoleDomain.SYSTEM
     ) ?? false;
 
-  console.log("Has system role:", hasSystemRole);
-
   // If user has system role and we allow system roles, show button
   if (allowSystemRole && hasSystemRole) {
     return <Button {...props} />;
@@ -52,8 +50,6 @@ export function PermissionButton({
     user.roles?.some((userRole) =>
       userRole.role?.permissions.includes(permission)
     ) ?? false;
-
-  console.log("Has permission:", hasPermission);
 
   if (!hasPermission) {
     return fallback;
