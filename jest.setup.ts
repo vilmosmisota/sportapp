@@ -32,3 +32,14 @@ jest.mock("@supabase/supabase-js", () => ({
     })),
   })),
 }));
+
+// Mock ResizeObserver for Recharts
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+global.ResizeObserver = ResizeObserverMock;
+
+// Add any global test setup here

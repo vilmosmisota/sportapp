@@ -1,34 +1,76 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Trophy } from "lucide-react";
+import { Trophy, Clock, UserCheck, Info } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface PlayerStat {
   id: string;
   name: string;
   attendanceRate: number;
   accuracyRate: number;
+  performanceScore: number;
+  onTime: number;
+  late: number;
+  absent: number;
 }
 
 interface PerformanceOverviewProps {
   topPerformers: PlayerStat[];
   bottomPerformers: PlayerStat[];
+  "data-testid"?: string;
 }
 
 export function PerformanceOverview({
   topPerformers,
   bottomPerformers,
+  "data-testid": dataTestId,
 }: PerformanceOverviewProps) {
+  // Check if the top performer has better stats than the second performer
+  const hasTopPerformer =
+    topPerformers.length > 1 &&
+    topPerformers[0].performanceScore > topPerformers[1].performanceScore;
+
   return (
-    <div className="grid gap-6 md:grid-cols-2">
+    <div className="grid gap-6 md:grid-cols-2" data-testid={dataTestId}>
       <Card>
         <CardHeader className="pb-2">
           <div className="space-y-1">
-            <CardTitle className="text-base font-semibold">
-              Top Performers
-            </CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-base font-semibold">
+                Top Performers
+              </CardTitle>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Info className="h-4 w-4 text-muted-foreground" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[300px] p-4">
+                    <div className="space-y-2">
+                      <p className="font-semibold">
+                        Performance Score Formula:
+                      </p>
+                      <p className="text-sm">
+                        ((OnTime × 1.0) + (Late × 0.5) - (Absent × 0.25)) ÷
+                        Total Sessions × 100
+                      </p>
+                      <ul className="text-xs list-disc pl-5 space-y-1">
+                        <li>OnTime attendance gets full credit</li>
+                        <li>Late attendance gets half credit</li>
+                        <li>Absences apply a small penalty</li>
+                      </ul>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
             <p className="text-sm text-muted-foreground">
-              Players with highest attendance and accuracy
+              Players with highest attendance performance
             </p>
           </div>
         </CardHeader>
@@ -38,36 +80,30 @@ export function PerformanceOverview({
               <div key={player.id} className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    {index === 0 && (
+                    {index === 0 && hasTopPerformer && (
                       <Trophy className="h-4 w-4 text-yellow-500" />
                     )}
                     <span className="font-medium">{player.name}</span>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
                     <Badge
                       variant="secondary"
-                      className="bg-emerald-50 text-emerald-600"
+                      className="bg-blue-50 text-blue-600"
                     >
-                      {player.attendanceRate}% Attendance
+                      {player.performanceScore}% Performance
                     </Badge>
-                    <Badge
-                      variant="secondary"
-                      className="bg-sky-50 text-sky-600"
-                    >
-                      {player.accuracyRate}% Accuracy
-                    </Badge>
+                    <div className="flex items-center text-xs text-muted-foreground gap-1">
+                      <UserCheck className="h-3 w-3" />
+                      <span>{player.onTime}</span>
+                      <Clock className="h-3 w-3 ml-1" />
+                      <span>{player.late}</span>
+                    </div>
                   </div>
                 </div>
-                <div className="space-y-1">
-                  <Progress
-                    value={player.attendanceRate}
-                    className="h-2 bg-emerald-50 [&>div]:bg-emerald-500"
-                  />
-                  <Progress
-                    value={player.accuracyRate}
-                    className="h-2 bg-sky-50 [&>div]:bg-sky-500"
-                  />
-                </div>
+                <Progress
+                  value={player.performanceScore}
+                  className="h-2 bg-blue-50 [&>div]:bg-blue-500"
+                />
               </div>
             ))}
           </div>
@@ -77,9 +113,34 @@ export function PerformanceOverview({
       <Card>
         <CardHeader className="pb-2">
           <div className="space-y-1">
-            <CardTitle className="text-base font-semibold">
-              Areas for Improvement
-            </CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-base font-semibold">
+                Areas for Improvement
+              </CardTitle>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Info className="h-4 w-4 text-muted-foreground" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[300px] p-4">
+                    <div className="space-y-2">
+                      <p className="font-semibold">
+                        Performance Score Formula:
+                      </p>
+                      <p className="text-sm">
+                        ((OnTime × 1.0) + (Late × 0.5) - (Absent × 0.25)) ÷
+                        Total Sessions × 100
+                      </p>
+                      <ul className="text-xs list-disc pl-5 space-y-1">
+                        <li>OnTime attendance gets full credit</li>
+                        <li>Late attendance gets half credit</li>
+                        <li>Absences apply a small penalty</li>
+                      </ul>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
             <p className="text-sm text-muted-foreground">
               Players who need additional support
             </p>
@@ -91,31 +152,25 @@ export function PerformanceOverview({
               <div key={player.id} className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="font-medium">{player.name}</span>
-                  <div className="flex gap-2">
-                    <Badge
-                      variant="secondary"
-                      className="bg-rose-50 text-rose-600"
-                    >
-                      {player.attendanceRate}% Attendance
-                    </Badge>
+                  <div className="flex items-center gap-2">
                     <Badge
                       variant="secondary"
                       className="bg-orange-50 text-orange-600"
                     >
-                      {player.accuracyRate}% Accuracy
+                      {player.performanceScore}% Performance
                     </Badge>
+                    <div className="flex items-center text-xs text-muted-foreground gap-1">
+                      <UserCheck className="h-3 w-3" />
+                      <span>{player.onTime}</span>
+                      <Clock className="h-3 w-3 ml-1" />
+                      <span>{player.late}</span>
+                    </div>
                   </div>
                 </div>
-                <div className="space-y-1">
-                  <Progress
-                    value={player.attendanceRate}
-                    className="h-2 bg-rose-50 [&>div]:bg-rose-200"
-                  />
-                  <Progress
-                    value={player.accuracyRate}
-                    className="h-2 bg-orange-50 [&>div]:bg-orange-200"
-                  />
-                </div>
+                <Progress
+                  value={player.performanceScore}
+                  className="h-2 bg-orange-50 [&>div]:bg-orange-300"
+                />
               </div>
             ))}
           </div>

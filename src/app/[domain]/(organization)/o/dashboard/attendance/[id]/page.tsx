@@ -8,12 +8,17 @@ import {
 } from "@/entities/attendance/Attendance.query";
 import { usePlayersByTeamId } from "@/entities/team/Team.query";
 import {
+  Check,
+  Clock,
+  Info,
   Loader2,
   UserCheck,
   Key,
   RefreshCw,
   MoreVertical,
   Trash2,
+  Archive,
+  ClipboardEdit,
 } from "lucide-react";
 import { DataTable } from "@/components/ui/data-table/DataTable";
 import { DataTablePagination } from "@/components/ui/data-table/DataTablePagination";
@@ -34,7 +39,6 @@ import { useState, useMemo } from "react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Info } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -44,16 +48,26 @@ import { AttendanceStatus } from "@/entities/attendance/Attendance.schema";
 import {
   useCloseAttendanceSession,
   useDeleteAttendanceSession,
+  useUpdateAttendanceStatuses,
 } from "@/entities/attendance/Attendance.actions.client";
 import { toast } from "sonner";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
-import { Card } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { PageHeader } from "@/components/ui/page-header";
+import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type PlayerAttendanceRow = {
   id: number;
@@ -77,13 +91,14 @@ export default function AttendanceSessionPage() {
 
   const deleteSession = useDeleteAttendanceSession();
   const [isConfirmCloseOpen, setIsConfirmCloseOpen] = useState(false);
-  const [isConfirmReopenOpen, setIsConfirmReopenOpen] = useState(false);
   const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
+  const [isManageAttendanceOpen, setIsManageAttendanceOpen] = useState(false);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
   const queryClient = useQueryClient();
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { data: session, isLoading: isSessionLoading } =
     useAttendanceSessionById(params.id as string, tenant?.id?.toString() ?? "");
@@ -150,7 +165,7 @@ export default function AttendanceSessionPage() {
         const status = row.getValue("status") as AttendanceStatus | null;
 
         if (status === AttendanceStatus.ABSENT) {
-          return <Badge variant="secondary">Absent</Badge>;
+          return <Badge variant="outline">Absent</Badge>;
         }
 
         if (status === AttendanceStatus.LATE) {
@@ -158,7 +173,11 @@ export default function AttendanceSessionPage() {
         }
 
         if (status === AttendanceStatus.PRESENT) {
-          return <Badge variant="default">Present</Badge>;
+          return (
+            <Badge className="bg-emerald-500 hover:bg-emerald-600">
+              Present
+            </Badge>
+          );
         }
 
         // No record/status
@@ -191,23 +210,6 @@ export default function AttendanceSessionPage() {
     });
   }, [playersConnections, attendanceRecords]);
 
-  const records: PlayerAttendanceRow[] =
-    data?.map((record) => ({
-      id: record.id,
-      attendanceSessionId: record.attendanceSessionId,
-      playerId: record.playerId,
-      tenantId: record.tenantId,
-      checkInTime: record.checkInTime,
-      status: record.status,
-      player: record.player
-        ? {
-            firstName: record.player.firstName,
-            lastName: record.player.lastName,
-            pin: record.player.pin,
-          }
-        : null,
-    })) ?? [];
-
   const table = useReactTable({
     data,
     columns,
@@ -234,29 +236,44 @@ export default function AttendanceSessionPage() {
         .filter((record) => !record.status)
         .map((record) => record.id);
 
+      // Set loading state (closeSession.isPending will be true during the mutation)
       await closeSession.mutateAsync({
         sessionId: Number(params.id),
         tenantId: tenant?.id?.toString() ?? "",
         notCheckedInPlayerIds,
       });
-      // Manually refetch the session data to update UI
-      await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: [
-            queryKeys.attendance.detail(
-              tenant?.id?.toString() ?? "",
-              params.id as string
-            ),
-          ],
-        }),
-        queryClient.invalidateQueries({
-          queryKey: [queryKeys.attendance.records],
-        }),
-      ]);
-      toast.success("Session closed successfully");
+
+      // After successful closure and data aggregation, show success message
+      toast.success("Session closed and data aggregated successfully");
+
+      // Redirect to the attendance dashboard since this session no longer exists
+      router.push(`/o/dashboard/attendance`);
     } catch (error) {
       console.error("Error closing session:", error);
-      toast.error("Failed to close attendance session");
+
+      // Provide more specific error messages if possible
+      if (error instanceof Error) {
+        if (error.message.includes("Failed to aggregate")) {
+          toast.error("Failed to aggregate attendance data. Please try again.");
+        } else {
+          toast.error(`Error: ${error.message}`);
+        }
+      } else {
+        toast.error("Failed to close attendance session");
+      }
+
+      // Refresh the session data to ensure UI is in sync
+      queryClient.invalidateQueries({
+        queryKey: [
+          queryKeys.attendance.detail(
+            tenant?.id?.toString() ?? "",
+            params.id as string
+          ),
+        ],
+      });
+    } finally {
+      // Close the confirmation dialog
+      setIsConfirmCloseOpen(false);
     }
   };
 
@@ -273,6 +290,51 @@ export default function AttendanceSessionPage() {
     }
   };
 
+  // Add refresh function to invalidate queries and get fresh data
+  const refreshData = async () => {
+    try {
+      setIsRefreshing(true);
+
+      // Invalidate attendance session detail query
+      await queryClient.invalidateQueries({
+        queryKey: [
+          queryKeys.attendance.detail(
+            tenant?.id?.toString() ?? "",
+            params.id as string
+          ),
+        ],
+      });
+
+      // Invalidate attendance records query
+      await queryClient.invalidateQueries({
+        queryKey: [
+          queryKeys.attendance.records,
+          Number(params.id),
+          tenant?.id?.toString() ?? "",
+        ],
+      });
+
+      // Invalidate team players query if we have a team ID
+      if (session?.training?.teamId) {
+        await queryClient.invalidateQueries({
+          queryKey: [
+            queryKeys.team.players(
+              tenant?.id?.toString() ?? "",
+              session.training.teamId
+            ),
+          ],
+        });
+      }
+
+      toast.success("Data refreshed successfully");
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+      toast.error("Failed to refresh data");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-48">
@@ -281,177 +343,131 @@ export default function AttendanceSessionPage() {
     );
   }
 
-  // Calculate statistics
-  const totalPlayers = data.length;
-  const presentPlayers = data.filter(
-    (record) => record.status === AttendanceStatus.PRESENT
-  ).length;
-  const latePlayers = data.filter(
-    (record) => record.status === AttendanceStatus.LATE
-  ).length;
-  const absentPlayers = totalPlayers - presentPlayers - latePlayers;
-  const attendanceRate = ((presentPlayers + latePlayers) / totalPlayers) * 100;
-
-  // Get the first and last check-in times
-  const checkInTimes = data
-    .map((record) => record.checkInTime)
-    .filter((time): time is string => time !== null)
-    .map((time) => {
-      // If time is in HH:mm:ss format, parse it as today's date with that time
-      if (time.match(/^\d{2}:\d{2}:\d{2}$/)) {
-        const [hours, minutes] = time.split(":");
-        const date = new Date();
-        date.setHours(parseInt(hours, 10));
-        date.setMinutes(parseInt(minutes, 10));
-        date.setSeconds(0);
-        return date;
-      }
-      // Otherwise try to parse as date
-      return new Date(time);
-    })
-    .sort((a, b) => a.getTime() - b.getTime());
-
-  const firstCheckIn = checkInTimes[0];
-  const lastCheckIn = checkInTimes[checkInTimes.length - 1];
-
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">
-            Attendance Session
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {session?.training?.date &&
-              format(new Date(session.training.date), "MMMM d, yyyy")}
-          </p>
-        </div>
-        <div className="flex gap-2 items-center">
-          {!session?.isActive ? (
-            <>
+      <PageHeader
+        title="Attendance Session"
+        description="View and manage attendance records"
+        backButton={{
+          href: "/o/dashboard/attendance",
+          label: "Back to Attendance",
+        }}
+        actions={
+          <div className="flex gap-2 items-center">
+            {!session?.isActive ? (
               <Badge
                 variant="secondary"
                 className="h-10 px-4 flex items-center text-sm"
               >
                 Session Closed
               </Badge>
-            </>
-          ) : (
+            ) : (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    router.push(`/o/dashboard/attendance/${params.id}/check-in`)
+                  }
+                >
+                  <UserCheck className="h-4 w-4 mr-2" />
+                  Check In
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    router.push(`/o/dashboard/attendance/${params.id}/add-pin`)
+                  }
+                >
+                  <Key className="h-4 w-4 mr-2" />
+                  Create PIN
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => setIsConfirmCloseOpen(true)}
+                  disabled={closeSession.isPending}
+                >
+                  {closeSession.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Closing...
+                    </>
+                  ) : (
+                    <>
+                      <Archive className="mr-2 h-4 w-4" />
+                      Close
+                    </>
+                  )}
+                </Button>
+                <DropdownMenu modal={false}>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onClick={() => setIsConfirmDeleteOpen(true)}
+                      className="text-destructive"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete Session
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            )}
+          </div>
+        }
+      />
+
+      <div className="space-y-1 mb-4">
+        <p className="text-sm text-muted-foreground">
+          {session?.training?.date &&
+            format(new Date(session.training.date), "MMMM d, yyyy")}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          {session?.training?.startTime && session?.training?.endTime && (
             <>
-              <Button
-                variant="outline"
-                onClick={() =>
-                  router.push(`/o/dashboard/attendance/${params.id}/check-in`)
-                }
-              >
-                <UserCheck className="h-4 w-4 mr-2" />
-                Check In
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() =>
-                  router.push(`/o/dashboard/attendance/${params.id}/add-pin`)
-                }
-              >
-                <Key className="h-4 w-4 mr-2" />
-                Create PIN
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={() => setIsConfirmCloseOpen(true)}
-                disabled={closeSession.isPending}
-              >
-                {closeSession.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Closing...
-                  </>
-                ) : (
-                  "Close Session"
-                )}
-              </Button>
+              {format(
+                new Date(`2000-01-01T${session.training.startTime}`),
+                "h:mm a"
+              )}{" "}
+              -{" "}
+              {format(
+                new Date(`2000-01-01T${session.training.endTime}`),
+                "h:mm a"
+              )}
             </>
           )}
-          <DropdownMenu modal={false}>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => setIsConfirmDeleteOpen(true)}
-                className="text-destructive"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete Session
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        </p>
       </div>
 
-      {!session?.isActive && (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
-          <Card className="p-4">
-            <div className="flex flex-col">
-              <span className="text-sm font-medium text-muted-foreground">
-                Attendance Rate
-              </span>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold">
-                  {attendanceRate.toFixed(0)}%
-                </span>
-                <span className="text-sm text-muted-foreground">
-                  ({presentPlayers + latePlayers}/{totalPlayers})
-                </span>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-4">
-            <div className="flex flex-col">
-              <span className="text-sm font-medium text-muted-foreground">
-                Attendance Breakdown
-              </span>
-              <div className="flex items-center gap-3 mt-2">
-                <div className="flex items-center gap-1.5">
-                  <Badge variant="default" className="h-2 w-2 p-0" />
-                  <span className="text-sm">{presentPlayers} Present</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Badge variant="destructive" className="h-2 w-2 p-0" />
-                  <span className="text-sm">{latePlayers} Late</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Badge variant="secondary" className="h-2 w-2 p-0" />
-                  <span className="text-sm">{absentPlayers} Absent</span>
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-4">
-            <div className="flex flex-col">
-              <span className="text-sm font-medium text-muted-foreground">
-                First Check-in
-              </span>
-              <span className="text-2xl font-bold">
-                {firstCheckIn ? format(firstCheckIn, "HH:mm") : "-"}
-              </span>
-            </div>
-          </Card>
-
-          <Card className="p-4">
-            <div className="flex flex-col">
-              <span className="text-sm font-medium text-muted-foreground">
-                Last Check-in
-              </span>
-              <span className="text-2xl font-bold">
-                {lastCheckIn ? format(lastCheckIn, "HH:mm") : "-"}
-              </span>
-            </div>
-          </Card>
+      {/* Table toolbar with secondary actions */}
+      {session?.isActive && (
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsManageAttendanceOpen(true)}
+              className="gap-2"
+            >
+              <ClipboardEdit className="h-4 w-4" />
+              Manage Attendance
+            </Button>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={refreshData}
+            disabled={isRefreshing}
+            className="gap-2"
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
+            />
+            {isRefreshing ? "Refreshing..." : "Refresh"}
+          </Button>
         </div>
       )}
 
@@ -462,8 +478,8 @@ export default function AttendanceSessionPage() {
         setIsOpen={setIsConfirmCloseOpen}
         onConfirm={() => handleCloseSession()}
         categoryId={params.id as string}
-        text="This will close the attendance session. You won't be able to record any more check-ins after this. Are you sure?"
-        buttonText="Close Session"
+        text="This will close the attendance session and aggregate the data. The original attendance records will be summarized and then deleted to save storage space. You won't be able to access individual check-ins after this process. Are you sure you want to proceed?"
+        buttonText="Close & Aggregate Session"
       />
 
       <ConfirmDeleteDialog
@@ -474,6 +490,197 @@ export default function AttendanceSessionPage() {
         text="This will permanently delete the attendance session and all associated records. This action cannot be undone. Are you sure?"
         buttonText="Delete Session"
       />
+
+      {/* Manage Attendance Form */}
+      <ResponsiveSheet
+        isOpen={isManageAttendanceOpen}
+        setIsOpen={setIsManageAttendanceOpen}
+        title="Manage Attendance"
+      >
+        <ManageAttendanceForm
+          attendanceRecords={data}
+          session={session}
+          tenantId={tenant?.id?.toString() ?? ""}
+          sessionId={Number(params.id)}
+          setIsOpen={setIsManageAttendanceOpen}
+        />
+      </ResponsiveSheet>
     </div>
+  );
+}
+
+// Add the ManageAttendanceForm component
+interface ManageAttendanceFormProps {
+  attendanceRecords: PlayerAttendanceRow[];
+  session: any;
+  tenantId: string;
+  sessionId: number;
+  setIsOpen: (isOpen: boolean) => void;
+}
+
+function ManageAttendanceForm({
+  attendanceRecords,
+  session,
+  tenantId,
+  sessionId,
+  setIsOpen,
+}: ManageAttendanceFormProps) {
+  const [playerAttendance, setPlayerAttendance] = useState<
+    Record<number, AttendanceStatus | null>
+  >(
+    attendanceRecords.reduce((acc, record) => {
+      acc[record.id] = record.status;
+      return acc;
+    }, {} as Record<number, AttendanceStatus | null>)
+  );
+  const queryClient = useQueryClient();
+  const updateAttendanceStatuses = useUpdateAttendanceStatuses(
+    sessionId,
+    tenantId
+  );
+
+  // Special handling for "not checked in" status
+  const NOT_CHECKED_IN = "not_checked_in";
+
+  const handleStatusChange = (playerId: number, value: string) => {
+    // If the special "not checked in" value is selected, set status to null
+    // Otherwise, use the value as an attendance status
+    const status =
+      value === NOT_CHECKED_IN ? null : (value as AttendanceStatus);
+
+    setPlayerAttendance((prev) => ({
+      ...prev,
+      [playerId]: status,
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      // Convert the playerAttendance record to an array of records to update
+      const recordsToUpdate = Object.entries(playerAttendance).map(
+        ([playerIdStr, status]) => ({
+          playerId: Number(playerIdStr),
+          status,
+        })
+      );
+
+      // Call the mutation
+      await updateAttendanceStatuses.mutateAsync(recordsToUpdate);
+
+      toast.success("Attendance records updated successfully");
+      setIsOpen(false);
+    } catch (error) {
+      console.error("Error updating attendance records:", error);
+      toast.error("Failed to update attendance records");
+    }
+  };
+
+  // Function to get display value for select
+  const getSelectValue = (status: AttendanceStatus | null): string => {
+    return status === null ? NOT_CHECKED_IN : status;
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-6">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-medium flex items-center gap-2">
+              <UserCheck className="h-4 w-4" />
+              Attendance Status
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Update attendance status for players who forgot to check in or
+              need adjustment.
+            </p>
+            <div className="space-y-4">
+              {attendanceRecords.map((record) => (
+                <div
+                  key={record.id}
+                  className="flex items-center justify-between border-b pb-2"
+                >
+                  <div>
+                    <p className="font-medium">
+                      {record.player?.firstName} {record.player?.lastName}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {record.status && (
+                        <span className="flex items-center gap-2">
+                          Current status:&nbsp;
+                          {record.status === AttendanceStatus.PRESENT && (
+                            <Badge className="bg-emerald-500 hover:bg-emerald-600">
+                              Present
+                            </Badge>
+                          )}
+                          {record.status === AttendanceStatus.LATE && (
+                            <Badge variant="destructive">Late</Badge>
+                          )}
+                          {record.status === AttendanceStatus.ABSENT && (
+                            <Badge variant="outline">Absent</Badge>
+                          )}
+                        </span>
+                      )}
+                      {!record.status && "Not checked in"}
+                    </p>
+                  </div>
+                  <div>
+                    <Select
+                      value={getSelectValue(playerAttendance[record.id])}
+                      onValueChange={(value) =>
+                        handleStatusChange(record.id, value)
+                      }
+                    >
+                      <SelectTrigger className="w-[140px]">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={NOT_CHECKED_IN}>
+                          Not checked in
+                        </SelectItem>
+                        <SelectItem value={AttendanceStatus.PRESENT}>
+                          Present
+                        </SelectItem>
+                        <SelectItem value={AttendanceStatus.LATE}>
+                          Late
+                        </SelectItem>
+                        <SelectItem value={AttendanceStatus.ABSENT}>
+                          Absent
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="bg-background sticky h-[100px] flex items-center justify-end bottom-0 left-0 right-0 border-t">
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => setIsOpen(false)}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" disabled={updateAttendanceStatuses.isPending}>
+            {updateAttendanceStatuses.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              "Save Changes"
+            )}
+          </Button>
+        </div>
+      </div>
+    </form>
   );
 }

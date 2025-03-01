@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useMemo, useState } from "react";
 import DataTableColumnHeader from "@/components/ui/data-table/DataTableColumnHeader";
+import { calculateAccuracyRate } from "@/entities/attendance/Attendance.utils";
 
 interface AttendanceTableProps {
   players: Array<{
@@ -31,6 +32,7 @@ interface AttendanceTableProps {
   teamId: number;
   seasonId: number;
   tenantId: string;
+  "data-testid"?: string;
 }
 
 type PlayerStats = {
@@ -50,6 +52,7 @@ export function AttendanceTable({
   teamId,
   seasonId,
   tenantId,
+  "data-testid": dataTestId,
 }: AttendanceTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
@@ -64,23 +67,27 @@ export function AttendanceTable({
 
         if (!stats) return null;
 
-        const totalSessions =
-          stats.totalAttendance + stats.totalLate + stats.totalAbsent;
+        // Calculate total sessions where the player was actually present
+        const totalAttendedSessions = stats.totalOnTime + stats.totalLate;
 
-        if (totalSessions === 0) return null;
+        // For attendance and accuracy calculations, we still need the total including absences
+        const totalPossibleSessions = totalAttendedSessions + stats.totalAbsent;
+
+        if (totalPossibleSessions === 0) return null;
 
         const attendanceRate = Math.round(
-          ((stats.totalAttendance + stats.totalLate) / totalSessions) * 100
+          (totalAttendedSessions / totalPossibleSessions) * 100
         );
-        const accuracyRate = Math.round(
-          (stats.totalAttendance / totalSessions) * 100
+        const accuracyRate = calculateAccuracyRate(
+          stats.totalOnTime,
+          stats.totalLate
         );
 
         return {
           id: player.id,
           name: `${player.firstName} ${player.lastName}`,
-          totalSessions,
-          present: stats.totalAttendance,
+          totalSessions: totalAttendedSessions, // Only count sessions they attended
+          present: stats.totalOnTime,
           late: stats.totalLate,
           absent: stats.totalAbsent,
           attendanceRate,
@@ -101,13 +108,13 @@ export function AttendanceTable({
       {
         accessorKey: "totalSessions",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Total Sessions" />
+          <DataTableColumnHeader column={column} title="Sessions Attended" />
         ),
       },
       {
         accessorKey: "present",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Present" />
+          <DataTableColumnHeader column={column} title="On Time" />
         ),
       },
       {
@@ -174,9 +181,9 @@ export function AttendanceTable({
   });
 
   return (
-    <Card>
+    <Card data-testid={dataTestId}>
       <CardHeader>
-        <CardTitle>Player Attendance Details</CardTitle>
+        <CardTitle>Player Attendance Records</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="rounded-md border">

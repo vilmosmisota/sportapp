@@ -140,11 +140,6 @@ export default async function middleware(req: NextRequest) {
     );
   }
 
-  console.log("tenantType", tenantType);
-  console.log("tenantId", tenantId);
-  console.log("isPublicSitePublished", isPublicSitePublished);
-  console.log("req.nextUrl.pathname", req.nextUrl.pathname);
-
   // Tenant validation
   if (!tenantType || !tenantId) {
     return NextResponse.redirect(new URL(`${protocol}://${ROOT_DOMAIN}/`));

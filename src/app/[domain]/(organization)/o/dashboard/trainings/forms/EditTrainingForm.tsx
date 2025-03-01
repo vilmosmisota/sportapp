@@ -30,6 +30,7 @@ import { format } from "date-fns";
 import { GroupedTraining } from "@/entities/training/Training.schema";
 import { useTrainingLocations } from "@/entities/tenant/hooks/useTrainingLocations";
 import { useUpdateTrainingPattern } from "@/entities/training/Training.actions.client";
+import { formatTeamName } from "../utils";
 
 const formSchema = z.object({
   startTime: z.string().min(1, "Start time is required"),
@@ -210,7 +211,7 @@ export default function EditTrainingForm({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm">{training.teamName}</p>
+                <p className="text-sm">{formatTeamName(training.teamName)}</p>
               </CardContent>
             </Card>
           )}

@@ -27,6 +27,8 @@ import { Player } from "@/entities/player/Player.schema";
 import { toast } from "sonner";
 import { calculateAttendanceStatus } from "@/entities/attendance/Attendance.services";
 
+import { BackConfirmationDialog } from "../../components/BackConfirmationDialog";
+
 function NumericKeypad({
   onKeyPress,
   onDelete,
@@ -173,6 +175,7 @@ export default function CheckInPage() {
   const [isPinValid, setIsPinValid] = useState(true);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [matchedPlayer, setMatchedPlayer] = useState<Player | null>(null);
+  const [showBackConfirmation, setShowBackConfirmation] = useState(false);
 
   const { data: session, isLoading: isSessionLoading } =
     useAttendanceSessionById(params.id as string, tenant?.id?.toString() ?? "");
@@ -246,7 +249,9 @@ export default function CheckInPage() {
 
     // Check if already checked in
     if (isPlayerCheckedIn(player.id)) {
-      setError("You have already checked in");
+      toast.info(
+        `${player.firstName} ${player.lastName} is already checked in for this session`
+      );
       setPin("");
       return;
     }
@@ -278,18 +283,45 @@ export default function CheckInPage() {
         tenant.lateThresholdMinutes
       );
 
-      await createAttendanceRecord.mutateAsync({
+      const result = await createAttendanceRecord.mutateAsync({
         playerId: matchedPlayer.id,
         status,
       });
 
-      toast.success("Successfully checked in!");
+      toast.success(
+        `${matchedPlayer.firstName} ${matchedPlayer.lastName} checked in successfully!`
+      );
       setShowConfirmation(false);
       setPin("");
       setMatchedPlayer(null);
     } catch (error) {
-      toast.error("Failed to check in");
+      console.error("Check-in error:", error);
+
+      // Handle specific error cases
+      if (error instanceof Error) {
+        if (error.name === "DuplicateCheckInError") {
+          toast.info(
+            `${matchedPlayer.firstName} ${matchedPlayer.lastName} is already checked in for this session`
+          );
+        } else {
+          toast.error(`Check-in failed: ${error.message}`);
+        }
+      } else {
+        toast.error("Failed to check in. Please try again.");
+      }
+
+      setShowConfirmation(false);
+      setPin("");
+      setMatchedPlayer(null);
     }
+  };
+
+  const handleBackNavigation = () => {
+    setShowBackConfirmation(true);
+  };
+
+  const handleConfirmedBack = () => {
+    router.push(`/o/dashboard/attendance/${params.id}`);
   };
 
   if (isLoading) {
@@ -312,14 +344,10 @@ export default function CheckInPage() {
   }
 
   return (
-    <div className="w-screen h-screen bg-background absolute top-0 left-0 flex flex-col">
+    <div className="w-screen h-screen bg-background absolute top-0 left-0 flex flex-col z-50">
       {/* Navigation */}
       <div className="flex justify-between items-center border-b border-border px-4 h-14 shrink-0">
-        <Button
-          variant="ghost"
-          className="p-2"
-          onClick={() => router.push(`/o/dashboard/attendance/${params.id}`)}
-        >
+        <Button variant="ghost" className="p-2" onClick={handleBackNavigation}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
 
@@ -408,6 +436,12 @@ export default function CheckInPage() {
           </DialogContent>
         </Dialog>
       </div>
+
+      <BackConfirmationDialog
+        isOpen={showBackConfirmation}
+        onOpenChange={setShowBackConfirmation}
+        onConfirm={handleConfirmedBack}
+      />
     </div>
   );
 }

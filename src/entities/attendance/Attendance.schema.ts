@@ -44,6 +44,7 @@ export const dayOfWeekStatsSchema = z.object({
   dayOfWeek: z.string(),
   attendanceRate: z.number(),
   averagePlayersPresent: z.number(),
+  accuracy: z.number().optional(),
 });
 
 export const recentTrendSchema = z.object({
@@ -67,7 +68,7 @@ export const playerAttendanceStatsSchema = z.object({
   playerId: z.number(),
   firstName: z.string(),
   lastName: z.string(),
-  totalAttendance: z.number(),
+  totalOnTime: z.number(),
   totalLate: z.number(),
   totalAbsent: z.number(),
   totalSessions: z.number(),
@@ -115,7 +116,7 @@ export const attendanceSessionAggregateSchema = z.object({
   tenantId: z.number(),
   seasonId: z.number(),
   totalSessions: z.number(),
-  totalPresent: z.number(),
+  totalOnTime: z.number(),
   totalLate: z.number(),
   totalAbsent: z.number(),
   averageAttendanceRate: z.number(),
@@ -126,7 +127,7 @@ export const attendanceSessionAggregateSchema = z.object({
       date: z.string(),
       startTime: z.string(),
       endTime: z.string(),
-      presentCount: z.number(),
+      onTimeCount: z.number(),
       lateCount: z.number(),
       absentCount: z.number(),
     })
@@ -140,7 +141,7 @@ export const attendanceRecordAggregateSchema = z.object({
   teamId: z.number(),
   tenantId: z.number(),
   seasonId: z.number(),
-  totalAttendance: z.number(),
+  totalOnTime: z.number(),
   totalLate: z.number(),
   totalAbsent: z.number(),
   attendanceRate: z.number(),

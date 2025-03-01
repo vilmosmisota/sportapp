@@ -9,6 +9,7 @@ import {
   getPlayerAttendanceAggregates,
   getAllTeamPlayerAttendanceAggregates,
   closeAttendanceSession,
+  updateOrCreateAttendanceRecords,
 } from "./Attendance.services";
 import { queryKeys } from "@/cacheKeys/cacheKeys";
 import { useRouter } from "next/navigation";
@@ -122,24 +123,30 @@ export const useCloseAttendanceSession = () => {
       tenantId: string;
       notCheckedInPlayerIds: number[];
     }) => {
-      await closeAttendanceSession(
+      const result = await closeAttendanceSession(
         client,
         sessionId,
         tenantId,
         notCheckedInPlayerIds
       );
+
+      // Return the result to be used in onSuccess/onError callbacks
+      return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.attendance.all,
-      });
+      // Since the records are now deleted, we need to invalidate different queries
+
+      // Invalidate active sessions
       queryClient.invalidateQueries({
         queryKey: queryKeys.attendance.activeSessions,
       });
+
+      // Invalidate all attendance data
       queryClient.invalidateQueries({
-        queryKey: [queryKeys.attendance.records],
+        queryKey: queryKeys.attendance.all,
       });
-      // Add invalidation for aggregate stats
+
+      // Invalidate aggregate stats which now contain the summarized data
       queryClient.invalidateQueries({
         queryKey: [queryKeys.attendance.teamStats],
       });
@@ -149,6 +156,15 @@ export const useCloseAttendanceSession = () => {
       queryClient.invalidateQueries({
         queryKey: [queryKeys.attendance.aggregates],
       });
+
+      // We don't need to invalidate records for this session since they're deleted
+      // But we should invalidate the session itself
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.attendance.sessions],
+      });
+    },
+    onError: (error) => {
+      console.error("Error in closeAttendanceSession:", error);
     },
   });
 };
@@ -226,11 +242,41 @@ export const useAllTeamPlayerAttendanceAggregates = (
   tenantId: string
 ) => {
   const client = useSupabase();
-  const queryClient = useQueryClient();
 
   return useQuery({
     queryKey: [queryKeys.attendance.aggregates, "team", teamId, seasonId],
     queryFn: () =>
       getAllTeamPlayerAttendanceAggregates(client, teamId, seasonId, tenantId),
+  });
+};
+
+export const useUpdateAttendanceStatuses = (
+  sessionId: number,
+  tenantId: string
+) => {
+  const client = useSupabase();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (
+      records: { playerId: number; status: AttendanceStatus | null }[]
+    ) => {
+      return updateOrCreateAttendanceRecords(
+        client,
+        sessionId,
+        records,
+        tenantId
+      );
+    },
+    onSuccess: () => {
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.attendance.detail(tenantId, sessionId.toString())],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.attendance.records, sessionId, tenantId],
+      });
+    },
   });
 };

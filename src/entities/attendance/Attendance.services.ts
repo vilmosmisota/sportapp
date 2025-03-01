@@ -220,7 +220,38 @@ export const createAttendanceRecord = async (
   tenantId: string
 ) => {
   try {
-    const { data: newRecord, error } = await client
+    // First verify that the player belongs to this tenant
+    const { data: playerData, error: playerError } = await client
+      .from("players")
+      .select("id")
+      .eq("id", data.playerId)
+      .eq("tenantId", Number(tenantId))
+      .single();
+
+    if (playerError || !playerData) {
+      throw new Error("Invalid player or unauthorized access");
+    }
+
+    // Then check if record already exists
+    const { data: existingRecord } = await client
+      .from("attendanceRecords")
+      .select(ATTENDANCE_RECORD_QUERY_WITH_RELATIONS)
+      .eq("attendanceSessionId", data.attendanceSessionId)
+      .eq("playerId", data.playerId)
+      .eq("tenantId", Number(tenantId))
+      .maybeSingle();
+
+    if (existingRecord) {
+      // Return the existing record but with a specific error
+      const error = new Error("Player is already checked in for this session");
+      error.name = "DuplicateCheckInError";
+      // @ts-ignore - adding custom property
+      error.record = existingRecord;
+      throw error;
+    }
+
+    // Create new record
+    const { data: newRecord, error: insertError } = await client
       .from("attendanceRecords")
       .insert({
         ...data,
@@ -235,7 +266,31 @@ export const createAttendanceRecord = async (
       .select(ATTENDANCE_RECORD_QUERY_WITH_RELATIONS)
       .single();
 
-    if (error) throw error;
+    if (insertError) {
+      // If we get a unique constraint violation, it means there was a race condition
+      if (insertError.code === "23505") {
+        const { data: racedRecord } = await client
+          .from("attendanceRecords")
+          .select(ATTENDANCE_RECORD_QUERY_WITH_RELATIONS)
+          .eq("attendanceSessionId", data.attendanceSessionId)
+          .eq("playerId", data.playerId)
+          .eq("tenantId", Number(tenantId))
+          .maybeSingle();
+
+        if (racedRecord) {
+          // Return the existing record but with a specific error
+          const error = new Error(
+            "Player is already checked in for this session"
+          );
+          error.name = "DuplicateCheckInError";
+          // @ts-ignore - adding custom property
+          error.record = racedRecord;
+          throw error;
+        }
+      }
+      throw insertError;
+    }
+
     return attendanceRecordSchema.parse(newRecord);
   } catch (error) {
     console.error("Error in createAttendanceRecord:", error);
@@ -262,6 +317,102 @@ export const updateAttendanceRecord = async (
     return attendanceRecordSchema.parse(updatedRecord);
   } catch (error) {
     console.error("Error in updateAttendanceRecord:", error);
+    throw error;
+  }
+};
+
+// New function to update or create multiple attendance records in batch
+export const updateOrCreateAttendanceRecords = async (
+  client: TypedClient,
+  sessionId: number,
+  records: { playerId: number; status: AttendanceStatus | null }[],
+  tenantId: string
+) => {
+  try {
+    // Get existing records for this session
+    const { data: existingRecords, error: fetchError } = await client
+      .from("attendanceRecords")
+      .select("id, playerId, status")
+      .eq("attendanceSessionId", sessionId)
+      .eq("tenantId", tenantId);
+
+    if (fetchError) throw fetchError;
+
+    // Group records by whether they exist or not
+    const recordsToUpdate: { id: number; status: AttendanceStatus }[] = [];
+    const recordsToCreate: {
+      attendanceSessionId: number;
+      playerId: number;
+      tenantId: number;
+      status: AttendanceStatus;
+      checkInTime: string;
+    }[] = [];
+
+    // Current time for new records
+    const now = new Date();
+    const currentTime = now.toLocaleTimeString("en-GB", {
+      hour12: false,
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+
+    // Organize records
+    records.forEach((record) => {
+      if (!record.status) return; // Skip null status (no change)
+
+      const existingRecord = existingRecords?.find(
+        (er) => er.playerId === record.playerId
+      );
+
+      if (existingRecord) {
+        // Only update if status is different
+        if (existingRecord.status !== record.status) {
+          recordsToUpdate.push({
+            id: existingRecord.id,
+            status: record.status,
+          });
+        }
+      } else {
+        // Create new record
+        recordsToCreate.push({
+          attendanceSessionId: sessionId,
+          playerId: record.playerId,
+          tenantId: Number(tenantId),
+          status: record.status,
+          checkInTime: currentTime,
+        });
+      }
+    });
+
+    // Process updates in batches if needed
+    if (recordsToUpdate.length > 0) {
+      for (const record of recordsToUpdate) {
+        const { error } = await client
+          .from("attendanceRecords")
+          .update({ status: record.status })
+          .eq("id", record.id)
+          .eq("tenantId", tenantId);
+
+        if (error) throw error;
+      }
+    }
+
+    // Process creates in a single batch
+    if (recordsToCreate.length > 0) {
+      const { error } = await client
+        .from("attendanceRecords")
+        .insert(recordsToCreate);
+
+      if (error) throw error;
+    }
+
+    return {
+      updated: recordsToUpdate.length,
+      created: recordsToCreate.length,
+    };
+  } catch (error) {
+    console.error("Error in updateOrCreateAttendanceRecords:", error);
     throw error;
   }
 };
@@ -293,25 +444,39 @@ export const createAbsentRecords = async (
   tenantId: string
 ) => {
   try {
-    // Create absent records for players who haven't checked in
+    // Verify that all players belong to this tenant
     if (notCheckedInPlayerIds.length > 0) {
-      const { error: insertError } = await client
-        .from("attendanceRecords")
-        .insert(
-          notCheckedInPlayerIds.map((playerId) => ({
-            attendanceSessionId: sessionId,
-            playerId,
-            tenantId: Number(tenantId),
-            status: "absent",
-          }))
-        );
+      const { data: validPlayers, error: playerError } = await client
+        .from("players")
+        .select("id")
+        .in("id", notCheckedInPlayerIds)
+        .eq("tenantId", Number(tenantId));
 
-      if (insertError) throw insertError;
+      if (playerError) throw playerError;
+
+      // Filter to only include players that belong to this tenant
+      const validPlayerIds = validPlayers.map((player) => player.id);
+
+      // Create absent records for players who haven't checked in and belong to the tenant
+      if (validPlayerIds.length > 0) {
+        const { error: insertError } = await client
+          .from("attendanceRecords")
+          .insert(
+            validPlayerIds.map((playerId) => ({
+              attendanceSessionId: sessionId,
+              playerId,
+              tenantId: Number(tenantId),
+              status: "absent",
+            }))
+          );
+
+        if (insertError) throw insertError;
+      }
     }
 
     return true;
   } catch (error) {
-    console.error("Error in updateAbsentRecords:", error);
+    console.error("Error in createAbsentRecords:", error);
     throw error;
   }
 };
@@ -332,9 +497,9 @@ export const closeAttendanceSession = async (
 
     if (updateError) throw updateError;
 
-    // Call the aggregate function which will also handle creating absent records
-    const { error: aggregateError } = await client.rpc(
-      "aggregate_attendance_on_session_close",
+    // Call the new function which will aggregate data and clean up records
+    const { data, error: aggregateError } = await client.rpc(
+      "aggregate_and_cleanup_attendance",
       {
         session_id: sessionId,
         tenant_id: Number(tenantId),
@@ -343,6 +508,11 @@ export const closeAttendanceSession = async (
     );
 
     if (aggregateError) throw aggregateError;
+
+    // If the function returns false, it means something went wrong
+    if (!data) {
+      throw new Error("Failed to aggregate and clean up attendance data");
+    }
 
     return true;
   } catch (error) {
@@ -371,7 +541,7 @@ export const getTeamAttendanceAggregates = async (
       if (error.code === "PGRST116") {
         return {
           totalSessions: 0,
-          totalPresent: 0,
+          totalOnTime: 0,
           totalLate: 0,
           totalAbsent: 0,
           averageAttendanceRate: 0,

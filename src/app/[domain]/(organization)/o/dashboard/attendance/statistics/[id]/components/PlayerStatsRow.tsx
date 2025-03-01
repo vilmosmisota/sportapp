@@ -28,14 +28,11 @@ export function PlayerStatsRow({
 
   if (!stats) return null;
 
-  const totalSessions =
-    stats.totalAttendance + stats.totalLate + stats.totalAbsent;
+  const totalSessions = stats.totalOnTime + stats.totalLate + stats.totalAbsent;
   const attendanceRate = Math.round(
-    ((stats.totalAttendance + stats.totalLate) / totalSessions) * 100
+    ((stats.totalOnTime + stats.totalLate) / totalSessions) * 100
   );
-  const accuracyRate = Math.round(
-    (stats.totalAttendance / totalSessions) * 100
-  );
+  const accuracyRate = Math.round((stats.totalOnTime / totalSessions) * 100);
 
   return (
     <TableRow>
@@ -43,7 +40,7 @@ export function PlayerStatsRow({
         {player.firstName} {player.lastName}
       </TableCell>
       <TableCell>{totalSessions}</TableCell>
-      <TableCell>{stats.totalAttendance}</TableCell>
+      <TableCell>{stats.totalOnTime}</TableCell>
       <TableCell>{stats.totalLate}</TableCell>
       <TableCell>{stats.totalAbsent}</TableCell>
       <TableCell>

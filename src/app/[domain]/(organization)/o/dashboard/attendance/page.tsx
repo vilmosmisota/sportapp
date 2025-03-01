@@ -1,28 +1,32 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { Loader2 } from "lucide-react";
+import { format } from "date-fns";
+import { toast } from "sonner";
+
+// Components
+import { ErrorBoundary } from "@/components/ui/error-boundary";
+import { Card, CardContent } from "@/components/ui/card";
+import { PageHeader } from "@/components/ui/page-header";
+import { UpcomingAttendanceCarousel } from "./components/UpcomingAttendanceCarousel";
+import { ActiveSessionsCarousel } from "./components/ActiveSessionsCarousel";
+
+// Data fetching
 import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 import { useTrainingsByDayRange } from "@/entities/training/Training.query";
 import { useActiveAttendanceSessions } from "@/entities/attendance/Attendance.query";
-import { Button } from "@/components/ui/button";
-import { Plus, Loader2, CalendarClock } from "lucide-react";
-import { useState } from "react";
-import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
+import { useAttendanceRecords } from "@/entities/attendance/Attendance.query";
+import { usePlayersByTeamId } from "@/entities/team/Team.query";
 
-import { ErrorBoundary } from "@/components/ui/error-boundary";
-import { format, isToday, isFuture, parseISO, isPast } from "date-fns";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Training } from "@/entities/training/Training.schema";
+// Actions
 import {
   useCreateAttendanceSession,
   useCloseAttendanceSession,
 } from "@/entities/attendance/Attendance.actions.client";
-import { toast } from "sonner";
-import Link from "next/link";
-import { getDisplayGender } from "@/entities/team/Team.schema";
 
-import { useAttendanceRecords } from "@/entities/attendance/Attendance.query";
-import { usePlayersByTeamId } from "@/entities/team/Team.query";
-import { PageHeader } from "@/components/ui/page-header";
+// Types
+import { Training } from "@/entities/training/Training.schema";
 
 function formatTimeString(timeStr: string) {
   try {
@@ -59,7 +63,72 @@ export default function AttendancePage({
   const { data: activeSessions } = useActiveAttendanceSessions(
     tenant?.id?.toString() ?? ""
   );
-  const [isCreateSessionOpen, setIsCreateSessionOpen] = useState(false);
+
+  const createSession = useCreateAttendanceSession();
+  const closeSession = useCloseAttendanceSession();
+
+  // We'll need to track which team we're working with for the close session function
+  const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
+  const [selectedSessionId, setSelectedSessionId] = useState<number | null>(
+    null
+  );
+
+  // Move these hooks to the component level with conditional fetching
+  const { data: players } = usePlayersByTeamId(
+    selectedTeamId ?? 0,
+    tenant?.id?.toString() ?? ""
+  );
+
+  const { data: records } = useAttendanceRecords(
+    selectedSessionId ?? 0,
+    tenant?.id?.toString() ?? ""
+  );
+
+  // Use useEffect to handle the session closing logic when data is available
+  useEffect(() => {
+    const closeActiveSession = async () => {
+      if (
+        !selectedTeamId ||
+        !selectedSessionId ||
+        !tenant ||
+        !players ||
+        !records
+      )
+        return;
+
+      try {
+        // Find players who haven't checked in
+        const notCheckedInPlayerIds = players
+          .filter((p) => !records.some((r) => r.playerId === p.player.id))
+          .map((p) => p.player.id);
+
+        await closeSession.mutateAsync({
+          sessionId: selectedSessionId,
+          tenantId: tenant.id.toString(),
+          notCheckedInPlayerIds,
+        });
+        toast.success("Session closed successfully");
+      } catch (error) {
+        console.error("Error closing session:", error);
+        toast.error("Failed to close attendance session");
+      } finally {
+        // Reset the selected IDs
+        setSelectedTeamId(null);
+        setSelectedSessionId(null);
+      }
+    };
+
+    if (selectedTeamId && selectedSessionId && tenant && players && records) {
+      closeActiveSession();
+    }
+  }, [
+    selectedTeamId,
+    selectedSessionId,
+    tenant,
+    players,
+    records,
+    closeSession,
+  ]);
 
   const isLoading = isTenantLoading || isTrainingsLoading;
 
@@ -67,30 +136,101 @@ export default function AttendancePage({
   const upcomingTrainings =
     trainings
       ?.filter((training) => {
-        const trainingDateTime = new Date(training.date);
-        trainingDateTime.setHours(
-          parseInt(training.startTime.split(":")[0]),
-          parseInt(training.startTime.split(":")[1])
-        );
-        return trainingDateTime > new Date();
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const trainingDate = new Date(training.date);
+        trainingDate.setHours(0, 0, 0, 0);
+
+        return trainingDate >= today;
       })
-      .sort((a, b) => a.date.getTime() - b.date.getTime()) ?? [];
+      .sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+      ) ?? [];
+
+  // Get upcoming trainings with active sessions
+  const upcomingTrainingsWithActiveSessions = upcomingTrainings.filter(
+    (training) =>
+      activeSessions?.some((session) => session.trainingId === training.id)
+  );
+
+  // Get upcoming trainings without active sessions
+  const upcomingTrainingsWithoutActiveSessions = upcomingTrainings.filter(
+    (training) =>
+      !activeSessions?.some((session) => session.trainingId === training.id)
+  );
 
   // Get past trainings with active sessions
   const pastTrainingsWithActiveSessions =
     trainings
       ?.filter((training) => {
-        const trainingDateTime = new Date(training.date);
-        trainingDateTime.setHours(
-          parseInt(training.startTime.split(":")[0]),
-          parseInt(training.startTime.split(":")[1])
-        );
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const trainingDate = new Date(training.date);
+        trainingDate.setHours(0, 0, 0, 0);
+
         return (
-          trainingDateTime <= new Date() &&
+          trainingDate < today &&
           activeSessions?.some((session) => session.trainingId === training.id)
         );
       })
-      .sort((a, b) => b.date.getTime() - a.date.getTime()) ?? [];
+      .sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      ) ?? [];
+
+  // Combine all active sessions (both upcoming and past)
+  const allActiveSessionTrainings = [
+    ...upcomingTrainingsWithActiveSessions,
+    ...pastTrainingsWithActiveSessions,
+  ];
+
+  // Add these helper functions for the carousel
+  const hasActiveSession = (trainingId: number) => {
+    return (
+      activeSessions?.some((session) => session.trainingId === trainingId) ||
+      false
+    );
+  };
+
+  const getActiveSessionId = (trainingId: number) => {
+    return activeSessions?.find((session) => session.trainingId === trainingId)
+      ?.id;
+  };
+
+  const isPastTraining = (training: Training) => {
+    const trainingDate = new Date(training.date);
+    trainingDate.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return trainingDate < today;
+  };
+
+  const handleStartSessionFromCarousel = async (training: Training) => {
+    try {
+      await createSession.mutateAsync({
+        trainingId: training.id,
+        tenantId: tenant?.id.toString() ?? "",
+        endTime: training.endTime,
+        seasonId: training.trainingSeasonConnections[0]?.seasonId ?? 1,
+      });
+      toast.success("Attendance session created successfully");
+    } catch (error) {
+      console.error("Error creating session:", error);
+      toast.error("Failed to create attendance session");
+    }
+  };
+
+  const handleCloseSessionFromCarousel = async (
+    sessionId: number,
+    teamId?: number
+  ) => {
+    if (!teamId || !tenant) return;
+
+    // Set the selected team and session IDs to trigger the useEffect
+    setSelectedTeamId(teamId);
+    setSelectedSessionId(sessionId);
+  };
 
   if (isLoading) {
     return (
@@ -113,241 +253,70 @@ export default function AttendancePage({
 
   return (
     <ErrorBoundary>
-      <div className="w-full space-y-6">
+      <div className="space-y-6">
         <PageHeader
           title="Attendance"
-          description="Manage attendance for upcoming training sessions."
-          actions={
-            upcomingTrainings.length > 0 && (
-              <Button
-                onClick={() => setIsCreateSessionOpen(true)}
-                className="gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Create Session
-              </Button>
-            )
-          }
+          description="Manage attendance for training sessions"
         />
 
-        {/* Upcoming Trainings */}
-        <div className="space-y-4">
-          <h4 className="text-lg font-semibold">Upcoming Trainings</h4>
-          {upcomingTrainings.length === 0 ? (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg font-medium flex items-center gap-2">
-                  <CalendarClock className="h-5 w-5 text-muted-foreground" />
-                  No Upcoming Trainings
-                </CardTitle>
-              </CardHeader>
-            </Card>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {upcomingTrainings.map((training) => (
-                <TrainingCard
-                  key={training.id}
-                  training={training}
-                  activeSessionId={
-                    activeSessions?.find(
-                      (session) => session.trainingId === training.id
-                    )?.id
-                  }
-                  hasActiveSession={
-                    activeSessions?.some(
-                      (session) => session.trainingId === training.id
-                    ) ?? false
-                  }
-                  tenantId={tenant.id.toString()}
-                  isPastTraining={false}
-                />
-              ))}
+        {/* Active sessions carousel */}
+        {isLoading ? (
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <div className="h-7 w-40 bg-muted rounded animate-pulse"></div>
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 bg-muted rounded-full animate-pulse"></div>
+                <div className="h-8 w-8 bg-muted rounded-full animate-pulse"></div>
+              </div>
             </div>
-          )}
-        </div>
-
-        {/* Past Trainings with Active Sessions */}
-        {pastTrainingsWithActiveSessions.length > 0 && (
-          <div className="space-y-4">
-            <h4 className="text-lg font-semibold">
-              Past Trainings with Active Sessions
-            </h4>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {pastTrainingsWithActiveSessions.map((training) => (
-                <TrainingCard
-                  key={training.id}
-                  training={training}
-                  activeSessionId={
-                    activeSessions?.find(
-                      (session) => session.trainingId === training.id
-                    )?.id
-                  }
-                  hasActiveSession={true}
-                  tenantId={tenant.id.toString()}
-                  isPastTraining={true}
-                />
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {[...Array(4)].map((_, i) => (
+                <div
+                  key={i}
+                  className="h-40 w-full bg-muted rounded animate-pulse"
+                ></div>
               ))}
             </div>
           </div>
-        )}
+        ) : allActiveSessionTrainings.length > 0 ? (
+          <ActiveSessionsCarousel
+            trainings={allActiveSessionTrainings}
+            getActiveSessionId={getActiveSessionId}
+            isPastTraining={isPastTraining}
+            onCloseSession={handleCloseSessionFromCarousel}
+            isClosingSession={closeSession.isPending}
+            tenantId={tenant?.id.toString() ?? ""}
+          />
+        ) : null}
 
-        <ResponsiveSheet
-          isOpen={isCreateSessionOpen}
-          setIsOpen={setIsCreateSessionOpen}
-          title="Create Attendance Session"
-        >
-          <div className="p-4">
-            {/* TODO: Add CreateSessionForm component */}
+        {/* Upcoming trainings without active sessions */}
+        {isLoading ? (
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <div className="h-7 w-40 bg-muted rounded animate-pulse"></div>
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 bg-muted rounded-full animate-pulse"></div>
+                <div className="h-8 w-8 bg-muted rounded-full animate-pulse"></div>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {[...Array(4)].map((_, i) => (
+                <div
+                  key={i}
+                  className="h-40 w-full bg-muted rounded animate-pulse"
+                ></div>
+              ))}
+            </div>
           </div>
-        </ResponsiveSheet>
+        ) : upcomingTrainingsWithoutActiveSessions.length > 0 ? (
+          <UpcomingAttendanceCarousel
+            trainings={upcomingTrainingsWithoutActiveSessions}
+            onStartSession={handleStartSessionFromCarousel}
+            isStartingSession={createSession.isPending}
+            tenantId={tenant?.id.toString() ?? ""}
+          />
+        ) : null}
       </div>
     </ErrorBoundary>
-  );
-}
-
-function TrainingCard({
-  training,
-  hasActiveSession,
-  tenantId,
-
-  activeSessionId,
-  isPastTraining,
-}: {
-  training: Training;
-  hasActiveSession: boolean;
-  tenantId: string;
-  activeSessionId: number | undefined;
-  isPastTraining: boolean;
-}) {
-  const createSession = useCreateAttendanceSession();
-  const closeSession = useCloseAttendanceSession();
-
-  const { data: records } = useAttendanceRecords(
-    activeSessionId ?? 0,
-    tenantId
-  );
-
-  const { data: players } = usePlayersByTeamId(training?.teamId ?? 0, tenantId);
-
-  const handleStartSession = async () => {
-    try {
-      await createSession.mutateAsync({
-        trainingId: training.id,
-        tenantId,
-        endTime: training.endTime,
-        seasonId: training.trainingSeasonConnections[0]?.seasonId ?? 1,
-      });
-    } catch (error) {
-      console.error("Error creating session:", error);
-      toast.error("Failed to create attendance session");
-    }
-  };
-
-  const handleCloseSession = async () => {
-    if (!activeSessionId || !training?.teamId) return;
-    try {
-      // Find players who haven't checked in
-      const notCheckedInPlayerIds = (players ?? [])
-        .filter((p) => !records?.some((r) => r.playerId === p.player.id))
-        .map((p) => p.player.id);
-
-      await closeSession.mutateAsync({
-        sessionId: activeSessionId,
-        tenantId,
-        notCheckedInPlayerIds,
-      });
-      toast.success("Session closed successfully");
-    } catch (error) {
-      console.error("Error closing session:", error);
-      toast.error("Failed to close attendance session");
-    }
-  };
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg font-medium">
-          {[
-            training.team?.age,
-            getDisplayGender(training.team?.gender, training.team?.age),
-            training.team?.skill,
-          ]
-            .filter(
-              (value): value is string =>
-                typeof value === "string" && value.length > 0
-            )
-            .join(" • ")}
-        </CardTitle>
-        <p className="text-sm text-muted-foreground">
-          {format(training.date, "EEEE, MMMM d")}
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Time:</span>
-          <span className="font-medium">
-            {formatTimeString(training.startTime)} -{" "}
-            {formatTimeString(training.endTime)}
-          </span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Location:</span>
-          <span className="font-medium">{training.location?.name}</span>
-        </div>
-        {hasActiveSession && (
-          <div className="pt-4 space-y-2">
-            <div className="flex gap-2">
-              <Link
-                href={`/o/dashboard/attendance/${activeSessionId}`}
-                className="flex-1"
-              >
-                <Button variant="secondary" className="w-full">
-                  View Active Session
-                </Button>
-              </Link>
-              <Button variant="outline" className="flex-1">
-                Check In
-              </Button>
-            </div>
-            {isPastTraining && (
-              <Button
-                variant="destructive"
-                className="w-full"
-                onClick={handleCloseSession}
-                disabled={closeSession.isPending}
-              >
-                {closeSession.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Closing...
-                  </>
-                ) : (
-                  "Close Session"
-                )}
-              </Button>
-            )}
-          </div>
-        )}
-        {!hasActiveSession && !isPastTraining && (
-          <div className="mt-4 py-4">
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={handleStartSession}
-              disabled={createSession.isPending}
-            >
-              {createSession.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Starting...
-                </>
-              ) : (
-                "Start Session"
-              )}
-            </Button>
-          </div>
-        )}
-      </CardContent>
-    </Card>
   );
 }

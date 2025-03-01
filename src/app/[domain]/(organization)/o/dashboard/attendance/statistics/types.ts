@@ -24,6 +24,13 @@ export interface SessionData {
   playersPresent: number;
   totalPlayers: number;
   attendanceRate: number;
+  sessionId?: number;
+  trainingId?: number;
+  startTime?: string;
+  endTime?: string;
+  onTimeCount?: number;
+  lateCount?: number;
+  absentCount?: number;
 }
 
 export type { RecentTrend as TrendData, DayOfWeekStats, TeamAttendanceStats };

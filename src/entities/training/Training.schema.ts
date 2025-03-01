@@ -61,6 +61,15 @@ export const GroupedTrainingSchema = z.object({
   trainingCount: z.number(),
   firstDate: z.string(),
   lastDate: z.string(),
+  team: z
+    .object({
+      appearance: z
+        .object({
+          color: z.string().nullable(),
+        })
+        .nullable(),
+    })
+    .nullable(),
 });
 
 export type GroupedTraining = z.infer<typeof GroupedTrainingSchema>;

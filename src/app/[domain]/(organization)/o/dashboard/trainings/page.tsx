@@ -4,22 +4,28 @@ import { useEffect, useState } from "react";
 import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 import { useGetTeamsByTenantId } from "@/entities/team/Team.query";
 import { useSeasonsByTenantId } from "@/entities/season/Season.query";
-import { useGroupedTrainings } from "@/entities/training/Training.query";
+import {
+  useGroupedTrainings,
+  useTrainingsByDayRange,
+} from "@/entities/training/Training.query";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { Season } from "@/entities/season/Season.schema";
 import SeasonSelect from "./components/SeasonSelect";
 import CreateTrainingButton from "./components/CreateTrainingButton";
 import EditTrainingForm from "./forms/EditTrainingForm";
+import EditTrainingPatternItemsForm from "./forms/EditTrainingPatternItemsForm";
 import { CalendarWeekView } from "./components/CalendarWeekView";
+import { UpcomingTrainingsCarousel } from "./components/UpcomingTrainingsCarousel";
 import { format } from "date-fns";
-import { GroupedTraining } from "@/entities/training/Training.schema";
+import { GroupedTraining, Training } from "@/entities/training/Training.schema";
 import {
   useUpdateTrainingPattern,
   useDeleteTrainingPattern,
 } from "@/entities/training/Training.actions.client";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/ui/page-header";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function TrainingsPage({
   params,
@@ -28,8 +34,11 @@ export default function TrainingsPage({
 }) {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isEditItemsOpen, setIsEditItemsOpen] = useState(false);
   const [selectedTraining, setSelectedTraining] =
     useState<GroupedTraining | null>(null);
+  const [selectedUpcomingTraining, setSelectedUpcomingTraining] =
+    useState<Training | null>(null);
 
   const { data: tenant } = useTenantByDomain(params.domain);
   const { data: teams } = useGetTeamsByTenantId(tenant?.id.toString() ?? "");
@@ -44,15 +53,26 @@ export default function TrainingsPage({
     activeSeason?.id.toString()
   );
 
+  // Fetch upcoming trainings for the next 7 days
+  const { data: upcomingTrainings, isLoading: isLoadingUpcoming } =
+    useTrainingsByDayRange(tenant?.id.toString() ?? "", 7);
+
   const updatePattern = useUpdateTrainingPattern();
   const deletePattern = useDeleteTrainingPattern();
 
-  const handleEdit = (training: GroupedTraining) => {
+  const handleEditPattern = (training: GroupedTraining) => {
     setSelectedTraining(training);
     setIsEditOpen(true);
   };
 
-  const handleDelete = (training: GroupedTraining) => {
+  const handleEditIndividual = (training: GroupedTraining) => {
+    // For now, this will use the same handler as pattern editing
+    // This will need to be implemented separately
+    setSelectedTraining(training);
+    setIsEditItemsOpen(true);
+  };
+
+  const handleDeletePattern = (training: GroupedTraining) => {
     setSelectedTraining(training);
     setIsDeleteOpen(true);
   };
@@ -82,7 +102,7 @@ export default function TrainingsPage({
     }
   };
 
-  const handleDeletePattern = async (training: GroupedTraining) => {
+  const executeDeletePattern = async (training: GroupedTraining) => {
     if (!tenant || !activeSeason) return;
 
     try {
@@ -109,7 +129,7 @@ export default function TrainingsPage({
   if (!tenant) return null;
 
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full space-y-6 ">
       <PageHeader
         title="Trainings"
         description={
@@ -140,18 +160,38 @@ export default function TrainingsPage({
         }
       />
 
+      {isLoadingUpcoming ? (
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <Skeleton className="h-7 w-40" />
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-8 w-8 rounded-full" />
+              <Skeleton className="h-8 w-8 rounded-full" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <Skeleton key={i} className="h-40 w-full rounded-md" />
+            ))}
+          </div>
+        </div>
+      ) : (
+        <UpcomingTrainingsCarousel trainings={upcomingTrainings ?? []} />
+      )}
+
       <CalendarWeekView
         trainings={groupedTrainings ?? []}
         canManage={true}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
+        onEdit={handleEditPattern}
+        onDelete={handleDeletePattern}
+        onEditIndividual={handleEditIndividual}
         onUpdatePattern={handleUpdatePattern}
       />
 
       <ResponsiveSheet
         isOpen={isEditOpen}
         setIsOpen={setIsEditOpen}
-        title="Edit Training Schedule"
+        title="Edit Training Pattern"
       >
         {selectedTraining && (
           <EditTrainingForm
@@ -164,14 +204,30 @@ export default function TrainingsPage({
         )}
       </ResponsiveSheet>
 
+      <ResponsiveSheet
+        isOpen={isEditItemsOpen}
+        setIsOpen={setIsEditItemsOpen}
+        title="Manage Training Sessions"
+      >
+        {selectedTraining && (
+          <EditTrainingPatternItemsForm
+            training={selectedTraining}
+            setIsOpen={setIsEditItemsOpen}
+            domain={params.domain}
+            tenantId={tenant.id.toString()}
+            seasonId={activeSeason?.id ?? 0}
+          />
+        )}
+      </ResponsiveSheet>
+
       <ConfirmDeleteDialog
         categoryId={selectedTraining?.teamId?.toString() ?? ""}
         isOpen={isDeleteOpen}
         setIsOpen={setIsDeleteOpen}
-        text="This will permanently delete all future training sessions in this pattern. Are you sure you want to proceed?"
+        text="This will permanently delete all future training sessions in this pattern. This action cannot be undone. Are you sure you want to proceed?"
         onConfirm={() => {
           if (selectedTraining) {
-            handleDeletePattern(selectedTraining);
+            executeDeletePattern(selectedTraining);
           }
         }}
       />

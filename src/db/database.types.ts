@@ -46,7 +46,7 @@ export type Database = {
           tenantId: number;
           seasonId: number;
           totalSessions: number;
-          totalPresent: number;
+          totalOnTime: number;
           totalLate: number;
           totalAbsent: number;
           averageAttendanceRate: number;
@@ -59,7 +59,7 @@ export type Database = {
           tenantId: number;
           seasonId: number;
           totalSessions: number;
-          totalPresent: number;
+          totalOnTime: number;
           totalLate: number;
           totalAbsent: number;
           averageAttendanceRate: number;
@@ -72,7 +72,7 @@ export type Database = {
           tenantId?: number;
           seasonId?: number;
           totalSessions?: number;
-          totalPresent?: number;
+          totalOnTime?: number;
           totalLate?: number;
           totalAbsent?: number;
           averageAttendanceRate?: number;
@@ -110,7 +110,7 @@ export type Database = {
           teamId: number;
           tenantId: number;
           seasonId: number;
-          totalAttendance: number;
+          totalOnTime: number;
           totalLate: number;
           totalAbsent: number;
           attendanceRate: number;
@@ -123,7 +123,7 @@ export type Database = {
           teamId: number;
           tenantId: number;
           seasonId: number;
-          totalAttendance: number;
+          totalOnTime: number;
           totalLate: number;
           totalAbsent: number;
           attendanceRate: number;
@@ -136,7 +136,7 @@ export type Database = {
           teamId?: number;
           tenantId?: number;
           seasonId?: number;
-          totalAttendance?: number;
+          totalOnTime?: number;
           totalLate?: number;
           totalAbsent?: number;
           attendanceRate?: number;
@@ -825,6 +825,14 @@ export type Database = {
           not_checked_in_player_ids: number[];
         };
         Returns: void;
+      };
+      aggregate_and_cleanup_attendance: {
+        Args: {
+          session_id: number;
+          tenant_id: number;
+          not_checked_in_player_ids: number[];
+        };
+        Returns: boolean;
       };
     };
     Enums: {

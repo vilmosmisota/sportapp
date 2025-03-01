@@ -12,6 +12,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Player } from "@/entities/player/Player.schema";
 import { useUpdatePlayerPin } from "@/entities/player/Player.actions.client";
@@ -19,6 +20,8 @@ import { toast } from "sonner";
 import { PlayerGender } from "@/entities/player/Player.schema";
 import { cn } from "@/libs/tailwind/utils";
 import { useQueryClient } from "@tanstack/react-query";
+
+import { BackConfirmationDialog } from "../../components/BackConfirmationDialog";
 
 function NumericKeypad({
   onKeyPress,
@@ -242,6 +245,7 @@ export default function AddPinPage() {
   const { data: tenant } = useTenantByDomain(params.domain as string);
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [showBackConfirmation, setShowBackConfirmation] = useState(false);
 
   const { data: session, isLoading: isSessionLoading } =
     useAttendanceSessionById(params.id as string, tenant?.id?.toString() ?? "");
@@ -279,15 +283,19 @@ export default function AddPinPage() {
   const playersWithoutPin =
     playersConnections?.filter((conn) => !conn.player.pin) ?? [];
 
+  const handleBackNavigation = () => {
+    setShowBackConfirmation(true);
+  };
+
+  const handleConfirmedBack = () => {
+    router.push(`/o/dashboard/attendance/${params.id}`);
+  };
+
   return (
-    <div className="w-screen h-screen bg-background absolute top-0 left-0 flex flex-col">
+    <div className="w-screen h-screen bg-background absolute top-0 left-0 flex flex-col z-50">
       {/* Navigation */}
       <div className="flex justify-between items-center border-b border-border px-4 h-14 shrink-0">
-        <Button
-          variant="ghost"
-          className="p-2"
-          onClick={() => router.push(`/o/dashboard/attendance/${params.id}`)}
-        >
+        <Button variant="ghost" className="p-2" onClick={handleBackNavigation}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
 
@@ -366,6 +374,12 @@ export default function AddPinPage() {
           teamId={session?.training?.teamId ?? 0}
         />
       )}
+
+      <BackConfirmationDialog
+        isOpen={showBackConfirmation}
+        onOpenChange={setShowBackConfirmation}
+        onConfirm={handleConfirmedBack}
+      />
     </div>
   );
 }

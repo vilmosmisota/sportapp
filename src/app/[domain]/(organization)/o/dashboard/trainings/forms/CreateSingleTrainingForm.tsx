@@ -12,7 +12,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from "@/components/ui/form";
 import {
   Select,
@@ -21,41 +20,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  getDisplayGender,
-  getDisplayAgeGroup,
-  Team,
-} from "@/entities/team/Team.schema";
+import { Team } from "@/entities/team/Team.schema";
 import { Season } from "@/entities/season/Season.schema";
-import { TrainingForm } from "@/entities/training/Training.schema";
-import { useAddTrainingBatch } from "@/entities/training/Training.actions.client";
+import { useAddTraining } from "@/entities/training/Training.actions.client";
 import { TrainingLocation } from "@/entities/tenant/Tenant.schema";
 import { useTrainingLocations } from "@/entities/tenant/hooks/useTrainingLocations";
-import { Toggle } from "@/components/ui/toggle";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import FormButtons from "@/components/ui/form-buttons";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Clock, MapPin, Users, Calendar } from "lucide-react";
-import { format, isWithinInterval } from "date-fns";
+import { format } from "date-fns";
+import { TeamBadge } from "@/components/ui/team-badge";
 import { TeamSelector } from "@/components/ui/team-selector";
-
-const daysOfWeek = [
-  { id: 1, name: "Monday" },
-  { id: 2, name: "Tuesday" },
-  { id: 3, name: "Wednesday" },
-  { id: 4, name: "Thursday" },
-  { id: 5, name: "Friday" },
-  { id: 6, name: "Saturday" },
-  { id: 0, name: "Sunday" },
-];
+import {
+  getDisplayGender,
+  getDisplayAgeGroup,
+} from "@/entities/team/Team.schema";
 
 const formSchema = z.object({
+  date: z.string().min(1, "Date is required"),
   startTime: z.string().min(1, "Start time is required"),
   endTime: z.string().min(1, "End time is required"),
   locationId: z.string().min(1, "Location is required"),
   teamId: z.string().min(1, "Team is required"),
-  selectedDays: z.array(z.number()).min(1, "Select at least one day"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -68,7 +56,7 @@ interface Props {
   setIsOpen: (open: boolean) => void;
 }
 
-export default function CreateTrainingScheduleForm({
+export default function CreateSingleTrainingForm({
   tenantId,
   domain,
   selectedSeason,
@@ -76,17 +64,17 @@ export default function CreateTrainingScheduleForm({
   setIsOpen,
 }: Props) {
   const locations = useTrainingLocations(domain);
-  const addTrainingBatch = useAddTrainingBatch(tenantId);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const addTraining = useAddTraining(tenantId);
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      date: format(new Date(), "yyyy-MM-dd"),
       startTime: "",
       endTime: "",
       locationId: "",
       teamId: "",
-      selectedDays: [],
     },
   });
 
@@ -97,60 +85,34 @@ export default function CreateTrainingScheduleForm({
     }
 
     try {
-      setIsSubmitting(true);
+      setIsLoading(true);
 
       const location = locations.find((l) => l.id === values.locationId);
-      if (!location) return;
-
-      const startDate = new Date(selectedSeason.startDate);
-      const endDate = new Date(selectedSeason.endDate);
-
-      // Generate all dates between start and end date that match the selected days
-      const dates: string[] = [];
-      const currentDate = new Date(startDate);
-
-      while (currentDate <= endDate) {
-        if (values.selectedDays.includes(currentDate.getDay())) {
-          // Check if the date falls within any break period
-          const isBreak = selectedSeason.breaks.some((breakPeriod) =>
-            isWithinInterval(currentDate, {
-              start: new Date(breakPeriod.from),
-              end: new Date(breakPeriod.to),
-            })
-          );
-
-          // Only add the date if it's not during a break
-          if (!isBreak) {
-            dates.push(currentDate.toISOString());
-          }
-        }
-        currentDate.setDate(currentDate.getDate() + 1);
-      }
-
-      if (dates.length === 0) {
-        toast.error(
-          "No valid training dates found after excluding break periods"
-        );
+      if (!location) {
+        toast.error("Selected location not found");
         return;
       }
 
-      // Create trainings in batch
-      await addTrainingBatch.mutateAsync({
-        dates,
+      // Handle teamId - convert to number
+      const teamId = parseInt(values.teamId);
+
+      // Create a single training
+      await addTraining.mutateAsync({
+        date: values.date,
         startTime: values.startTime,
         endTime: values.endTime,
         location,
-        teamId: parseInt(values.teamId),
-        seasonId: selectedSeason.id,
+        teamId,
+        seasonIds: [selectedSeason.id],
       });
 
-      toast.success("Training schedule created successfully");
+      toast.success("Training created successfully");
       setIsOpen(false);
     } catch (error) {
-      toast.error("Failed to create training schedule");
+      toast.error("Failed to create training");
       console.error(error);
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
@@ -171,9 +133,12 @@ export default function CreateTrainingScheduleForm({
                 <p className="text-sm">
                   {selectedSeason.customName ??
                     `${format(
-                      selectedSeason.startDate,
+                      new Date(selectedSeason.startDate),
                       "dd/MM/yyyy"
-                    )} - ${format(selectedSeason.endDate, "dd/MM/yyyy")}`}
+                    )} - ${format(
+                      new Date(selectedSeason.endDate),
+                      "dd/MM/yyyy"
+                    )}`}
                   {selectedSeason.isActive && (
                     <span className="ml-2 inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
                       Active
@@ -184,46 +149,24 @@ export default function CreateTrainingScheduleForm({
             </Card>
           )}
 
-          {/* Days Selection */}
+          {/* Training Details */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-medium flex items-center gap-2">
                 <Clock className="h-4 w-4" />
-                Schedule
+                Training Details
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <FormField
                 control={form.control}
-                name="selectedDays"
-                render={() => (
+                name="date"
+                render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Select Days</FormLabel>
-                    <div className="flex flex-wrap gap-2">
-                      {daysOfWeek.map((day) => (
-                        <Toggle
-                          key={day.id}
-                          pressed={form.watch("selectedDays").includes(day.id)}
-                          onPressedChange={(pressed) => {
-                            const current = form.watch("selectedDays");
-                            if (pressed) {
-                              form.setValue("selectedDays", [
-                                ...current,
-                                day.id,
-                              ]);
-                            } else {
-                              form.setValue(
-                                "selectedDays",
-                                current.filter((d) => d !== day.id)
-                              );
-                            }
-                          }}
-                          className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
-                        >
-                          {day.name}
-                        </Toggle>
-                      ))}
-                    </div>
+                    <FormLabel>Date</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -261,33 +204,34 @@ export default function CreateTrainingScheduleForm({
             </CardContent>
           </Card>
 
-          {/* Location Selection */}
+          {/* Location & Team */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-medium flex items-center gap-2">
                 <MapPin className="h-4 w-4" />
-                Location
+                Location & Team
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <FormField
                 control={form.control}
                 name="locationId"
                 render={({ field }) => (
                   <FormItem>
+                    <FormLabel>Location</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select location" />
+                          <SelectValue placeholder="Select a location" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {locations.map((location) => (
                           <SelectItem key={location.id} value={location.id}>
-                            {location.name}
+                            {location.name}, {location.city}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -296,36 +240,24 @@ export default function CreateTrainingScheduleForm({
                   </FormItem>
                 )}
               />
-            </CardContent>
-          </Card>
 
-          {/* Team Selection */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base font-medium flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                Team
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
               <TeamSelector
                 teams={teams}
                 control={form.control}
                 name="teamId"
-                placeholder="Select team"
+                label="Team"
+                placeholder="Select a team"
               />
             </CardContent>
           </Card>
         </div>
 
-        <div className="bg-background sticky h-[100px] flex items-center justify-end bottom-0 left-0 right-0 border-t">
-          <FormButtons
-            buttonText="Create Schedule"
-            isLoading={isSubmitting}
-            isDirty={form.formState.isDirty}
-            onCancel={() => setIsOpen(false)}
-          />
-        </div>
+        <FormButtons
+          buttonText="Create Training"
+          isLoading={isLoading}
+          isDirty={true}
+          onCancel={() => setIsOpen(false)}
+        />
       </form>
     </Form>
   );

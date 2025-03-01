@@ -20,46 +20,109 @@ import {
   AttendanceRecordAggregate,
   AttendanceStatus,
 } from "@/entities/attendance/Attendance.schema";
-import { Card } from "@/components/ui/card";
-import { Team, PlayerTeamConnectionSchema } from "@/entities/team/Team.schema";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Team,
+  PlayerTeamConnectionSchema,
+  getDisplayAgeGroup,
+  getDisplayGender,
+} from "@/entities/team/Team.schema";
+import {
+  calculateAttendanceRate,
+  calculateAccuracyRate,
+} from "@/entities/attendance/Attendance.utils";
+import { useTeamAttendanceAggregates } from "@/entities/attendance/Attendance.actions.client";
+
+function formatTeamName(team: {
+  name?: string | null | undefined;
+  age?: string | null | undefined;
+  gender?: string | null | undefined;
+  skill?: string | null | undefined;
+}) {
+  if (team.name) return team.name;
+
+  return [
+    getDisplayAgeGroup(team.age ?? null),
+    getDisplayGender(team.gender ?? null, team.age ?? null),
+    team.skill ?? null,
+  ]
+    .filter(Boolean)
+    .join(" • ");
+}
+
+function StatItem({
+  icon: Icon,
+  label,
+  value,
+  className,
+}: {
+  icon: any;
+  label: string;
+  value: string | number;
+  className?: string;
+}) {
+  return (
+    <Card className={className}>
+      <CardContent className="p-6">
+        <div className="flex items-center gap-4">
+          <div className="rounded-lg bg-primary/10 p-2">
+            <Icon className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">{label}</p>
+            <p className="text-2xl font-bold">{value}</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function TeamAttendanceStatisticsPage() {
-  const params = useParams<{ domain: string; id: string }>();
-  const teamId = Number(params.id);
-  const { data: tenant, isLoading: isTenantLoading } = useTenantByDomain(
-    params.domain
-  );
+  const params = useParams();
+  const domain = params?.domain as string;
+  const teamId = params?.id ? parseInt(params.id as string) : 0;
+  const { data: tenant, isLoading: tenantLoading } = useTenantByDomain(domain);
   const { data: seasons, isLoading: isSeasonsLoading } = useSeasonsByTenantId(
     tenant?.id?.toString() || ""
   );
-  const { data: teams, isLoading: isTeamsLoading } = useGetTeamsByTenantId(
+  const { data: teams, isLoading: teamsLoading } = useGetTeamsByTenantId(
     tenant?.id?.toString() || ""
   );
   const team = teams?.find((t) => t.id === teamId);
   const currentSeason = seasons?.find((s) => s.isActive);
 
-  const isLoading = isTenantLoading || isSeasonsLoading || isTeamsLoading;
-
-  if (isLoading) {
+  if (tenantLoading || isSeasonsLoading || teamsLoading) {
     return (
-      <div className="space-y-6">
-        <PageHeader
-          title="Team Attendance Statistics"
-          backButton={{
-            href: "/o/dashboard/attendance/statistics",
-            label: "Back to Statistics",
-          }}
-        />
-        <div className="grid gap-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            <Skeleton className="h-[400px]" />
-            <Skeleton className="h-[400px]" />
-          </div>
-          <div className="grid gap-6 md:grid-cols-2">
-            <Skeleton className="h-[300px]" />
-            <Skeleton className="h-[300px]" />
-          </div>
-          <Skeleton className="h-[500px]" />
+      <div className="space-y-6" data-testid="team-statistics-loading">
+        <div className="space-y-2">
+          <Skeleton className="h-10 w-1/3" />
+          <Skeleton className="h-4 w-1/2" />
+        </div>
+
+        <div className="grid md:grid-cols-4 gap-4">
+          {Array(4)
+            .fill(0)
+            .map((_, i) => (
+              <Card key={i} className="p-4">
+                <div className="flex flex-col items-center justify-center text-center gap-2">
+                  <Skeleton className="h-8 w-8 rounded-full" />
+                  <Skeleton className="h-8 w-16" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+              </Card>
+            ))}
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          <Card className="p-4">
+            <Skeleton className="h-6 w-32 mb-4" />
+            <Skeleton className="h-40 w-full" />
+          </Card>
+          <Card className="p-4">
+            <Skeleton className="h-6 w-32 mb-4" />
+            <Skeleton className="h-40 w-full" />
+          </Card>
         </div>
       </div>
     );
@@ -117,13 +180,18 @@ function TeamAttendanceStatisticsContent({
     seasonId,
     tenantId
   );
+  const { data: teamStats } = useTeamAttendanceAggregates(
+    teamId,
+    seasonId,
+    tenantId
+  );
   const selectedSeason = seasons?.find((s) => s.id === seasonId) || null;
 
   if (!playerStats) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4" data-testid="team-statistics-loading">
         <PageHeader
-          title={`${team.name || team.age} Statistics`}
+          title={formatTeamName(team)}
           description="View detailed attendance statistics for this team"
           backButton={{
             href: "/o/dashboard/attendance/statistics",
@@ -140,86 +208,144 @@ function TeamAttendanceStatisticsContent({
     );
   }
 
-  // Process data for charts
-  const trendData = (playerStats as AttendanceRecordAggregate[]).reduce<
-    Record<string, { date: string; attendance: number; accuracy: number }>
-  >((acc, player) => {
-    if (!player.records) return acc;
+  // Get all sessions from team stats
+  const allSessions = teamStats?.sessions
+    ? (
+        teamStats.sessions as {
+          date: string;
+          sessionId: number;
+          trainingId: number;
+          startTime: string;
+          endTime: string;
+          onTimeCount: number;
+          lateCount: number;
+          absentCount: number;
+        }[]
+      ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    : [];
 
-    player.records.forEach((record) => {
-      const date = format(new Date(record.date), "MMM d");
-      if (!acc[date]) {
-        acc[date] = {
-          date,
-          attendance: 0,
-          accuracy: 0,
-        };
-      }
+  // Format trend data for the line chart using the same approach as the main page
+  const chartData = allSessions.map((session) => {
+    const sessionDate = new Date(session.date);
+    // Calculate attendance rate using the utility function
+    const attendanceRate = calculateAttendanceRate(
+      session.onTimeCount,
+      session.lateCount,
+      session.absentCount
+    );
 
-      const isPresent = record.status === AttendanceStatus.PRESENT;
-      const isLate = record.status === AttendanceStatus.LATE;
+    // Calculate accuracy rate using the utility function
+    const accuracyRate = calculateAccuracyRate(
+      session.onTimeCount,
+      session.lateCount
+    );
 
-      if (isPresent || isLate) {
-        acc[date].attendance++;
-      }
-      if (isPresent) {
-        acc[date].accuracy++;
-      }
-    });
-    return acc;
-  }, {});
+    return {
+      date: format(sessionDate, "MMM d"),
+      attendance: attendanceRate,
+      accuracy: accuracyRate,
+    };
+  });
 
-  const chartData = Object.values(trendData).map((data) => ({
-    ...data,
-    attendance: Math.round((data.attendance / playerStats.length) * 100),
-    accuracy: Math.round((data.accuracy / playerStats.length) * 100),
-  }));
-
-  // Process data for day stats
-  const dayStats = (playerStats as AttendanceRecordAggregate[]).reduce<
-    Record<string, { day: string; attendance: number; accuracy: number }>
-  >((acc, player) => {
-    if (!player.records) return acc;
-
-    player.records.forEach((record) => {
-      const day = format(new Date(record.date), "EEEE");
+  // Calculate day of week stats from all sessions
+  const dayOfWeekStats = allSessions.reduce(
+    (
+      acc: Record<
+        string,
+        {
+          day: string;
+          onTime: number;
+          late: number;
+          absent: number;
+          total: number;
+        }
+      >,
+      session
+    ) => {
+      const sessionDate = new Date(session.date);
+      const day = format(sessionDate, "EEEE");
       if (!acc[day]) {
         acc[day] = {
           day,
-          attendance: 0,
-          accuracy: 0,
+          onTime: 0,
+          late: 0,
+          absent: 0,
+          total: 0,
         };
       }
 
-      const isPresent = record.status === AttendanceStatus.PRESENT;
-      const isLate = record.status === AttendanceStatus.LATE;
+      // Count all players for this session
+      const sessionTotal =
+        session.onTimeCount + session.lateCount + session.absentCount;
+      acc[day].total += sessionTotal;
 
-      if (isPresent || isLate) {
-        acc[day].attendance++;
-      }
-      if (isPresent) {
-        acc[day].accuracy++;
-      }
+      // Add stats for this session to the day's stats
+      acc[day].onTime += session.onTimeCount;
+      acc[day].late += session.lateCount;
+      acc[day].absent += session.absentCount;
+
+      return acc;
+    },
+    {}
+  );
+
+  // Sort day stats for consistent display order (e.g., Mon, Tue, Wed, etc.)
+  const dayOrder = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+  ];
+  const dayStatsData = Object.entries(dayOfWeekStats)
+    .sort(([a], [b]) => dayOrder.indexOf(a) - dayOrder.indexOf(b))
+    .map(([day, data]) => {
+      // Calculate attendance rate using the utility function
+      const attendanceRate = calculateAttendanceRate(
+        data.onTime,
+        data.late,
+        data.absent
+      );
+
+      // Calculate accuracy rate using utility function
+      const accuracyRate = calculateAccuracyRate(data.onTime, data.late);
+
+      return {
+        day,
+        attendance: attendanceRate,
+        accuracy: accuracyRate,
+      };
     });
-    return acc;
-  }, {});
-
-  const dayStatsData = Object.values(dayStats).map((data) => ({
-    ...data,
-    attendance: Math.round((data.attendance / playerStats.length) * 100),
-    accuracy: Math.round((data.accuracy / playerStats.length) * 100),
-  }));
 
   // Process data for performance overview
   const playerPerformance = playerStats
     .map((stats) => {
       const totalSessions =
-        stats.totalAttendance + stats.totalLate + stats.totalAbsent;
-      const attendanceRate = Math.round(
-        ((stats.totalAttendance + stats.totalLate) / totalSessions) * 100
+        stats.totalOnTime + stats.totalLate + stats.totalAbsent;
+
+      // Calculate the new Attendance Performance Score
+      const attendancePerformanceScore =
+        ((stats.totalOnTime * 1.0 +
+          stats.totalLate * 0.5 -
+          stats.totalAbsent * 0.25) /
+          totalSessions) *
+        100;
+
+      // Ensure score is not negative and round to nearest integer
+      const performanceScore = Math.max(
+        0,
+        Math.round(attendancePerformanceScore)
       );
-      const accuracyRate = Math.round(
-        (stats.totalAttendance / totalSessions) * 100
+
+      // Keep the original metrics for backward compatibility
+      const attendanceRate = Math.round(
+        ((stats.totalOnTime + stats.totalLate) / totalSessions) * 100
+      );
+      const accuracyRate = calculateAccuracyRate(
+        stats.totalOnTime,
+        stats.totalLate
       );
 
       const playerConnection = team.playerTeamConnections?.find(
@@ -233,13 +359,18 @@ function TeamAttendanceStatisticsContent({
         name: `${playerConnection.player.firstName} ${playerConnection.player.lastName}`,
         attendanceRate,
         accuracyRate,
+        performanceScore,
+        // Include raw data for context
+        onTime: stats.totalOnTime,
+        late: stats.totalLate,
+        absent: stats.totalAbsent,
       };
     })
     .filter((p): p is NonNullable<typeof p> => p !== null);
 
+  // Sort by the single performance score
   const sortedPerformance = [...playerPerformance].sort(
-    (a, b) =>
-      b.attendanceRate + b.accuracyRate - (a.attendanceRate + a.accuracyRate)
+    (a, b) => b.performanceScore - a.performanceScore
   );
 
   const topPerformers = sortedPerformance.slice(0, 3);
@@ -248,7 +379,7 @@ function TeamAttendanceStatisticsContent({
   // Calculate overall statistics
   const totalSessions = playerStats.reduce((acc, player) => {
     const playerSessions =
-      player.totalAttendance + player.totalLate + player.totalAbsent;
+      player.totalOnTime + player.totalLate + player.totalAbsent;
     return Math.max(acc, playerSessions);
   }, 0);
 
@@ -256,110 +387,79 @@ function TeamAttendanceStatisticsContent({
 
   const overallStats = playerStats.reduce(
     (acc, player) => {
-      acc.totalPresent += player.totalAttendance;
+      acc.totalOnTime += player.totalOnTime;
       acc.totalLate += player.totalLate;
       acc.totalAbsent += player.totalAbsent;
       return acc;
     },
-    { totalPresent: 0, totalLate: 0, totalAbsent: 0 }
+    { totalOnTime: 0, totalLate: 0, totalAbsent: 0 }
   );
 
   const totalAttendances =
-    overallStats.totalPresent +
+    overallStats.totalOnTime +
     overallStats.totalLate +
     overallStats.totalAbsent;
-  const attendanceRate = Math.round(
-    ((overallStats.totalPresent + overallStats.totalLate) / totalAttendances) *
-      100
-  );
-  const accuracyRate = Math.round(
-    (overallStats.totalPresent / totalAttendances) * 100
-  );
+
+  const attendanceRate =
+    ((overallStats.totalOnTime + overallStats.totalLate) / totalAttendances) *
+    100;
+
+  const onTimeRate =
+    (overallStats.totalOnTime /
+      (overallStats.totalOnTime + overallStats.totalLate)) *
+    100;
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`${team.name || team.age} Statistics`}
-        description="View detailed attendance statistics for this team"
+        title={formatTeamName(team)}
+        description={`Attendance statistics for ${
+          selectedSeason?.customName ?? "current season"
+        }`}
         backButton={{
           href: "/o/dashboard/attendance/statistics",
           label: "Back to Statistics",
         }}
-        actions={
-          <SeasonSelect
-            seasons={seasons ?? []}
-            selectedSeason={selectedSeason}
-            tenantId={tenantId}
-          />
-        }
       />
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="p-4">
-          <div className="flex items-center gap-4">
-            <div className="rounded-lg bg-primary/10 p-2">
-              <Calendar className="h-6 w-6 text-primary" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-medium text-muted-foreground">
-                Total Sessions
-              </span>
-              <span className="text-2xl font-bold">{totalSessions}</span>
-            </div>
-          </div>
-        </Card>
-        <Card className="p-4">
-          <div className="flex items-center gap-4">
-            <div className="rounded-lg bg-primary/10 p-2">
-              <Users className="h-6 w-6 text-primary" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-medium text-muted-foreground">
-                Total Players
-              </span>
-              <span className="text-2xl font-bold">{totalPlayers}</span>
-            </div>
-          </div>
-        </Card>
-        <Card className="p-4">
-          <div className="flex items-center gap-4">
-            <div className="rounded-lg bg-primary/10 p-2">
-              <BarChart3 className="h-6 w-6 text-primary" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-medium text-muted-foreground">
-                Attendance Rate
-              </span>
-              <span className="text-2xl font-bold">{attendanceRate}%</span>
-            </div>
-          </div>
-        </Card>
-        <Card className="p-4">
-          <div className="flex items-center gap-4">
-            <div className="rounded-lg bg-primary/10 p-2">
-              <Trophy className="h-6 w-6 text-primary" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-medium text-muted-foreground">
-                Accuracy Rate
-              </span>
-              <span className="text-2xl font-bold">{accuracyRate}%</span>
-            </div>
-          </div>
-        </Card>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatItem
+          icon={Calendar}
+          label="Training Sessions"
+          value={totalSessions}
+        />
+        <StatItem icon={Users} label="Players" value={totalPlayers} />
+        <StatItem
+          icon={BarChart3}
+          label="Attendance Rate"
+          value={`${Math.round(attendanceRate)}%`}
+        />
+        <StatItem
+          icon={Trophy}
+          label="On-Time Rate"
+          value={`${Math.round(onTimeRate)}%`}
+        />
       </div>
 
-      <AttendanceCharts trendData={chartData} dayStats={dayStatsData} />
+      <AttendanceCharts
+        trendData={chartData}
+        dayStats={dayStatsData}
+        data-testid="attendance-charts"
+      />
+
       <PerformanceOverview
         topPerformers={topPerformers}
         bottomPerformers={bottomPerformers}
+        data-testid="performance-overview"
       />
+
       <AttendanceTable
         players={team.playerTeamConnections || []}
         playerStats={playerStats}
         teamId={teamId}
         seasonId={seasonId}
         tenantId={tenantId}
+        data-testid="attendance-table"
       />
     </div>
   );

@@ -11,7 +11,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BarChart3, Users, Clock, Trophy, Calendar } from "lucide-react";
 import Link from "next/link";
-import { getDisplayGender } from "@/entities/team/Team.schema";
+import {
+  getDisplayGender,
+  getDisplayAgeGroup,
+} from "@/entities/team/Team.schema";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { useTeamAttendanceAggregates } from "@/entities/attendance/Attendance.actions.client";
 import { Progress } from "@/components/ui/progress";
@@ -46,6 +49,10 @@ import { useState } from "react";
 import { AttendanceSessionAggregate } from "@/entities/attendance/Attendance.schema";
 import { PageHeader } from "@/components/ui/page-header";
 import { Season } from "@/entities/season/Season.schema";
+import {
+  calculateAttendanceRate,
+  calculateAccuracyRate,
+} from "@/entities/attendance/Attendance.utils";
 
 function StatItem({
   icon: Icon,
@@ -81,17 +88,34 @@ type SessionData = {
   date: string;
   startTime: string;
   endTime: string;
-  presentCount: number;
+  onTimeCount: number;
   lateCount: number;
   absentCount: number;
 };
 
 type DayStats = {
   total: number;
-  present: number;
+  onTime: number;
   late: number;
   absent: number;
 };
+
+function formatTeamName(team: {
+  name?: string | null | undefined;
+  age?: string | null | undefined;
+  gender?: string | null | undefined;
+  skill?: string | null | undefined;
+}) {
+  if (team.name) return team.name;
+
+  return [
+    getDisplayAgeGroup(team.age ?? null),
+    getDisplayGender(team.gender ?? null, team.age ?? null),
+    team.skill ?? null,
+  ]
+    .filter(Boolean)
+    .join(" • ");
+}
 
 function TeamCard({
   team,
@@ -100,10 +124,10 @@ function TeamCard({
 }: {
   team: {
     id: number;
-    name: string | null;
-    age: string | null;
-    gender: string | null;
-    skill: string | null;
+    name: string | null | undefined;
+    age: string | null | undefined;
+    gender: string | null | undefined;
+    skill: string | null | undefined;
     playerTeamConnections?: Array<{ player: { id: number } | null }>;
     coach?: {
       firstName: string | null;
@@ -121,7 +145,7 @@ function TeamCard({
 
   if (isStatsLoading) {
     return (
-      <Card>
+      <Card data-testid="team-card-loading">
         <CardHeader>
           <Skeleton className="h-6 w-3/4" />
         </CardHeader>
@@ -146,12 +170,7 @@ function TeamCard({
     return (
       <Card className="border-destructive">
         <CardHeader>
-          <CardTitle className="text-lg">
-            {team.name ||
-              [team.age, getDisplayGender(team.gender, team.age), team.skill]
-                .filter(Boolean)
-                .join(" • ")}
-          </CardTitle>
+          <CardTitle className="text-lg">{formatTeamName(team)}</CardTitle>
         </CardHeader>
         <CardContent>
           <Alert variant="destructive">
@@ -174,12 +193,15 @@ function TeamCard({
   // Format recent trend data for the line chart
   const recentTrendData = recentSessions.map((session) => {
     const totalAttendees =
-      session.presentCount + session.lateCount + session.absentCount;
-    const attendanceRate = Math.round(
-      ((session.presentCount + session.lateCount) / totalAttendees) * 100
+      session.onTimeCount + session.lateCount + session.absentCount;
+    const attendanceRate = calculateAttendanceRate(
+      session.onTimeCount,
+      session.lateCount,
+      session.absentCount
     );
-    const accuracyRate = Math.round(
-      (session.presentCount / totalAttendees) * 100
+    const accuracyRate = calculateAccuracyRate(
+      session.onTimeCount,
+      session.lateCount
     );
 
     return {
@@ -195,10 +217,10 @@ function TeamCard({
     (acc: Record<string, DayStats>, session) => {
       const day = format(new Date(session.date), "EEE");
       if (!acc[day]) {
-        acc[day] = { total: 0, present: 0, late: 0, absent: 0 };
+        acc[day] = { total: 0, onTime: 0, late: 0, absent: 0 };
       }
       acc[day].total++;
-      acc[day].present += session.presentCount;
+      acc[day].onTime += session.onTimeCount;
       acc[day].late += session.lateCount;
       acc[day].absent += session.absentCount;
       return acc;
@@ -208,13 +230,8 @@ function TeamCard({
 
   const dayOfWeekData = Object.entries(dayOfWeekStats).map(([day, data]) => ({
     day,
-    attendance: Math.round(
-      ((data.present + data.late) / (data.present + data.late + data.absent)) *
-        100
-    ),
-    accuracy: Math.round(
-      (data.present / (data.present + data.late + data.absent)) * 100
-    ),
+    attendance: calculateAttendanceRate(data.onTime, data.late, data.absent),
+    accuracy: calculateAccuracyRate(data.onTime, data.late),
   }));
 
   return (
@@ -223,10 +240,7 @@ function TeamCard({
         <div className="flex items-start justify-between">
           <div className="space-y-3">
             <CardTitle className="text-2xl font-bold">
-              {team.name ||
-                [team.age, getDisplayGender(team.gender, team.age), team.skill]
-                  .filter(Boolean)
-                  .join(" • ")}
+              {formatTeamName(team)}
             </CardTitle>
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -242,11 +256,11 @@ function TeamCard({
               </div>
               <div className="flex gap-2">
                 <Badge variant="secondary" className="capitalize">
-                  {team.age}
+                  {getDisplayAgeGroup(team.age ?? null)}
                 </Badge>
                 {team.gender && (
                   <Badge variant="outline" className="capitalize">
-                    {team.gender.toLowerCase()}
+                    {getDisplayGender(team.gender, team.age ?? null)}
                   </Badge>
                 )}
                 {team.skill && (
@@ -288,23 +302,18 @@ function TeamCard({
                 <StatItem
                   icon={BarChart3}
                   label="Attendance Rate"
-                  value={`${Math.round(
-                    ((stats.totalPresent + stats.totalLate) /
-                      (stats.totalPresent +
-                        stats.totalLate +
-                        stats.totalAbsent)) *
-                      100
+                  value={`${calculateAttendanceRate(
+                    stats.totalOnTime,
+                    stats.totalLate,
+                    stats.totalAbsent
                   )}%`}
                 />
                 <StatItem
                   icon={Trophy}
                   label="Accuracy Rate"
-                  value={`${Math.round(
-                    (stats.totalPresent /
-                      (stats.totalPresent +
-                        stats.totalLate +
-                        stats.totalAbsent)) *
-                      100
+                  value={`${calculateAccuracyRate(
+                    stats.totalOnTime,
+                    stats.totalLate
                   )}%`}
                 />
               </div>
@@ -587,7 +596,7 @@ export default function AttendanceStatisticsPage({
   const isLoading = isTenantLoading || isTeamsLoading;
 
   if (isLoading) {
-    return <Skeleton className="w-full h-[400px]" />;
+    return <Skeleton className="w-full h-[400px]" data-testid="skeleton" />;
   }
 
   if (!teams?.length) {
@@ -632,14 +641,7 @@ export default function AttendanceStatisticsPage({
                   <SelectItem value="all">All Teams</SelectItem>
                   {teams.map((team) => (
                     <SelectItem key={team.id} value={team.id.toString()}>
-                      {team.name ||
-                        [
-                          team.age,
-                          getDisplayGender(team.gender, team.age),
-                          team.skill,
-                        ]
-                          .filter(Boolean)
-                          .join(" • ")}
+                      {formatTeamName(team)}
                     </SelectItem>
                   ))}
                 </SelectContent>

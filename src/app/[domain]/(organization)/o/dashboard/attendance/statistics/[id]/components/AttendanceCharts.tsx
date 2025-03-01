@@ -28,14 +28,16 @@ interface DayStats {
 interface AttendanceChartsProps {
   trendData: TrendData[];
   dayStats: DayStats[];
+  "data-testid"?: string;
 }
 
 export function AttendanceCharts({
   trendData,
   dayStats,
+  "data-testid": dataTestId,
 }: AttendanceChartsProps) {
   return (
-    <div className="grid gap-6 md:grid-cols-2">
+    <div className="grid gap-6 md:grid-cols-2" data-testid={dataTestId}>
       <Card>
         <CardHeader className="pb-2">
           <div className="space-y-1">

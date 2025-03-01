@@ -17,8 +17,6 @@ export function PermissionButton({
 }: PermissionButtonProps) {
   const { data: user, isLoading, error } = useCurrentUser();
 
-  console.log("PermissionButton:", { user, isLoading, error });
-
   // If no permission required, show button
   if (!permission) {
     return <Button {...props} />;

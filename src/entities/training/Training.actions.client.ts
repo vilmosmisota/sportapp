@@ -70,6 +70,16 @@ export const useUpdateTraining = (trainingId: number, tenantId: string) => {
         queryKey: [queryKeys.training.all],
       });
       queryClient.invalidateQueries({
+        queryKey: [queryKeys.training.grouped],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.training.detail(tenantId, trainingId.toString())],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.training.byDayRange(7)],
+      });
+
+      queryClient.invalidateQueries({
         queryKey: [queryKeys.team.all],
       });
       queryClient.invalidateQueries({
