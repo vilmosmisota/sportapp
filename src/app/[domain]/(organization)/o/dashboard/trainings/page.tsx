@@ -26,6 +26,8 @@ import {
 import { toast } from "sonner";
 import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 export default function TrainingsPage({
   params,
@@ -128,6 +130,8 @@ export default function TrainingsPage({
 
   if (!tenant) return null;
 
+  const noSeasonSelected = !activeSeason;
+
   return (
     <div className="w-full space-y-6 ">
       <PageHeader
@@ -160,6 +164,18 @@ export default function TrainingsPage({
         }
       />
 
+      {noSeasonSelected && (
+        <Alert variant="destructive" className="bg-amber-50 border-amber-200">
+          <AlertCircle className="h-4 w-4 text-amber-600" />
+          <AlertTitle className="text-amber-800">Season Required</AlertTitle>
+          <AlertDescription className="text-amber-700">
+            Please select a season to view and create trainings. If you
+            don&apos;t have any seasons yet, please go to Team Management and
+            create one first.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {isLoadingUpcoming ? (
         <div className="mb-6">
           <div className="flex items-center justify-between mb-3">
@@ -179,14 +195,27 @@ export default function TrainingsPage({
         <UpcomingTrainingsCarousel trainings={upcomingTrainings ?? []} />
       )}
 
-      <CalendarWeekView
-        trainings={groupedTrainings ?? []}
-        canManage={true}
-        onEdit={handleEditPattern}
-        onDelete={handleDeletePattern}
-        onEditIndividual={handleEditIndividual}
-        onUpdatePattern={handleUpdatePattern}
-      />
+      {noSeasonSelected ? (
+        <div className="h-96 flex items-center justify-center">
+          <div className="text-center max-w-md p-6 border border-dashed rounded-lg">
+            <AlertCircle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No Season Selected</h3>
+            <p className="text-muted-foreground">
+              Please select a season from the dropdown above to view and manage
+              your training schedule.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <CalendarWeekView
+          trainings={groupedTrainings ?? []}
+          canManage={true}
+          onEdit={handleEditPattern}
+          onDelete={handleDeletePattern}
+          onEditIndividual={handleEditIndividual}
+          onUpdatePattern={handleUpdatePattern}
+        />
+      )}
 
       <ResponsiveSheet
         isOpen={isEditOpen}

@@ -4,6 +4,8 @@ import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/ui/page-header";
+import { cn } from "@/libs/tailwind/utils";
+import { AlertCircle } from "lucide-react";
 import ProfileContent from "./tabs/ProfileContent";
 import GroupTypesContent from "./tabs/GroupTypesContent";
 import TrainingSettingsContent from "./tabs/TrainingSettingsContent";
@@ -15,6 +17,24 @@ export default function OrganizationDetailPage({
   params: { domain: string };
 }) {
   const { data: tenant, isPending, error } = useTenantByDomain(params.domain);
+
+  // Check if team management configuration is complete
+  const isTeamManagementConfigComplete = Boolean(
+    tenant?.groupTypes &&
+      tenant.groupTypes.ageGroups?.length > 0 &&
+      tenant.groupTypes.skillLevels?.length > 0 &&
+      tenant.groupTypes.positions?.length > 0
+  );
+
+  // Check if training locations are configured
+  const hasTrainingLocations = Boolean(
+    tenant?.trainingLocations && tenant.trainingLocations.length > 0
+  );
+
+  // Check if game locations are configured
+  const hasGameLocations = Boolean(
+    tenant?.gameLocations && tenant.gameLocations.length > 0
+  );
 
   if (error) {
     return <div>{error.message}</div>;
@@ -34,14 +54,42 @@ export default function OrganizationDetailPage({
                 <TabsTrigger value="profile" className="text-sm">
                   Profile
                 </TabsTrigger>
-                <TabsTrigger value="group-types" className="text-sm">
-                  Group Types
+                <TabsTrigger
+                  value="group-types"
+                  className={cn(
+                    "text-sm relative",
+                    !isTeamManagementConfigComplete &&
+                      "font-medium text-amber-600"
+                  )}
+                >
+                  {!isTeamManagementConfigComplete && (
+                    <AlertCircle className="h-3 w-3 absolute -top-1 -right-1 text-amber-600" />
+                  )}
+                  Team Management
                 </TabsTrigger>
-                <TabsTrigger value="training-settings" className="text-sm">
-                  Training Settings
+                <TabsTrigger
+                  value="training-settings"
+                  className={cn(
+                    "text-sm relative",
+                    !hasTrainingLocations && "font-medium text-amber-600"
+                  )}
+                >
+                  {!hasTrainingLocations && (
+                    <AlertCircle className="h-3 w-3 absolute -top-1 -right-1 text-amber-600" />
+                  )}
+                  Training & Development
                 </TabsTrigger>
-                <TabsTrigger value="game-settings" className="text-sm">
-                  Game Settings
+                <TabsTrigger
+                  value="game-settings"
+                  className={cn(
+                    "text-sm relative",
+                    !hasGameLocations && "font-medium text-amber-600"
+                  )}
+                >
+                  {!hasGameLocations && (
+                    <AlertCircle className="h-3 w-3 absolute -top-1 -right-1 text-amber-600" />
+                  )}
+                  Competition
                 </TabsTrigger>
               </TabsList>
               <ScrollBar orientation="horizontal" className="invisible" />

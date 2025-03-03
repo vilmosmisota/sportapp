@@ -5,7 +5,7 @@ import {
   TenantForm,
   TenantType,
 } from "@/entities/tenant/Tenant.schema";
-import { Plus } from "lucide-react";
+import { Plus, AlertCircle } from "lucide-react";
 import { useState } from "react";
 import AddTrainingLocationForm from "../forms/AddTrainingLocationForm";
 import LocationItem from "../items/LocationItem";
@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useUpdateTenant } from "@/entities/tenant/Tenant.actions.client";
 import { toast } from "sonner";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface TrainingSettingsContentProps {
   tenant: Tenant | undefined;
@@ -32,6 +33,10 @@ export default function TrainingSettingsContent({
   const updateTenant = useUpdateTenant(tenant?.id?.toString() ?? "", domain);
 
   if (!tenant) return null;
+
+  // Check if training locations are configured
+  const hasTrainingLocations =
+    tenant.trainingLocations && tenant.trainingLocations.length > 0;
 
   const handleLateThresholdChange = async () => {
     try {
@@ -61,6 +66,20 @@ export default function TrainingSettingsContent({
 
   return (
     <div className="space-y-8">
+      {!hasTrainingLocations && (
+        <Alert variant="destructive" className="bg-amber-50 border-amber-200">
+          <AlertCircle className="h-4 w-4 text-amber-600" />
+          <AlertTitle className="text-amber-800">
+            Training Locations Required
+          </AlertTitle>
+          <AlertDescription className="text-amber-700">
+            Please add at least one training location to enable training and
+            attendance features. Training locations are required before you can
+            schedule trainings or track attendance.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Late Threshold Settings */}
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -121,12 +140,21 @@ export default function TrainingSettingsContent({
           ))}
           {(!tenant.trainingLocations ||
             tenant.trainingLocations.length === 0) && (
-            <Card className="col-span-2 border-dashed">
-              <CardContent className="flex flex-col items-center justify-center h-[200px] text-muted-foreground">
-                <p>No locations added yet</p>
-                <p className="text-sm">
-                  Click the + button to add your first location
+            <Card className="col-span-2 border-dashed border-amber-300">
+              <CardContent className="flex flex-col items-center justify-center h-[200px] text-amber-700">
+                <p className="font-medium">No locations added yet - Required</p>
+                <p className="text-sm mt-2">
+                  Add at least one training location to enable training and
+                  attendance features
                 </p>
+                <Button
+                  variant="outline"
+                  className="mt-4 border-amber-400 text-amber-700 hover:bg-amber-50 hover:text-amber-800"
+                  onClick={() => setIsAddLocationOpen(true)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Your First Location
+                </Button>
               </CardContent>
             </Card>
           )}

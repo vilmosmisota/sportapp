@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
-import { Plus, Calendar, CalendarRange } from "lucide-react";
+import { Plus, Calendar, CalendarRange, AlertCircle } from "lucide-react";
 import { useState } from "react";
 import { Season } from "@/entities/season/Season.schema";
 import { Team } from "@/entities/team/Team.schema";
@@ -12,6 +12,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Props {
   domain: string;
@@ -28,6 +34,31 @@ export default function CreateTrainingButton({
 }: Props) {
   const [isPatternOpen, setIsPatternOpen] = useState(false);
   const [isSingleOpen, setIsSingleOpen] = useState(false);
+
+  // Check if a season is selected
+  const noSeasonSelected = !selectedSeason;
+
+  // If no season is selected, render a disabled button with a tooltip
+  if (noSeasonSelected) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button className="gap-2" disabled>
+              <Plus className="h-4 w-4" />
+              Create
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-xs">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5 flex-shrink-0" />
+              <p>Please select a season first before creating trainings.</p>
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
 
   return (
     <>

@@ -63,6 +63,8 @@ interface NavItem {
   href: string;
   iconName: string;
   description?: string;
+  disabled?: boolean;
+  disabledReason?: string;
 }
 
 interface NavSection {
@@ -176,7 +178,10 @@ export default function Dashboard({ items, children }: DashboardProps) {
                     {section.items.map((item) => (
                       <TooltipProvider key={item.href} delayDuration={0}>
                         <Tooltip
-                          open={isCollapsed && openTooltip === item.href}
+                          open={
+                            (isCollapsed || item.disabled) &&
+                            openTooltip === item.href
+                          }
                           onOpenChange={(open) => {
                             if (open) {
                               setOpenTooltip(item.href);
@@ -186,45 +191,82 @@ export default function Dashboard({ items, children }: DashboardProps) {
                           }}
                         >
                           <TooltipTrigger asChild>
-                            <Link
-                              href={item.href}
-                              className={cn(
-                                "group/item flex rounded-md transition-all duration-200 relative",
-                                isCollapsed
-                                  ? "w-10 h-10 justify-center items-center"
-                                  : "px-3 py-1.5 items-center",
-                                pathname === item.href
-                                  ? "bg-accent text-accent-foreground"
-                                  : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
-                              )}
-                            >
+                            {item.disabled ? (
                               <div
                                 className={cn(
+                                  "group/item flex rounded-md transition-all duration-200 relative cursor-not-allowed",
                                   isCollapsed
-                                    ? "flex items-center justify-center"
-                                    : "flex items-center gap-x-3 w-full"
+                                    ? "w-10 h-10 justify-center items-center"
+                                    : "px-3 py-1.5 items-center",
+                                  "bg-muted/50 text-muted-foreground/50"
+                                )}
+                                onClick={() => setOpenTooltip(item.href)}
+                              >
+                                <div
+                                  className={cn(
+                                    isCollapsed
+                                      ? "flex items-center justify-center"
+                                      : "flex items-center gap-x-3 w-full"
+                                  )}
+                                >
+                                  {getIcon(item.iconName)}
+                                  {!isCollapsed && (
+                                    <span className="text-sm font-medium truncate">
+                                      {item.name}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            ) : (
+                              <Link
+                                href={item.href}
+                                className={cn(
+                                  "group/item flex rounded-md transition-all duration-200 relative",
+                                  isCollapsed
+                                    ? "w-10 h-10 justify-center items-center"
+                                    : "px-3 py-1.5 items-center",
+                                  pathname === item.href
+                                    ? "bg-accent text-accent-foreground"
+                                    : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
                                 )}
                               >
-                                {getIcon(item.iconName)}
-                                {!isCollapsed && (
-                                  <span className="text-sm font-medium truncate">
-                                    {item.name}
-                                  </span>
+                                <div
+                                  className={cn(
+                                    isCollapsed
+                                      ? "flex items-center justify-center"
+                                      : "flex items-center gap-x-3 w-full"
+                                  )}
+                                >
+                                  {getIcon(item.iconName)}
+                                  {!isCollapsed && (
+                                    <span className="text-sm font-medium truncate">
+                                      {item.name}
+                                    </span>
+                                  )}
+                                </div>
+                                {pathname === item.href && !isCollapsed && (
+                                  <div className="ml-auto h-1 w-1 rounded-full bg-primary" />
                                 )}
-                              </div>
-                              {pathname === item.href && !isCollapsed && (
-                                <div className="ml-auto h-1 w-1 rounded-full bg-primary" />
-                              )}
-                            </Link>
+                              </Link>
+                            )}
                           </TooltipTrigger>
-                          {isCollapsed && (
+                          {(isCollapsed || item.disabled) && (
                             <TooltipContent side="right" sideOffset={10}>
                               <div className="flex flex-col gap-1">
                                 <span className="font-medium">{item.name}</span>
-                                {item.description && (
-                                  <span className="text-xs text-muted-foreground">
-                                    {item.description}
-                                  </span>
+                                {item.disabled && item.disabledReason ? (
+                                  <div className="text-xs text-amber-500 max-w-64">
+                                    <span className="font-medium">
+                                      Required:
+                                    </span>{" "}
+                                    {item.disabledReason}
+                                  </div>
+                                ) : (
+                                  item.description && (
+                                    <span className="text-xs text-muted-foreground">
+                                      {item.description}
+                                    </span>
+                                  )
                                 )}
                               </div>
                             </TooltipContent>

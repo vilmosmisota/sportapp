@@ -164,7 +164,7 @@ export default function AddGameLocationForm({
             name="mapLink"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Map Link (optional)</FormLabel>
+                <FormLabel>Map Link</FormLabel>
                 <FormControl>
                   <Input placeholder="Enter map link" {...field} />
                 </FormControl>

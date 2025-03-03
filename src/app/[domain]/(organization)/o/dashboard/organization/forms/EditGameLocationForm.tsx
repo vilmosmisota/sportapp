@@ -163,7 +163,7 @@ export default function EditGameLocationForm({
             name="mapLink"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Map Link (optional)</FormLabel>
+                <FormLabel>Map Link</FormLabel>
                 <FormControl>
                   <Input placeholder="Enter map link" {...field} />
                 </FormControl>
