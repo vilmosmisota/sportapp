@@ -41,6 +41,11 @@ export function DateInput({
   }, [value]);
 
   const formatDateString = (input: string) => {
+    // If user types '/' at the correct positions (3rd or 6th index), keep it
+    if ((input.length === 3 || input.length === 6) && input.endsWith("/")) {
+      return input;
+    }
+
     // Remove any non-digit characters
     const digits = input.replace(/\D/g, "");
 
