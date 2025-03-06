@@ -182,7 +182,10 @@ export default function OrgDashboardLayout({
 
   // Check if game locations are configured
   const gameLocationsConfigured = Boolean(
-    tenant?.gameLocations && tenant.gameLocations.length > 0
+    tenant?.gameLocations &&
+      tenant.gameLocations.length > 0 &&
+      tenant.competitionTypes &&
+      tenant.competitionTypes.length > 0
   );
 
   const navItems = getNavItems(

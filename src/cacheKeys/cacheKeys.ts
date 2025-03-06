@@ -118,4 +118,15 @@ export const queryKeys = {
     detail: (tenantId: string | undefined, roleId: string | undefined) =>
       ["role", "detail", tenantId, roleId] as const,
   },
+  game: {
+    all: ["game"] as const,
+    byTenant: (tenantId: string | undefined) =>
+      ["game", "byTenant", tenantId] as const,
+    bySeason: (tenantId: string | undefined, seasonId: number | undefined) =>
+      ["game", "bySeason", tenantId, seasonId] as const,
+    byTeam: (tenantId: string | undefined, teamId: number | undefined) =>
+      ["game", "byTeam", tenantId, teamId] as const,
+    detail: (tenantId: string | undefined, gameId: number | undefined) =>
+      ["game", "detail", tenantId, gameId] as const,
+  },
 } as const;

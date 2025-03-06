@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, AlertCircle } from "lucide-react";
+import { Plus, AlertCircle, Users, Award, Layers } from "lucide-react";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { Tenant } from "@/entities/tenant/Tenant.schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,7 +33,7 @@ export default function GroupTypesContent({
     ageGroups.length > 0 && skillLevels.length > 0 && positions.length > 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {!isConfigComplete && (
         <Alert variant="destructive" className="bg-amber-50 border-amber-200">
           <AlertCircle className="h-4 w-4 text-amber-600" />
@@ -48,106 +48,156 @@ export default function GroupTypesContent({
         </Alert>
       )}
 
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground">
-            Manage your organization&apos;s age groups, skill levels, and player
-            positions for teams.
-          </h3>
-        </div>
-
-        <Button onClick={() => setIsAddOpen(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Manage Group Types
-        </Button>
+      {/* Section Introduction */}
+      <div>
+        <h2 className="text-lg font-semibold mb-2">Team Group Management</h2>
+        <p className="text-sm text-muted-foreground">
+          Configure team grouping settings for your organization
+        </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
-        <Card className={ageGroups.length === 0 ? "border-amber-300" : ""}>
-          <CardHeader
-            className={`${
-              ageGroups.length === 0 ? "bg-amber-50/50" : "bg-secondary/50"
-            } rounded-t-lg`}
+      {/* Group Types Management Card */}
+      <Card className="border">
+        <CardHeader className="bg-secondary/30 py-2 px-6 border-b flex flex-row items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-base font-medium">
+            <Layers className="h-4 w-4" />
+            Group Types
+          </CardTitle>
+          <Button
+            onClick={() => setIsAddOpen(true)}
+            className="gap-2"
+            size="sm"
           >
-            <CardTitle className="text-base font-semibold">
-              Age Groups
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="flex flex-wrap gap-2">
-              {ageGroups.length === 0 ? (
-                <p className="text-sm text-amber-600 font-medium">
-                  No age groups defined - Required
-                </p>
-              ) : (
-                ageGroups.map((group) => (
-                  <Badge key={group} variant="secondary">
-                    {getDisplayAgeGroup(group)}
-                  </Badge>
-                ))
-              )}
+            <Plus className="h-4 w-4" />
+            Manage Groups
+          </Button>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="space-y-5">
+            <div>
+              <h3 className="text-sm font-medium text-muted-foreground">
+                Manage your organization&apos;s age groups, skill levels, and
+                player positions for teams
+              </h3>
             </div>
-          </CardContent>
-        </Card>
 
-        <Card className={skillLevels.length === 0 ? "border-amber-300" : ""}>
-          <CardHeader
-            className={`${
-              skillLevels.length === 0 ? "bg-amber-50/50" : "bg-secondary/50"
-            } rounded-t-lg`}
-          >
-            <CardTitle className="text-base font-semibold">
-              Skill Levels
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="flex flex-wrap gap-2">
-              {skillLevels.length === 0 ? (
-                <p className="text-sm text-amber-600 font-medium">
-                  No skill levels defined - Required
-                </p>
-              ) : (
-                skillLevels.map((level) => (
-                  <Badge key={level} variant="secondary" className="capitalize">
-                    {level}
-                  </Badge>
-                ))
-              )}
-            </div>
-          </CardContent>
-        </Card>
+            <div className="grid gap-6 md:grid-cols-3">
+              {/* Age Groups Card */}
+              <Card
+                className={`border ${
+                  ageGroups.length === 0 ? "border-amber-300" : ""
+                }`}
+              >
+                <CardHeader
+                  className={`py-2 px-4 ${
+                    ageGroups.length === 0
+                      ? "bg-amber-50/50"
+                      : "bg-secondary/20"
+                  } border-b`}
+                >
+                  <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                    <Users className="h-4 w-4" />
+                    Age Groups
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <div className="flex flex-wrap gap-2">
+                    {ageGroups.length === 0 ? (
+                      <p className="text-sm text-amber-600 font-medium">
+                        No age groups defined - Required
+                      </p>
+                    ) : (
+                      ageGroups.map((group) => (
+                        <Badge key={group} variant="secondary">
+                          {getDisplayAgeGroup(group)}
+                        </Badge>
+                      ))
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
 
-        <Card className={positions.length === 0 ? "border-amber-300" : ""}>
-          <CardHeader
-            className={`${
-              positions.length === 0 ? "bg-amber-50/50" : "bg-secondary/50"
-            } rounded-t-lg`}
-          >
-            <CardTitle className="text-base font-semibold">
-              Player Positions
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="flex flex-wrap gap-2">
-              {positions.length === 0 ? (
-                <p className="text-sm text-amber-600 font-medium">
-                  No positions defined - Required
-                </p>
-              ) : (
-                positions.map((position) => (
-                  <Badge
-                    key={position}
-                    variant="secondary"
-                    className="capitalize"
-                  >
-                    {position}
-                  </Badge>
-                ))
-              )}
+              {/* Skill Levels Card */}
+              <Card
+                className={`border ${
+                  skillLevels.length === 0 ? "border-amber-300" : ""
+                }`}
+              >
+                <CardHeader
+                  className={`py-2 px-4 ${
+                    skillLevels.length === 0
+                      ? "bg-amber-50/50"
+                      : "bg-secondary/20"
+                  } border-b`}
+                >
+                  <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                    <Award className="h-4 w-4" />
+                    Skill Levels
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <div className="flex flex-wrap gap-2">
+                    {skillLevels.length === 0 ? (
+                      <p className="text-sm text-amber-600 font-medium">
+                        No skill levels defined - Required
+                      </p>
+                    ) : (
+                      skillLevels.map((level) => (
+                        <Badge
+                          key={level}
+                          variant="secondary"
+                          className="capitalize"
+                        >
+                          {level}
+                        </Badge>
+                      ))
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Player Positions Card */}
+              <Card
+                className={`border ${
+                  positions.length === 0 ? "border-amber-300" : ""
+                }`}
+              >
+                <CardHeader
+                  className={`py-2 px-4 ${
+                    positions.length === 0
+                      ? "bg-amber-50/50"
+                      : "bg-secondary/20"
+                  } border-b`}
+                >
+                  <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                    <Layers className="h-4 w-4" />
+                    Player Positions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <div className="flex flex-wrap gap-2">
+                    {positions.length === 0 ? (
+                      <p className="text-sm text-amber-600 font-medium">
+                        No positions defined - Required
+                      </p>
+                    ) : (
+                      positions.map((position) => (
+                        <Badge
+                          key={position}
+                          variant="secondary"
+                          className="capitalize"
+                        >
+                          {position}
+                        </Badge>
+                      ))
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <ResponsiveSheet
         isOpen={isAddOpen}

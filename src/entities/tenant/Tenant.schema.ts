@@ -37,6 +37,14 @@ export const TenantFeaturesSchema = z.object({
 
 export type TenantFeatures = z.infer<typeof TenantFeaturesSchema>;
 
+// Define the competition type schema
+export const CompetitionTypeSchema = z.object({
+  name: z.string(),
+  color: z.string().optional(),
+});
+
+export type CompetitionType = z.infer<typeof CompetitionTypeSchema>;
+
 export const TenantSchema = z.object({
   id: z.number(),
   name: z.string().min(1, { message: "Name is required" }),
@@ -55,6 +63,7 @@ export const TenantSchema = z.object({
   gameLocations: z.array(LocationSchema).nullable(),
   lateThresholdMinutes: z.number().min(0).nullable().default(5),
   isPublicSitePublished: z.boolean().nullable().default(false),
+  competitionTypes: z.array(CompetitionTypeSchema).nullable(),
 });
 
 export type Tenant = z.infer<typeof TenantSchema>;
@@ -71,6 +80,7 @@ export const TenantFormSchema = TenantSchema.omit({
   groupTypes: GroupTypeSchema.optional(),
   trainingLocations: z.array(LocationSchema).optional(),
   gameLocations: z.array(LocationSchema).optional(),
+  competitionTypes: z.array(CompetitionTypeSchema).optional(),
 });
 
 export type TenantForm = z.infer<typeof TenantFormSchema>;
