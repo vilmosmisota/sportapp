@@ -5,6 +5,7 @@ import "../styles/globals.css";
 import RootStyleLoader from "./components/RootStyleLoader";
 import ReactQueryClientProvider from "@/providers/ReactQueryClientProvider";
 import { Toaster } from "@/components/ui/sonner";
+import { Providers } from "@/components/ui/providers";
 
 export const metadata = {
   title: "Title",
@@ -22,7 +23,7 @@ export default function RootLayout({
         <body className={"min-h-screen bg-background antialiased"}>
           {/* <RootStyleLoader /> */}
 
-          <>{children}</>
+          {children}
           <Toaster />
         </body>
       </html>

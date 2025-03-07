@@ -20,8 +20,16 @@ const getNavItems = (
         description: "Overview of your organization",
         permissions: [Permission.VIEW_DASHBOARD],
       },
+      {
+        name: "Calendar",
+        href: "/o/dashboard/calendar",
+        iconName: "Calendar",
+        description: "View upcoming games and trainings",
+        permissions: [Permission.VIEW_DASHBOARD],
+      },
     ],
   },
+
   {
     section: "Organization",
     items: [

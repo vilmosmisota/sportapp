@@ -19,17 +19,11 @@ import {
   Users2,
   X,
   Swords,
+  Calendar,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
+
 import { useState } from "react";
 import { Menu as MenuIcon } from "lucide-react";
 import { DashboardAuthMenu } from "./DashboardAuthMenu";
@@ -56,6 +50,7 @@ const iconMap = {
   ClipboardCheck,
   BarChart3,
   Swords,
+  Calendar,
 };
 
 interface NavItem {
