@@ -5,7 +5,6 @@ import "../styles/globals.css";
 import RootStyleLoader from "./components/RootStyleLoader";
 import ReactQueryClientProvider from "@/providers/ReactQueryClientProvider";
 import { Toaster } from "@/components/ui/sonner";
-import { Providers } from "@/components/ui/providers";
 
 export const metadata = {
   title: "Title",

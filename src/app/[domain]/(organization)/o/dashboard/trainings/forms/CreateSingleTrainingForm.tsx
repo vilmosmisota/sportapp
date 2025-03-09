@@ -229,9 +229,12 @@ export default function CreateSingleTrainingForm({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {locations.map((location) => (
-                          <SelectItem key={location.id} value={location.id}>
-                            {location.name}, {location.city}
+                        {locations.map((location, index) => (
+                          <SelectItem
+                            key={location.id || `loc-${index}`}
+                            value={location.id || `loc-${index}`}
+                          >
+                            {location.name}
                           </SelectItem>
                         ))}
                       </SelectContent>

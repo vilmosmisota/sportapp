@@ -1,28 +1,28 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import {
-  format,
-  parseISO,
-  startOfDay,
-  addHours,
-  startOfMonth,
-  endOfMonth,
-} from "date-fns";
+import { useState, useEffect, useMemo } from "react";
+import { format, startOfMonth, endOfMonth } from "date-fns";
 import {
   EventCalendar,
   CalendarEvent,
 } from "@/components/calendar/EventCalendar";
 import { EventDetailsDialog } from "@/components/calendar/EventDetailsDialog";
-import { Game, GameStatus } from "@/entities/game/Game.schema";
-import { Training } from "@/entities/training/Training.schema";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Plus, Info, Keyboard } from "lucide-react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { SimpleFilter } from "@/components/calendar/filters/SimpleFilter";
+import { useCalendarEvents } from "@/components/calendar/hooks/useCalendarEvents";
+import { useSeasonsByTenantId } from "@/entities/season/Season.query";
+import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type PageProps = {
   params: {
@@ -31,9 +31,7 @@ type PageProps = {
 };
 
 export default function CalendarPage({ params }: PageProps) {
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<CalendarEvent[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
     null
   );
@@ -44,39 +42,34 @@ export default function CalendarPage({ params }: PageProps) {
     end: endOfMonth(new Date()),
   });
 
-  // Load events when component mounts or date range changes
+  const { data: tenant } = useTenantByDomain(params.domain);
+  const { data: seasons } = useSeasonsByTenantId(tenant?.id?.toString() || "");
+
+  const selectedSeason = useMemo(() => {
+    if (!seasons) return undefined;
+    return seasons.find((season) => season.isActive) || seasons[0];
+  }, [seasons]);
+
+  const { data: events, isLoading } = useCalendarEvents(
+    tenant?.id?.toString() || "",
+    dateRange.start,
+    dateRange.end,
+    selectedSeason?.id || 0,
+    !!tenant && !!selectedSeason
+  );
+
+  // Update filtered events when events change
   useEffect(() => {
-    const loadEventsForRange = async () => {
-      setIsLoading(true);
+    if (events && events.length > 0 && filteredEvents.length === 0) {
+      setFilteredEvents(events);
+    }
+  }, [events, filteredEvents.length]);
 
-      // Simulate API loading delay
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      // In a real app, you would fetch events for the specific date range:
-      // const games = await fetchGamesForDateRange(params.domain, dateRange.start, dateRange.end);
-      // const trainings = await fetchTrainingsForDateRange(params.domain, dateRange.start, dateRange.end);
-
-      // For demo, let's create mock events within the date range
-      const mockEvents = generateMockEventsForRange(
-        dateRange.start,
-        dateRange.end
-      );
-      setEvents(mockEvents);
-      // Initialize filtered events but don't update them if SimpleFilter has already done filtering
-      setFilteredEvents((prev) => (prev.length === 0 ? mockEvents : prev));
-      setIsLoading(false);
-    };
-
-    loadEventsForRange();
-  }, [params.domain, dateRange]);
-
-  // Handle event click
   const handleEventClick = (event: CalendarEvent) => {
     setSelectedEvent(event);
     setIsEventDetailsOpen(true);
   };
 
-  // Handle date range change (when user navigates to a different month/week)
   const handleDateRangeChange = (start: Date, end: Date) => {
     // Only update the dateRange state if the range has actually changed
     setDateRange((prev) => {
@@ -114,217 +107,20 @@ export default function CalendarPage({ params }: PageProps) {
     // In a real app, you would confirm and delete the event
   };
 
-  // Generate mock events for demonstration
-  const generateMockEvents = (): CalendarEvent[] => {
-    const mockEvents: CalendarEvent[] = [];
-    const today = startOfDay(new Date());
+  // Handle season change
+  const handleSeasonChange = (seasonId: string) => {
+    const selected = seasons?.find((s) => s.id === parseInt(seasonId));
 
-    // Game events
-    const gameStatuses = [
-      GameStatus.Scheduled,
-      GameStatus.InProgress,
-      GameStatus.Completed,
-      GameStatus.Postponed,
-    ];
+    // If no season was found, don't update
+    if (!selected) return;
 
-    for (let i = -5; i < 15; i++) {
-      const gameDate = addHours(today, 24 * i + 14); // afternoon games
-
-      const mockGame: Game = {
-        id: i + 100,
-        homeTeam: { id: 1, name: "Lions FC", appearance: { color: "blue" } },
-        awayTeam: {
-          id: 2,
-          name: "Tigers United",
-          appearance: { color: "orange" },
-        },
-        status: gameStatuses[Math.floor(Math.random() * gameStatuses.length)],
-        type: "league",
-        homeScore: i > 0 ? null : Math.floor(Math.random() * 5),
-        awayScore: i > 0 ? null : Math.floor(Math.random() * 5),
-        location: { id: 1, name: "City Stadium", address: "123 Main St" },
-        startTime: format(gameDate, "HH:mm"),
-        date: format(gameDate, "yyyy-MM-dd"),
-        tenantId: 1,
-        seasonId: 1,
-        notes:
-          i % 3 === 0 ? "Important match against a rival team." : undefined,
-      } as unknown as Game;
-
-      mockEvents.push({
-        id: `game-${i + 100}`,
-        type: "game",
-        title: `${mockGame.homeTeam?.name} vs ${mockGame.awayTeam?.name}`,
-        start: gameDate,
-        end: addHours(gameDate, 2),
-        color: "blue",
-        data: mockGame,
+    // Update date range to match season dates if available
+    if (selected.startDate && selected.endDate) {
+      setDateRange({
+        start: new Date(selected.startDate),
+        end: new Date(selected.endDate),
       });
     }
-
-    // Training events
-    for (let i = -3; i < 20; i++) {
-      // Skip some days to avoid having training every day
-      if (i % 2 === 0) continue;
-
-      const trainingDate = addHours(today, 24 * i + 18); // evening trainings
-
-      const mockTraining: Training = {
-        id: i + 200,
-        date: trainingDate,
-        startTime: format(trainingDate, "HH:mm"),
-        endTime: format(addHours(trainingDate, 1.5), "HH:mm"),
-        location: { id: 2, name: "Training Ground", address: "456 Park Ave" },
-        teamId: 1,
-        tenantId: 1,
-        team: { id: 1, name: "Lions FC", appearance: { color: "blue" } },
-        trainingSeasonConnections: [
-          {
-            id: 1,
-            trainingId: i + 200,
-            seasonId: 1,
-            tenantId: 1,
-            season: {
-              id: 1,
-              startDate: new Date(),
-              endDate: new Date(),
-              isActive: true,
-              customName: "Season 2023-2024",
-              breaks: [],
-              phases: null,
-            },
-          },
-        ],
-      } as unknown as Training;
-
-      mockEvents.push({
-        id: `training-${i + 200}`,
-        type: "training",
-        title: `${mockTraining.team?.name} Training`,
-        start: trainingDate,
-        end: addHours(trainingDate, 1.5),
-        color: "green",
-        data: mockTraining,
-      });
-    }
-
-    return mockEvents;
-  };
-
-  // Generate mock events for a specific date range
-  const generateMockEventsForRange = (
-    start: Date,
-    end: Date
-  ): CalendarEvent[] => {
-    const mockEvents: CalendarEvent[] = [];
-    const today = startOfDay(new Date());
-
-    // Game events
-    const gameStatuses = [
-      GameStatus.Scheduled,
-      GameStatus.InProgress,
-      GameStatus.Completed,
-      GameStatus.Postponed,
-    ];
-
-    for (let i = -5; i < 15; i++) {
-      const gameDate = addHours(today, 24 * i + 14); // afternoon games
-
-      if (gameDate >= start && gameDate <= end) {
-        const mockGame = {
-          id: `${i + 100}`, // Convert to string
-          homeTeam: {
-            id: "1",
-            name: "Lions FC",
-            appearance: { color: "blue", isVisible: true },
-          },
-          awayTeam: {
-            id: "2",
-            name: "Tigers United",
-            appearance: { color: "orange", isVisible: true },
-          },
-          status: gameStatuses[Math.floor(Math.random() * gameStatuses.length)],
-          type: "league",
-          homeScore: i > 0 ? null : Math.floor(Math.random() * 5),
-          awayScore: i > 0 ? null : Math.floor(Math.random() * 5),
-          location: { id: "1", name: "City Stadium", address: "123 Main St" },
-          startTime: format(gameDate, "HH:mm"),
-          date: gameDate, // Keep as Date object
-          tenantId: "1",
-          seasonId: "1",
-          notes:
-            i % 3 === 0 ? "Important match against a rival team." : undefined,
-        } as unknown as Game;
-
-        mockEvents.push({
-          id: `game-${i + 100}`,
-          type: "game",
-          title: `${mockGame.homeTeam?.name} vs ${mockGame.awayTeam?.name}`,
-          start: gameDate,
-          end: addHours(gameDate, 2),
-          color: "blue",
-          data: mockGame,
-        });
-      }
-    }
-
-    // Training events
-    for (let i = -3; i < 20; i++) {
-      // Skip some days to avoid having training every day
-      if (i % 2 === 0) continue;
-
-      const trainingDate = addHours(today, 24 * i + 18); // evening trainings
-
-      if (trainingDate >= start && trainingDate <= end) {
-        const mockTraining = {
-          id: `${i + 200}`, // Convert to string
-          date: trainingDate,
-          startTime: format(trainingDate, "HH:mm"),
-          endTime: format(addHours(trainingDate, 1.5), "HH:mm"),
-          location: {
-            id: "2",
-            name: "Training Ground",
-            address: "456 Park Ave",
-          },
-          teamId: "1",
-          tenantId: "1",
-          team: {
-            id: "1",
-            name: "Lions FC",
-            appearance: { color: "blue", isVisible: true },
-          },
-          trainingSeasonConnections: [
-            {
-              id: "1",
-              trainingId: `${i + 200}`,
-              seasonId: "1",
-              tenantId: "1",
-              season: {
-                id: "1",
-                startDate: new Date(),
-                endDate: new Date(),
-                isActive: true,
-                customName: "Season 2023-2024",
-                breaks: [],
-                phases: null,
-              },
-            },
-          ],
-        } as unknown as Training;
-
-        mockEvents.push({
-          id: `training-${i + 200}`,
-          type: "training",
-          title: `${mockTraining.team?.name} Training`,
-          start: trainingDate,
-          end: addHours(trainingDate, 1.5),
-          color: "green",
-          data: mockTraining,
-        });
-      }
-    }
-
-    return mockEvents;
   };
 
   return (
@@ -332,7 +128,26 @@ export default function CalendarPage({ params }: PageProps) {
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Calendar</h1>
         <div className="flex space-x-2">
-          <Button onClick={() => setIsCreateFormOpen(true)} size="sm">
+          {/* Season selector */}
+          {seasons && seasons.length > 0 && (
+            <Select
+              value={selectedSeason?.id.toString()}
+              onValueChange={handleSeasonChange}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select season" />
+              </SelectTrigger>
+              <SelectContent>
+                {seasons.map((season) => (
+                  <SelectItem key={season.id} value={season.id.toString()}>
+                    {season.customName || `Season ${season.id}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          <Button onClick={() => setIsCreateFormOpen(true)}>
             <Plus className="h-4 w-4 mr-1" />
             Add Event
           </Button>
@@ -341,7 +156,7 @@ export default function CalendarPage({ params }: PageProps) {
 
       {/* Simple filter component */}
       <SimpleFilter
-        events={events}
+        events={events || []}
         onFilteredEventsChange={setFilteredEvents}
         dateRange={dateRange}
       />
@@ -353,6 +168,7 @@ export default function CalendarPage({ params }: PageProps) {
             events={filteredEvents}
             onEventClick={handleEventClick}
             onDateRangeChange={handleDateRangeChange}
+            defaultView="day"
             isLoading={isLoading}
           />
         </CardContent>

@@ -9,15 +9,20 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useUsers } from "@/entities/user/User.query";
 
-export const useGetTeamsByTenantId = (tenantId: string) => {
+export const useGetTeamsByTenantId = (
+  tenantId: string,
+  includeOpponents: boolean = false
+) => {
   const client = useSupabase();
   const { data: users } = useUsers(tenantId);
-  const queryKey = [queryKeys.team.all, tenantId];
+  const queryKey = [queryKeys.team.all, tenantId, includeOpponents];
 
   return useQuery({
     queryKey,
     queryFn: async () => {
-      const data = await getTeamsByTenantId(client, tenantId);
+      const data = await getTeamsByTenantId(client, tenantId, {
+        includeOpponents,
+      });
 
       // Map coaches to teams using the cached users data
       return data.map((team) => ({
@@ -28,6 +33,31 @@ export const useGetTeamsByTenantId = (tenantId: string) => {
       }));
     },
     enabled: !!tenantId && !!users,
+  });
+};
+
+// New function to get teams by opponent ID
+export const useGetTeamsByOpponentId = (
+  tenantId: string,
+  opponentId: number
+) => {
+  const client = useSupabase();
+  const queryKey = queryKeys.team.byOpponent(tenantId, opponentId);
+
+  return useQuery({
+    queryKey,
+    queryFn: async () => {
+      const { data, error } = await client
+        .from("teams")
+        .select("*")
+        .eq("tenantId", tenantId)
+        .eq("opponentId", opponentId);
+
+      if (error) throw new Error(error.message);
+
+      return data;
+    },
+    enabled: !!tenantId && !!opponentId,
   });
 };
 

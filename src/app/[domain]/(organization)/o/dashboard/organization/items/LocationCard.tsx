@@ -97,7 +97,7 @@ export function LocationCard({
       </ResponsiveSheet>
 
       <ConfirmDeleteDialog
-        categoryId={location.id}
+        categoryId={location.id || ""}
         text={`This will permanently delete this ${
           type === "training" ? "training" : "game"
         } location. Are you sure you want to proceed?`}

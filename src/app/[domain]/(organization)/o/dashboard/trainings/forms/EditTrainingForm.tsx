@@ -187,8 +187,11 @@ export default function EditTrainingForm({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {locations.map((location) => (
-                          <SelectItem key={location.id} value={location.id}>
+                        {locations.map((location, index) => (
+                          <SelectItem
+                            key={location.id || `loc-${index}`}
+                            value={location.id || `loc-${index}`}
+                          >
                             {location.name}
                           </SelectItem>
                         ))}

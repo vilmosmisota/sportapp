@@ -350,3 +350,54 @@ export const getTrainingsByDayRange = async (
     throw error;
   }
 };
+
+// Get trainings for a specific date range
+export const getTrainingsByDateRange = async (
+  client: TypedClient,
+  tenantId: string,
+  startDate: Date,
+  endDate: Date,
+  seasonId?: number
+): Promise<Training[]> => {
+  // Format dates to YYYY-MM-DD for database query
+  const formattedStartDate = startDate.toISOString().split("T")[0];
+  const formattedEndDate = endDate.toISOString().split("T")[0];
+
+  try {
+    let query = client
+      .from("trainings")
+      .select(TRAINING_QUERY_WITH_RELATIONS)
+      .eq("tenantId", tenantId)
+      .gte("date", formattedStartDate)
+      .lte("date", formattedEndDate)
+      .order("date", { ascending: true });
+
+    // If seasonId is provided, filter through trainingSeasonConnections
+    if (seasonId) {
+      // Get IDs of trainings that are connected to the specified season
+      const { data: connectedTrainings, error: connectionError } = await client
+        .from("trainingSeasonConnections")
+        .select("trainingId")
+        .eq("tenantId", tenantId)
+        .eq("seasonId", seasonId);
+
+      if (connectionError) throw connectionError;
+
+      if (connectedTrainings && connectedTrainings.length > 0) {
+        const trainingIds = connectedTrainings.map((conn) => conn.trainingId);
+        query = query.in("id", trainingIds);
+      } else {
+        // If no trainings are connected to this season, return empty array
+        return [];
+      }
+    }
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+    return data.map((training) => TrainingSchema.parse(training));
+  } catch (error) {
+    console.error("Error in getTrainingsByDateRange:", error);
+    throw error;
+  }
+};

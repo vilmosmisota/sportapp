@@ -65,7 +65,7 @@ export const TeamSchema = z.object({
   playerCount: z.number().nullable().optional(),
   tenantId: z.number(),
   coachId: z.string().nullable().optional(),
-  isOpponent: z.boolean().nullable().optional(),
+  opponentId: z.number().nullable().optional(),
   appearance: AppearanceSchema.nullable().optional(),
   coach: z
     .object({
@@ -90,7 +90,13 @@ export const createTeamFormSchema = (
     skill: z.enum([...skillLevels] as [string, ...string[]]),
     coachId: z.string().nullable().optional(),
     appearance: AppearanceSchema.nullable().optional(),
+    opponentId: z.number().nullable().optional(),
   });
 
 export type TeamFormSchema = ReturnType<typeof createTeamFormSchema>;
 export type TeamForm = z.infer<TeamFormSchema>;
+
+// Helper function to determine if a team belongs to an opponent
+export const isOpponentTeam = (team: Team): boolean => {
+  return team.opponentId !== null && team.opponentId !== undefined;
+};

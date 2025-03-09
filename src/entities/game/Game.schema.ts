@@ -38,7 +38,7 @@ export const GameSchema = z
 
     // Tenant and season references
     tenantId: z.number().positive({ message: "Tenant ID is required" }),
-    seasonId: z.number().nullable().optional(),
+    seasonId: z.number().positive({ message: "Season ID is required" }),
 
     // Game status and results
     status: z.nativeEnum(GameStatus).default(GameStatus.Scheduled),
@@ -106,7 +106,12 @@ export const GameFormSchema = z
       .positive({ message: "Please select a valid away team" }),
     location: LocationSchema.nullable().optional(),
     competitionType: z.string().nullable().optional(),
-    seasonId: z.number().nullable().optional(),
+    seasonId: z
+      .number({
+        required_error: "Season is required",
+        invalid_type_error: "Season must be a number",
+      })
+      .positive({ message: "Please select a valid season" }),
     status: z
       .nativeEnum(GameStatus, {
         required_error: "Status is required",

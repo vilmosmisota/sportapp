@@ -5,11 +5,17 @@ import { AppearanceSchema } from "../common/Appearance.schema";
 
 // Base opponent schema
 export const OpponentSchema = z.object({
-  id: z.number(),
-  name: z.string().nullable(),
-  location: LocationSchema.nullable(),
-  tenantId: z.number().nullable(),
+  id: z.number().int().positive().optional(),
+  name: z.string().min(1, { message: "Name is required" }),
+  createdAt: z.union([z.string(), z.date()]).optional(),
+  location: LocationSchema.nullable().optional(),
   appearance: AppearanceSchema.nullable().optional(),
+  contactEmail: z
+    .union([z.string().email(), z.literal(""), z.null()])
+    .optional(),
+  contactPhone: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  tenantId: z.number().int().positive(),
   teams: z.array(TeamSchema).nullable(),
 });
 
@@ -30,6 +36,12 @@ export const OpponentFormSchema = z.object({
       })
     )
     .nullable(),
+  contactEmail: z
+    .union([z.string().email("Invalid email format"), z.literal("")])
+    .optional()
+    .default(""),
+  contactPhone: z.string().optional().default(""),
+  notes: z.string().optional().default(""),
 });
 
 // Schema for updating opponents (all fields optional)
@@ -40,12 +52,13 @@ export type Opponent = z.infer<typeof OpponentSchema>;
 export type OpponentForm = z.infer<typeof OpponentFormSchema>;
 export type OpponentUpdate = z.infer<typeof OpponentUpdateSchema>;
 
-// Junction table schema
-export const OpponentTeamSchema = z.object({
-  id: z.number(),
-  opponentId: z.number().nullable(),
-  teamId: z.number().nullable(),
-  tenantId: z.number().nullable(),
-});
-
-export type OpponentTeam = z.infer<typeof OpponentTeamSchema>;
+export interface OpponentRepository {
+  getById(id: number): Promise<Opponent | null>;
+  getByTenantId(tenantId: number): Promise<Opponent[]>;
+  create(opponent: Omit<Opponent, "id" | "createdAt">): Promise<Opponent>;
+  update(
+    id: number,
+    opponent: Partial<Omit<Opponent, "id" | "createdAt" | "tenantId">>
+  ): Promise<Opponent>;
+  delete(id: number): Promise<boolean>;
+}

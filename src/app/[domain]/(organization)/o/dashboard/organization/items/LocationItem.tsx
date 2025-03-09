@@ -124,7 +124,7 @@ export default function LocationItem({
       </ResponsiveSheet>
 
       <ConfirmDeleteDialog
-        categoryId={location.id}
+        categoryId={location.id || ""}
         text="This will permanently delete this location. Are you sure you want to proceed?"
         isOpen={isDeleteOpen}
         setIsOpen={setIsDeleteOpen}

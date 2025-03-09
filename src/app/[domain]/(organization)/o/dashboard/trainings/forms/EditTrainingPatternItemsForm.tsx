@@ -506,14 +506,22 @@ export default function EditTrainingPatternItemsForm({
                                             <SelectValue placeholder="Select location" />
                                           </SelectTrigger>
                                           <SelectContent>
-                                            {locations.map((location) => (
-                                              <SelectItem
-                                                key={location.id}
-                                                value={location.id}
-                                              >
-                                                {location.name}, {location.city}
-                                              </SelectItem>
-                                            ))}
+                                            {locations.map(
+                                              (location, locationIndex) => (
+                                                <SelectItem
+                                                  key={
+                                                    location.id ||
+                                                    `loc-${locationIndex}`
+                                                  }
+                                                  value={
+                                                    location.id ||
+                                                    `loc-${locationIndex}`
+                                                  }
+                                                >
+                                                  {location.name}
+                                                </SelectItem>
+                                              )
+                                            )}
                                           </SelectContent>
                                         </Select>
                                       </FormControl>

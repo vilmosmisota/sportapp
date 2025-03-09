@@ -6,7 +6,10 @@ import {
   getGamesBySeason,
   getGamesByTeam,
   getGameById,
+  getGamesByDateRange,
 } from "./Game.services";
+import { format } from "date-fns";
+import type { Game } from "./Game.schema";
 
 /**
  * Hook for fetching all games for a tenant
@@ -77,5 +80,34 @@ export const useGameById = (tenantId: string, gameId: number) => {
     queryKey,
     queryFn,
     enabled: !!tenantId && !!gameId,
+  });
+};
+
+export const useGamesFromMonthQuery = (
+  tenantId: string,
+  startDate: Date,
+  endDate: Date,
+  seasonId: number,
+  enabled = true
+) => {
+  const client = useSupabase();
+
+  // Format dates for cache keys
+  const formattedStart = format(startDate, "yyyy-MM-dd");
+  const formattedEnd = format(endDate, "yyyy-MM-dd");
+
+  // Create query key
+  const queryKey = queryKeys.game.byDateRange(
+    tenantId,
+    formattedStart,
+    formattedEnd,
+    seasonId
+  );
+
+  return useQuery<Game[]>({
+    queryKey,
+    queryFn: async () =>
+      getGamesByDateRange(client, tenantId, startDate, endDate, seasonId),
+    enabled: enabled && !!tenantId && !!seasonId,
   });
 };

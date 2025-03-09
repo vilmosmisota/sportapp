@@ -200,7 +200,7 @@ export function EventCalendar({
             ? `${startMonth} ${startDay} - ${endMonth} ${endDay}`
             : `${startMonth} ${startDay} - ${endDay}`
         }, ${year}`;
-      case "agenda":
+      case "day":
         return "Upcoming Events";
       default:
         return "";
@@ -214,8 +214,7 @@ export function EventCalendar({
         onPrevious={view === "month" ? handlePreviousMonth : handlePreviousWeek}
         onNext={view === "month" ? handleNextMonth : handleNextWeek}
         onToday={handleToday}
-        filteredCount={events.length}
-        totalCount={events.length} // Replace with total unfiltered count in real app
+        // Replace with total unfiltered count in real app
       />
 
       <Tabs
@@ -223,13 +222,13 @@ export function EventCalendar({
         onValueChange={(newView) => setView(newView as CalendarViewType)}
       >
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="month">Month</TabsTrigger>
+          <TabsTrigger value="day">Day</TabsTrigger>
           <TabsTrigger value="week">Week</TabsTrigger>
-          <TabsTrigger value="agenda">Agenda</TabsTrigger>
+          <TabsTrigger value="month">Month</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="month" className="mt-2">
-          <MonthView
+        <TabsContent value="day" className="mt-2">
+          <AgendaView
             currentDate={currentDate}
             events={events}
             onEventClick={onEventClick}
@@ -246,8 +245,8 @@ export function EventCalendar({
           />
         </TabsContent>
 
-        <TabsContent value="agenda" className="mt-2">
-          <AgendaView
+        <TabsContent value="month" className="mt-2">
+          <MonthView
             currentDate={currentDate}
             events={events}
             onEventClick={onEventClick}

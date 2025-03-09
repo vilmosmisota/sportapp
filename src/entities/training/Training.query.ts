@@ -4,10 +4,16 @@ import {
   getTrainings,
   getTrainingById,
   getTrainingsByDayRange,
+  getTrainingsByDateRange,
 } from "./Training.services";
 import { useQuery } from "@tanstack/react-query";
-import { GroupedTraining, GroupedTrainingSchema } from "./Training.schema";
+import {
+  GroupedTraining,
+  GroupedTrainingSchema,
+  Training,
+} from "./Training.schema";
 import { z } from "zod";
+import { format } from "date-fns";
 
 export const useTrainings = (tenantId: string) => {
   const client = useSupabase();
@@ -61,5 +67,34 @@ export const useTrainingsByDayRange = (tenantId: string, days: number) => {
     queryKey,
     queryFn: () => getTrainingsByDayRange(client, tenantId, days),
     enabled: !!tenantId,
+  });
+};
+
+export const useTrainingsForMonthQuery = (
+  tenantId: string,
+  startDate: Date,
+  endDate: Date,
+  seasonId?: number,
+  enabled = true
+) => {
+  const client = useSupabase();
+
+  // Format dates for cache keys
+  const formattedStart = format(startDate, "yyyy-MM-dd");
+  const formattedEnd = format(endDate, "yyyy-MM-dd");
+
+  // Create query key
+  const queryKey = queryKeys.training.byDateRange(
+    tenantId,
+    formattedStart,
+    formattedEnd,
+    seasonId
+  );
+
+  return useQuery<Training[]>({
+    queryKey,
+    queryFn: async () =>
+      getTrainingsByDateRange(client, tenantId, startDate, endDate, seasonId),
+    enabled: enabled && !!tenantId,
   });
 };

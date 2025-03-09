@@ -40,7 +40,7 @@ export const getTeamsByTenantId = async (
 
   // If we don't want to include opponents, filter them out
   if (!options?.includeOpponents) {
-    query = query.or("isOpponent.is.null,isOpponent.eq.false");
+    query = query.is("opponentId", null);
   }
 
   const { data, error } = await query;
@@ -88,14 +88,14 @@ export const createTeam = async (
   client: TypedClient,
   data: TeamForm,
   tenantId: string,
-  isOpponent: boolean = false
+  opponentId: number | null = null
 ): Promise<Team> => {
   const { data: team, error } = await client
     .from("teams")
     .insert({
       ...data,
       tenantId: Number(tenantId),
-      isOpponent,
+      opponentId,
     })
     .select(
       `

@@ -13,14 +13,14 @@ export const getGamesByTenantId = async (
       *,
       homeTeam:homeTeamId(
         id,
-        name,
+      
         age,
         gender,
         appearance
       ),
       awayTeam:awayTeamId(
         id,
-        name,
+      
         age,
         gender,
         appearance
@@ -56,14 +56,14 @@ export const getGamesBySeason = async (
       *,
       homeTeam:homeTeamId(
         id,
-        name,
+     
         age,
         gender,
         appearance
       ),
       awayTeam:awayTeamId(
         id,
-        name,
+      
         age,
         gender,
         appearance
@@ -100,14 +100,14 @@ export const getGamesByTeam = async (
       *,
       homeTeam:homeTeamId(
         id,
-        name,
+    
         age,
         gender,
         appearance
       ),
       awayTeam:awayTeamId(
         id,
-        name,
+      
         age,
         gender,
         appearance
@@ -144,14 +144,14 @@ export const getGameById = async (
       *,
       homeTeam:homeTeamId(
         id,
-        name,
+    
         age,
         gender,
         appearance
       ),
       awayTeam:awayTeamId(
         id,
-        name,
+       
         age,
         gender,
         appearance
@@ -272,4 +272,57 @@ export const deleteGame = async (
     console.error("Error deleting game:", error);
     throw error;
   }
+};
+
+// Get games for a specific date range
+export const getGamesByDateRange = async (
+  client: TypedClient,
+  tenantId: string,
+  startDate: Date,
+  endDate: Date,
+  seasonId: number
+): Promise<Game[]> => {
+  // Format dates to YYYY-MM-DD for database query
+  const formattedStartDate = startDate.toISOString().split("T")[0];
+  const formattedEndDate = endDate.toISOString().split("T")[0];
+
+  // Start with basic query
+  const query = client
+    .from("games")
+    .select(
+      `
+      *,
+      homeTeam:homeTeamId(
+        id,
+        age,
+        gender,
+        appearance
+      ),
+      awayTeam:awayTeamId(
+        id,
+        age,
+        gender,
+        appearance
+      ),
+      season:seasonId(
+        id,
+        customName
+      )
+    `
+    )
+    .eq("tenantId", tenantId)
+    .eq("seasonId", seasonId)
+    .gte("date", formattedStartDate)
+    .lte("date", formattedEndDate)
+    .order("date", { ascending: true });
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Error fetching games by date range:", error);
+    throw error;
+  }
+
+  // Parse each game through the schema
+  return data ? data.map((game) => GameSchema.parse(game)) : [];
 };

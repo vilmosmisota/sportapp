@@ -16,6 +16,7 @@ export const useCreateOpponent = (tenantId: string) => {
     mutationFn: (data: OpponentForm) => createOpponent(client, data, tenantId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.opponent.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.team.all });
     },
   });
 };
@@ -32,6 +33,7 @@ export const useUpdateOpponent = (opponentId: number, tenantId: string) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.opponent.detail(tenantId, String(opponentId)),
       });
+      queryClient.invalidateQueries({ queryKey: queryKeys.team.all });
     },
   });
 };
@@ -45,6 +47,7 @@ export const useDeleteOpponent = (tenantId: string) => {
       deleteOpponent(client, opponentId, tenantId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.opponent.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.team.all });
     },
   });
 };

@@ -10,18 +10,11 @@ export function CalendarHeader({
   onPrevious,
   onNext,
   onToday,
-  filteredCount,
-  totalCount,
 }: CalendarHeaderProps) {
   return (
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-2">
         <h2 className="text-2xl font-bold">{title}</h2>
-        {filteredCount !== undefined && totalCount !== undefined && (
-          <Badge variant="outline" className="ml-2 text-xs font-normal">
-            Showing {filteredCount} of {totalCount} events
-          </Badge>
-        )}
       </div>
 
       <div className="flex items-center space-x-2">

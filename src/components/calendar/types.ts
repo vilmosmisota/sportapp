@@ -1,4 +1,4 @@
-export type CalendarViewType = "month" | "week" | "agenda";
+export type CalendarViewType = "day" | "week" | "month";
 
 export interface CalendarView {
   name: CalendarViewType;

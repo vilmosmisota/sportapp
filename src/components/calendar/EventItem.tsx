@@ -6,7 +6,13 @@ import { CalendarEvent } from "./EventCalendar";
 import { defaultEventColors, gameStatusColors, formatEventTime } from "./utils";
 import { Game, GameStatus } from "@/entities/game/Game.schema";
 import { Training } from "@/entities/training/Training.schema";
-import { CalendarClock, Users } from "lucide-react";
+import { CalendarClock, Dumbbell, Trophy, MapPin } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface EventItemProps {
   event: CalendarEvent;
@@ -43,20 +49,36 @@ export function EventItem({
 
   const colors = getEventColors();
 
+  // Get team color for training cards
+  const getTeamColor = () => {
+    if (event.type === "training") {
+      const training = event.data as Training;
+      return training.team?.appearance?.color || undefined;
+    }
+    return undefined;
+  };
+
+  const teamColor = getTeamColor();
+
+  // Get custom styles based on team color
+  const getCustomStyles = () => {
+    if (!teamColor) return {};
+
+    if (event.type === "training") {
+      return {
+        borderLeftWidth: variant === "minimal" ? "2px" : "4px",
+        borderLeftColor: teamColor,
+        backgroundColor: `${teamColor}10`, // Add 15% opacity version of the color
+        paddingLeft: variant === "minimal" ? "2px" : undefined,
+      };
+    }
+
+    return {};
+  };
+
   // Handle click
   const handleClick = () => {
     if (onClick) onClick(event);
-  };
-
-  // Get team names for game events
-  const getGameTeams = () => {
-    if (event.type !== "game") return null;
-
-    const game = event.data as Game;
-    const home = game.homeTeam?.name || "Unknown Team";
-    const away = game.awayTeam?.name || "Unknown Team";
-
-    return { home, away };
   };
 
   // Format location (used in full variant)
@@ -84,20 +106,62 @@ export function EventItem({
     );
   };
 
-  // Minimal variant (just a dot for month view)
+  // Get event icon based on type
+  const getEventIcon = () => {
+    if (event.type === "training") {
+      return (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Dumbbell className="w-3.5 h-3.5 text-blue-600" strokeWidth={3} />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Training</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
+    } else if (event.type === "game") {
+      return (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Trophy className="w-3.5 h-3.5 text-amber-600" strokeWidth={3} />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Game</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
+    }
+    return null;
+  };
+
+  // Minimal variant (for month view cells with limited space)
   if (variant === "minimal") {
     return (
       <div
-        className={cn("h-2 w-2 rounded-full", colors.bg, className)}
+        className={cn(
+          "flex items-center gap-1 px-1 py-0.5 text-2xs rounded cursor-pointer truncate",
+          colors.bg,
+          colors.text,
+          className
+        )}
         onClick={handleClick}
-      />
+        style={getCustomStyles()}
+      >
+        <span className="font-semibold whitespace-nowrap">
+          {format(event.start, "HH:mm")}
+        </span>
+        {getEventIcon()}
+        <span className="truncate">{event.title}</span>
+      </div>
     );
   }
 
   // Compact variant (for month view when space allows)
   if (variant === "compact") {
-    const teams = getGameTeams();
-
     return (
       <div
         className={cn(
@@ -105,30 +169,19 @@ export function EventItem({
           colors.bg,
           colors.text,
           colors.border,
-          className
+          className,
+          "relative overflow-hidden"
         )}
         onClick={handleClick}
+        style={getCustomStyles()}
       >
-        {event.type === "game" && teams ? (
-          <div className="flex items-center justify-between w-full">
-            <span className="font-semibold truncate">
-              {teams.home} vs {teams.away}
-            </span>
-            <span className="ml-1 whitespace-nowrap">
-              {format(event.start, "HH:mm")}
-            </span>
-          </div>
-        ) : (
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-1">
-              {event.type === "training" && <Users className="w-3 h-3" />}
-              <span className="font-semibold truncate">{event.title}</span>
-            </div>
-            <span className="ml-1 whitespace-nowrap">
-              {format(event.start, "HH:mm")}
-            </span>
-          </div>
-        )}
+        <div className="flex items-center gap-2 w-full">
+          <span className="font-semibold whitespace-nowrap">
+            {format(event.start, "HH:mm")}
+          </span>
+          {getEventIcon()}
+          <span className="truncate">{event.title}</span>
+        </div>
       </div>
     );
   }
@@ -141,18 +194,18 @@ export function EventItem({
         colors.bg,
         colors.text,
         colors.border,
-        className
+        className,
+        "relative overflow-hidden"
       )}
       onClick={handleClick}
+      style={getCustomStyles()}
     >
       <div className="flex items-start justify-between">
         <div>
-          <div className="font-semibold">{event.title}</div>
-          {event.type === "game" && getGameTeams() && (
-            <div className="text-sm">
-              {getGameTeams()?.home} vs {getGameTeams()?.away}
-            </div>
-          )}
+          <div className="flex items-center gap-1">
+            {getEventIcon()}
+            <span className="font-semibold">{event.title}</span>
+          </div>
         </div>
         {event.type === "game" && getStatusBadge()}
       </div>
@@ -163,6 +216,7 @@ export function EventItem({
           <span>{formatEventTime(event.start, event.end)}</span>
         </div>
         <div className="flex items-center gap-1">
+          <MapPin className="w-3.5 h-3.5" />
           <span className="text-sm">{getLocation()}</span>
         </div>
       </div>

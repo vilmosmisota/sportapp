@@ -29,6 +29,10 @@ export const queryKeys = {
       ["team", "detail", tenantId, teamId] as const,
     players: (tenantId: string | undefined, teamId: number | undefined) =>
       [...queryKeys.team.all, "players", tenantId, teamId] as const,
+    byOpponent: (
+      tenantId: string | undefined,
+      opponentId: number | undefined
+    ) => [...queryKeys.team.all, "byOpponent", tenantId, opponentId] as const,
   },
   player: {
     all: ["player"] as const,
@@ -65,6 +69,20 @@ export const queryKeys = {
     detail: (tenantId: string | undefined, trainingId: string | undefined) =>
       ["training", tenantId, trainingId] as const,
     byDayRange: (days: number) => ["training", "byDayRange", days] as const,
+    byDateRange: (
+      tenantId: string | undefined,
+      startDate: string | undefined,
+      endDate: string | undefined,
+      seasonId?: number | undefined
+    ) =>
+      [
+        "training",
+        "byDateRange",
+        tenantId,
+        startDate,
+        endDate,
+        seasonId,
+      ] as const,
   },
   trainingSeasonConnection: {
     all: ["trainingSeasonConnection"] as const,
@@ -128,5 +146,12 @@ export const queryKeys = {
       ["game", "byTeam", tenantId, teamId] as const,
     detail: (tenantId: string | undefined, gameId: number | undefined) =>
       ["game", "detail", tenantId, gameId] as const,
+    byDateRange: (
+      tenantId: string | undefined,
+      startDate: string | undefined,
+      endDate: string | undefined,
+      seasonId?: number | undefined
+    ) =>
+      ["game", "byDateRange", tenantId, startDate, endDate, seasonId] as const,
   },
 } as const;
