@@ -9,8 +9,7 @@ import { RoleDomain } from "../role/Role.permissions";
 
 export const getTeamsByTenantId = async (
   client: TypedClient,
-  tenantId: string,
-  options?: { includeOpponents?: boolean }
+  tenantId: string
 ): Promise<Team[]> => {
   let query = client
     .from("teams")
@@ -36,12 +35,8 @@ export const getTeamsByTenantId = async (
       )
     `
     )
-    .eq("tenantId", tenantId);
-
-  // If we don't want to include opponents, filter them out
-  if (!options?.includeOpponents) {
-    query = query.is("opponentId", null);
-  }
+    .eq("tenantId", tenantId)
+    .is("opponentId", null);
 
   const { data, error } = await query;
 

@@ -7,6 +7,7 @@ import {
   getGamesByTeam,
   getGameById,
   getGamesByDateRange,
+  getGamesWithDetailsByDateRange,
 } from "./Game.services";
 import { format } from "date-fns";
 import type { Game } from "./Game.schema";
@@ -108,6 +109,48 @@ export const useGamesFromMonthQuery = (
     queryKey,
     queryFn: async () =>
       getGamesByDateRange(client, tenantId, startDate, endDate, seasonId),
+    enabled: enabled && !!tenantId && !!seasonId,
+  });
+};
+
+/**
+ * Hook that fetches games using the vw_games_with_details view
+ * This provides already-formatted team information for both tenant and opponent teams
+ */
+export const useGamesWithDetailsFromMonthQuery = (
+  tenantId: string,
+  startDate: Date,
+  endDate: Date,
+  seasonId: number,
+  enabled = true
+) => {
+  const client = useSupabase();
+
+  // Format dates for cache keys
+  const formattedStart = format(startDate, "yyyy-MM-dd");
+  const formattedEnd = format(endDate, "yyyy-MM-dd");
+
+  // Create query key
+  const queryKey = [
+    ...queryKeys.game.byDateRange(
+      tenantId,
+      formattedStart,
+      formattedEnd,
+      seasonId
+    ),
+    "withDetails", // Add this to distinguish from the regular query
+  ];
+
+  return useQuery({
+    queryKey,
+    queryFn: async () =>
+      getGamesWithDetailsByDateRange(
+        client,
+        tenantId,
+        startDate,
+        endDate,
+        seasonId
+      ),
     enabled: enabled && !!tenantId && !!seasonId,
   });
 };

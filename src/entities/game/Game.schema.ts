@@ -2,6 +2,7 @@ import { z } from "zod";
 import { TeamSchema, type Team } from "../team/Team.schema";
 import { SeasonSchema, type Season } from "../season/Season.schema";
 import { LocationSchema, type Location } from "../common/Location.schema";
+import { MetaSchema, type Meta } from "../common/Meta.schema";
 
 // Game status enumeration
 export enum GameStatus {
@@ -45,13 +46,17 @@ export const GameSchema = z
     homeScore: z.number().nullable().optional(),
     awayScore: z.number().nullable().optional(),
 
-    // Additional metadata
-    notes: z.string().nullable().optional(),
+    // Meta data (replaces notes)
+    meta: MetaSchema,
 
     // Optional related data (populated via joins)
     homeTeam: TeamSchema.nullable().optional(),
     awayTeam: TeamSchema.nullable().optional(),
     season: SeasonSchema.nullable().optional(),
+
+    // Properties from vw_games_with_details view
+    tenantTeam: z.any().optional(), // Team that belongs to the tenant
+    opponentTeam: z.any().optional(), // Opponent team
   })
   .refine(
     (data) =>
@@ -120,7 +125,7 @@ export const GameFormSchema = z
       .default(GameStatus.Scheduled),
     homeScore: z.number().nullable().optional(),
     awayScore: z.number().nullable().optional(),
-    notes: z.string().nullable().optional(),
+    meta: MetaSchema,
   })
   .refine((data) => data.homeTeamId !== data.awayTeamId, {
     message: "Home team and away team must be different",

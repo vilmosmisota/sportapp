@@ -212,7 +212,7 @@ export default function AttendancePage({
         trainingId: training.id,
         tenantId: tenant?.id.toString() ?? "",
         endTime: training.endTime,
-        seasonId: training.trainingSeasonConnections[0]?.seasonId ?? 1,
+        seasonId: training.seasonId,
       });
       toast.success("Attendance session created successfully");
     } catch (error) {

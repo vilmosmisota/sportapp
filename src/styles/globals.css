@@ -127,3 +127,13 @@
     @apply scroll-m-20 text-xl font-semibold tracking-tight;
   }
 }
+
+@layer utilities {
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}

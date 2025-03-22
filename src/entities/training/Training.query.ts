@@ -5,6 +5,7 @@ import {
   getTrainingById,
   getTrainingsByDayRange,
   getTrainingsByDateRange,
+  getTrainingsByPattern,
 } from "./Training.services";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -96,5 +97,34 @@ export const useTrainingsForMonthQuery = (
     queryFn: async () =>
       getTrainingsByDateRange(client, tenantId, startDate, endDate, seasonId),
     enabled: enabled && !!tenantId,
+  });
+};
+
+export const useTrainingsByPattern = (
+  tenantId: string,
+  pattern: {
+    startTime: string;
+    endTime: string;
+    teamId: number | null;
+    firstDate: string;
+    lastDate: string;
+  },
+  enabled = true
+) => {
+  const client = useSupabase();
+  const queryKey = [
+    queryKeys.training.byPattern,
+    tenantId,
+    pattern.startTime,
+    pattern.endTime,
+    pattern.teamId,
+    pattern.firstDate,
+    pattern.lastDate,
+  ];
+
+  return useQuery({
+    queryKey,
+    queryFn: () => getTrainingsByPattern(client, tenantId, pattern),
+    enabled: !!tenantId && enabled,
   });
 };

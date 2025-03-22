@@ -17,14 +17,12 @@ const TRAINING_QUERY_WITH_RELATIONS = `
     skill,
     appearance
   ),
-  trainingSeasonConnections:trainingSeasonConnections (
-    *,
-    season:seasons (
-      id,
-      startDate,
-      endDate,
-      breaks
-    )
+  season:seasons (
+    id,
+    startDate,
+    endDate,
+    breaks,
+    customName
   )
 `;
 
@@ -87,56 +85,18 @@ export const addTraining = async (
   tenantId: string
 ) => {
   try {
-    let addedTraining: Training;
-    const { seasonIds, ...trainingData } = data;
-
-    // Insert training
+    // Insert training with seasonId directly
     const { data: newTraining, error } = await client
       .from("trainings")
       .insert({
-        ...trainingData,
+        ...data,
         tenantId: Number(tenantId),
       })
       .select(TRAINING_QUERY_WITH_RELATIONS)
       .single();
 
     if (error) throw error;
-
-    addedTraining = {
-      ...newTraining,
-      trainingSeasonConnections: [],
-    };
-
-    // Add season connections if provided
-    if (seasonIds.length > 0) {
-      const seasonConnections = seasonIds.map((seasonId) => ({
-        trainingId: newTraining.id,
-        seasonId,
-        tenantId: Number(tenantId),
-      }));
-
-      const { data: seasonData, error: seasonError } = await client
-        .from("trainingSeasonConnections")
-        .insert(seasonConnections).select(`
-          *,
-          season:seasons (
-            id,
-            customName,
-            startDate,
-            endDate,
-            breaks
-          )
-        `);
-
-      if (seasonError) throw seasonError;
-
-      addedTraining = {
-        ...newTraining,
-        trainingSeasonConnections: seasonData,
-      };
-    }
-
-    return TrainingSchema.parse(addedTraining);
+    return TrainingSchema.parse(newTraining);
   } catch (error) {
     console.error("Error in addTraining:", error);
     throw error;
@@ -150,58 +110,17 @@ export const updateTraining = async (
   tenantId: string
 ) => {
   try {
-    let updatedTrainingData: Training;
-    const { seasonIds, ...trainingData } = data;
-
-    // Update training base data
+    // Update training base data, including seasonId
     const { data: updatedTraining, error } = await client
       .from("trainings")
-      .update(trainingData)
+      .update(data)
       .eq("id", trainingId)
       .eq("tenantId", tenantId)
-      .select()
+      .select(TRAINING_QUERY_WITH_RELATIONS)
       .single();
 
     if (error) throw error;
-
-    updatedTrainingData = {
-      ...updatedTraining,
-      trainingSeasonConnections: [],
-    };
-
-    // Update season connections if provided
-    if (seasonIds !== undefined) {
-      // Delete existing season connections
-      const { error: deleteSeasonError } = await client
-        .from("trainingSeasonConnections")
-        .delete()
-        .eq("trainingId", trainingId);
-
-      if (deleteSeasonError) throw deleteSeasonError;
-
-      // Add new season connections
-      if (seasonIds.length > 0) {
-        const seasonConnections = seasonIds.map((seasonId) => ({
-          trainingId,
-          seasonId,
-          tenantId: Number(tenantId),
-        }));
-
-        const { data: seasonData, error: seasonError } = await client
-          .from("trainingSeasonConnections")
-          .insert(seasonConnections)
-          .select();
-
-        if (seasonError) throw seasonError;
-
-        updatedTrainingData = {
-          ...updatedTraining,
-          trainingSeasonConnections: seasonData,
-        };
-      }
-    }
-
-    return TrainingSchema.parse(updatedTrainingData);
+    return TrainingSchema.parse(updatedTraining);
   } catch (error) {
     console.error("Error in updateTraining:", error);
     throw error;
@@ -214,15 +133,7 @@ export const deleteTraining = async (
   tenantId: string
 ) => {
   try {
-    // Delete season connections
-    const { error: seasonError } = await client
-      .from("trainingSeasonConnections")
-      .delete()
-      .eq("trainingId", trainingId);
-
-    if (seasonError) throw seasonError;
-
-    // Delete training
+    // Delete training directly
     const { error: trainingError } = await client
       .from("trainings")
       .delete()
@@ -247,47 +158,31 @@ export const addTrainingBatch = async (
     location: TrainingLocation;
     teamId: number | null;
     seasonId: number;
+    meta?: { note?: string | null } | null;
   },
   tenantId: string
 ) => {
   try {
+    // Create array of training objects
     const trainings = data.dates.map((date) => ({
       date,
       startTime: data.startTime,
       endTime: data.endTime,
       location: data.location,
       teamId: data.teamId,
+      seasonId: data.seasonId,
+      tenantId: parseInt(tenantId),
+      meta: data.meta || null,
     }));
 
-    const { data: newTrainings, error } = await client.rpc(
-      "batch_create_trainings",
-      {
-        p_trainings: trainings,
-        p_tenant_id: parseInt(tenantId),
-        p_season_id: data.seasonId,
-      }
-    );
+    // Insert trainings directly
+    const { data: newTrainings, error } = await client
+      .from("trainings")
+      .insert(trainings)
+      .select(TRAINING_QUERY_WITH_RELATIONS);
 
     if (error) throw error;
-
-    // Transform the response to match our schema
-    const transformedTrainings = newTrainings.map((training) => ({
-      ...training,
-      team: null, // We'll need to fetch teams separately if needed
-      trainingSeasonConnections: [
-        {
-          id: 0, // This will be replaced with actual ID
-          trainingId: training.id,
-          seasonId: data.seasonId,
-          tenantId: parseInt(tenantId),
-          season: null, // We'll need to fetch seasons separately if needed
-        },
-      ],
-    }));
-
-    return transformedTrainings.map((training) =>
-      TrainingSchema.parse(training)
-    );
+    return newTrainings.map((training) => TrainingSchema.parse(training));
   } catch (error) {
     console.error("Error in addTrainingBatch:", error);
     throw error;
@@ -369,27 +264,48 @@ export const getTrainingsByDateRange = async (
       .select(TRAINING_QUERY_WITH_RELATIONS)
       .eq("tenantId", tenantId)
       .gte("date", formattedStartDate)
-      .lte("date", formattedEndDate)
+      .lte("date", formattedEndDate);
+
+    // If seasonId is provided, filter directly by seasonId
+    if (seasonId) {
+      query = query.eq("seasonId", seasonId);
+    }
+
+    const { data, error } = await query.order("date", { ascending: true });
+
+    if (error) throw error;
+    return data.map((training) => TrainingSchema.parse(training));
+  } catch (error) {
+    console.error("Error in getTrainingsByDateRange:", error);
+    throw error;
+  }
+};
+
+export const getTrainingsByPattern = async (
+  client: TypedClient,
+  tenantId: string,
+  pattern: {
+    startTime: string;
+    endTime: string;
+    teamId: number | null;
+    firstDate: string;
+    lastDate: string;
+  }
+): Promise<Training[]> => {
+  try {
+    let query = client
+      .from("trainings")
+      .select(TRAINING_QUERY_WITH_RELATIONS)
+      .eq("tenantId", tenantId)
+      .eq("startTime", pattern.startTime)
+      .eq("endTime", pattern.endTime)
+      .gte("date", pattern.firstDate)
+      .lte("date", pattern.lastDate)
       .order("date", { ascending: true });
 
-    // If seasonId is provided, filter through trainingSeasonConnections
-    if (seasonId) {
-      // Get IDs of trainings that are connected to the specified season
-      const { data: connectedTrainings, error: connectionError } = await client
-        .from("trainingSeasonConnections")
-        .select("trainingId")
-        .eq("tenantId", tenantId)
-        .eq("seasonId", seasonId);
-
-      if (connectionError) throw connectionError;
-
-      if (connectedTrainings && connectedTrainings.length > 0) {
-        const trainingIds = connectedTrainings.map((conn) => conn.trainingId);
-        query = query.in("id", trainingIds);
-      } else {
-        // If no trainings are connected to this season, return empty array
-        return [];
-      }
+    // Add teamId filter only if it exists
+    if (pattern.teamId !== null) {
+      query = query.eq("teamId", pattern.teamId);
     }
 
     const { data, error } = await query;
@@ -397,7 +313,7 @@ export const getTrainingsByDateRange = async (
     if (error) throw error;
     return data.map((training) => TrainingSchema.parse(training));
   } catch (error) {
-    console.error("Error in getTrainingsByDateRange:", error);
+    console.error("Error in getTrainingsByPattern:", error);
     throw error;
   }
 };

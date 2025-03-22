@@ -105,7 +105,23 @@ export const getEventsForTimeRange = (
 };
 
 // Format time for display
-export const formatEventTime = (start: Date, end: Date): string => {
+export const formatEventTime = (
+  start: Date,
+  end: Date,
+  eventType?: string
+): string => {
+  // For games, check if end time is within 2 hours of start time (default duration)
+  // This indicates the end time wasn't explicitly set
+  if (eventType === "game") {
+    const defaultEndTime = new Date(start);
+    defaultEndTime.setHours(start.getHours() + 2);
+
+    // If end time is exactly 2 hours after start, assume it's the default we added
+    if (end.getTime() === defaultEndTime.getTime()) {
+      return format(start, "HH:mm");
+    }
+  }
+
   return `${format(start, "HH:mm")} - ${format(end, "HH:mm")}`;
 };
 

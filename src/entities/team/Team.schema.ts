@@ -7,6 +7,12 @@ export enum TeamGender {
   Mixed = "Mixed",
 }
 
+// Team types enum - for internal application use only, no longer stored in DB
+export enum TeamType {
+  Tenant = "tenant",
+  Opponent = "opponent",
+}
+
 export const getDisplayGender = (
   gender: TeamGender | null | undefined | string,
   age: string | null | undefined
@@ -80,6 +86,14 @@ export const TeamSchema = z.object({
 
 export type Team = z.infer<typeof TeamSchema>;
 
+// Add a virtual property to give type safety for teamType in application code
+// This is not stored in the database
+export const getTeamType = (team: Team): TeamType => {
+  return team.opponentId !== null && team.opponentId !== undefined
+    ? TeamType.Opponent
+    : TeamType.Tenant;
+};
+
 export const createTeamFormSchema = (
   ageGroups: string[],
   skillLevels: string[]
@@ -96,7 +110,19 @@ export const createTeamFormSchema = (
 export type TeamFormSchema = ReturnType<typeof createTeamFormSchema>;
 export type TeamForm = z.infer<TeamFormSchema>;
 
-// Helper function to determine if a team belongs to an opponent
+/**
+ * Helper function to determine if a team belongs to an opponent
+ * This function checks if the team has an opponentId
+ * This is the ONLY way to determine if a team is an opponent team
+ */
 export const isOpponentTeam = (team: Team): boolean => {
   return team.opponentId !== null && team.opponentId !== undefined;
+};
+
+/**
+ * Helper function to determine if a team belongs to the tenant
+ * This function checks if the team does NOT have an opponentId
+ */
+export const isTenantTeam = (team: Team): boolean => {
+  return team.opponentId === null || team.opponentId === undefined;
 };

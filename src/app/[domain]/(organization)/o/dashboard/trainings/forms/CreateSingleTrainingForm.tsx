@@ -103,7 +103,7 @@ export default function CreateSingleTrainingForm({
         endTime: values.endTime,
         location,
         teamId,
-        seasonIds: [selectedSeason.id],
+        seasonId: selectedSeason.id,
       });
 
       toast.success("Training created successfully");
@@ -131,14 +131,19 @@ export default function CreateSingleTrainingForm({
               </CardHeader>
               <CardContent>
                 <p className="text-sm">
-                  {selectedSeason.customName ??
-                    `${format(
+                  {(() => {
+                    const dateRange = `${format(
                       new Date(selectedSeason.startDate),
                       "dd/MM/yyyy"
                     )} - ${format(
                       new Date(selectedSeason.endDate),
                       "dd/MM/yyyy"
-                    )}`}
+                    )}`;
+
+                    return selectedSeason.customName
+                      ? `${selectedSeason.customName} (${dateRange})`
+                      : dateRange;
+                  })()}
                   {selectedSeason.isActive && (
                     <span className="ml-2 inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
                       Active

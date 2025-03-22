@@ -161,9 +161,8 @@ export function CalendarFilterer({
           }
         } else if (event.type === "training") {
           const training = event.data as Training;
-          const hasSelectedSeason = training.trainingSeasonConnections?.some(
-            (conn) => conn.seasonId === filters.seasons.selectedSeason
-          );
+          const hasSelectedSeason =
+            training.seasonId === filters.seasons.selectedSeason;
 
           if (!hasSelectedSeason) {
             logFilter(

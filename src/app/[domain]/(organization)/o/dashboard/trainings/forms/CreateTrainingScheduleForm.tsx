@@ -39,6 +39,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Clock, MapPin, Users, Calendar } from "lucide-react";
 import { format, isWithinInterval } from "date-fns";
 import { TeamSelector } from "@/components/ui/team-selector";
+import { Textarea } from "@/components/ui/textarea";
 
 const daysOfWeek = [
   { id: 1, name: "Monday" },
@@ -56,6 +57,7 @@ const formSchema = z.object({
   locationId: z.string().min(1, "Location is required"),
   teamId: z.string().min(1, "Team is required"),
   selectedDays: z.array(z.number()).min(1, "Select at least one day"),
+  note: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -87,6 +89,7 @@ export default function CreateTrainingScheduleForm({
       locationId: "",
       teamId: "",
       selectedDays: [],
+      note: "",
     },
   });
 
@@ -108,6 +111,8 @@ export default function CreateTrainingScheduleForm({
       // Generate all dates between start and end date that match the selected days
       const dates: string[] = [];
       const currentDate = new Date(startDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Set to beginning of today for proper comparison
 
       while (currentDate <= endDate) {
         if (values.selectedDays.includes(currentDate.getDay())) {
@@ -119,8 +124,8 @@ export default function CreateTrainingScheduleForm({
             })
           );
 
-          // Only add the date if it's not during a break
-          if (!isBreak) {
+          // Only add the date if it's not during a break AND is today or in the future
+          if (!isBreak && currentDate >= today) {
             dates.push(currentDate.toISOString());
           }
         }
@@ -129,7 +134,7 @@ export default function CreateTrainingScheduleForm({
 
       if (dates.length === 0) {
         toast.error(
-          "No valid training dates found after excluding break periods"
+          "No valid future training dates found after excluding break periods"
         );
         return;
       }
@@ -142,6 +147,7 @@ export default function CreateTrainingScheduleForm({
         location,
         teamId: parseInt(values.teamId),
         seasonId: selectedSeason.id,
+        meta: values.note ? { note: values.note } : null,
       });
 
       toast.success("Training schedule created successfully");
@@ -169,11 +175,16 @@ export default function CreateTrainingScheduleForm({
               </CardHeader>
               <CardContent>
                 <p className="text-sm">
-                  {selectedSeason.customName ??
-                    `${format(
+                  {(() => {
+                    const dateRange = `${format(
                       selectedSeason.startDate,
                       "dd/MM/yyyy"
-                    )} - ${format(selectedSeason.endDate, "dd/MM/yyyy")}`}
+                    )} - ${format(selectedSeason.endDate, "dd/MM/yyyy")}`;
+
+                    return selectedSeason.customName
+                      ? `${selectedSeason.customName} (${dateRange})`
+                      : dateRange;
+                  })()}
                   {selectedSeason.isActive && (
                     <span className="ml-2 inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
                       Active
@@ -199,6 +210,10 @@ export default function CreateTrainingScheduleForm({
                 render={() => (
                   <FormItem>
                     <FormLabel>Select Days</FormLabel>
+                    <FormDescription>
+                      Click on the days below to select when trainings should
+                      occur
+                    </FormDescription>
                     <div className="flex flex-wrap gap-2">
                       {daysOfWeek.map((day) => (
                         <Toggle
@@ -218,7 +233,8 @@ export default function CreateTrainingScheduleForm({
                               );
                             }
                           }}
-                          className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                          className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=off]:bg-muted data-[state=off]:hover:bg-muted/80 border border-input min-w-[90px] justify-center"
+                          variant="outline"
                         >
                           {day.name}
                         </Toggle>
@@ -316,6 +332,36 @@ export default function CreateTrainingScheduleForm({
                 control={form.control}
                 name="teamId"
                 placeholder="Select team"
+              />
+            </CardContent>
+          </Card>
+
+          {/* Additional Details */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-medium flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                Additional Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <FormField
+                control={form.control}
+                name="note"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes (Optional)</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Add any additional notes about these training sessions..."
+                        className="resize-none min-h-[100px]"
+                        {...field}
+                        value={field.value || ""}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </CardContent>
           </Card>

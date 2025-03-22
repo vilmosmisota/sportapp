@@ -4,7 +4,6 @@ import DataTableColumnHeader from "@/components/ui/data-table/DataTableColumnHea
 import { Opponent } from "@/entities/opponent/Opponent.schema";
 import { useState } from "react";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
-import OpponentForm from "./OpponentForm";
 import { useDeleteOpponent } from "@/entities/opponent/Opponent.actions";
 import { toast } from "sonner";
 import { Tenant } from "@/entities/tenant/Tenant.schema";
@@ -22,6 +21,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { EditOpponentForm } from "../form";
 
 interface OpponentTableActionsProps {
   opponent: Opponent;
@@ -77,8 +77,8 @@ const OpponentTableActions = ({
         title="Edit Opponent"
       >
         <div className="p-4">
-          <OpponentForm
-            opponent={opponent}
+          <EditOpponentForm
+            opponentId={opponent.id ?? 0}
             tenantId={tenantId}
             setIsOpen={setIsEditOpen}
             tenant={tenant}

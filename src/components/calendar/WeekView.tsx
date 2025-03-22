@@ -13,18 +13,23 @@ import {
   getHours,
   getMinutes,
   addMinutes,
+  isBefore,
+  isAfter,
 } from "date-fns";
 import { cn } from "@/libs/tailwind/utils";
 import { CalendarEvent } from "./EventCalendar";
 import { getEventsForTimeRange, generateTimeSlots } from "./utils";
 import { EventItem } from "./EventItem";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Pause, Calendar } from "lucide-react";
 
 interface WeekViewProps {
   currentDate: Date;
   events: CalendarEvent[];
   onEventClick?: (event: CalendarEvent) => void;
   isLoading?: boolean;
+  seasonBreaks?: { from: Date; to: Date }[];
+  seasonDateRange?: { startDate: Date; endDate: Date } | null;
 }
 
 export function WeekView({
@@ -32,12 +37,33 @@ export function WeekView({
   events,
   onEventClick,
   isLoading = false,
+  seasonBreaks = [],
+  seasonDateRange = null,
 }: WeekViewProps) {
   const [weekDays, setWeekDays] = useState<Date[]>([]);
   const [timeSlots, setTimeSlots] = useState<
     { time: string; hour: number; minute: number }[]
   >([]);
   const [nowIndicatorPosition, setNowIndicatorPosition] = useState<number>(0);
+
+  // Helper function to check if a date is within a break period
+  const isDateInBreak = (date: Date) => {
+    return seasonBreaks.some((breakPeriod) =>
+      isWithinInterval(date, {
+        start: breakPeriod.from,
+        end: breakPeriod.to,
+      })
+    );
+  };
+
+  // Helper function to check if a date is outside the season range
+  const isDateOutsideSeason = (date: Date) => {
+    if (!seasonDateRange) return false;
+    return (
+      isBefore(date, seasonDateRange.startDate) ||
+      isAfter(date, seasonDateRange.endDate)
+    );
+  };
 
   // Generate week days
   useEffect(() => {
@@ -123,22 +149,40 @@ export function WeekView({
         <div className="sticky left-0 bg-background z-10 border-r p-2"></div>
 
         {/* Day column headers */}
-        {weekDays.map((day) => (
-          <div
-            key={format(day, "yyyy-MM-dd")}
-            className={cn("p-2 text-center", isToday(day) && "bg-primary/10")}
-          >
-            <div className="text-sm font-medium">{format(day, "EEE")}</div>
+        {weekDays.map((day) => {
+          const isInBreak = isDateInBreak(day);
+          const isOutsideSeason = isDateOutsideSeason(day);
+
+          return (
             <div
+              key={format(day, "yyyy-MM-dd")}
               className={cn(
-                "w-8 h-8 rounded-full mx-auto flex items-center justify-center text-sm",
-                isToday(day) && "bg-primary text-primary-foreground"
+                "p-2 text-center relative",
+                isToday(day) && "bg-primary/10",
+                isInBreak && "bg-amber-50",
+                isOutsideSeason && "bg-gray-100"
               )}
             >
-              {format(day, "d")}
+              <div className="text-sm font-medium">
+                {format(day, "EEE")}
+                {isInBreak && (
+                  <Pause className="h-3 w-3 inline-block ml-1 text-amber-500" />
+                )}
+                {isOutsideSeason && (
+                  <Calendar className="h-3 w-3 inline-block ml-1 text-gray-400" />
+                )}
+              </div>
+              <div
+                className={cn(
+                  "w-8 h-8 rounded-full mx-auto flex items-center justify-center text-sm",
+                  isToday(day) && "bg-primary text-primary-foreground"
+                )}
+              >
+                {format(day, "d")}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Time grid */}
@@ -194,17 +238,37 @@ export function WeekView({
                 </div>
 
                 {/* Day columns */}
-                {weekDays.map((day) => (
-                  <div
-                    key={`${format(day, "yyyy-MM-dd")}-${slot.time}`}
-                    className={cn(
-                      "border-b border-r relative min-h-[60px]",
-                      isToday(day) && "bg-primary/5"
-                    )}
-                  >
-                    {/* Event rendering is handled separately */}
-                  </div>
-                ))}
+                {weekDays.map((day) => {
+                  const isInBreak = isDateInBreak(day);
+                  const isOutsideSeason = isDateOutsideSeason(day);
+
+                  return (
+                    <div
+                      key={`${format(day, "yyyy-MM-dd")}-${slot.time}`}
+                      className={cn(
+                        "border-b border-r relative min-h-[60px]",
+                        isToday(day) && "bg-primary/5",
+                        isInBreak && "bg-amber-50/30",
+                        isOutsideSeason && "bg-gray-100/40"
+                      )}
+                    >
+                      {isInBreak && slot.hour === 12 && (
+                        <div className="absolute inset-x-0 text-center z-10 pointer-events-none">
+                          <div className="text-xs py-1 px-2 bg-amber-100/70 border border-amber-200 rounded text-amber-600 inline-block">
+                            Season Break
+                          </div>
+                        </div>
+                      )}
+                      {isOutsideSeason && slot.hour === 12 && (
+                        <div className="absolute inset-x-0 text-center z-10 pointer-events-none">
+                          <div className="text-xs py-1 px-2 bg-gray-100 border border-gray-200 rounded text-gray-500 inline-block">
+                            Outside Season
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </React.Fragment>
             ))}
 

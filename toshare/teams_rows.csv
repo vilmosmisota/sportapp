@@ -1,0 +1,5 @@
+id,age,skill,gender,tenantId,coachId,appearance,opponentId
+43,U12#0-12,Beginner,Male,5,b6c959f1-cb98-40a1-801c-d4938ad7804a,"{""color"": ""#99F6E4"", ""isVisible"": true}",
+46,U14#0-14,Intermediate,Female,5,b6c959f1-cb98-40a1-801c-d4938ad7804a,"{""color"": ""#FED7AA"", ""isVisible"": true}",
+48,U18#0-18,Advanced,Male,5,b6c959f1-cb98-40a1-801c-d4938ad7804a,"{""color"": ""#D9F99D"", ""isVisible"": true}",
+73,U12#0-12,Beginner,Male,5,,,5

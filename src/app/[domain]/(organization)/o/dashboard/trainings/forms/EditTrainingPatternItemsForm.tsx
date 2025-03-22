@@ -27,11 +27,10 @@ import { Clock, MapPin, Calendar, Trash2, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { GroupedTraining, Training } from "@/entities/training/Training.schema";
 import { useTrainingLocations } from "@/entities/tenant/hooks/useTrainingLocations";
-import { useSupabase } from "@/libs/supabase/useSupabase";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
-  useUpdateTraining,
+  useUpdateTrainingProperties,
   useDeleteTraining,
 } from "@/entities/training/Training.actions.client";
 import {
@@ -50,9 +49,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/cacheKeys/cacheKeys";
+import { useTrainingsByPattern } from "@/entities/training/Training.query";
 import { formatTeamName } from "../utils";
+import { Textarea } from "@/components/ui/textarea";
 
 interface Props {
   training: GroupedTraining;
@@ -72,6 +71,7 @@ const trainingFormSchema = z.object({
   startTime: z.string(),
   endTime: z.string(),
   locationId: z.string(),
+  note: z.string().optional(),
 });
 
 type TrainingFormValues = z.infer<typeof trainingFormSchema>;
@@ -84,9 +84,6 @@ export default function EditTrainingPatternItemsForm({
   seasonId,
 }: Props) {
   const locations = useTrainingLocations(domain);
-  const client = useSupabase();
-  const queryClient = useQueryClient();
-  const [isLoading, setIsLoading] = useState(true);
   const [trainings, setTrainings] = useState<TrainingItem[]>([]);
   const [selectedTraining, setSelectedTraining] = useState<TrainingItem | null>(
     null
@@ -95,7 +92,20 @@ export default function EditTrainingPatternItemsForm({
   const [isFormDirty, setIsFormDirty] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const updateTrainingMutation = useUpdateTraining(
+  // Use the query hook instead of direct client access
+  const { data: patternTrainings, isLoading } = useTrainingsByPattern(
+    tenantId,
+    {
+      startTime: training.startTime,
+      endTime: training.endTime,
+      teamId: training.teamId,
+      firstDate: training.firstDate,
+      lastDate: training.lastDate,
+    }
+  );
+
+  // Setup update and delete mutations
+  const updateTrainingMutation = useUpdateTrainingProperties(
     selectedTraining?.id || 0,
     tenantId
   );
@@ -109,67 +119,23 @@ export default function EditTrainingPatternItemsForm({
       startTime: "",
       endTime: "",
       locationId: "",
+      note: "",
     },
   });
 
-  // Fetch all individual trainings in this pattern
+  // Update trainings when data loads from the query
   useEffect(() => {
-    const fetchTrainings = async () => {
-      try {
-        setIsLoading(true);
+    if (patternTrainings) {
+      // Transform data to include editing state
+      const transformedData = patternTrainings.map((item) => ({
+        ...item,
+        date: new Date(item.date),
+        isEditing: false,
+      }));
 
-        // Query trainings that match the pattern criteria
-        const { data, error } = await client
-          .from("trainings")
-          .select(
-            `
-            *,
-            team:teams (
-              id,
-              age,
-              gender,
-              skill,
-              appearance
-            ),
-            trainingSeasonConnections:trainingSeasonConnections (
-              *,
-              season:seasons (
-                id,
-                startDate,
-                endDate,
-                breaks
-              )
-            )
-          `
-          )
-          .eq("tenantId", tenantId)
-          .eq("startTime", training.startTime)
-          .eq("endTime", training.endTime)
-          .eq("teamId", training.teamId)
-          .gte("date", training.firstDate)
-          .lte("date", training.lastDate)
-          .order("date", { ascending: true });
-
-        if (error) throw error;
-
-        // Transform data to include editing state
-        const transformedData = data.map((item) => ({
-          ...item,
-          date: new Date(item.date),
-          isEditing: false,
-        }));
-
-        setTrainings(transformedData);
-      } catch (error) {
-        console.error("Error fetching trainings:", error);
-        toast.error("Failed to load trainings");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchTrainings();
-  }, [client, tenantId, training]);
+      setTrainings(transformedData);
+    }
+  }, [patternTrainings]);
 
   const handleEditClick = (trainingItem: TrainingItem) => {
     // Instead of deep copying the entire object, just create a new object with the editable properties
@@ -198,6 +164,7 @@ export default function EditTrainingPatternItemsForm({
       startTime: editableTraining.startTime,
       endTime: editableTraining.endTime,
       locationId: editableTraining.location?.id || "",
+      note: editableTraining.meta?.note || "",
     });
 
     // Reset form dirty state
@@ -220,43 +187,14 @@ export default function EditTrainingPatternItemsForm({
         return;
       }
 
-      // Find the original training item to get the complete data
-      const originalTraining = trainings.find(
-        (t) => t.id === selectedTraining.id
-      );
-      if (!originalTraining) {
-        toast.error("Training not found");
-        return;
-      }
-
-      // Update directly in the database to bypass Zod validation
-      const { error } = await client
-        .from("trainings")
-        .update({
-          date: data.date.toISOString().split("T")[0],
-          startTime: data.startTime,
-          endTime: data.endTime,
-          location: location,
-        })
-        .eq("id", selectedTraining.id)
-        .eq("tenantId", tenantId);
-
-      if (error) {
-        console.error("Error updating training:", error);
-        toast.error("Failed to update training");
-        return;
-      }
-
-      // Manually invalidate all relevant cache keys
-      queryClient.invalidateQueries({ queryKey: [queryKeys.training.all] });
-      queryClient.invalidateQueries({ queryKey: [queryKeys.training.grouped] });
-      queryClient.invalidateQueries({
-        queryKey: [
-          queryKeys.training.detail(tenantId, selectedTraining.id.toString()),
-        ],
+      // Update training using the mutation hook
+      await updateTrainingMutation.mutateAsync({
+        date: data.date.toISOString().split("T")[0],
+        startTime: data.startTime,
+        endTime: data.endTime,
+        location: location,
+        meta: data.note ? { note: data.note } : null,
       });
-      queryClient.invalidateQueries({ queryKey: [queryKeys.team.all] });
-      queryClient.invalidateQueries({ queryKey: [queryKeys.season.all] });
 
       // Update the training in the local state
       setTrainings(
@@ -268,6 +206,7 @@ export default function EditTrainingPatternItemsForm({
                 startTime: data.startTime,
                 endTime: data.endTime,
                 location: location,
+                meta: data.note ? { note: data.note } : null,
                 isEditing: false,
               }
             : item
@@ -524,6 +463,29 @@ export default function EditTrainingPatternItemsForm({
                                             )}
                                           </SelectContent>
                                         </Select>
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+
+                                <FormField
+                                  control={form.control}
+                                  name="note"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Notes (Optional)</FormLabel>
+                                      <FormControl>
+                                        <Textarea
+                                          placeholder="Add any notes about this training..."
+                                          className="resize-none min-h-[80px]"
+                                          {...field}
+                                          value={field.value || ""}
+                                          onChange={(e) => {
+                                            field.onChange(e);
+                                            setIsFormDirty(true);
+                                          }}
+                                        />
                                       </FormControl>
                                       <FormMessage />
                                     </FormItem>

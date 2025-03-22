@@ -13,21 +13,43 @@ export const getGamesByTenantId = async (
       *,
       homeTeam:homeTeamId(
         id,
-      
         age,
         gender,
-        appearance
+        skill,
+        tenantId,
+        coachId,
+        appearance,
+        opponentId,
+        opponent:opponentId(
+          id,
+          name,
+          appearance
+        )
       ),
       awayTeam:awayTeamId(
         id,
-      
         age,
         gender,
-        appearance
+        skill,
+        tenantId,
+        coachId,
+        appearance,
+        opponentId,
+        opponent:opponentId(
+          id,
+          name,
+          appearance
+        )
       ),
       season:seasonId(
         id,
-        customName
+        customName,
+        startDate,
+        endDate,
+        tenantId,
+        isActive,
+        breaks,
+        phases
       )
     `
     )
@@ -56,21 +78,43 @@ export const getGamesBySeason = async (
       *,
       homeTeam:homeTeamId(
         id,
-     
         age,
         gender,
-        appearance
+        skill,
+        tenantId,
+        coachId,
+        appearance,
+        opponentId,
+        opponent:opponentId(
+          id,
+          name,
+          appearance
+        )
       ),
       awayTeam:awayTeamId(
         id,
-      
         age,
         gender,
-        appearance
+        skill,
+        tenantId,
+        coachId,
+        appearance,
+        opponentId,
+        opponent:opponentId(
+          id,
+          name,
+          appearance
+        )
       ),
       season:seasonId(
         id,
-        customName
+        customName,
+        startDate,
+        endDate,
+        tenantId,
+        isActive,
+        breaks,
+        phases
       )
     `
     )
@@ -100,21 +144,43 @@ export const getGamesByTeam = async (
       *,
       homeTeam:homeTeamId(
         id,
-    
         age,
         gender,
-        appearance
+        skill,
+        tenantId,
+        coachId,
+        appearance,
+        opponentId,
+        opponent:opponentId(
+          id,
+          name,
+          appearance
+        )
       ),
       awayTeam:awayTeamId(
         id,
-      
         age,
         gender,
-        appearance
+        skill,
+        tenantId,
+        coachId,
+        appearance,
+        opponentId,
+        opponent:opponentId(
+          id,
+          name,
+          appearance
+        )
       ),
       season:seasonId(
         id,
-        customName
+        customName,
+        startDate,
+        endDate,
+        tenantId,
+        isActive,
+        breaks,
+        phases
       )
     `
     )
@@ -144,21 +210,43 @@ export const getGameById = async (
       *,
       homeTeam:homeTeamId(
         id,
-    
         age,
         gender,
-        appearance
+        skill,
+        tenantId,
+        coachId,
+        appearance,
+        opponentId,
+        opponent:opponentId(
+          id,
+          name,
+          appearance
+        )
       ),
       awayTeam:awayTeamId(
         id,
-       
         age,
         gender,
-        appearance
+        skill,
+        tenantId,
+        coachId,
+        appearance,
+        opponentId,
+        opponent:opponentId(
+          id,
+          name,
+          appearance
+        )
       ),
       season:seasonId(
         id,
-        customName
+        customName,
+        startDate,
+        endDate,
+        tenantId,
+        isActive,
+        breaks,
+        phases
       )
     `
     )
@@ -184,35 +272,33 @@ export const createGame = async (
   data: GameForm,
   tenantId: string
 ): Promise<Game> => {
-  // Create a new object with database-friendly values
-  const formattedData = {
-    date: data.date.toISOString().split("T")[0],
-    startTime: data.startTime,
-    endTime: data.endTime,
-    homeTeamId: data.homeTeamId,
-    awayTeamId: data.awayTeamId,
-    location: data.location,
-    competitionType: data.competitionType,
-    seasonId: data.seasonId,
-    status: data.status,
-    homeScore: data.homeScore,
-    awayScore: data.awayScore,
-    notes: data.notes,
-    tenantId,
-  };
+  try {
+    // Build the game object
+    const gameData = {
+      ...data,
+      date: data.date.toISOString().split("T")[0], // Format date as YYYY-MM-DD
+      tenantId: parseInt(tenantId),
+    };
 
-  const { data: newGame, error } = await client
-    .from("games")
-    .insert(formattedData)
-    .select()
-    .single();
+    // Create the game
+    const { data: newGame, error } = await client
+      .from("games")
+      .insert(gameData)
+      .select(
+        "*, homeTeam:homeTeamId(*), awayTeam:awayTeamId(*), season:seasonId(*)"
+      )
+      .single();
 
-  if (error) {
-    console.error("Error creating game:", error);
+    if (error) {
+      console.error("Error creating game:", error);
+      throw error;
+    }
+
+    return GameSchema.parse(newGame);
+  } catch (error) {
+    console.error("Error in createGame:", error);
     throw error;
   }
-
-  return GameSchema.parse(newGame);
 };
 
 // Update an existing game
@@ -222,38 +308,36 @@ export const updateGame = async (
   gameId: number,
   tenantId: string
 ): Promise<Game> => {
-  // Create a new object with database-friendly values
-  const formattedData: Record<string, any> = {};
+  try {
+    // Prepare data for update
+    const updateData: any = { ...data };
 
-  // Only include properties that are present in the input data
-  if (data.date) formattedData.date = data.date.toISOString().split("T")[0];
-  if (data.startTime !== undefined) formattedData.startTime = data.startTime;
-  if (data.endTime !== undefined) formattedData.endTime = data.endTime;
-  if (data.homeTeamId !== undefined) formattedData.homeTeamId = data.homeTeamId;
-  if (data.awayTeamId !== undefined) formattedData.awayTeamId = data.awayTeamId;
-  if (data.location !== undefined) formattedData.location = data.location;
-  if (data.competitionType !== undefined)
-    formattedData.competitionType = data.competitionType;
-  if (data.seasonId !== undefined) formattedData.seasonId = data.seasonId;
-  if (data.status !== undefined) formattedData.status = data.status;
-  if (data.homeScore !== undefined) formattedData.homeScore = data.homeScore;
-  if (data.awayScore !== undefined) formattedData.awayScore = data.awayScore;
-  if (data.notes !== undefined) formattedData.notes = data.notes;
+    // Format date if present
+    if (data.date) {
+      updateData.date = data.date.toISOString().split("T")[0];
+    }
 
-  const { data: updatedGame, error } = await client
-    .from("games")
-    .update(formattedData)
-    .eq("id", gameId)
-    .eq("tenantId", tenantId)
-    .select()
-    .single();
+    // Update the game
+    const { data: updatedGame, error } = await client
+      .from("games")
+      .update(updateData)
+      .eq("id", gameId)
+      .eq("tenantId", tenantId)
+      .select(
+        "*, homeTeam:homeTeamId(*), awayTeam:awayTeamId(*), season:seasonId(*)"
+      )
+      .single();
 
-  if (error) {
-    console.error("Error updating game:", error);
+    if (error) {
+      console.error("Error updating game:", error);
+      throw error;
+    }
+
+    return GameSchema.parse(updatedGame);
+  } catch (error) {
+    console.error("Error in updateGame:", error);
     throw error;
   }
-
-  return GameSchema.parse(updatedGame);
 };
 
 // Delete a game
@@ -296,17 +380,41 @@ export const getGamesByDateRange = async (
         id,
         age,
         gender,
-        appearance
+        skill,
+        tenantId,
+        coachId,
+        appearance,
+        opponentId,
+        opponent:opponentId(
+          id,
+          name,
+          appearance
+        )
       ),
       awayTeam:awayTeamId(
         id,
         age,
         gender,
-        appearance
+        skill,
+        tenantId,
+        coachId,
+        appearance,
+        opponentId,
+        opponent:opponentId(
+          id,
+          name,
+          appearance
+        )
       ),
       season:seasonId(
         id,
-        customName
+        customName,
+        startDate,
+        endDate,
+        tenantId,
+        isActive,
+        breaks,
+        phases
       )
     `
     )
@@ -325,4 +433,38 @@ export const getGamesByDateRange = async (
 
   // Parse each game through the schema
   return data ? data.map((game) => GameSchema.parse(game)) : [];
+};
+
+/**
+ * Get games for a specific date range using the vw_games_with_details view
+ * This view provides pre-formatted data about teams, including tenant teams and opponent teams
+ * which simplifies client-side transformations
+ */
+export const getGamesWithDetailsByDateRange = async (
+  client: TypedClient,
+  tenantId: string,
+  startDate: Date,
+  endDate: Date,
+  seasonId: number
+): Promise<any[]> => {
+  // Format dates to YYYY-MM-DD for database query
+  const formattedStartDate = startDate.toISOString().split("T")[0];
+  const formattedEndDate = endDate.toISOString().split("T")[0];
+
+  // Use the view directly
+  const { data, error } = await client
+    .from("vw_games_with_details")
+    .select("*")
+    .eq("tenantId", tenantId)
+    .eq("seasonId", seasonId)
+    .gte("date", formattedStartDate)
+    .lte("date", formattedEndDate)
+    .order("date", { ascending: true });
+
+  if (error) {
+    console.error("Error fetching games with details by date range:", error);
+    throw error;
+  }
+
+  return data || [];
 };

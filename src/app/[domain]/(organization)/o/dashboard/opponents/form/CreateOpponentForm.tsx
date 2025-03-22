@@ -6,16 +6,12 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import FormButtons from "@/components/ui/form-buttons";
 import { Input } from "@/components/ui/input";
-import {
-  useCreateOpponent,
-  useUpdateOpponent,
-} from "@/entities/opponent/Opponent.actions";
+import { useCreateOpponent } from "@/entities/opponent/Opponent.actions";
 import {
   Opponent,
   OpponentFormSchema,
-  type OpponentForm,
+  type OpponentForm as OpponentFormType,
 } from "@/entities/opponent/Opponent.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -30,13 +26,15 @@ import {
   StickyNote,
   Palette,
   Info,
+  Trash2,
 } from "lucide-react";
 import { Tenant } from "@/entities/tenant/Tenant.schema";
 import {
   getDisplayAgeGroup,
   getDisplayGender,
   TeamGender,
-  isOpponentTeam,
+  isTenantTeam,
+  Team,
 } from "@/entities/team/Team.schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -59,15 +57,14 @@ import { Separator } from "@/components/ui/separator";
 import { ColorPicker } from "@/components/ui/color-picker";
 import { cn } from "@/lib/utils";
 
-interface OpponentFormProps {
+interface CreateOpponentFormProps {
   tenantId: string;
-  opponent?: Opponent;
   setIsOpen: (value: boolean) => void;
   tenant: Tenant;
 }
 
 interface TeamTableProps {
-  teams: any[];
+  teams: Team[];
   selectedTeamIds: number[];
   onToggleTeam: (teamId: number) => void;
 }
@@ -125,55 +122,35 @@ const TeamTable = ({
   );
 };
 
-export default function OpponentForm({
+// Helper function to map team to basic data
+const mapTeamToBasicData = (team: Team) => ({
+  id: team.id,
+  age: team.age,
+  gender: team.gender,
+  skill: team.skill,
+});
+
+export default function CreateOpponentForm({
   tenantId,
-  opponent,
   setIsOpen,
   tenant,
-}: OpponentFormProps) {
+}: CreateOpponentFormProps) {
   const [formKey, setFormKey] = useState(0);
   const [forceReset, setForceReset] = useState(false);
   const [activeTab, setActiveTab] = useState("basic");
   const createOpponent = useCreateOpponent(tenantId);
-  const updateOpponent = useUpdateOpponent(opponent?.id ?? 0, tenantId);
   const { data: allTeams } = useGetTeamsByTenantId(tenantId);
 
-  // Keep track of the teams that already belong to THIS opponent
-  const existingOpponentTeams = useMemo(() => {
-    return opponent?.teams || [];
-  }, [opponent]);
-
-  // Filter teams: include ones that don't belong to ANY opponent OR are already assigned to THIS opponent
-  const availableTeams = useMemo(() => {
+  // Filter and prepare teams for selection
+  const selectableTeams = useMemo(() => {
     if (!allTeams) return [];
 
-    return allTeams.filter((team) => {
-      // Include teams that don't belong to any opponent
-      if (!isOpponentTeam(team)) return true;
+    // Teams returned by useGetTeamsByTenantId are already filtered
+    // to include only tenant teams (opponentId is null)
+    return allTeams;
+  }, [allTeams]);
 
-      // Include teams that belong specifically to THIS opponent
-      if (opponent && team.opponentId === opponent.id) return true;
-
-      // Exclude teams that belong to other opponents
-      return false;
-    });
-  }, [allTeams, opponent]);
-
-  // All selectable teams for the form
-  const teams = useMemo(() => {
-    // Combine the filtered teams with existing opponent teams (if editing)
-    if (opponent) {
-      const existingTeamIds = new Set(existingOpponentTeams.map((t) => t.id));
-      const filteredWithoutDuplicates = availableTeams.filter(
-        (t) => !existingTeamIds.has(t.id)
-      );
-      return [...existingOpponentTeams, ...filteredWithoutDuplicates];
-    }
-
-    return availableTeams;
-  }, [availableTeams, existingOpponentTeams, opponent]);
-
-  const form = useForm<OpponentForm>({
+  const form = useForm<OpponentFormType>({
     resolver: zodResolver(OpponentFormSchema, {
       // Be more lenient with undefined values
       errorMap: (issue, ctx) => {
@@ -183,47 +160,28 @@ export default function OpponentForm({
         return { message: ctx.defaultError };
       },
     }),
-    defaultValues: opponent
-      ? {
-          name: opponent.name ?? "",
-          location: opponent.location || {
-            name: "",
-            streetAddress: "",
-            city: "",
-            postcode: "",
-            mapLink: "",
-          },
-          tenantId: Number(tenantId),
-          teamIds: opponent.teams?.map((t) => t.id) ?? null,
-          teams: opponent.teams ?? null,
-          appearance: opponent.appearance ?? null,
-          contactEmail: opponent.contactEmail ?? "",
-          contactPhone: opponent.contactPhone ?? "",
-          notes: opponent.notes ?? "",
-        }
-      : {
-          name: "",
-          location: {
-            name: "",
-            streetAddress: "",
-            city: "",
-            postcode: "",
-            mapLink: "",
-          },
-          tenantId: Number(tenantId),
-          teamIds: null,
-          teams: null,
-          appearance: null,
-          contactEmail: "",
-          contactPhone: "",
-          notes: "",
-        },
+    defaultValues: {
+      name: "",
+      location: {
+        name: "",
+        streetAddress: "",
+        city: "",
+        postcode: "",
+        mapLink: "",
+      },
+      tenantId: Number(tenantId),
+      teamIds: null,
+      teams: null,
+      appearance: null,
+      contactEmail: "",
+      contactPhone: "",
+      notes: "",
+    },
   });
 
   const { handleSubmit, watch } = form;
   const { isDirty, isLoading } = form.formState;
   const selectedTeamIds = watch("teamIds") ?? [];
-  const brandColor = watch("appearance.color");
 
   const resetFormCompletely = () => {
     form.setValue("name", "");
@@ -247,8 +205,8 @@ export default function OpponentForm({
     }
   }, [forceReset, form]);
 
-  // Add this function to ensure appearance object is valid
-  const prepareFormData = (formData: OpponentForm) => {
+  // Prepare form data with validation
+  const prepareFormData = (formData: OpponentFormType) => {
     // Ensure appearance object exists with empty color if not set
     if (!formData.appearance) {
       formData.appearance = {
@@ -297,89 +255,37 @@ export default function OpponentForm({
 
     // Ensure teamIds are preserved (not null or undefined)
     if (formData.teamIds === null || formData.teamIds === undefined) {
-      if (opponent?.teams?.length) {
-        formData.teamIds = opponent.teams.map((t) => t.id);
-      } else {
-        formData.teamIds = [];
-      }
+      formData.teamIds = [];
     }
 
     return formData;
   };
 
-  const onSubmit = async (data: OpponentForm) => {
+  const onSubmit = async (data: OpponentFormType) => {
     try {
       console.log("Form submitted with data:", data);
 
-      // Get the processed data with validated fields
+      // Process basic form data
       const processedData = prepareFormData(data);
 
-      // Handle team data - define type inline
-      let finalTeamData: {
-        id: number;
-        age: string | null;
-        gender: string | null;
-        skill: string | null;
-      }[] = [];
-
-      // The teamIds field stores which teams are selected
+      // Handle team data conversion
       const teamIdsToInclude = processedData.teamIds || [];
 
-      if (opponent) {
-        // EDITING SCENARIO
+      // For new opponents, just map the selected team IDs to team data
+      const finalTeamData = selectableTeams
+        .filter((team: Team) => teamIdsToInclude.includes(team.id))
+        .map(mapTeamToBasicData);
 
-        // If editing, get the full team data for all selected teams
-        if (teamIdsToInclude.length > 0) {
-          // Find the full team objects that correspond to the selected team IDs
-          finalTeamData = teams
-            .filter((team) => teamIdsToInclude.includes(team.id))
-            .map((team) => ({
-              id: team.id,
-              age: team.age,
-              gender: team.gender,
-              skill: team.skill,
-            }));
-        } else if (existingOpponentTeams.length > 0) {
-          // If no teams were selected but the opponent had teams previously,
-          // preserve those existing teams
-          finalTeamData = existingOpponentTeams.map((team) => ({
-            id: team.id,
-            age: team.age,
-            gender: team.gender,
-            skill: team.skill,
-          }));
-        }
-      } else {
-        // NEW OPPONENT SCENARIO
-
-        // For new opponents, just map the selected team IDs to team data
-        finalTeamData = teams
-          .filter((team) => teamIdsToInclude.includes(team.id))
-          .map((team) => ({
-            id: team.id,
-            age: team.age,
-            gender: team.gender,
-            skill: team.skill,
-          }));
-      }
-
-      // Create the final data for submission
-      const formData = {
+      // Final data for submission
+      const submitData = {
         ...processedData,
         teams: finalTeamData,
       };
 
-      if (opponent) {
-        await updateOpponent.mutateAsync(formData);
-        toast.success("Opponent updated successfully");
-        form.reset();
-        setIsOpen(false);
-      } else {
-        await createOpponent.mutateAsync(formData);
-        toast.success("Opponent added successfully");
-        form.reset();
-        setIsOpen(false);
-      }
+      await createOpponent.mutateAsync(submitData);
+      toast.success("Opponent added successfully");
+      form.reset();
+      setIsOpen(false);
     } catch (error: any) {
       console.error("Error submitting form:", error);
       console.error("Validation errors:", form.formState.errors);
@@ -387,39 +293,26 @@ export default function OpponentForm({
     }
   };
 
-  const onSubmitAndAddAnother = async (data: OpponentForm) => {
+  const onSubmitAndAddAnother = async (data: OpponentFormType) => {
     try {
-      // Get the processed data with validated fields
+      // Process basic form data
       const processedData = prepareFormData(data);
 
-      // Handle team data - define type inline
-      let finalTeamData: {
-        id: number;
-        age: string | null;
-        gender: string | null;
-        skill: string | null;
-      }[] = [];
-
-      // The teamIds field stores which teams are selected
+      // Handle team data conversion
       const teamIdsToInclude = processedData.teamIds || [];
 
       // For new opponents, just map the selected team IDs to team data
-      finalTeamData = teams
-        .filter((team) => teamIdsToInclude.includes(team.id))
-        .map((team) => ({
-          id: team.id,
-          age: team.age,
-          gender: team.gender,
-          skill: team.skill,
-        }));
+      const finalTeamData = selectableTeams
+        .filter((team: Team) => teamIdsToInclude.includes(team.id))
+        .map(mapTeamToBasicData);
 
-      // Create the final data for submission
-      const formData = {
+      // Final data for submission
+      const submitData = {
         ...processedData,
         teams: finalTeamData,
       };
 
-      await createOpponent.mutateAsync(formData);
+      await createOpponent.mutateAsync(submitData);
       toast.success("Opponent added successfully");
       resetFormCompletely();
     } catch (error: any) {
@@ -457,16 +350,20 @@ export default function OpponentForm({
   };
 
   const toggleTeam = (teamId: number) => {
+    // Get current selected team IDs
     const currentTeamIds = form.getValues("teamIds") ?? [];
+    // Check if this team is already selected
     const isSelected = currentTeamIds.includes(teamId);
 
     if (isSelected) {
+      // Remove the team from selection
       form.setValue(
         "teamIds",
         currentTeamIds.filter((id) => id !== teamId),
         { shouldDirty: true }
       );
     } else {
+      // Add the team to selection
       form.setValue("teamIds", [...currentTeamIds, teamId], {
         shouldDirty: true,
       });
@@ -664,59 +561,11 @@ export default function OpponentForm({
                 <p className="text-sm text-muted-foreground">
                   In competitions, your teams typically face opponents with
                   similar age groups, genders, and skill levels. This tab lets
-                  you mirror your organization's team structure for this
+                  you mirror your organization&apos;s team structure for this
                   opponent, making it easier to schedule matches between
                   comparable teams.
                 </p>
               </div>
-
-              {/* Display teams already assigned to this opponent if editing */}
-              {opponent?.teams && opponent.teams.length > 0 && (
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base font-medium flex items-center gap-2">
-                      <Users className="h-4 w-4" />
-                      Current Opponent Teams
-                    </CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      These team groupings have been created for this opponent
-                      to match with your teams.
-                    </p>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Age Group</TableHead>
-                          <TableHead>Gender</TableHead>
-                          <TableHead>Skill Level</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {opponent.teams.map((team, index) => (
-                          <TableRow key={index}>
-                            <TableCell>
-                              <Badge variant="outline" className="font-medium">
-                                {getDisplayAgeGroup(team.age)}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="secondary" className="capitalize">
-                                {getDisplayGender(team.gender, team.age)}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="secondary" className="capitalize">
-                                {team.skill}
-                              </Badge>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
-              )}
 
               {/* Available teams to select */}
               <Card>
@@ -733,9 +582,9 @@ export default function OpponentForm({
                 </CardHeader>
                 <CardContent>
                   <ScrollArea className="h-[300px] w-full rounded-md border">
-                    {teams && (
+                    {selectableTeams && (
                       <TeamTable
-                        teams={teams}
+                        teams={selectableTeams}
                         selectedTeamIds={selectedTeamIds}
                         onToggleTeam={toggleTeam}
                       />
@@ -895,16 +744,14 @@ export default function OpponentForm({
         <Separator className="my-2" />
 
         <div className="bg-background sticky bottom-0 left-0 right-0 py-4 flex items-center justify-between">
-          {!opponent && (
-            <Button
-              type="button"
-              onClick={handleSubmit(onSubmitAndAddAnother)}
-              disabled={!isDirty || isLoading}
-            >
-              <PlusCircle className="h-4 w-4 mr-2" />
-              Add and continue
-            </Button>
-          )}
+          <Button
+            type="button"
+            onClick={handleSubmit(onSubmitAndAddAnother)}
+            disabled={!isDirty || isLoading}
+          >
+            <PlusCircle className="h-4 w-4 mr-2" />
+            Add and continue
+          </Button>
           <div className="flex items-center gap-2">
             <Button
               type="submit"
@@ -912,7 +759,7 @@ export default function OpponentForm({
               disabled={!isDirty || isLoading}
             >
               {isLoading && <div className="mr-2 h-4 w-4 animate-spin" />}
-              {opponent ? "Save changes" : "Add and close"}
+              Add and close
             </Button>
             <Button type="button" variant="outline" onClick={onCancel}>
               Cancel

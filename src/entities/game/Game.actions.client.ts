@@ -18,6 +18,10 @@ export const useCreateGame = (tenantId: string) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.game.all,
       });
+      // Use the central cache key for invalidating all calendar events for this tenant
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.game.allCalendarEvents(tenantId),
+      });
     },
   });
 };
@@ -45,6 +49,10 @@ export const useUpdateGame = (tenantId: string) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.game.detail(tenantId, variables.gameId),
       });
+      // Use the central cache key for invalidating all calendar events for this tenant
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.game.allCalendarEvents(tenantId),
+      });
     },
   });
 };
@@ -62,6 +70,10 @@ export const useDeleteGame = (tenantId: string) => {
       // Invalidate all game queries when a game is deleted
       queryClient.invalidateQueries({
         queryKey: queryKeys.game.all,
+      });
+      // Use the central cache key for invalidating all calendar events for this tenant
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.game.allCalendarEvents(tenantId),
       });
     },
   });

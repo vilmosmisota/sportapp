@@ -24,7 +24,8 @@ export const getOpponentsByTenantId = async (
       )
     `
     )
-    .eq("tenantId", tenantId);
+    .eq("tenantId", tenantId)
+    .order("name", { ascending: true });
 
   if (error) {
     throw new Error(error.message);

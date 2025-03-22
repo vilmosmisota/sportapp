@@ -37,6 +37,8 @@ export function DateInput({
   useEffect(() => {
     if (value && isValid(value)) {
       setInputValue(format(value, "dd/MM/yyyy"));
+    } else {
+      setInputValue("");
     }
   }, [value]);
 
@@ -73,6 +75,12 @@ export function DateInput({
     setShowPicker(false);
   };
 
+  const handleCalendarButtonClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowPicker(!showPicker);
+  };
+
   return (
     <div className="relative">
       <div className="relative">
@@ -94,6 +102,7 @@ export function DateInput({
             <Button
               type="button"
               variant="ghost"
+              onClick={handleCalendarButtonClick}
               className={cn(
                 "absolute right-0 top-0 h-full px-2 py-2 hover:bg-transparent",
                 error && "text-red-500 hover:text-red-500"

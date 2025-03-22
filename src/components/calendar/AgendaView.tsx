@@ -1,12 +1,21 @@
 "use client";
 
 import * as React from "react";
-import { format, isSameDay, addDays, isToday, isAfter } from "date-fns";
+import {
+  format,
+  isSameDay,
+  addDays,
+  isToday,
+  isAfter,
+  isWithinInterval,
+  isBefore,
+} from "date-fns";
 import { cn } from "@/libs/tailwind/utils";
 import { CalendarEvent } from "./EventCalendar";
 import { EventItem } from "./EventItem";
 import { sortEvents } from "./utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Pause, Calendar } from "lucide-react";
 
 interface AgendaViewProps {
   currentDate: Date;
@@ -14,6 +23,8 @@ interface AgendaViewProps {
   onEventClick?: (event: CalendarEvent) => void;
   isLoading?: boolean;
   daysToShow?: number;
+  seasonBreaks?: { from: Date; to: Date }[];
+  seasonDateRange?: { startDate: Date; endDate: Date } | null;
 }
 
 export function AgendaView({
@@ -22,7 +33,28 @@ export function AgendaView({
   onEventClick,
   isLoading = false,
   daysToShow = 14,
+  seasonBreaks = [],
+  seasonDateRange = null,
 }: AgendaViewProps) {
+  // Helper function to check if a date is within a break period
+  const isDateInBreak = (date: Date) => {
+    return seasonBreaks.some((breakPeriod) =>
+      isWithinInterval(date, {
+        start: breakPeriod.from,
+        end: breakPeriod.to,
+      })
+    );
+  };
+
+  // Helper function to check if a date is outside the season range
+  const isDateOutsideSeason = (date: Date) => {
+    if (!seasonDateRange) return false;
+    return (
+      isBefore(date, seasonDateRange.startDate) ||
+      isAfter(date, seasonDateRange.endDate)
+    );
+  };
+
   // Group events by date
   const groupedEvents = React.useMemo(() => {
     const grouped: Record<string, CalendarEvent[]> = {};
@@ -77,9 +109,12 @@ export function AgendaView({
         {dateRange.map((date) => {
           const dateKey = format(date, "yyyy-MM-dd");
           const dayEvents = groupedEvents[dateKey] || [];
+          const isInBreak = isDateInBreak(date);
+          const isOutsideSeason = isDateOutsideSeason(date);
 
-          // Skip days with no events
-          if (dayEvents.length === 0) return null;
+          // If there are no events and it's not in a break or outside season, skip the day
+          if (dayEvents.length === 0 && !isInBreak && !isOutsideSeason)
+            return null;
 
           return (
             <div key={dateKey} className="space-y-2">
@@ -87,7 +122,9 @@ export function AgendaView({
               <div
                 className={cn(
                   "sticky top-0 bg-background py-2 z-10 border-b",
-                  isToday(date) && "text-primary font-medium"
+                  isToday(date) && "text-primary font-medium",
+                  isInBreak && "bg-amber-50/70",
+                  isOutsideSeason && "bg-gray-100"
                 )}
               >
                 <div className="flex items-center">
@@ -99,8 +136,22 @@ export function AgendaView({
                   >
                     {format(date, "d")}
                   </div>
-                  <div>
-                    <div className="font-medium">{format(date, "EEEE")}</div>
+                  <div className="flex-grow">
+                    <div className="font-medium flex items-center gap-1">
+                      {format(date, "EEEE")}
+                      {isInBreak && (
+                        <span className="inline-flex items-center text-amber-500 text-xs">
+                          <Pause className="h-3.5 w-3.5 mr-1" />
+                          Season Break
+                        </span>
+                      )}
+                      {isOutsideSeason && (
+                        <span className="inline-flex items-center text-gray-400 text-xs">
+                          <Calendar className="h-3.5 w-3.5 mr-1" />
+                          Outside Season
+                        </span>
+                      )}
+                    </div>
                     <div className="text-muted-foreground text-sm">
                       {format(date, "MMMM yyyy")}
                     </div>
@@ -110,6 +161,18 @@ export function AgendaView({
 
               {/* Events for this day */}
               <div className="space-y-2 pl-12">
+                {isInBreak && dayEvents.length === 0 && (
+                  <div className="text-sm py-2 px-3 bg-amber-50 border border-amber-200 rounded text-amber-700">
+                    No events during this break period
+                  </div>
+                )}
+
+                {isOutsideSeason && dayEvents.length === 0 && (
+                  <div className="text-sm py-2 px-3 bg-gray-100 border border-gray-200 rounded text-gray-500">
+                    No events outside season range
+                  </div>
+                )}
+
                 {dayEvents.map((event) => (
                   <EventItem
                     key={event.id}
@@ -124,14 +187,18 @@ export function AgendaView({
         })}
 
         {/* Empty state */}
-        {Object.keys(groupedEvents).length === 0 && (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="text-muted-foreground mb-2">No upcoming events</div>
-            <div className="text-sm text-muted-foreground">
-              Events will appear here when they are scheduled
+        {Object.keys(groupedEvents).length === 0 &&
+          !dateRange.some(isDateInBreak) &&
+          !dateRange.some(isDateOutsideSeason) && (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="text-muted-foreground mb-2">
+                No upcoming events
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Events will appear here when they are scheduled
+              </div>
             </div>
-          </div>
-        )}
+          )}
       </div>
     </div>
   );

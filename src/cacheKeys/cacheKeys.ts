@@ -66,14 +66,14 @@ export const queryKeys = {
   training: {
     all: ["training"] as const,
     grouped: ["training", "grouped"] as const,
-    detail: (tenantId: string | undefined, trainingId: string | undefined) =>
+    detail: (tenantId?: string, trainingId?: string) =>
       ["training", tenantId, trainingId] as const,
     byDayRange: (days: number) => ["training", "byDayRange", days] as const,
     byDateRange: (
-      tenantId: string | undefined,
-      startDate: string | undefined,
-      endDate: string | undefined,
-      seasonId?: number | undefined
+      tenantId?: string,
+      startDate?: string,
+      endDate?: string,
+      seasonId?: number
     ) =>
       [
         "training",
@@ -83,6 +83,11 @@ export const queryKeys = {
         endDate,
         seasonId,
       ] as const,
+    byPattern: ["training", "byPattern"] as const,
+    calendarEvents: (tenantId?: string, month?: string, seasonId?: number) =>
+      ["trainingCalendarEvents", tenantId, month, seasonId] as const,
+    allCalendarEvents: (tenantId?: string) =>
+      ["trainingCalendarEvents", tenantId] as const,
   },
   trainingSeasonConnection: {
     all: ["trainingSeasonConnection"] as const,
@@ -153,5 +158,9 @@ export const queryKeys = {
       seasonId?: number | undefined
     ) =>
       ["game", "byDateRange", tenantId, startDate, endDate, seasonId] as const,
+    calendarEvents: (tenantId?: string, month?: string, seasonId?: number) =>
+      ["gameCalendarEvents", tenantId, month, seasonId] as const,
+    allCalendarEvents: (tenantId?: string) =>
+      ["gameCalendarEvents", tenantId] as const,
   },
 } as const;

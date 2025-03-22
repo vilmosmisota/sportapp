@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   format,
   startOfToday,
@@ -14,6 +14,7 @@ import {
   addWeeks,
   subWeeks,
   isSameMonth,
+  startOfDay,
 } from "date-fns";
 import { useMediaQuery } from "@/utils/hooks";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,7 +25,8 @@ import { CalendarViewType } from "./types";
 import { CalendarHeader } from "./CalendarHeader";
 import { MonthView } from "./MonthView";
 import { WeekView } from "./WeekView";
-import { AgendaView } from "./AgendaView";
+import { DayView } from "./DayView";
+import { Season } from "@/entities/season/Season.schema";
 
 export type CalendarEvent = {
   id: string | number;
@@ -34,7 +36,14 @@ export type CalendarEvent = {
   end: Date;
   allDay?: boolean;
   color?: string;
-  data: Game | Training;
+  data: (Game | Training) & {
+    displayDetails?: {
+      homeTeam?: { name: string; color: string; details: string };
+      awayTeam?: { name: string; color: string; details: string };
+      competition?: { name: string; color: string };
+      detailsText?: string;
+    };
+  };
 };
 
 interface EventCalendarProps {
@@ -43,6 +52,8 @@ interface EventCalendarProps {
   onDateRangeChange?: (start: Date, end: Date) => void;
   defaultView?: CalendarViewType;
   isLoading?: boolean;
+  seasonBreaks?: { from: Date; to: Date }[];
+  seasonDateRange?: { startDate: Date; endDate: Date } | null;
 }
 
 export function EventCalendar({
@@ -51,6 +62,8 @@ export function EventCalendar({
   onDateRangeChange,
   defaultView = "month",
   isLoading = false,
+  seasonBreaks = [],
+  seasonDateRange = null,
 }: EventCalendarProps) {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const [view, setView] = useState<CalendarViewType>(defaultView);
@@ -61,11 +74,6 @@ export function EventCalendar({
   const [currentWeek, setCurrentWeek] = useState<Date>(
     startOfWeek(currentDate)
   );
-  const [dateRange, setDateRange] = useState({
-    start:
-      view === "month" ? startOfMonth(currentDate) : startOfWeek(currentDate),
-    end: view === "month" ? endOfMonth(currentDate) : endOfWeek(currentDate),
-  });
 
   // Calculate date range based on current view and date
   const calculateDateRange = useCallback(
@@ -75,14 +83,11 @@ export function EventCalendar({
       if (viewType === "month") {
         start = startOfMonth(date);
         end = endOfMonth(date);
-      } else if (viewType === "week") {
-        start = startOfWeek(date);
-        end = endOfWeek(date);
       } else {
-        // For agenda view, show next 30 days by default
-        start = startOfToday();
+        // day view
+        start = startOfDay(date);
         end = new Date(start);
-        end.setDate(start.getDate() + 30);
+        end.setHours(23, 59, 59, 999);
       }
 
       return { start, end };
@@ -90,33 +95,44 @@ export function EventCalendar({
     []
   );
 
-  // Update the date range and trigger the callback
-  const updateDateRange = useCallback(
-    (date: Date, viewType: CalendarViewType) => {
-      const { start, end } = calculateDateRange(date, viewType);
-      setDateRange({ start, end });
+  // Compute the current date range during rendering based on view and current date
+  const currentViewDate = view === "month" ? currentMonth : currentWeek;
+  const computedDateRange = calculateDateRange(currentViewDate, view);
 
-      // Only call the callback if it exists and the date range has changed
-      if (
-        onDateRangeChange &&
-        (!dateRange.start ||
-          !dateRange.end ||
-          dateRange.start.getTime() !== start.getTime() ||
-          dateRange.end.getTime() !== end.getTime())
-      ) {
-        onDateRangeChange(start, end);
-      }
-    },
-    [calculateDateRange, onDateRangeChange, dateRange]
-  );
+  // Store the computed date range to check for changes
+  const prevDateRangeRef = useRef(computedDateRange);
 
-  // Initialize date range on mount and when view changes
+  // We need a useEffect for handling notification to parent component
+  // This specifically focuses on tracking month changes for data fetching
   useEffect(() => {
-    const currentViewDate = view === "month" ? currentMonth : currentWeek;
-    updateDateRange(currentViewDate, view);
-    // We deliberately omit updateDateRange from dependencies to prevent cycles
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view, currentMonth, currentWeek]);
+    // Extract month from current date range
+    const currentViewMonth = startOfMonth(computedDateRange.start);
+
+    // Extract month from previous date range (if any)
+    const prevViewMonth = prevDateRangeRef.current
+      ? startOfMonth(prevDateRangeRef.current.start)
+      : null;
+
+    // Only notify when month changes or on first render
+    if (
+      !prevViewMonth ||
+      currentViewMonth.getTime() !== prevViewMonth.getTime()
+    ) {
+      if (onDateRangeChange) {
+        // Always notify with full month boundaries
+        const monthStart = startOfMonth(currentViewMonth);
+        const monthEnd = endOfMonth(currentViewMonth);
+
+        console.log(
+          `Calendar: Month changed to ${format(currentViewMonth, "MMMM yyyy")}`
+        );
+        onDateRangeChange(monthStart, monthEnd);
+      }
+    }
+
+    // Always update the ref with current range to track changes
+    prevDateRangeRef.current = computedDateRange;
+  }, [computedDateRange, onDateRangeChange]);
 
   // Navigate to today
   const handleToday = () => {
@@ -125,31 +141,6 @@ export function EventCalendar({
 
     if (view === "month") {
       setCurrentMonth(startOfMonth(today));
-    } else {
-      setCurrentWeek(startOfWeek(today));
-    }
-
-    updateDateRange(today, view);
-  };
-
-  // Navigation functions
-  const navigatePrevious = () => {
-    if (view === "month") {
-      setCurrentDate((prevDate) => subMonths(prevDate, 1));
-    } else if (view === "week") {
-      setCurrentDate((prevDate) => subWeeks(prevDate, 1));
-    } else {
-      setCurrentDate((prevDate) => subWeeks(prevDate, 2));
-    }
-  };
-
-  const navigateNext = () => {
-    if (view === "month") {
-      setCurrentDate((prevDate) => addMonths(prevDate, 1));
-    } else if (view === "week") {
-      setCurrentDate((prevDate) => addWeeks(prevDate, 1));
-    } else {
-      setCurrentDate((prevDate) => addWeeks(prevDate, 2));
     }
   };
 
@@ -157,51 +148,50 @@ export function EventCalendar({
   const handlePreviousMonth = () => {
     const prevMonth = subMonths(currentMonth, 1);
     setCurrentMonth(prevMonth);
-    updateDateRange(prevMonth, "month");
+    setCurrentDate(prevMonth);
   };
 
   const handleNextMonth = () => {
     const nextMonth = addMonths(currentMonth, 1);
     setCurrentMonth(nextMonth);
-    updateDateRange(nextMonth, "month");
+    setCurrentDate(nextMonth);
   };
 
-  // Week view navigation
-  const handlePreviousWeek = () => {
-    const prevWeek = subWeeks(currentWeek, 1);
-    setCurrentWeek(prevWeek);
-    updateDateRange(prevWeek, "week");
+  // Day view navigation
+  const handleDayChange = (date: Date) => {
+    setCurrentDate(date);
+    if (onDateRangeChange) {
+      // For day view, use the start and end of the day as the range
+      const start = startOfDay(date);
+      const end = new Date(start);
+      end.setHours(23, 59, 59, 999);
+      onDateRangeChange(start, end);
+    }
   };
 
-  const handleNextWeek = () => {
-    const nextWeek = addWeeks(currentWeek, 1);
-    setCurrentWeek(nextWeek);
-    updateDateRange(nextWeek, "week");
-  };
+  // Handle date click from month view to switch to day view
+  const handleDateClick = useCallback(
+    (date: Date) => {
+      setCurrentDate(date);
+      setView("day");
+
+      if (onDateRangeChange) {
+        // For day view, use the start and end of the day as the range
+        const start = startOfDay(date);
+        const end = new Date(start);
+        end.setHours(23, 59, 59, 999);
+        onDateRangeChange(start, end);
+      }
+    },
+    [onDateRangeChange]
+  );
 
   const formatTitle = () => {
-    const monthFormat = "MMMM yyyy";
-    const weekFormat = "MMM d";
-
     switch (view) {
       case "month":
-        return format(currentMonth, monthFormat);
-      case "week":
-        const start = startOfWeek(currentWeek);
-        const end = endOfWeek(currentWeek);
-        const startMonth = format(start, "MMM");
-        const endMonth = format(end, "MMM");
-        const startDay = format(start, "d");
-        const endDay = format(end, "d");
-        const year = format(end, "yyyy");
-
-        return `${
-          startMonth !== endMonth
-            ? `${startMonth} ${startDay} - ${endMonth} ${endDay}`
-            : `${startMonth} ${startDay} - ${endDay}`
-        }, ${year}`;
+        return format(currentMonth, "MMMM yyyy");
       case "day":
-        return "Upcoming Events";
+        return format(currentDate, "MMMM yyyy");
       default:
         return "";
     }
@@ -209,48 +199,62 @@ export function EventCalendar({
 
   return (
     <div className="h-full flex flex-col">
-      <CalendarHeader
-        title={formatTitle()}
-        onPrevious={view === "month" ? handlePreviousMonth : handlePreviousWeek}
-        onNext={view === "month" ? handleNextMonth : handleNextWeek}
-        onToday={handleToday}
-        // Replace with total unfiltered count in real app
-      />
+      <div className="flex items-center justify-between mb-5 pb-2 border-b">
+        <CalendarHeader
+          title={formatTitle()}
+          onPrevious={handlePreviousMonth}
+          onNext={handleNextMonth}
+          onToday={handleToday}
+        />
+
+        <Tabs
+          value={view}
+          onValueChange={(newView) => setView(newView as CalendarViewType)}
+          className="w-auto"
+        >
+          <TabsList className="grid grid-cols-2 w-auto h-8 px-1">
+            <TabsTrigger value="day" className="px-3 text-xs rounded-sm">
+              Day
+            </TabsTrigger>
+            <TabsTrigger value="month" className="px-3 text-xs rounded-sm">
+              Month
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
 
       <Tabs
         value={view}
         onValueChange={(newView) => setView(newView as CalendarViewType)}
+        className="flex-grow h-[calc(100%-52px)]"
       >
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="day">Day</TabsTrigger>
-          <TabsTrigger value="week">Week</TabsTrigger>
-          <TabsTrigger value="month">Month</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="day" className="mt-2">
-          <AgendaView
+        <TabsContent
+          value="day"
+          className="h-full m-0 mt-0 p-0 data-[state=active]:block"
+        >
+          <DayView
             currentDate={currentDate}
             events={events}
             onEventClick={onEventClick}
             isLoading={isLoading}
+            seasonBreaks={seasonBreaks}
+            seasonDateRange={seasonDateRange}
+            onDateChange={handleDayChange}
           />
         </TabsContent>
 
-        <TabsContent value="week" className="mt-2">
-          <WeekView
-            currentDate={currentDate}
-            events={events}
-            onEventClick={onEventClick}
-            isLoading={isLoading}
-          />
-        </TabsContent>
-
-        <TabsContent value="month" className="mt-2">
+        <TabsContent
+          value="month"
+          className="h-full m-0 mt-0 p-0 data-[state=active]:block"
+        >
           <MonthView
             currentDate={currentDate}
             events={events}
             onEventClick={onEventClick}
+            onDateClick={handleDateClick}
             isLoading={isLoading}
+            seasonBreaks={seasonBreaks}
+            seasonDateRange={seasonDateRange}
           />
         </TabsContent>
       </Tabs>

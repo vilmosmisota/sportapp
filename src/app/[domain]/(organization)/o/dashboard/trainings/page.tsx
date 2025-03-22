@@ -28,6 +28,12 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function TrainingsPage({
   params,
@@ -138,22 +144,51 @@ export default function TrainingsPage({
         title="Trainings"
         description={
           activeSeason
-            ? `Training schedule for ${
-                activeSeason.customName ??
-                `${format(
+            ? (() => {
+                const dateRange = `${format(
                   new Date(activeSeason.startDate),
                   "dd/MM/yyyy"
-                )} - ${format(new Date(activeSeason.endDate), "dd/MM/yyyy")}`
-              }`
+                )} - ${format(new Date(activeSeason.endDate), "dd/MM/yyyy")}`;
+
+                return `Training schedule for ${
+                  activeSeason.customName
+                    ? `${activeSeason.customName} (${dateRange})`
+                    : dateRange
+                }`;
+              })()
             : "Manage your training schedules and sessions"
         }
         actions={
           <div className="flex items-center gap-4">
-            <SeasonSelect
-              seasons={seasons ?? []}
-              selectedSeason={activeSeason}
-              tenantId={tenant.id.toString()}
-            />
+            {seasons?.length === 0 ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <SeasonSelect
+                        seasons={seasons ?? []}
+                        selectedSeason={activeSeason}
+                        tenantId={tenant.id.toString()}
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                      <p>
+                        Please go to Team Management and create a season first.
+                      </p>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              <SeasonSelect
+                seasons={seasons ?? []}
+                selectedSeason={activeSeason}
+                tenantId={tenant.id.toString()}
+              />
+            )}
             <CreateTrainingButton
               domain={params.domain}
               selectedSeason={activeSeason}

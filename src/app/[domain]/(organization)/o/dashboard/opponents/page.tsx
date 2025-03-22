@@ -9,7 +9,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { PermissionButton } from "@/components/auth/PermissionButton";
 import { Permission } from "@/entities/role/Role.permissions";
 
-import OpponentForm from "./components/OpponentForm";
+import { CreateOpponentForm } from "./form";
 import OpponentsDataTable from "./components/OpponentsDataTable";
 
 export default function OpponentsPage({
@@ -54,7 +54,7 @@ export default function OpponentsPage({
         title="Add Opponent"
       >
         <div className="p-4">
-          <OpponentForm
+          <CreateOpponentForm
             tenantId={tenant?.id.toString() ?? ""}
             setIsOpen={setIsAddOpponentOpen}
             tenant={tenant!}
