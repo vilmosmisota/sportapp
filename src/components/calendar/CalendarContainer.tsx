@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { EventCalendar, CalendarEvent } from "./EventCalendar";
 import { useGamesCalendarEvents } from "./hooks/useGamesCalendarEvents";
@@ -13,6 +13,7 @@ interface CalendarContainerProps {
   selectedSeason: Season | null;
   tenantName: string;
   onEventClick?: (event: CalendarEvent) => void;
+  onEventsLoad?: (events: CalendarEvent[]) => void;
   defaultView?: CalendarViewType;
 }
 
@@ -21,6 +22,7 @@ export function CalendarContainer({
   selectedSeason,
   tenantName = "Our Team",
   onEventClick,
+  onEventsLoad,
   defaultView = "month",
 }: CalendarContainerProps) {
   // Track the current month for data fetching
@@ -56,6 +58,17 @@ export function CalendarContainer({
 
   // Combine the events
   const allEvents = [...gameEvents, ...trainingEvents];
+
+  // Notify parent when events are loaded
+  const isSuccess = isGamesSuccess && isTrainingsSuccess;
+  const eventsReady = allEvents.length > 0 && isSuccess;
+
+  // Call onEventsLoad when events are ready
+  useEffect(() => {
+    if (eventsReady && onEventsLoad) {
+      onEventsLoad(allEvents);
+    }
+  }, [eventsReady, allEvents, onEventsLoad]);
 
   // Handle date range changes (mainly for changing month)
   const handleDateRangeChange = useCallback(

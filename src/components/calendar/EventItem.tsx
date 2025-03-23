@@ -95,6 +95,8 @@ export function EventItem(props: EventItemProps) {
     <div
       className="px-2 py-1 rounded-md cursor-pointer truncate border"
       onClick={onClick ? () => onClick(event) : undefined}
+      data-event-id={event.id}
+      data-event-type={event.type}
     >
       <span className="font-medium">{event.title}</span>
     </div>
