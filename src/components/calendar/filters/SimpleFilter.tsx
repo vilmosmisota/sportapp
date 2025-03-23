@@ -552,7 +552,7 @@ export function SimpleFilter({
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4 text-green-500" />
                   <span className="font-medium">
-                    {tenantName || "Your"} Teams
+                    {tenantName || "Your teams"}
                   </span>
                   {filters.teams.tenantTeams.length > 0 && (
                     <Badge variant="secondary" className="ml-1 h-5 px-1">
@@ -607,7 +607,7 @@ export function SimpleFilter({
               <div className="px-4 py-3 bg-accent/5 border-b">
                 <div className="flex items-center gap-2">
                   <Shield className="h-4 w-4 text-red-500" />
-                  <span className="font-medium">Opponent Teams</span>
+                  <span className="font-medium">Opponents</span>
                   {filters.teams.opponentTeams.length > 0 && (
                     <Badge variant="secondary" className="ml-1 h-5 px-1">
                       {filters.teams.opponentTeams.length}
