@@ -13,6 +13,7 @@ import {
   ChevronDown,
   ChevronUp,
   X,
+  SlidersHorizontal,
 } from "lucide-react";
 import { cn } from "@/libs/tailwind/utils";
 import { Badge } from "@/components/ui/badge";
@@ -459,9 +460,9 @@ export function SimpleFilter({
             <Filter className="h-4 w-4 mr-2 text-primary" />
             <h3 className="text-base font-medium">Filters</h3>
             {activeFilterCount > 0 && (
-              <Badge className="ml-2 h-5 w-5 p-0 flex items-center justify-center rounded-full">
+              <p className="text-sm text-muted-foreground ml-2">
                 {activeFilterCount}
-              </Badge>
+              </p>
             )}
           </div>
         </AccordionTrigger>
@@ -481,7 +482,7 @@ export function SimpleFilter({
           </div>
         )}
 
-        <AccordionContent className="p-4 pt-2 data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
+        <AccordionContent className=" pt-2 data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
           <div className="flex justify-between items-center mb-3">
             <p className="text-sm text-muted-foreground">
               Filter events by type and teams
@@ -502,9 +503,9 @@ export function SimpleFilter({
             {/* Event Type Filter */}
             <Card className="shadow-sm border overflow-hidden">
               {/* Static header */}
-              <div className="px-4 py-3 bg-accent/5 border-b">
+              <div className="px-4 py-3 bg-accent/20 border-b">
                 <div className="flex items-center gap-2">
-                  <Filter className="h-4 w-4 text-blue-500" />
+                  <SlidersHorizontal className="h-4 w-4 text-blue-500" />
                   <span className="font-medium">Event Type</span>
                 </div>
               </div>
@@ -522,6 +523,7 @@ export function SimpleFilter({
                       id="filter-games"
                       checked={filters.eventTypes.games}
                       onCheckedChange={() => toggleEventType("games")}
+                      className="scale-75 origin-right"
                     />
                   </div>
 
@@ -539,6 +541,7 @@ export function SimpleFilter({
                       id="filter-trainings"
                       checked={filters.eventTypes.trainings}
                       onCheckedChange={() => toggleEventType("trainings")}
+                      className="scale-75 origin-right"
                     />
                   </div>
                 </div>
@@ -548,7 +551,7 @@ export function SimpleFilter({
             {/* Tenant Teams Filter */}
             <Card className="shadow-sm border overflow-hidden">
               {/* Static header */}
-              <div className="px-4 py-3 bg-accent/5 border-b">
+              <div className="px-4 py-3 bg-accent/20 border-b">
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4 text-green-500" />
                   <span className="font-medium">
@@ -575,8 +578,8 @@ export function SimpleFilter({
                         className={cn(
                           "flex items-center justify-between p-2 rounded-md transition-colors",
                           filters.teams.tenantTeams.includes(team.id)
-                            ? "bg-accent/20"
-                            : "hover:bg-accent/10 cursor-pointer"
+                            ? "bg-accent/60"
+                            : "hover:bg-accent/30 cursor-pointer"
                         )}
                         onClick={() => toggleTeam(team.id, false)}
                       >
@@ -604,7 +607,7 @@ export function SimpleFilter({
             {/* Opponent Teams Filter */}
             <Card className="shadow-sm border overflow-hidden">
               {/* Static header */}
-              <div className="px-4 py-3 bg-accent/5 border-b">
+              <div className="px-4 py-3 bg-accent/20 border-b">
                 <div className="flex items-center gap-2">
                   <Shield className="h-4 w-4 text-red-500" />
                   <span className="font-medium">Opponents</span>
@@ -629,8 +632,8 @@ export function SimpleFilter({
                         className={cn(
                           "flex items-center justify-between p-2 rounded-md transition-colors",
                           filters.teams.opponentTeams.includes(team.id)
-                            ? "bg-accent/20"
-                            : "hover:bg-accent/10 cursor-pointer"
+                            ? "bg-accent/60"
+                            : "hover:bg-accent/30 cursor-pointer"
                         )}
                         onClick={() => toggleTeam(team.id, true)}
                       >

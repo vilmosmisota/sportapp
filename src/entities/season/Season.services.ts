@@ -32,7 +32,6 @@ export const updateSeasonById = async (
       breaks: data.breaks,
       customName: data.customName,
       isActive: data.isActive,
-      phases: data.phases,
     })
     .eq("id", seasonId)
     .select()
@@ -58,7 +57,6 @@ export const addSeasonById = async (
       breaks: data.breaks,
       customName: data.customName,
       isActive: data.isActive,
-      phases: data.phases,
       tenantId,
     })
     .select()

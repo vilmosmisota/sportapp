@@ -13,7 +13,6 @@ export const SeasonSchema = z.object({
   tenantId: z.number(),
   isActive: z.boolean().default(false),
   breaks: z.array(BreakSchema).default([]),
-  phases: z.array(z.string()).nullable().default(null),
 });
 
 export type Season = z.infer<typeof SeasonSchema>;
@@ -24,7 +23,6 @@ export const SeasonFormSchema = z.object({
   customName: z.string().optional(),
   isActive: z.boolean().default(false),
   breaks: z.array(BreakSchema).default([]),
-  phases: z.array(z.string()).nullable().default(null),
 });
 
 export type SeasonForm = z.infer<typeof SeasonFormSchema>;

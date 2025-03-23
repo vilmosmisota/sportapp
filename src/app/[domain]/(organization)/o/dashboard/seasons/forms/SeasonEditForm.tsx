@@ -12,11 +12,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import FormButtons from "@/components/ui/form-buttons";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+
 import { useUpdateSeason } from "@/entities/season/Season.actions.client";
 import { Season, SeasonForm } from "@/entities/season/Season.schema";
 import { cn } from "@/libs/tailwind/utils";
@@ -31,7 +27,7 @@ import { Input } from "@/components/ui/input";
 import { DateInput } from "@/components/ui/date-input/DateInput";
 import { parseISO } from "date-fns";
 import BreaksEditor from "./BreaksEditor";
-import PhasesEditor from "./PhasesEditor";
+
 import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 
 type SeasonEditFormProps = {
@@ -61,9 +57,6 @@ export function SeasonEditForm({
     }))
   );
 
-  const [initialPhases] = useState(season.phases);
-  const [phases, setPhases] = useState(season.phases);
-
   const [breaks, setBreaks] = useState(
     season.breaks.map((br, index) => ({
       id: index + 1,
@@ -79,7 +72,6 @@ export function SeasonEditForm({
       breaks: season.breaks,
       isActive: season.isActive,
       customName: season.customName,
-      phases: season.phases,
     },
   });
 
@@ -87,9 +79,7 @@ export function SeasonEditForm({
   const isComponentsDirty = () => {
     const breaksChanged =
       JSON.stringify(breaks) !== JSON.stringify(initialBreaks);
-    const phasesChanged =
-      JSON.stringify(phases) !== JSON.stringify(initialPhases);
-    return breaksChanged || phasesChanged;
+    return breaksChanged;
   };
 
   const { handleSubmit } = form;
@@ -111,7 +101,6 @@ export function SeasonEditForm({
       breaks: formattedBreaks,
       customName: data.customName,
       isActive: data.isActive,
-      phases: phases,
     };
 
     seasonMutation.mutate(formData, {
@@ -121,7 +110,6 @@ export function SeasonEditForm({
         // Reset all form states
         form.reset();
         setBreaks(initialBreaks);
-        setPhases(initialPhases);
       },
       onError: (error) => {
         toast.error("Failed to update season");
@@ -132,7 +120,7 @@ export function SeasonEditForm({
 
   const onCancel = () => {
     setBreaks(initialBreaks);
-    setPhases(initialPhases);
+
     form.reset();
     setIsParentModalOpen?.(false);
   };
@@ -250,19 +238,6 @@ export function SeasonEditForm({
                 minDate={form.getValues("startDate")}
                 maxDate={form.getValues("endDate")}
               />
-            </CardContent>
-          </Card>
-
-          {/* Season Phases */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base font-medium flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                Season Phases
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <PhasesEditor phases={phases} onUpdate={setPhases} />
             </CardContent>
           </Card>
         </div>
