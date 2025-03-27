@@ -22,6 +22,8 @@ import {
   Shield,
   Globe,
   Hammer,
+  ChevronDown,
+  Cog,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -29,11 +31,27 @@ import { Badge } from "@/components/ui/badge";
 import { LucideIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useTenantFeatures } from "@/entities/tenant/TenantFeatures.query";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useState } from "react";
+import { Tenant } from "@/entities/tenant/Tenant.schema";
+
+interface NavItem {
+  name: string;
+  href: string;
+  iconName: string;
+  description?: string;
+  disabled?: boolean;
+  disabledReason?: string;
+}
 
 interface DomainSwitcherProps {
   currentDomain: string;
   collapsed?: boolean;
   tenantId?: number;
+  tenant?: Tenant;
+  isLoading?: boolean;
+  adminNavItems?: NavItem[];
+  getIcon?: (iconName: string) => React.ReactNode;
 }
 
 const domainIcons: Record<RoleDomain, LucideIcon> = {
@@ -58,15 +76,19 @@ const domainRoutes: Record<RoleDomain, string> = {
 };
 
 export function DomainSwitcher({
-  currentDomain,
   collapsed = false,
   tenantId,
+  tenant,
+  isLoading = false,
+  adminNavItems = [],
+  getIcon,
 }: DomainSwitcherProps) {
-  const { data: user, isLoading } = useCurrentUser();
+  const [isOpen, setIsOpen] = useState(false);
+  const { data: user, isLoading: userLoading } = useCurrentUser();
   const pathname = usePathname();
-  const { data: features, error } = useTenantFeatures(tenantId ?? 0);
+  const { data: features } = useTenantFeatures(tenantId ?? 0);
 
-  if (isLoading || !user || !tenantId) return null;
+  if (userLoading || !user || !tenantId) return null;
 
   // Check if user has system role
   const hasSystemRole = user.roles?.some(
@@ -104,21 +126,57 @@ export function DomainSwitcher({
 
   const activeDomain = getCurrentDomainFromPath();
 
+  // Determine which domains to show
+  const domainOptions = hasSystemRole
+    ? Object.values(RoleDomain).filter((domain) => domain !== RoleDomain.SYSTEM)
+    : availableDomains;
+
   return (
-    <DropdownMenu>
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         {collapsed ? (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-10 h-10 p-0 hover:bg-accent/50"
+          <button
+            className="flex items-center justify-center"
+            onClick={() => setIsOpen(true)}
           >
-            <MenuIcon className="h-4 w-4" />
-          </Button>
+            <Avatar className="h-8 w-8 shrink-0">
+              <AvatarImage src={tenant?.logo ? tenant.logo : ""} />
+              <AvatarFallback className="bg-primary/10 text-primary">
+                {tenant?.name ? tenant?.name.slice(0, 2).toUpperCase() : "N/A"}
+              </AvatarFallback>
+            </Avatar>
+          </button>
         ) : (
-          <Button variant="ghost" size="sm" className="px-2 hover:bg-accent/50">
-            <MenuIcon className="h-4 w-4" />
-          </Button>
+          <button className="flex items-center gap-3 hover:bg-accent/30 py-1 px-2 rounded-md transition-colors group/tenant">
+            <div className="flex items-center gap-3">
+              {tenant?.logo && (
+                <Avatar className="h-8 w-8 shrink-0">
+                  <AvatarImage src={tenant?.logo ? tenant.logo : ""} />
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    {tenant?.name
+                      ? tenant?.name.slice(0, 2).toUpperCase()
+                      : "N/A"}
+                  </AvatarFallback>
+                </Avatar>
+              )}
+
+              <div className="flex flex-col items-start">
+                <span className="font-semibold text-sm">
+                  {!isLoading ? tenant?.name : "Loading..."}
+                </span>
+                <span className="text-xs text-muted-foreground capitalize">
+                  {activeDomain}
+                </span>
+              </div>
+            </div>
+            <ChevronDown
+              size={16}
+              className={cn(
+                "text-muted-foreground ml-1 transition-transform",
+                isOpen && "transform rotate-180"
+              )}
+            />
+          </button>
         )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-72">
@@ -139,47 +197,46 @@ export function DomainSwitcher({
         <DropdownMenuSeparator />
 
         {/* Show all accessible domains */}
-        {(hasSystemRole
-          ? Object.values(RoleDomain).filter(
-              (domain) => domain !== RoleDomain.SYSTEM
-            )
-          : availableDomains
-        ).map((domain) => {
-          const DomainIcon = domainIcons[domain];
-          const isActive = domain === activeDomain;
+        {domainOptions.length > 0 &&
+          domainOptions.map((domain) => {
+            const DomainIcon = domainIcons[domain];
+            const isActive = domain === activeDomain;
 
-          return (
-            <DropdownMenuItem
-              key={domain}
-              asChild
-              className={cn(
-                "flex items-center justify-between py-3",
-                isActive && "bg-accent"
-              )}
-            >
-              <Link href={domainRoutes[domain]}>
-                <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 flex items-center justify-center rounded-md border bg-background">
-                    <DomainIcon className="h-4 w-4" />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium">
-                      {domainLabels[domain]} Dashboard
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {isActive ? "Current view" : "Switch view"}
-                    </span>
-                  </div>
-                </div>
-                {isActive ? (
-                  <CheckCircle2 className="h-4 w-4 text-primary" />
-                ) : (
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            return (
+              <DropdownMenuItem
+                key={domain}
+                asChild
+                className={cn(
+                  "flex items-center justify-between py-3",
+                  isActive && "bg-accent"
                 )}
-              </Link>
-            </DropdownMenuItem>
-          );
-        })}
+              >
+                <Link
+                  href={domainRoutes[domain]}
+                  onClick={() => setIsOpen(false)}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 flex items-center justify-center rounded-md border bg-background">
+                      <DomainIcon className="h-4 w-4" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">
+                        {domainLabels[domain]} Dashboard
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {isActive ? "Current view" : "Switch view"}
+                      </span>
+                    </div>
+                  </div>
+                  {isActive ? (
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </Link>
+              </DropdownMenuItem>
+            );
+          })}
 
         {/* Website Section - Only show if website builder is enabled */}
         {features?.websiteBuilder === true && (
@@ -190,7 +247,11 @@ export function DomainSwitcher({
                 Website
               </DropdownMenuLabel>
               <DropdownMenuItem asChild>
-                <Link href="/" className="flex items-center gap-2 py-3">
+                <Link
+                  href="/"
+                  className="flex items-center gap-2 py-3"
+                  onClick={() => setIsOpen(false)}
+                >
                   <div className="h-8 w-8 flex items-center justify-center rounded-md border bg-background">
                     <Globe className="h-4 w-4" />
                   </div>
@@ -206,6 +267,7 @@ export function DomainSwitcher({
                 <Link
                   href="/o/dashboard/website"
                   className="flex items-center gap-2 py-3"
+                  onClick={() => setIsOpen(false)}
                 >
                   <div className="h-8 w-8 flex items-center justify-center rounded-md border bg-background">
                     <Hammer className="h-4 w-4" />
@@ -225,6 +287,60 @@ export function DomainSwitcher({
                   </div>
                 </Link>
               </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </>
+        )}
+
+        {/* Administration Section */}
+        {(adminNavItems.length > 0 || collapsed) && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+                Administration
+              </DropdownMenuLabel>
+              {collapsed && (
+                <DropdownMenuItem asChild>
+                  <Link
+                    href="/o/dashboard/settings"
+                    className="flex items-center gap-x-3 py-3"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <div className="h-8 w-8 flex items-center justify-center rounded-md border bg-background">
+                      <Cog className="h-4 w-4" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">
+                        Organization Setup
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        Configure organization settings
+                      </span>
+                    </div>
+                  </Link>
+                </DropdownMenuItem>
+              )}
+              {adminNavItems.map((item) => (
+                <DropdownMenuItem key={item.href} asChild>
+                  <Link
+                    href={item.href}
+                    className="flex items-center gap-x-3 py-3"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <div className="h-8 w-8 flex items-center justify-center rounded-md border bg-background">
+                      {getIcon ? getIcon(item.iconName) : null}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">{item.name}</span>
+                      {item.description && (
+                        <span className="text-xs text-muted-foreground">
+                          {item.description}
+                        </span>
+                      )}
+                    </div>
+                  </Link>
+                </DropdownMenuItem>
+              ))}
             </DropdownMenuGroup>
           </>
         )}

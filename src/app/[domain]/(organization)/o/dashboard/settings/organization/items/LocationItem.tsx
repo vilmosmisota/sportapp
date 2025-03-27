@@ -18,7 +18,7 @@ import {
 import { toast } from "sonner";
 import EditLocationForm from "../forms/EditLocationForm";
 import { useUpdateTenant } from "@/entities/tenant/Tenant.actions.client";
-import { ConfirmDeleteDialog } from "../../../../../../../components/ui/confirm-alert";
+import { ConfirmDeleteDialog } from "../../../../../../../../components/ui/confirm-alert";
 
 type LocationItemProps = {
   location: TrainingLocation;

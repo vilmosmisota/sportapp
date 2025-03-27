@@ -8,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RoleList } from "./components/RoleList";
 import { Plus } from "lucide-react";
 import { useParams } from "next/navigation";
-import { PageHeader } from "@/components/ui/page-header";
 import { useState } from "react";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { RoleForm } from "./components/RoleForm";
@@ -48,20 +47,16 @@ function RolesPageContent() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Role Management"
-        description="Manage roles and permissions for your organization"
-        actions={
-          <PermissionButton
-            permission={Permission.MANAGE_USERS}
-            allowSystemRole={true}
-            onClick={() => setIsOpen(true)}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Role
-          </PermissionButton>
-        }
-      />
+      <div className="flex justify-end mb-4">
+        <PermissionButton
+          permission={Permission.MANAGE_USERS}
+          allowSystemRole={true}
+          onClick={() => setIsOpen(true)}
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Add Role
+        </PermissionButton>
+      </div>
 
       <Tabs defaultValue="management" className="space-y-4">
         <TabsList>

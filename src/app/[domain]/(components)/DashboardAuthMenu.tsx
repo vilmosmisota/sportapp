@@ -15,13 +15,34 @@ import { useCurrentUser } from "@/entities/user/User.query";
 import { LogOut, Settings, UserRound, Bell, HelpCircle } from "lucide-react";
 import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import {
+  TooltipProvider,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface DashboardAuthMenuProps {
   collapsed?: boolean;
   className?: string;
 }
+
+const leftQuickActions = [
+  {
+    icon: Bell,
+    label: "Notifications",
+    href: "/auth/notifications",
+  },
+];
+
+const rightQuickActions = [
+  {
+    icon: HelpCircle,
+    label: "Help",
+    href: "/auth/help",
+  },
+];
 
 export function DashboardAuthMenu({
   collapsed = false,
@@ -45,83 +66,130 @@ export function DashboardAuthMenu({
 
   if (isLoading || !user?.email) return null;
 
-  const initials = user.email
-    .split("@")[0]
-    .split(".")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase();
-
-  // Get primary role or fall back to first role
-  const primaryRole = user.roles?.find((role) => role.isPrimary);
-  const displayRole = primaryRole || user.roles?.[0];
+  if (collapsed) {
+    return (
+      <DropdownMenu>
+        <TooltipProvider delayDuration={0}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-9 w-9">
+                  <UserRound className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={10}>
+              Account Menu
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuLabel className="font-normal">
+            <div className="flex flex-col space-y-1">
+              <p className="text-sm font-medium">{user.email}</p>
+              <p className="text-xs text-muted-foreground">
+                {user.roles?.[0]?.role?.name || "Member"}
+              </p>
+            </div>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <Link href="/auth/profile" className="flex items-center">
+              <UserRound className="mr-2 h-4 w-4" />
+              Profile
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/auth/notifications" className="flex items-center">
+              <Bell className="mr-2 h-4 w-4" />
+              Notifications
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/auth/help" className="flex items-center">
+              <HelpCircle className="mr-2 h-4 w-4" />
+              Help & Support
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={handleSignOut}
+            className="text-red-600 focus:text-red-600"
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Sign Out
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className={cn(
-            "w-full flex items-center gap-2 px-2",
-            collapsed ? "justify-center" : "justify-start",
-            className
-          )}
-        >
-          <Avatar className="h-8 w-8 shrink-0">
-            <AvatarFallback className="bg-primary/10 text-primary">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-          {!collapsed && (
-            <div className="flex flex-col items-start">
-              <span className="text-sm font-medium">{user.email}</span>
-              <span className="text-xs text-muted-foreground">
-                {displayRole?.role?.name || "Member"}
-              </span>
-            </div>
-          )}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align={collapsed ? "center" : "start"}
-        className="w-56"
-      >
-        <DropdownMenuLabel>My Account</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link href="/auth/profile" className="flex items-center">
-            <UserRound className="mr-2 h-4 w-4" />
-            Profile
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href="/auth/settings" className="flex items-center">
-            <Settings className="mr-2 h-4 w-4" />
-            Settings
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href="/auth/notifications" className="flex items-center">
-            <Bell className="mr-2 h-4 w-4" />
-            Notifications
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href="/auth/help" className="flex items-center">
-            <HelpCircle className="mr-2 h-4 w-4" />
-            Help & Support
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={handleSignOut}
-          className="text-red-600 focus:text-red-600"
-        >
-          <LogOut className="mr-2 h-4 w-4" />
-          Sign Out
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="flex items-center justify-between w-full">
+      <div className="flex items-center gap-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-9 w-9">
+              <UserRound className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel className="font-normal">
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium">{user.email}</p>
+                <p className="text-xs text-muted-foreground">
+                  {user.roles?.[0]?.role?.name || "Member"}
+                </p>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href="/auth/profile" className="flex items-center">
+                <UserRound className="mr-2 h-4 w-4" />
+                Profile
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={handleSignOut}
+              className="text-red-600 focus:text-red-600"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign Out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        {leftQuickActions.map((action) => (
+          <TooltipProvider key={action.href} delayDuration={0}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-9 w-9" asChild>
+                  <Link href={action.href}>
+                    <action.icon className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top">{action.label}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ))}
+      </div>
+      <div className="flex items-center">
+        {rightQuickActions.map((action) => (
+          <TooltipProvider key={action.href} delayDuration={0}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-9 w-9" asChild>
+                  <Link href={action.href}>
+                    <action.icon className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top">{action.label}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ))}
+      </div>
+    </div>
   );
 }

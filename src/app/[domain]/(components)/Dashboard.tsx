@@ -20,9 +20,47 @@ import {
   X,
   Swords,
   Calendar,
+  ChevronDown,
+  Cog,
+  CheckCircle2,
+  ChevronRight,
+  Trophy,
+  CalendarCheck,
+  History,
+  LineChart,
+  Newspaper,
+  Home,
+  CalendarDays,
+  SunSnow,
+  Users,
+  CalendarCheck2,
+  ClipboardList,
+  Activity,
+  CalendarClock,
+  ClipboardPen,
+  Signal,
+  Archive,
+  LibraryBig,
+  ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuGroup,
+} from "@/components/ui/dropdown-menu";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 import { useState } from "react";
 import { Menu as MenuIcon } from "lucide-react";
@@ -36,6 +74,10 @@ import {
 } from "@/components/ui/tooltip";
 import { DomainSwitcher } from "./DomainSwitcher";
 import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
+import { useCurrentUser } from "@/entities/user/User.query";
+import { RoleDomain } from "@/entities/role/Role.permissions";
+import { useTenantFeatures } from "@/entities/tenant/TenantFeatures.query";
+import { Badge } from "@/components/ui/badge";
 
 const iconMap = {
   Globe,
@@ -51,6 +93,46 @@ const iconMap = {
   BarChart3,
   Swords,
   Calendar,
+  Cog,
+  Trophy,
+  CalendarCheck,
+  LineChart,
+  History,
+  Newspaper,
+  Home,
+  CalendarDays,
+  SunSnow,
+  Users,
+  CalendarCheck2,
+  ClipboardList,
+  Activity,
+  CalendarClock,
+  ClipboardPen,
+  Signal,
+  Archive,
+  LibraryBig,
+};
+
+// Domain mapping (copied from DomainSwitcher)
+const domainIcons: Record<RoleDomain, any> = {
+  [RoleDomain.MANAGEMENT]: Building2,
+  [RoleDomain.FAMILY]: Users2,
+  [RoleDomain.PLAYER]: UserRound,
+  [RoleDomain.SYSTEM]: ShieldCheck,
+};
+
+const domainLabels: Record<RoleDomain, string> = {
+  [RoleDomain.MANAGEMENT]: "Organization",
+  [RoleDomain.FAMILY]: "Family",
+  [RoleDomain.PLAYER]: "Player",
+  [RoleDomain.SYSTEM]: "System",
+};
+
+const domainRoutes: Record<RoleDomain, string> = {
+  [RoleDomain.MANAGEMENT]: "/o/dashboard",
+  [RoleDomain.FAMILY]: "/f/dashboard",
+  [RoleDomain.PLAYER]: "/p/dashboard",
+  [RoleDomain.SYSTEM]: "/o/dashboard", // System roles default to organization dashboard
 };
 
 interface NavItem {
@@ -76,6 +158,7 @@ export default function Dashboard({ items, children }: DashboardProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [openTooltip, setOpenTooltip] = useState<string | null>(null);
+  const [openSections, setOpenSections] = useState<string[]>([]);
 
   const pathname = usePathname();
   const params = useParams();
@@ -94,6 +177,112 @@ export default function Dashboard({ items, children }: DashboardProps) {
     return Icon ? <Icon className="h-4 w-4" /> : null;
   };
 
+  // Find admin navigation items
+  const adminNavItems =
+    items.find((section) => section.section === "Administration")?.items || [];
+
+  // Find non-admin navigation items
+  const mainNavItems = items.filter(
+    (section) => section.section !== "Administration"
+  );
+
+  const renderNavItems = (items: NavItem[], inAccordion: boolean = false) => {
+    return items.map((item) => (
+      <TooltipProvider key={item.href} delayDuration={0}>
+        <Tooltip
+          open={(isCollapsed || item.disabled) && openTooltip === item.href}
+          onOpenChange={(open) => {
+            if (open) {
+              setOpenTooltip(item.href);
+            } else {
+              setOpenTooltip(null);
+            }
+          }}
+        >
+          <TooltipTrigger asChild>
+            {item.disabled ? (
+              <div
+                className={cn(
+                  "group/item flex rounded-md transition-all duration-200 relative cursor-not-allowed",
+                  isCollapsed
+                    ? "w-10 h-10 justify-center items-center"
+                    : "px-3 py-1.5 items-center",
+                  "text-muted-foreground/30"
+                )}
+                onClick={() => setOpenTooltip(item.href)}
+              >
+                <div
+                  className={cn(
+                    isCollapsed
+                      ? "flex items-center justify-center"
+                      : "flex items-center gap-x-3 w-full"
+                  )}
+                >
+                  {getIcon(item.iconName)}
+                  {!isCollapsed && (
+                    <span className="text-sm font-medium truncate">
+                      {item.name}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <Link
+                href={item.href}
+                className={cn(
+                  "group/item flex rounded-md transition-all duration-200 relative",
+                  isCollapsed
+                    ? "w-10 h-10 justify-center items-center"
+                    : "px-3 py-1.5 items-center",
+                  pathname === item.href
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
+                )}
+              >
+                <div
+                  className={cn(
+                    isCollapsed
+                      ? "flex items-center justify-center"
+                      : "flex items-center gap-x-3 w-full"
+                  )}
+                >
+                  {getIcon(item.iconName)}
+                  {!isCollapsed && (
+                    <span className="text-sm font-medium truncate">
+                      {item.name}
+                    </span>
+                  )}
+                </div>
+                {pathname === item.href && !isCollapsed && (
+                  <div className="ml-auto h-1 w-1 rounded-full bg-primary" />
+                )}
+              </Link>
+            )}
+          </TooltipTrigger>
+          {(isCollapsed || item.disabled) && (
+            <TooltipContent side="right" sideOffset={10}>
+              <div className="flex flex-col gap-1">
+                <span className="font-medium">{item.name}</span>
+                {item.disabled && item.disabledReason ? (
+                  <div className="text-xs text-amber-500 max-w-64">
+                    <span className="font-medium">Required:</span>{" "}
+                    {item.disabledReason}
+                  </div>
+                ) : (
+                  item.description && (
+                    <span className="text-xs text-muted-foreground">
+                      {item.description}
+                    </span>
+                  )
+                )}
+              </div>
+            </TooltipContent>
+          )}
+        </Tooltip>
+      </TooltipProvider>
+    ));
+  };
+
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}
@@ -105,35 +294,41 @@ export default function Dashboard({ items, children }: DashboardProps) {
       >
         <div className="flex flex-col h-full bg-background border-r relative">
           {/* Header area with branding and navigation */}
-          <div className="h-14 flex items-center border-b bg-muted/40">
-            <div
-              className={cn(
-                "flex items-center justify-between w-full transition-all duration-300 h-full",
-                isCollapsed ? "px-2" : "pl-4"
-              )}
-            >
-              {isCollapsed ? (
-                <DomainSwitcher
-                  currentDomain={domain}
-                  tenantId={tenant?.id}
-                  collapsed
-                />
-              ) : (
-                <>
-                  <DashboardBranding
-                    domain={domain}
-                    tenant={tenant}
-                    isLoading={isTenantLoading}
-                  />
-                  <div className="border-l h-full flex items-center">
-                    <DomainSwitcher
-                      currentDomain={domain}
-                      tenantId={tenant?.id}
-                    />
-                  </div>
-                </>
-              )}
-            </div>
+          <div className="h-14 flex items-center justify-between border-b bg-muted/40 relative px-4">
+            <DomainSwitcher
+              currentDomain={domain}
+              tenantId={tenant?.id}
+              tenant={tenant}
+              isLoading={isTenantLoading}
+              collapsed={isCollapsed}
+              adminNavItems={adminNavItems}
+              getIcon={getIcon}
+            />
+            {!isCollapsed && (
+              <div className="border-l h-8 pl-2 ml-2 flex items-center">
+                <TooltipProvider delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href="/o/dashboard/settings"
+                        className={cn(
+                          "flex items-center justify-center h-9 w-9 rounded-md transition-all",
+                          pathname === "/o/dashboard/settings" ||
+                            pathname.startsWith("/o/dashboard/settings/")
+                            ? "bg-primary/10 text-primary"
+                            : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
+                        )}
+                      >
+                        <Cog className="h-4 w-4" />
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" align="end">
+                      Organization Setup
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            )}
           </div>
 
           {/* Collapse Rail */}
@@ -156,120 +351,43 @@ export default function Dashboard({ items, children }: DashboardProps) {
             </Tooltip>
           </TooltipProvider>
 
-          {/* Nav items */}
+          {/* Nav items - filter out admin items as they're now in the dropdown */}
           <ScrollArea className="flex-1 py-2">
             <div className={cn("space-y-6", isCollapsed ? "px-2" : "px-4")}>
-              {items.map((section) => (
-                <div key={section.section} className="space-y-1">
-                  <h4
-                    className={cn(
-                      "text-xs font-medium text-muted-foreground/70 uppercase tracking-wider px-2 mb-2 transition-all duration-300",
-                      isCollapsed && "opacity-0 h-0 mb-0 overflow-hidden"
-                    )}
-                  >
-                    {section.section}
-                  </h4>
-                  <div className="space-y-1">
-                    {section.items.map((item) => (
-                      <TooltipProvider key={item.href} delayDuration={0}>
-                        <Tooltip
-                          open={
-                            (isCollapsed || item.disabled) &&
-                            openTooltip === item.href
-                          }
-                          onOpenChange={(open) => {
-                            if (open) {
-                              setOpenTooltip(item.href);
-                            } else {
-                              setOpenTooltip(null);
-                            }
-                          }}
+              {mainNavItems.map((section) => (
+                <div key={section.section}>
+                  {section.section ? (
+                    isCollapsed ? (
+                      <div className="space-y-1">
+                        {renderNavItems(section.items)}
+                      </div>
+                    ) : (
+                      <Accordion
+                        type="multiple"
+                        value={openSections}
+                        onValueChange={setOpenSections}
+                        className="space-y-1"
+                      >
+                        <AccordionItem
+                          value={section.section}
+                          className="border-none"
                         >
-                          <TooltipTrigger asChild>
-                            {item.disabled ? (
-                              <div
-                                className={cn(
-                                  "group/item flex rounded-md transition-all duration-200 relative cursor-not-allowed",
-                                  isCollapsed
-                                    ? "w-10 h-10 justify-center items-center"
-                                    : "px-3 py-1.5 items-center",
-                                  "bg-muted/50 text-muted-foreground/50"
-                                )}
-                                onClick={() => setOpenTooltip(item.href)}
-                              >
-                                <div
-                                  className={cn(
-                                    isCollapsed
-                                      ? "flex items-center justify-center"
-                                      : "flex items-center gap-x-3 w-full"
-                                  )}
-                                >
-                                  {getIcon(item.iconName)}
-                                  {!isCollapsed && (
-                                    <span className="text-sm font-medium truncate">
-                                      {item.name}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            ) : (
-                              <Link
-                                href={item.href}
-                                className={cn(
-                                  "group/item flex rounded-md transition-all duration-200 relative",
-                                  isCollapsed
-                                    ? "w-10 h-10 justify-center items-center"
-                                    : "px-3 py-1.5 items-center",
-                                  pathname === item.href
-                                    ? "bg-accent text-accent-foreground"
-                                    : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
-                                )}
-                              >
-                                <div
-                                  className={cn(
-                                    isCollapsed
-                                      ? "flex items-center justify-center"
-                                      : "flex items-center gap-x-3 w-full"
-                                  )}
-                                >
-                                  {getIcon(item.iconName)}
-                                  {!isCollapsed && (
-                                    <span className="text-sm font-medium truncate">
-                                      {item.name}
-                                    </span>
-                                  )}
-                                </div>
-                                {pathname === item.href && !isCollapsed && (
-                                  <div className="ml-auto h-1 w-1 rounded-full bg-primary" />
-                                )}
-                              </Link>
-                            )}
-                          </TooltipTrigger>
-                          {(isCollapsed || item.disabled) && (
-                            <TooltipContent side="right" sideOffset={10}>
-                              <div className="flex flex-col gap-1">
-                                <span className="font-medium">{item.name}</span>
-                                {item.disabled && item.disabledReason ? (
-                                  <div className="text-xs text-amber-500 max-w-64">
-                                    <span className="font-medium">
-                                      Required:
-                                    </span>{" "}
-                                    {item.disabledReason}
-                                  </div>
-                                ) : (
-                                  item.description && (
-                                    <span className="text-xs text-muted-foreground">
-                                      {item.description}
-                                    </span>
-                                  )
-                                )}
-                              </div>
-                            </TooltipContent>
-                          )}
-                        </Tooltip>
-                      </TooltipProvider>
-                    ))}
-                  </div>
+                          <AccordionTrigger className="py-1.5 text-xs font-medium text-muted-foreground/70 hover:no-underline">
+                            {section.section}
+                          </AccordionTrigger>
+                          <AccordionContent className="pb-1 pt-0">
+                            <div className="space-y-1">
+                              {renderNavItems(section.items, true)}
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
+                    )
+                  ) : (
+                    <div className="space-y-1">
+                      {renderNavItems(section.items)}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -280,7 +398,7 @@ export default function Dashboard({ items, children }: DashboardProps) {
             <div
               className={cn(
                 "h-full flex items-center",
-                isCollapsed ? "justify-center" : "px-4"
+                isCollapsed ? "justify-center px-2" : "px-4"
               )}
             >
               <DashboardAuthMenu collapsed={isCollapsed} />
@@ -313,61 +431,130 @@ export default function Dashboard({ items, children }: DashboardProps) {
             <div className="flex h-full flex-col">
               {/* Mobile Header */}
               <div className="h-14 flex items-center justify-between px-4 border-b bg-muted/40">
-                <DashboardBranding
-                  domain={domain}
-                  tenant={tenant}
-                  isLoading={isTenantLoading}
-                />
-                <div className="border-l h-8 pl-2 ml-2 flex items-center">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="px-2 hover:bg-accent/50"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
+                <div className="flex-1">
+                  <DomainSwitcher
+                    currentDomain={domain}
+                    tenantId={tenant?.id}
+                    tenant={tenant}
+                    isLoading={isTenantLoading}
+                    adminNavItems={adminNavItems}
+                    getIcon={getIcon}
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <TooltipProvider delayDuration={0}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Link
+                          href="/o/dashboard/settings"
+                          className={cn(
+                            "flex items-center justify-center h-9 w-9 rounded-md transition-all",
+                            pathname === "/o/dashboard/settings" ||
+                              pathname.startsWith("/o/dashboard/settings/")
+                              ? "bg-primary/10 text-primary"
+                              : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
+                          )}
+                          onClick={() => setIsOpen(false)}
+                        >
+                          <Cog className="h-4 w-4" />
+                        </Link>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" align="end">
+                        Organization Setup
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <div className="border-l h-8 pl-2 ml-2 flex items-center">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="px-2 hover:bg-accent/50"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
 
               {/* Mobile Nav Items */}
               <ScrollArea className="flex-1">
                 <div className="space-y-6 p-4">
-                  {items.map((section) => (
-                    <div key={section.section} className="space-y-1">
-                      <h4 className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wider px-2 mb-2">
-                        {section.section}
-                      </h4>
-                      <div className="space-y-1">
-                        {section.items.map((item) => (
-                          <Link
-                            key={item.href}
-                            href={item.href}
-                            onClick={() => setIsOpen(false)}
-                            className={cn(
-                              "group flex items-center justify-between rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200",
-                              pathname === item.href
-                                ? "bg-accent text-accent-foreground"
-                                : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
-                            )}
+                  {mainNavItems.map((section) => (
+                    <div key={section.section}>
+                      {section.section ? (
+                        <Accordion
+                          type="multiple"
+                          value={openSections}
+                          onValueChange={setOpenSections}
+                          className="space-y-1"
+                        >
+                          <AccordionItem
+                            value={section.section}
+                            className="border-none"
                           >
-                            <div className="flex items-center gap-x-3">
-                              {getIcon(item.iconName)}
-                              <span>{item.name}</span>
-                            </div>
-                            {pathname === item.href && (
-                              <div className="h-1 w-1 rounded-full bg-primary" />
-                            )}
-                          </Link>
-                        ))}
-                      </div>
+                            <AccordionTrigger className="py-1.5 text-xs font-medium text-muted-foreground/70 hover:no-underline">
+                              {section.section}
+                            </AccordionTrigger>
+                            <AccordionContent className="pb-1 pt-0">
+                              <div className="space-y-1">
+                                {section.items.map((item) => (
+                                  <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    onClick={() => setIsOpen(false)}
+                                    className={cn(
+                                      "group flex items-center justify-between rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200",
+                                      pathname === item.href
+                                        ? "bg-accent text-accent-foreground"
+                                        : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
+                                    )}
+                                  >
+                                    <div className="flex items-center gap-x-3">
+                                      {getIcon(item.iconName)}
+                                      <span>{item.name}</span>
+                                    </div>
+                                    {pathname === item.href && (
+                                      <div className="h-1 w-1 rounded-full bg-primary" />
+                                    )}
+                                  </Link>
+                                ))}
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+                        </Accordion>
+                      ) : (
+                        <div className="space-y-1">
+                          {section.items.map((item) => (
+                            <Link
+                              key={item.href}
+                              href={item.href}
+                              onClick={() => setIsOpen(false)}
+                              className={cn(
+                                "group flex items-center justify-between rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200",
+                                pathname === item.href
+                                  ? "bg-accent text-accent-foreground"
+                                  : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
+                              )}
+                            >
+                              <div className="flex items-center gap-x-3">
+                                {getIcon(item.iconName)}
+                                <span>{item.name}</span>
+                              </div>
+                              {pathname === item.href && (
+                                <div className="h-1 w-1 rounded-full bg-primary" />
+                              )}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
               </ScrollArea>
 
               {/* Mobile Auth Menu */}
-              <div className="h-14 border-t bg-muted/40">
+              <div className="h-14 border-t ">
                 <div className="px-4 h-full flex items-center">
                   <DashboardAuthMenu />
                 </div>

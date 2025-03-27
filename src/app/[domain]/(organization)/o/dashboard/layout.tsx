@@ -14,59 +14,37 @@ const getNavItems = (
     section: "",
     items: [
       {
-        name: "Overview",
+        name: "Home",
         href: "/o/dashboard",
-        iconName: "LayoutDashboard",
-        description: "Overview of your organization",
+        iconName: "Home",
+        description: "Organization overview and quick insights",
         permissions: [Permission.VIEW_DASHBOARD],
       },
       {
-        name: "Calendar",
+        name: "Schedule",
         href: "/o/dashboard/calendar",
-        iconName: "Calendar",
-        description: "View upcoming games and trainings",
+        iconName: "CalendarDays",
+        description: "Manage all events and schedules",
         permissions: [Permission.VIEW_DASHBOARD],
       },
-    ],
-  },
-
-  {
-    section: "Organization",
-    items: [
       {
-        name: "Settings",
-        href: "/o/dashboard/organization",
-        iconName: "Building2",
-        description: "Manage organization settings",
-        permissions: [
-          Permission.VIEW_ORGANIZATION,
-          Permission.MANAGE_ORGANIZATION,
-        ],
-      },
-      {
-        name: "Roles",
-        href: "/o/dashboard/roles",
-        iconName: "ShieldCheck",
-        description: "Manage roles and permissions",
-        permissions: [Permission.MANAGE_USERS],
-        allowSystemRole: true,
-      },
-      {
-        name: "Users",
-        href: "/o/dashboard/users",
-        iconName: "Users2",
-        description: "Manage staff and permissions",
-        permissions: [Permission.VIEW_USERS, Permission.MANAGE_USERS],
+        name: "News",
+        href: "/o/dashboard/news",
+        iconName: "Newspaper",
+        description: "View news and announcements",
+        permissions: [],
+        disabled: true,
+        disabledReason: "Coming soon",
       },
     ],
   },
   {
-    section: "Team Management",
+    section: "Rostering",
     items: [
       {
-        name: "Seasons",
+        name: "Season Setup",
         href: "/o/dashboard/seasons",
-        iconName: "GraduationCap",
+        iconName: "SunSnow",
         description: "Manage seasons and programs",
         permissions: [Permission.VIEW_SEASONS, Permission.MANAGE_SEASONS],
         disabled: !teamManagementConfigComplete,
@@ -74,9 +52,9 @@ const getNavItems = (
           "Configure age groups, skill levels, and player positions in Organization settings first",
       },
       {
-        name: "Players",
+        name: "Player Roster",
         href: "/o/dashboard/players",
-        iconName: "UserRound",
+        iconName: "Users",
         description: "Manage player profiles",
         permissions: [Permission.VIEW_PLAYERS, Permission.MANAGE_PLAYERS],
         disabled: !teamManagementConfigComplete,
@@ -84,9 +62,9 @@ const getNavItems = (
           "Configure age groups, skill levels, and player positions in Organization settings first",
       },
       {
-        name: "Teams",
+        name: "Team Management",
         href: "/o/dashboard/teams",
-        iconName: "ShieldCheck",
+        iconName: "Users2",
         description: "Manage teams and rosters",
         permissions: [Permission.VIEW_TEAM, Permission.MANAGE_TEAM],
         disabled: !teamManagementConfigComplete,
@@ -99,31 +77,19 @@ const getNavItems = (
     section: "Training & Development",
     items: [
       {
-        name: "Trainings",
-        href: "/o/dashboard/trainings",
-        iconName: "Dumbbell",
-        description: "Schedule and plan trainings",
-        permissions: [Permission.VIEW_TRAINING, Permission.MANAGE_TRAINING],
-        disabled: !trainingLocationsConfigured,
-        disabledReason:
-          "Add at least one training location in Organization settings first",
-      },
-      {
-        name: "Attendance",
+        name: "Live Tracker",
         href: "/o/dashboard/attendance",
-        iconName: "ClipboardCheck",
-        description: "Track attendance",
+        iconName: "ClipboardList",
+        description: "Monitor live attendance and session participation",
         permissions: [Permission.VIEW_ATTENDANCE, Permission.MANAGE_ATTENDANCE],
-        disabled: !trainingLocationsConfigured,
-        disabledReason:
-          "Add at least one training location in Organization settings first",
       },
       {
-        name: "Statistics",
-        href: "/o/dashboard/attendance/statistics",
-        iconName: "BarChart3",
-        description: "View attendance reports",
-        permissions: [Permission.VIEW_ATTENDANCE],
+        name: "Performance Analytics",
+        href: "/o/dashboard/analytics/training",
+        iconName: "Activity",
+        description:
+          "View attendance trends, participation rates, and training effectiveness",
+        permissions: [Permission.VIEW_TRAINING, Permission.MANAGE_TRAINING],
         disabled: !trainingLocationsConfigured,
         disabledReason:
           "Add at least one training location in Organization settings first",
@@ -131,10 +97,10 @@ const getNavItems = (
     ],
   },
   {
-    section: "Competition",
+    section: "Games & Competition",
     items: [
       {
-        name: "Opponents",
+        name: "Opponent Directory",
         href: "/o/dashboard/opponents",
         iconName: "Swords",
         description: "Manage competing teams",
@@ -143,25 +109,48 @@ const getNavItems = (
         disabledReason:
           "Add at least one game location in Organization settings first",
       },
-      // Future Game section items would go here
-      // {
-      //   name: "Games",
-      //   href: "/o/dashboard/games",
-      //   iconName: "Trophy",
-      //   description: "Manage games and matches",
-      //   permissions: [Permission.VIEW_GAMES, Permission.MANAGE_GAMES],
-      //   disabled: !gameLocationsConfigured,
-      //   disabledReason: "Add at least one game location in Organization settings first",
-      // },
-      // {
-      //   name: "Game Stats",
-      //   href: "/o/dashboard/games/stats",
-      //   iconName: "LineChart",
-      //   description: "View game statistics",
-      //   permissions: [Permission.VIEW_GAMES],
-      //   disabled: !gameLocationsConfigured,
-      //   disabledReason: "Add at least one game location in Organization settings first",
-      // },
+      {
+        name: "Game Recorder",
+        href: "/o/dashboard/game-tracker",
+        iconName: "ClipboardPen",
+        description: "Record and analyze game performances",
+        permissions: [],
+        disabled: true,
+        disabledReason: "Coming soon",
+      },
+      {
+        name: "Game Analytics",
+        href: "/o/dashboard/analytics/game",
+        iconName: "Signal",
+        description:
+          "Analyze game results, player performance, and team metrics",
+        permissions: [],
+        disabled: true,
+        disabledReason: "Coming soon",
+      },
+    ],
+  },
+  {
+    section: "Archives & History",
+    items: [
+      {
+        name: "Season Archives",
+        href: "/o/dashboard/archives/seasons",
+        iconName: "Archive",
+        description: "Access historical season data and archives",
+        permissions: [Permission.VIEW_SEASONS],
+        disabled: true,
+        disabledReason: "Coming soon",
+      },
+      {
+        name: "Performance History",
+        href: "/o/dashboard/archives/performance",
+        iconName: "LibraryBig",
+        description: "Historical training and game performance data",
+        permissions: [Permission.VIEW_TRAINING, Permission.VIEW_ATTENDANCE],
+        disabled: true,
+        disabledReason: "Coming in Q3 2024",
+      },
     ],
   },
 ];

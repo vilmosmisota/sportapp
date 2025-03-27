@@ -3,7 +3,6 @@
 import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PageHeader } from "@/components/ui/page-header";
 import { cn } from "@/libs/tailwind/utils";
 import { AlertCircle } from "lucide-react";
 import ProfileContent from "./tabs/ProfileContent";
@@ -41,11 +40,7 @@ export default function OrganizationDetailPage({
   }
 
   return (
-    <div className="w-full space-y-4 md:space-y-6">
-      <PageHeader
-        title="Organisation"
-        description="Manage your organization settings and preferences"
-      />
+    <div className="w-full">
       <div className="px-0">
         <Tabs defaultValue="profile" className="w-full">
           <div className="w-[calc(100vw-2rem)] md:w-fit">

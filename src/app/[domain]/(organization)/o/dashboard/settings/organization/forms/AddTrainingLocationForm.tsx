@@ -18,7 +18,7 @@ import { useUpdateTenant } from "@/entities/tenant/Tenant.actions.client";
 import { toast } from "sonner";
 import FormButtons from "@/components/ui/form-buttons";
 import { Dispatch, SetStateAction } from "react";
-import { LocationSchema } from "../../../../../../../entities/common/Location.schema";
+import { LocationSchema } from "@/entities/common/Location.schema";
 
 const formSchema = LocationSchema.omit({ id: true });
 type FormValues = z.infer<typeof formSchema>;
