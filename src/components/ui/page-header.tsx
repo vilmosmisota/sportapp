@@ -20,7 +20,7 @@ export function PageHeader({
   backButton,
 }: PageHeaderProps) {
   return (
-    <div className="flex items-center justify-between pb-6 border-b border-border">
+    <div className="flex items-center justify-between pb-6 ">
       <div className="space-y-1">
         {backButton && (
           <Button

@@ -34,6 +34,7 @@ import { useTenantFeatures } from "@/entities/tenant/TenantFeatures.query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState } from "react";
 import { Tenant } from "@/entities/tenant/Tenant.schema";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface NavItem {
   name: string;
@@ -75,6 +76,33 @@ const domainRoutes: Record<RoleDomain, string> = {
   [RoleDomain.SYSTEM]: "/o/dashboard", // System roles default to organization dashboard
 };
 
+function DomainSwitcherSkeleton({
+  collapsed = false,
+}: {
+  collapsed?: boolean;
+}) {
+  if (collapsed) {
+    return (
+      <div className="flex items-center justify-center">
+        <Skeleton className="h-8 w-8 rounded-full" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center justify-between w-full py-1 px-2 rounded-md">
+      <div className="flex items-center gap-3 min-w-0">
+        <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+        <div className="flex flex-col gap-1">
+          <Skeleton className="h-4 w-[150px]" />
+          <Skeleton className="h-3 w-[80px]" />
+        </div>
+      </div>
+      <Skeleton className="h-4 w-4 shrink-0" />
+    </div>
+  );
+}
+
 export function DomainSwitcher({
   collapsed = false,
   tenantId,
@@ -88,7 +116,11 @@ export function DomainSwitcher({
   const pathname = usePathname();
   const { data: features } = useTenantFeatures(tenantId ?? 0);
 
-  if (userLoading || !user || !tenantId) return null;
+  if (userLoading || isLoading || !tenantId) {
+    return <DomainSwitcherSkeleton collapsed={collapsed} />;
+  }
+
+  if (!user) return null;
 
   // Check if user has system role
   const hasSystemRole = user.roles?.some(
@@ -147,8 +179,8 @@ export function DomainSwitcher({
             </Avatar>
           </button>
         ) : (
-          <button className="flex items-center gap-3 hover:bg-accent/30 py-1 px-2 rounded-md transition-colors group/tenant">
-            <div className="flex items-center gap-3">
+          <button className="flex items-center justify-between w-full hover:bg-accent/30 py-1 px-2 rounded-md transition-colors group/tenant gap-2">
+            <div className="flex items-center gap-3 min-w-0">
               {tenant?.logo && (
                 <Avatar className="h-8 w-8 shrink-0">
                   <AvatarImage src={tenant?.logo ? tenant.logo : ""} />
@@ -160,8 +192,8 @@ export function DomainSwitcher({
                 </Avatar>
               )}
 
-              <div className="flex flex-col items-start">
-                <span className="font-semibold text-sm">
+              <div className="flex flex-col items-start min-w-0">
+                <span className="font-semibold text-sm break-words max-w-[200px]">
                   {!isLoading ? tenant?.name : "Loading..."}
                 </span>
                 <span className="text-xs text-muted-foreground capitalize">
@@ -172,7 +204,7 @@ export function DomainSwitcher({
             <ChevronDown
               size={16}
               className={cn(
-                "text-muted-foreground ml-1 transition-transform",
+                "text-muted-foreground transition-transform shrink-0",
                 isOpen && "transform rotate-180"
               )}
             />

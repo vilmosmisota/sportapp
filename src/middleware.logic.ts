@@ -141,7 +141,7 @@ export function validateUserAccess(
       if (pathname.includes("/players")) {
         return userRole.role.permissions.includes(Permission.VIEW_PLAYERS);
       }
-      if (pathname.includes("/attendance")) {
+      if (pathname.includes("/training-attendance")) {
         return userRole.role.permissions.includes(Permission.VIEW_ATTENDANCE);
       }
       if (pathname.includes("/training")) {

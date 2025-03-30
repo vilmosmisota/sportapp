@@ -247,7 +247,7 @@ export default function AttendanceSessionPage() {
       toast.success("Session closed and data aggregated successfully");
 
       // Redirect to the attendance dashboard since this session no longer exists
-      router.push(`/o/dashboard/attendance`);
+      router.push(`/o/dashboard/training-attendance`);
     } catch (error) {
       console.error("Error closing session:", error);
 
@@ -349,7 +349,7 @@ export default function AttendanceSessionPage() {
         title="Attendance Session"
         description="View and manage attendance records"
         backButton={{
-          href: "/o/dashboard/attendance",
+          href: "/o/dashboard/training-attendance",
           label: "Back to Attendance",
         }}
         actions={
@@ -366,7 +366,9 @@ export default function AttendanceSessionPage() {
                 <Button
                   variant="outline"
                   onClick={() =>
-                    router.push(`/o/dashboard/attendance/${params.id}/check-in`)
+                    router.push(
+                      `/o/dashboard/training-attendance/${params.id}/check-in`
+                    )
                   }
                 >
                   <UserCheck className="h-4 w-4 mr-2" />
@@ -375,7 +377,9 @@ export default function AttendanceSessionPage() {
                 <Button
                   variant="outline"
                   onClick={() =>
-                    router.push(`/o/dashboard/attendance/${params.id}/add-pin`)
+                    router.push(
+                      `/o/dashboard/training-attendance/${params.id}/add-pin`
+                    )
                   }
                 >
                   <Key className="h-4 w-4 mr-2" />

@@ -288,7 +288,7 @@ export default function AddPinPage() {
   };
 
   const handleConfirmedBack = () => {
-    router.push(`/o/dashboard/attendance/${params.id}`);
+    router.push(`/o/dashboard/training-attendance/${params.id}`);
   };
 
   return (
@@ -303,7 +303,9 @@ export default function AddPinPage() {
           variant="outline"
           className="flex items-center gap-2"
           onClick={() =>
-            router.push(`/o/dashboard/attendance/${params.id}/check-in`)
+            router.push(
+              `/o/dashboard/training-attendance/${params.id}/check-in`
+            )
           }
         >
           <UserCheck className="h-4 w-4" />

@@ -166,7 +166,7 @@ export function ActiveSessionsCarousel({
                       <div className="mt-auto space-y-2">
                         <div className="flex gap-2">
                           <Link
-                            href={`/o/dashboard/attendance/${activeSessionId}`}
+                            href={`/o/dashboard/training-attendance/${activeSessionId}`}
                             className="flex-1"
                           >
                             <Button
@@ -178,7 +178,7 @@ export function ActiveSessionsCarousel({
                             </Button>
                           </Link>
                           <Link
-                            href={`/o/dashboard/attendance/${activeSessionId}/check-in`}
+                            href={`/o/dashboard/training-attendance/${activeSessionId}/check-in`}
                             className="flex-1"
                           >
                             <Button

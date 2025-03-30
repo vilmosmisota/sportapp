@@ -42,19 +42,12 @@ import {
   Archive,
   LibraryBig,
   ChevronUp,
+  PanelLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-  DropdownMenuGroup,
-} from "@/components/ui/dropdown-menu";
+
 import {
   Accordion,
   AccordionContent,
@@ -65,19 +58,74 @@ import {
 import { useState } from "react";
 import { Menu as MenuIcon } from "lucide-react";
 import { DashboardAuthMenu } from "./DashboardAuthMenu";
-import { DashboardBranding } from "./DashboardBranding";
+
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { DomainSwitcher } from "./DomainSwitcher";
+
 import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 import { useCurrentUser } from "@/entities/user/User.query";
 import { RoleDomain } from "@/entities/role/Role.permissions";
 import { useTenantFeatures } from "@/entities/tenant/TenantFeatures.query";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { DomainSwitcher } from "./DomainSwitcher";
+
+function DecorativeCorner() {
+  return (
+    <div
+      className="fixed right-0 top-4 z-30 h-8 w-[140px] overflow-hidden"
+      style={{ clipPath: "inset(0px 0px 0px 0px)" }}
+    >
+      {/* Background layer */}
+      <div
+        className="absolute inset-0"
+        style={{
+          transform: "skewX(30deg)",
+          transformOrigin: "top left",
+          clipPath:
+            "path('M0,0c6,0,10.7,4.7,10.7,10.7v10.7c0,5.9,4.8,10.7,10.7,10.7H140V0')",
+        }}
+      />
+
+      {/* Border layer */}
+      <div
+        className="pointer-events-none absolute top-0 z-10 h-full w-full origin-top transition-all"
+        style={{
+          transform: "skewX(30deg)",
+          transformOrigin: "top left",
+        }}
+      >
+        <svg
+          className="absolute h-full w-full"
+          viewBox="0 0 140 32"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M0,0c6,0,10.7,4.7,10.7,10.7v10.7c0,5.9,4.8,10.7,10.7,10.7H140V0"
+            stroke="hsl(var(--primary) / 0.1)"
+            strokeWidth="1"
+            fill="none"
+            vectorEffect="non-scaling-stroke"
+          />
+          <line
+            x1="18"
+            y1="32"
+            x2="120"
+            y2="32"
+            stroke="hsl(var(--primary) / 0.1)"
+            strokeWidth="1"
+            vectorEffect="non-scaling-stroke"
+          />
+        </svg>
+      </div>
+    </div>
+  );
+}
 
 const iconMap = {
   Globe,
@@ -154,43 +202,21 @@ interface DashboardProps {
   children: React.ReactNode;
 }
 
-export default function Dashboard({ items, children }: DashboardProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+interface NavItemProps {
+  item: NavItem;
+  isCollapsed?: boolean;
+  pathname: string;
+}
+
+function NavItem({ item, isCollapsed, pathname }: NavItemProps) {
   const [openTooltip, setOpenTooltip] = useState<string | null>(null);
-  const [openSections, setOpenSections] = useState<string[]>([]);
+  const Icon = iconMap[item.iconName as keyof typeof iconMap];
 
-  const pathname = usePathname();
-  const params = useParams();
-  const domain = params.domain as string;
-
-  const { data: tenant, isLoading: isTenantLoading } =
-    useTenantByDomain(domain);
-
-  const handleCollapse = () => {
-    setIsCollapsed(!isCollapsed);
-    setOpenTooltip(null); // Close any open tooltips when collapsing
-  };
-
-  const getIcon = (iconName: string) => {
-    const Icon = iconMap[iconName as keyof typeof iconMap];
-    return Icon ? <Icon className="h-4 w-4" /> : null;
-  };
-
-  // Find admin navigation items
-  const adminNavItems =
-    items.find((section) => section.section === "Administration")?.items || [];
-
-  // Find non-admin navigation items
-  const mainNavItems = items.filter(
-    (section) => section.section !== "Administration"
-  );
-
-  const renderNavItems = (items: NavItem[], inAccordion: boolean = false) => {
-    return items.map((item) => (
+  if (item.disabled) {
+    return (
       <TooltipProvider key={item.href} delayDuration={0}>
         <Tooltip
-          open={(isCollapsed || item.disabled) && openTooltip === item.href}
+          open={isCollapsed && openTooltip === item.href}
           onOpenChange={(open) => {
             if (open) {
               setOpenTooltip(item.href);
@@ -200,66 +226,33 @@ export default function Dashboard({ items, children }: DashboardProps) {
           }}
         >
           <TooltipTrigger asChild>
-            {item.disabled ? (
+            <div
+              className={cn(
+                "group/item flex rounded-md transition-all duration-200 relative cursor-not-allowed",
+                isCollapsed
+                  ? "w-10 h-10 justify-center items-center"
+                  : "px-3 py-1.5 items-center",
+                "text-muted-foreground/30"
+              )}
+              onClick={() => setOpenTooltip(item.href)}
+            >
               <div
                 className={cn(
-                  "group/item flex rounded-md transition-all duration-200 relative cursor-not-allowed",
                   isCollapsed
-                    ? "w-10 h-10 justify-center items-center"
-                    : "px-3 py-1.5 items-center",
-                  "text-muted-foreground/30"
+                    ? "flex items-center justify-center"
+                    : "flex items-center gap-x-3 w-full"
                 )}
-                onClick={() => setOpenTooltip(item.href)}
               >
-                <div
-                  className={cn(
-                    isCollapsed
-                      ? "flex items-center justify-center"
-                      : "flex items-center gap-x-3 w-full"
-                  )}
-                >
-                  {getIcon(item.iconName)}
-                  {!isCollapsed && (
-                    <span className="text-sm font-medium truncate">
-                      {item.name}
-                    </span>
-                  )}
-                </div>
+                {Icon && <Icon className="h-4 w-4" />}
+                {!isCollapsed && (
+                  <span className="text-sm font-medium truncate">
+                    {item.name}
+                  </span>
+                )}
               </div>
-            ) : (
-              <Link
-                href={item.href}
-                className={cn(
-                  "group/item flex rounded-md transition-all duration-200 relative",
-                  isCollapsed
-                    ? "w-10 h-10 justify-center items-center"
-                    : "px-3 py-1.5 items-center",
-                  pathname === item.href
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
-                )}
-              >
-                <div
-                  className={cn(
-                    isCollapsed
-                      ? "flex items-center justify-center"
-                      : "flex items-center gap-x-3 w-full"
-                  )}
-                >
-                  {getIcon(item.iconName)}
-                  {!isCollapsed && (
-                    <span className="text-sm font-medium truncate">
-                      {item.name}
-                    </span>
-                  )}
-                </div>
-                {pathname === item.href && !isCollapsed && (
-                  <div className="ml-auto h-1 w-1 rounded-full bg-primary" />
-                )}
-              </Link>
-            )}
+            </div>
           </TooltipTrigger>
-          {(isCollapsed || item.disabled) && (
+          {isCollapsed && (
             <TooltipContent side="right" sideOffset={10}>
               <div className="flex flex-col gap-1">
                 <span className="font-medium">{item.name}</span>
@@ -280,87 +273,164 @@ export default function Dashboard({ items, children }: DashboardProps) {
           )}
         </Tooltip>
       </TooltipProvider>
-    ));
+    );
+  }
+
+  return (
+    <TooltipProvider key={item.href} delayDuration={0}>
+      <Tooltip
+        open={isCollapsed && openTooltip === item.href}
+        onOpenChange={(open) => {
+          if (open) {
+            setOpenTooltip(item.href);
+          } else {
+            setOpenTooltip(null);
+          }
+        }}
+      >
+        <TooltipTrigger asChild>
+          <Link
+            href={item.href}
+            className={cn(
+              "group/item flex rounded-md transition-all duration-200 relative",
+              isCollapsed
+                ? "w-10 h-10 justify-center items-center"
+                : "px-3 py-1.5 items-center",
+              pathname === item.href
+                ? "bg-accent text-accent-foreground"
+                : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
+            )}
+          >
+            <div
+              className={cn(
+                isCollapsed
+                  ? "flex items-center justify-center"
+                  : "flex items-center gap-x-3 w-full"
+              )}
+            >
+              {Icon && <Icon className="h-4 w-4" />}
+              {!isCollapsed && (
+                <span className="text-sm font-medium truncate">
+                  {item.name}
+                </span>
+              )}
+            </div>
+            {pathname === item.href && !isCollapsed && (
+              <div className="ml-auto h-1 w-1 rounded-full bg-primary" />
+            )}
+          </Link>
+        </TooltipTrigger>
+        {isCollapsed && (
+          <TooltipContent side="right" sideOffset={10}>
+            <div className="flex flex-col gap-1">
+              <span className="font-medium">{item.name}</span>
+              {item.description && (
+                <span className="text-xs text-muted-foreground">
+                  {item.description}
+                </span>
+              )}
+            </div>
+          </TooltipContent>
+        )}
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
+interface NavItemsProps {
+  items: NavItem[];
+  isCollapsed?: boolean;
+  pathname: string;
+}
+
+function NavItems({ items, isCollapsed, pathname }: NavItemsProps) {
+  return (
+    <div className="space-y-1">
+      {items.map((item) => (
+        <NavItem
+          key={item.href}
+          item={item}
+          isCollapsed={isCollapsed}
+          pathname={pathname}
+        />
+      ))}
+    </div>
+  );
+}
+
+export default function Dashboard({ items, children }: DashboardProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [openSections, setOpenSections] = useState<string[]>([]);
+
+  const pathname = usePathname();
+  const params = useParams();
+  const domain = params.domain as string;
+
+  const { data: tenant, isLoading: isTenantLoading } =
+    useTenantByDomain(domain);
+
+  // Find non-admin navigation items
+  const mainNavItems = items.filter(
+    (section) => section.section !== "Administration"
+  );
+
+  const getIcon = (iconName: string) => {
+    const Icon = iconMap[iconName as keyof typeof iconMap];
+    return Icon ? <Icon className="h-4 w-4" /> : null;
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen relative">
+      <div className="absolute flex flex-col  h-12 top-0 left-0 z-50 pt-4 ">
+        <div className="flex h-full items-center justify-end gap-2  px-4 relative ">
+          {/* Pinned menu items will come here with smIcon buttons form */}
+        </div>
+      </div>
+
+      <div className="absolute flex flex-col  h-12 top-0 right-0 z-50 pt-4 ">
+        <div className="flex h-full items-center justify-end gap-2  px-4 relative ">
+          <Button variant="ghost" size="smIcon">
+            <Cog className="h-4 w-4" />
+          </Button>
+
+          <Button variant="ghost" size="smIcon">
+            <UserRound className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
       {/* Sidebar */}
       <div
         className={cn(
-          "group hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 transition-all duration-300 z-20",
+          "group hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 transition-all duration-300 z-20 mt",
           isCollapsed ? "lg:w-16" : "lg:w-72"
         )}
       >
-        <div className="flex flex-col h-full bg-background border-r relative">
+        <div className="flex flex-col h-full  relative pt-4">
           {/* Header area with branding and navigation */}
-          <div className="h-14 flex items-center justify-between border-b bg-muted/40 relative px-4">
+          <div className="px-4">
             <DomainSwitcher
               currentDomain={domain}
-              tenantId={tenant?.id}
-              tenant={tenant}
               isLoading={isTenantLoading}
-              collapsed={isCollapsed}
-              adminNavItems={adminNavItems}
               getIcon={getIcon}
+              tenant={tenant}
+              tenantId={tenant?.id}
             />
-            {!isCollapsed && (
-              <div className="border-l h-8 pl-2 ml-2 flex items-center">
-                <TooltipProvider delayDuration={0}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Link
-                        href="/o/dashboard/settings"
-                        className={cn(
-                          "flex items-center justify-center h-9 w-9 rounded-md transition-all",
-                          pathname === "/o/dashboard/settings" ||
-                            pathname.startsWith("/o/dashboard/settings/")
-                            ? "bg-primary/10 text-primary"
-                            : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
-                        )}
-                      >
-                        <Cog className="h-4 w-4" />
-                      </Link>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" align="end">
-                      Organization Setup
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-            )}
           </div>
 
-          {/* Collapse Rail */}
-          <TooltipProvider delayDuration={0}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div
-                  className="absolute inset-y-0 right-0 w-1.5 bg-transparent group-hover:bg-accent/30 cursor-col-resize transition-colors"
-                  onClick={handleCollapse}
-                >
-                  <div className="absolute inset-y-0 -left-0.5 w-0.5 bg-accent/50 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <div className="absolute inset-y-0 -right-0.5 w-0.5 bg-accent/50 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="right" sideOffset={10}>
-                <span className="text-sm">
-                  {isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-                </span>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
           {/* Nav items - filter out admin items as they're now in the dropdown */}
-          <ScrollArea className="flex-1 py-2">
+          <ScrollArea className="flex-1 py-2 pt-6 ">
             <div className={cn("space-y-6", isCollapsed ? "px-2" : "px-4")}>
               {mainNavItems.map((section) => (
                 <div key={section.section}>
                   {section.section ? (
                     isCollapsed ? (
-                      <div className="space-y-1">
-                        {renderNavItems(section.items)}
-                      </div>
+                      <NavItems
+                        items={section.items}
+                        isCollapsed={isCollapsed}
+                        pathname={pathname}
+                      />
                     ) : (
                       <Accordion
                         type="multiple"
@@ -376,33 +446,47 @@ export default function Dashboard({ items, children }: DashboardProps) {
                             {section.section}
                           </AccordionTrigger>
                           <AccordionContent className="pb-1 pt-0">
-                            <div className="space-y-1">
-                              {renderNavItems(section.items, true)}
-                            </div>
+                            <NavItems
+                              items={section.items}
+                              isCollapsed={isCollapsed}
+                              pathname={pathname}
+                            />
                           </AccordionContent>
                         </AccordionItem>
                       </Accordion>
                     )
                   ) : (
-                    <div className="space-y-1">
-                      {renderNavItems(section.items)}
-                    </div>
+                    <NavItems
+                      items={section.items}
+                      isCollapsed={isCollapsed}
+                      pathname={pathname}
+                    />
                   )}
                 </div>
               ))}
             </div>
           </ScrollArea>
 
-          {/* Auth Menu - Sticky Bottom */}
-          <div className="h-14 border-t bg-muted/40">
-            <div
-              className={cn(
-                "h-full flex items-center",
-                isCollapsed ? "justify-center px-2" : "px-4"
-              )}
+          {/* Collapse/Expand Button */}
+          <div
+            className={cn(
+              "h-14 flex items-center",
+              isCollapsed ? "justify-center" : "px-4"
+            )}
+          >
+            <Button
+              variant="ghost"
+              size="smIcon"
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="text-muted-foreground hover:text-primary"
             >
-              <DashboardAuthMenu collapsed={isCollapsed} />
-            </div>
+              <PanelLeft
+                className={cn(
+                  "h-4 w-4 transition-transform",
+                  isCollapsed ? "rotate-180" : ""
+                )}
+              />
+            </Button>
           </div>
         </div>
       </div>
@@ -410,13 +494,19 @@ export default function Dashboard({ items, children }: DashboardProps) {
       {/* Main content */}
       <div
         className={cn(
-          "flex-1 transition-all duration-300",
+          "flex-1 transition-all duration-300 relative pt-4",
           isCollapsed ? "lg:pl-16" : "lg:pl-72"
         )}
       >
-        <main className="py-6">
-          <div className="px-6">{children}</div>
-        </main>
+        <DecorativeCorner />
+
+        <div className="h-[calc(100dvh-1rem)] flex flex-col bg-white relative border-l border-t border-primary/10 rounded-tl-lg ">
+          <ScrollArea className="h-full">
+            <main className="pb-6 pt-12   h-full">
+              <div className="px-4">{children}</div>
+            </main>
+          </ScrollArea>
+        </div>
       </div>
 
       {/* Mobile Navigation */}
@@ -431,16 +521,7 @@ export default function Dashboard({ items, children }: DashboardProps) {
             <div className="flex h-full flex-col">
               {/* Mobile Header */}
               <div className="h-14 flex items-center justify-between px-4 border-b bg-muted/40">
-                <div className="flex-1">
-                  <DomainSwitcher
-                    currentDomain={domain}
-                    tenantId={tenant?.id}
-                    tenant={tenant}
-                    isLoading={isTenantLoading}
-                    adminNavItems={adminNavItems}
-                    getIcon={getIcon}
-                  />
-                </div>
+                <div className="flex-1"></div>
                 <div className="flex items-center gap-2">
                   <TooltipProvider delayDuration={0}>
                     <Tooltip>

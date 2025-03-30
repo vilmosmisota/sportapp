@@ -21,7 +21,6 @@ import AddEventForm from "./forms/AddEventForm";
 import AddTrainingForm from "./forms/AddTrainingForm";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/ui/page-header";
-import { FilteredCalendarContainer } from "@/components/calendar/FilteredCalendarContainer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SimpleFilter } from "@/components/calendar/filters/SimpleFilter";
 import { CalendarContainer } from "@/components/calendar/CalendarContainer";
@@ -104,53 +103,10 @@ export default function CalendarPage({ params }: PageProps) {
 
   const isLoadingTenantData = !tenant || !seasons;
 
-  // Create calendar view based on loaded events state
-  const renderCalendar = () => {
-    // If no events loaded yet, show the calendar that will fetch and load events
-    if (calendarEvents.length === 0) {
-      return (
-        <CalendarContainer
-          tenantId={tenant?.id?.toString() || ""}
-          selectedSeason={selectedSeason || null}
-          tenantName={tenant?.name || "Our Team"}
-          onEventClick={handleEventClick}
-          onEventsLoad={handleEventsCapture}
-          defaultView="day"
-        />
-      );
-    }
-
-    // Otherwise, display the filtered event view
-    return (
-      <EventCalendar
-        events={filteredEvents}
-        onEventClick={handleEventClick}
-        defaultView="day"
-        isLoading={false}
-        seasonBreaks={selectedSeason?.breaks || []}
-        seasonDateRange={
-          selectedSeason
-            ? {
-                startDate: selectedSeason.startDate,
-                endDate: selectedSeason.endDate,
-              }
-            : null
-        }
-        onDateRangeChange={(start, end) => {
-          // Only log the date change but don't reload events
-          console.log("Date range changed", {
-            start: start.toISOString().split("T")[0],
-            end: end.toISOString().split("T")[0],
-          });
-        }}
-      />
-    );
-  };
-
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Calendar"
+        title="Schedule"
         description={
           selectedSeason
             ? (() => {
@@ -228,7 +184,41 @@ export default function CalendarPage({ params }: PageProps) {
 
       {/* Main calendar component */}
       <Card>
-        <CardContent className="py-6">{renderCalendar()}</CardContent>
+        <CardContent className="py-6">
+          {calendarEvents.length === 0 ? (
+            <CalendarContainer
+              tenantId={tenant?.id?.toString() || ""}
+              selectedSeason={selectedSeason || null}
+              tenantName={tenant?.name || "Our Team"}
+              onEventClick={handleEventClick}
+              onEventsLoad={handleEventsCapture}
+              defaultView="day"
+            />
+          ) : (
+            <EventCalendar
+              events={filteredEvents}
+              onEventClick={handleEventClick}
+              defaultView="day"
+              isLoading={false}
+              seasonBreaks={selectedSeason?.breaks || []}
+              seasonDateRange={
+                selectedSeason
+                  ? {
+                      startDate: selectedSeason.startDate,
+                      endDate: selectedSeason.endDate,
+                    }
+                  : null
+              }
+              onDateRangeChange={(start, end) => {
+                // Only log the date change but don't reload events
+                console.log("Date range changed", {
+                  start: start.toISOString().split("T")[0],
+                  end: end.toISOString().split("T")[0],
+                });
+              }}
+            />
+          )}
+        </CardContent>
       </Card>
 
       {/* Event details dialog */}

@@ -61,7 +61,7 @@ export const useCreateAttendanceSession = () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.attendance.all,
       });
-      router.push(`/o/dashboard/attendance/${data.id}`);
+      router.push(`/o/dashboard/training-attendance/${data.id}`);
     },
   });
 };
@@ -194,7 +194,7 @@ export const useDeleteAttendanceSession = () => {
       queryClient.invalidateQueries({
         queryKey: [queryKeys.attendance.stats],
       });
-      router.push("/o/dashboard/attendance");
+      router.push("/o/dashboard/training-attendance");
     },
   });
 };

@@ -11,7 +11,7 @@ import {
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { Season } from "@/entities/season/Season.schema";
-import SeasonSelect from "./components/SeasonSelect";
+import SeasonSelect from "@/components/calendar/SeasonSelect";
 import CreateTrainingButton from "./components/CreateTrainingButton";
 import EditTrainingForm from "./forms/EditTrainingForm";
 import EditTrainingPatternItemsForm from "./forms/EditTrainingPatternItemsForm";

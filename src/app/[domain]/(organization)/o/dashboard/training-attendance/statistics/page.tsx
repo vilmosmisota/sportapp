@@ -36,7 +36,7 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import SeasonSelect from "../../trainings/components/SeasonSelect";
+import SeasonSelect from "@/components/calendar/SeasonSelect";
 import { format } from "date-fns";
 import {
   Select,
@@ -271,7 +271,7 @@ function TeamCard({
               </div>
             </div>
           </div>
-          <Link href={`/o/dashboard/attendance/statistics/${team.id}`}>
+          <Link href={`/o/dashboard/training-analytics/${team.id}`}>
             <Button variant="default" size="default" className="gap-2">
               <BarChart3 className="h-4 w-4" />
               View Player Details

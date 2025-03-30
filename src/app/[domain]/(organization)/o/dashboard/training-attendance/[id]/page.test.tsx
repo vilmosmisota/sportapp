@@ -208,11 +208,11 @@ function TestAttendanceSessionPage() {
 
   // Action handlers
   const handleNavigateToCheckIn = () => {
-    mockRouter.push(`/o/dashboard/attendance/${id}/check-in`);
+    mockRouter.push(`/o/dashboard/training-attendance/${id}/check-in`);
   };
 
   const handleNavigateToCreatePin = () => {
-    mockRouter.push(`/o/dashboard/attendance/${id}/pin`);
+    mockRouter.push(`/o/dashboard/training-attendance/${id}/pin`);
   };
 
   const handleCloseSession = async () => {
@@ -230,7 +230,7 @@ function TestAttendanceSessionPage() {
       });
 
       toast.success("Session closed and data aggregated successfully");
-      mockRouter.push("/o/dashboard/attendance");
+      mockRouter.push("/o/dashboard/training-attendance");
     } catch (error) {
       toast.error("Failed to close session");
       console.error(error);
@@ -246,7 +246,7 @@ function TestAttendanceSessionPage() {
       });
 
       toast.success("Session deleted successfully");
-      mockRouter.push("/o/dashboard/attendance");
+      mockRouter.push("/o/dashboard/training-attendance");
     } catch (error) {
       toast.error("Failed to delete session");
       console.error(error);
@@ -546,7 +546,7 @@ describe("AttendanceSessionPage", () => {
     fireEvent.click(checkInButton);
 
     expect(mockRouter.push).toHaveBeenCalledWith(
-      "/o/dashboard/attendance/123/check-in"
+      "/o/dashboard/training-attendance/123/check-in"
     );
   });
 
@@ -604,7 +604,9 @@ describe("AttendanceSessionPage", () => {
     });
 
     // Should redirect to attendance dashboard
-    expect(mockRouter.push).toHaveBeenCalledWith("/o/dashboard/attendance");
+    expect(mockRouter.push).toHaveBeenCalledWith(
+      "/o/dashboard/training-attendance"
+    );
   });
 
   it("should refresh data when Refresh button is clicked", async () => {

@@ -326,7 +326,7 @@ export function DayView({
       {/* Date header with status indicators */}
       <div
         className={cn(
-          "py-1.5 mb-4 flex items-center justify-between border-b",
+          "py-1.5 mb-4 flex items-center justify-between",
           isInBreak && "bg-amber-50/70 rounded-lg px-3",
           isOutsideSeason && "bg-gray-100 rounded-lg px-3"
         )}

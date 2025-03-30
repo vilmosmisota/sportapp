@@ -14,7 +14,7 @@ import { useAllTeamPlayerAttendanceAggregates } from "@/entities/attendance/Atte
 import { AttendanceCharts } from "./components/AttendanceCharts";
 import { PerformanceOverview } from "./components/PerformanceOverview";
 import { AttendanceTable } from "./components/AttendanceTable";
-import SeasonSelect from "../../../trainings/components/SeasonSelect";
+import SeasonSelect from "@/components/calendar/SeasonSelect";
 import { PageHeader } from "@/components/ui/page-header";
 import {
   AttendanceRecordAggregate,
@@ -134,7 +134,7 @@ export default function TeamAttendanceStatisticsPage() {
         <PageHeader
           title="Team Attendance Statistics"
           backButton={{
-            href: "/o/dashboard/attendance/statistics",
+            href: "/o/dashboard/training-analytics",
             label: "Back to Statistics",
           }}
         />
@@ -194,7 +194,7 @@ function TeamAttendanceStatisticsContent({
           title={formatTeamName(team)}
           description="View detailed attendance statistics for this team"
           backButton={{
-            href: "/o/dashboard/attendance/statistics",
+            href: "/o/dashboard/training-analytics",
             label: "Back to Statistics",
           }}
         />
@@ -417,7 +417,7 @@ function TeamAttendanceStatisticsContent({
           selectedSeason?.customName ?? "current season"
         }`}
         backButton={{
-          href: "/o/dashboard/attendance/statistics",
+          href: "/o/dashboard/training-analytics",
           label: "Back to Statistics",
         }}
       />

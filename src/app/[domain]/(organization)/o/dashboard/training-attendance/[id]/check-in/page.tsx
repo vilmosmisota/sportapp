@@ -321,7 +321,7 @@ export default function CheckInPage() {
   };
 
   const handleConfirmedBack = () => {
-    router.push(`/o/dashboard/attendance/${params.id}`);
+    router.push(`/o/dashboard/training-attendance/${params.id}`);
   };
 
   if (isLoading) {
@@ -355,7 +355,7 @@ export default function CheckInPage() {
           variant="outline"
           className="flex items-center gap-2"
           onClick={() =>
-            router.push(`/o/dashboard/attendance/${params.id}/add-pin`)
+            router.push(`/o/dashboard/training-attendance/${params.id}/add-pin`)
           }
         >
           <Key className="h-4 w-4" />

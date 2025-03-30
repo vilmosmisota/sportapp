@@ -22,7 +22,7 @@ const getNavItems = (
       },
       {
         name: "Schedule",
-        href: "/o/dashboard/calendar",
+        href: "/o/dashboard/schedule",
         iconName: "CalendarDays",
         description: "Manage all events and schedules",
         permissions: [Permission.VIEW_DASHBOARD],
@@ -42,7 +42,7 @@ const getNavItems = (
     section: "Rostering",
     items: [
       {
-        name: "Season Setup",
+        name: "Seasons",
         href: "/o/dashboard/seasons",
         iconName: "SunSnow",
         description: "Manage seasons and programs",
@@ -78,14 +78,14 @@ const getNavItems = (
     items: [
       {
         name: "Live Tracker",
-        href: "/o/dashboard/attendance",
+        href: "/o/dashboard/training-attendance/",
         iconName: "ClipboardList",
         description: "Monitor live attendance and session participation",
         permissions: [Permission.VIEW_ATTENDANCE, Permission.MANAGE_ATTENDANCE],
       },
       {
         name: "Performance Analytics",
-        href: "/o/dashboard/analytics/training",
+        href: "/o/dashboard/training-analytics",
         iconName: "Activity",
         description:
           "View attendance trends, participation rates, and training effectiveness",

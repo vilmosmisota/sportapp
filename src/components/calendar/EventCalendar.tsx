@@ -199,7 +199,7 @@ export function EventCalendar({
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between mb-5 pb-2 border-b">
+      <div className="flex items-center justify-between mb-5 pb-2">
         <CalendarHeader
           title={formatTitle()}
           onPrevious={handlePreviousMonth}

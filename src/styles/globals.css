@@ -137,3 +137,8 @@
     display: none;
   }
 }
+
+body,
+html {
+  overscroll-behavior: none;
+}
