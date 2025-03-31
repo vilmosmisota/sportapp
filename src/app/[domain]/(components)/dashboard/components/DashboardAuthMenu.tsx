@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { Button } from "../../../../../components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,19 +9,19 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useLogOut } from "@/entities/user/User.actions.client";
-import { useCurrentUser } from "@/entities/user/User.query";
+} from "../../../../../components/ui/dropdown-menu";
+import { useLogOut } from "../../../../../entities/user/User.actions.client";
+import { useCurrentUser } from "../../../../../entities/user/User.query";
 import { LogOut, Settings, UserRound, Bell, HelpCircle } from "lucide-react";
 import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
-import { cn } from "@/lib/utils";
+import { cn } from "../../../../../lib/utils";
 import {
   TooltipProvider,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "../../../../../components/ui/tooltip";
 
 interface DashboardAuthMenuProps {
   collapsed?: boolean;

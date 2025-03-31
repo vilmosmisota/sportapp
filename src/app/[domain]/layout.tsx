@@ -1,18 +1,6 @@
-import { SiteMenu } from "./(components)/SiteMenu";
-import { SiteMenuWrapper } from "./(components)/SiteMenuWrapper";
-
-export default function Layout({
-  children,
-  params,
-}: {
-  children: React.ReactNode;
-  params: { domain: string };
-}) {
+export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col overflow-x-hidden">
-      <SiteMenuWrapper>
-        <SiteMenu domain={params.domain} />
-      </SiteMenuWrapper>
       {children}
     </div>
   );

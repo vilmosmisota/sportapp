@@ -6,7 +6,7 @@ import { useDeleteRole } from "@/entities/role/Role.query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { RoleItem } from "./RoleItem";
-import { RoleDomain } from "../../../../../../../entities/role/Role.permissions";
+import { RoleDomain } from "@/entities/role/Role.permissions";
 
 interface RoleListProps {
   roles: Role[];
