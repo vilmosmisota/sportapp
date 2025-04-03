@@ -7,15 +7,20 @@ interface DashboardMainFrameProps {
   isCollapsed?: boolean;
 }
 
-function DecorativeCorner() {
+function DecorativeCorner({ isCollapsed }: { isCollapsed: boolean }) {
   return (
     <div
-      className="fixed right-0 top-4 z-30 h-8 w-[140px] overflow-hidden"
+      className={cn(
+        "fixed right-0 top-4 z-30 h-8 w-[140px] overflow-hidden transition-all duration-300 ease-in-out",
+        isCollapsed
+          ? "opacity-0 translate-x-8 pointer-events-none"
+          : "opacity-100"
+      )}
       style={{ clipPath: "inset(0px 0px 0px 0px)" }}
     >
       {/* Background layer */}
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 bg-sidebar"
         style={{
           transform: "skewX(30deg)",
           transformOrigin: "top left",
@@ -40,7 +45,7 @@ function DecorativeCorner() {
         >
           <path
             d="M0,0c6,0,10.7,4.7,10.7,10.7v10.7c0,5.9,4.8,10.7,10.7,10.7H140V0"
-            stroke="hsl(var(--primary) / 0.1)"
+            stroke="hsl(var(--primary-200))"
             strokeWidth="1"
             fill="none"
             vectorEffect="non-scaling-stroke"
@@ -50,7 +55,7 @@ function DecorativeCorner() {
             y1="32"
             x2="120"
             y2="32"
-            stroke="hsl(var(--primary) / 0.1)"
+            stroke="hsl(var(--primary-200))"
             strokeWidth="1"
             vectorEffect="non-scaling-stroke"
           />
@@ -67,13 +72,20 @@ export function DashboardMainFrame({
   return (
     <div
       className={cn(
-        "flex-1 transition-all duration-300 relative pt-4",
-        isCollapsed ? "lg:pl-16" : "lg:pl-72"
+        "flex-1 transition-all duration-300 ease-in-out relative pt-4",
+        isCollapsed ? "lg:pl-0 bg-card" : "lg:pl-72 bg-sidebar"
       )}
     >
-      <DecorativeCorner />
+      <DecorativeCorner isCollapsed={isCollapsed} />
 
-      <div className="h-[calc(100dvh-1rem)] flex flex-col bg-white relative border-l border-t border-primary/10 rounded-tl-lg ">
+      <div
+        className={cn(
+          "h-[calc(100dvh-1rem)] flex flex-col bg-card relative shadow-md transition-all duration-300",
+          isCollapsed
+            ? "rounded-none border-0"
+            : "rounded-tl-lg border-l border-t border-primary-100"
+        )}
+      >
         <ScrollArea className="h-full">
           <main className="pb-6 pt-12 h-full">
             <div className="px-4">{children}</div>

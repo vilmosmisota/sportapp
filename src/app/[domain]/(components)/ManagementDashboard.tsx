@@ -96,7 +96,12 @@ export default function ManagementDashboard({
     <div className="flex min-h-screen relative">
       {/* Top-left area for pinned items */}
       <div className="absolute flex flex-col h-12 top-0 left-0 z-50 pt-4">
-        <div className="flex h-full items-center justify-start gap-2 px-4  relative">
+        <div
+          className={cn(
+            "flex h-full items-center justify-start gap-2 px-4 relative rounded-md transition-all duration-300",
+            isCollapsed ? "bg-primary-300/30 backdrop-blur-sm" : ""
+          )}
+        >
           <Button
             variant="ghost"
             size="smIcon"
@@ -111,7 +116,7 @@ export default function ManagementDashboard({
             />
           </Button>
 
-          {/* Always show the pinned nav when sidebar is collapsed */}
+          {/* Only show the pinned nav when sidebar is collapsed */}
           {isCollapsed && (
             <PinnedNav pinnedItems={pinnedItems} pathname={pathname} />
           )}
@@ -119,16 +124,7 @@ export default function ManagementDashboard({
       </div>
 
       {/* Top-right navigation */}
-      <DashboardTopRightNav
-        buttons={[
-          <Button key="settings" variant="ghost" size="smIcon">
-            <Cog className="h-4 w-4" />
-          </Button>,
-          <Button key="user" variant="ghost" size="smIcon">
-            <UserRound className="h-4 w-4" />
-          </Button>,
-        ]}
-      />
+      <DashboardTopRightNav isCollapsed={isCollapsed} />
 
       {/* Desktop Sidebar */}
       <Sidebar

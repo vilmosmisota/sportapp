@@ -10,15 +10,16 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-gradient-to-b from-primary to-primary/90 text-primary-foreground shadow-[0_2px_8px_-3px_rgba(0,0,0,0.1),0_1px_2px_-2px_rgba(0,0,0,0.05)] hover:shadow-[0_3px_10px_-3px_rgba(0,0,0,0.15),0_2px_3px_-2px_rgba(0,0,0,0.05)] dark:shadow-[0_2px_8px_-3px_rgba(0,0,0,0.3),0_1px_2px_-2px_rgba(0,0,0,0.2)]",
+          "bg-primary text-primary-foreground shadow-sm hover:bg-primary-700 hover:shadow-md transition-colors",
         destructive:
-          "bg-gradient-to-b from-destructive to-destructive/90 text-destructive-foreground shadow-sm hover:shadow-md",
+          "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 hover:shadow-md transition-colors",
         outline:
-          "border border-input bg-gradient-to-b from-background to-background/95 shadow-sm hover:bg-accent hover:text-accent-foreground backdrop-blur-sm",
+          "border border-input bg-transparent shadow-sm hover:bg-primary-50 hover:border-primary-200 hover:text-primary-700 transition-colors",
         secondary:
-          "bg-gradient-to-b from-secondary to-secondary/95 text-secondary-foreground shadow-sm hover:shadow-md",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary-muted hover:text-primary-600 hover:shadow-md transition-colors",
+        ghost:
+          "text-foreground hover:bg-primary-50 hover:text-primary-700 transition-colors",
+        link: "text-primary underline-offset-4 hover:underline hover:text-primary-700 transition-colors",
       },
       size: {
         default: "h-11 px-4 py-2",

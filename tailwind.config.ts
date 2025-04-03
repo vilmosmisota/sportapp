@@ -28,7 +28,21 @@ const config = {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        sidebar: {
+          DEFAULT: "hsl(var(--sidebar))",
+          foreground: "hsl(var(--sidebar-foreground))",
+        },
         primary: {
+          "50": "hsl(var(--primary-50))",
+          "100": "hsl(var(--primary-100))",
+          "200": "hsl(var(--primary-200))",
+          "300": "hsl(var(--primary-300))",
+          "400": "hsl(var(--primary-400))",
+          "500": "hsl(var(--primary-500))",
+          "600": "hsl(var(--primary-600))",
+          "700": "hsl(var(--primary-700))",
+          "800": "hsl(var(--primary-800))",
+          "900": "hsl(var(--primary-900))",
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
         },
@@ -61,6 +75,9 @@ const config = {
           DEFAULT: "hsl(var(--bar))",
           foreground: "hsl(var(--bar-foreground))",
         },
+        // Base colors for convenience
+        white: "hsl(var(--white))",
+        black: "hsl(var(--black))",
       },
       borderRadius: {
         lg: "var(--radius)",

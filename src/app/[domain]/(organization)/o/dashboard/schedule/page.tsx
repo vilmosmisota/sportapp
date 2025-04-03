@@ -7,7 +7,13 @@ import { EventDetailsDialog } from "@/components/calendar/EventDetailsDialog";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import {
+  Plus,
+  CalendarDays,
+  AlertCircle,
+  CheckCircle2,
+  XCircle,
+} from "lucide-react";
 import { useSeasonsByTenantId } from "@/entities/season/Season.query";
 import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 import {
@@ -25,6 +31,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SimpleFilter } from "@/components/calendar/filters/SimpleFilter";
 import { CalendarContainer } from "@/components/calendar/CalendarContainer";
 import { EventCalendar } from "@/components/calendar/EventCalendar";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Cog } from "lucide-react";
 
 // Define an enum for event types
 enum EventType {
@@ -49,9 +57,29 @@ export default function CalendarPage({ params }: PageProps) {
   );
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<CalendarEvent[]>([]);
+  const [isNoSeasonsDialogOpen, setIsNoSeasonsDialogOpen] = useState(false);
 
   const { data: tenant } = useTenantByDomain(params.domain);
   const { data: seasons } = useSeasonsByTenantId(tenant?.id?.toString() || "");
+
+  // Add state for configuration status
+  const [teamManagementConfigComplete, setTeamManagementConfigComplete] =
+    useState<boolean | null>(null);
+  const [trainingLocationsConfigured, setTrainingLocationsConfigured] =
+    useState<boolean | null>(null);
+  const [gameLocationsConfigured, setGameLocationsConfigured] = useState<
+    boolean | null
+  >(null);
+
+  // Fetch configuration status - Simplified example, in a real app would call API
+  useEffect(() => {
+    if (tenant?.id) {
+      // These would be API calls in a real implementation
+      setTeamManagementConfigComplete(false); // Example placeholder
+      setTrainingLocationsConfigured(false); // Example placeholder
+      setGameLocationsConfigured(false); // Example placeholder
+    }
+  }, [tenant?.id]);
 
   const selectedSeason = useMemo(() => {
     if (!seasons) return undefined;
@@ -102,6 +130,138 @@ export default function CalendarPage({ params }: PageProps) {
   };
 
   const isLoadingTenantData = !tenant || !seasons;
+  const hasNoSeasons =
+    !isLoadingTenantData && (!seasons || seasons.length === 0);
+  const isLoadingConfig =
+    teamManagementConfigComplete === null ||
+    trainingLocationsConfigured === null ||
+    gameLocationsConfigured === null;
+
+  // If there are no seasons, show the empty state
+  if (hasNoSeasons) {
+    return (
+      <div className="space-y-4">
+        <PageHeader
+          title="Schedule"
+          description="View and manage your schedule of games and trainings"
+        />
+
+        <Card className="flex flex-col items-center justify-center p-10 text-center">
+          <div className="flex flex-col items-center max-w-lg">
+            <div className="bg-muted h-12 w-12 rounded-full flex items-center justify-center mb-4">
+              <CalendarDays className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <h3 className="text-xl font-semibold mb-2">
+              Schedule Setup Required
+            </h3>
+            <p className="text-muted-foreground mb-6">
+              Before you can start scheduling games and trainings, you need to
+              set up your organization and create a season. Please complete the
+              following setup steps:
+            </p>
+
+            <div className="w-full text-left mb-6 space-y-3 bg-muted p-4 rounded-lg">
+              <h4 className="font-medium">Setup Checklist:</h4>
+
+              <div className="flex items-start gap-2">
+                {isLoadingConfig ? (
+                  <Skeleton className="h-5 w-5 rounded-full mt-0.5" />
+                ) : teamManagementConfigComplete ? (
+                  <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                ) : (
+                  <XCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                )}
+                <div>
+                  <div className="font-medium">
+                    Team Management Configuration
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Configure age groups, skill levels, and player positions in
+                    Organization settings
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2">
+                {isLoadingConfig ? (
+                  <Skeleton className="h-5 w-5 rounded-full mt-0.5" />
+                ) : trainingLocationsConfigured ? (
+                  <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                ) : (
+                  <XCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                )}
+                <div>
+                  <div className="font-medium">Training Locations</div>
+                  <div className="text-sm text-muted-foreground">
+                    Add at least one training location in Organization settings
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2">
+                {isLoadingConfig ? (
+                  <Skeleton className="h-5 w-5 rounded-full mt-0.5" />
+                ) : gameLocationsConfigured ? (
+                  <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                ) : (
+                  <XCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                )}
+                <div>
+                  <div className="font-medium">Game Locations</div>
+                  <div className="text-sm text-muted-foreground">
+                    Add at least one game location in Organization settings
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2">
+                <XCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-medium">Season Creation</div>
+                  <div className="text-sm text-muted-foreground">
+                    Create at least one season to define the date range and
+                    teams for your schedule
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <Alert variant="destructive" className="mb-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Configuration Required</AlertTitle>
+              <AlertDescription>
+                Complete the organization setup before creating your first
+                season and scheduling events.
+              </AlertDescription>
+            </Alert>
+
+            <div className="flex gap-3">
+              <Button
+                onClick={() => {
+                  window.location.href = `/o/dashboard/settings/organization`;
+                }}
+                variant="default"
+              >
+                <Cog className="h-4 w-4 mr-2" />
+                Organization Settings
+              </Button>
+
+              <Button
+                onClick={() => {
+                  window.location.href = `/o/dashboard/settings/seasons`;
+                }}
+                variant="outline"
+                disabled={!teamManagementConfigComplete}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create Season
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

@@ -1,5 +1,4 @@
 import React from "react";
-import { PanelLeft } from "lucide-react";
 import { cn } from "../../../../lib/utils";
 import { ScrollArea } from "../../../../components/ui/scroll-area";
 import {
@@ -8,9 +7,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "../../../../components/ui/accordion";
-import { Button } from "../../../../components/ui/button";
 import { NavSection, NavItem } from "./constants";
-import { DomainSwitcher } from "./components/DomainSwitcher";
+import { DomainNavigation } from "./components/DomainNavigation";
+import { TenantBranding } from "./components/TenantBranding";
 import NavItems from "./components/DashboardNavItems";
 import { usePinnedItems } from "./hooks/usePinnedItems";
 
@@ -62,25 +61,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <div
       className={cn(
-        "group hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 transition-all duration-300 z-20 mt",
-        isCollapsed ? "lg:w-16" : "lg:w-72"
+        "group hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 transition-all duration-300 z-20 mt bg-sidebar text-sidebar-foreground",
+        isCollapsed
+          ? "lg:w-0 lg:opacity-0 lg:translate-x-[-100%] lg:overflow-hidden pointer-events-none"
+          : "lg:w-72 lg:opacity-100 lg:translate-x-0"
       )}
     >
       <div className="flex flex-col h-full relative pt-4">
-        {/* Header area with branding and navigation */}
-        <div className="pr-4 pl-12">
-          <DomainSwitcher
+        {/* Domain navigation at the top */}
+        <div className="px-4 pl-12 mb-4">
+          <DomainNavigation
             currentDomain={domain}
             isLoading={isTenantLoading}
-            getIcon={getIcon}
-            tenant={tenant}
             tenantId={tenantId}
           />
         </div>
 
         {/* Pinned nav items */}
         {pinnedItems.length > 0 && (
-          <div className={cn("py-2 pt-6", isCollapsed ? "px-2" : "px-4")}>
+          <div className={cn("py-2", isCollapsed ? "px-2" : "px-4")}>
             <div className="space-y-1">
               {!isCollapsed && (
                 <div className="text-xs font-medium text-muted-foreground/70 py-1">
@@ -159,26 +158,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </ScrollArea>
 
-        {/* Collapse/Expand Button */}
-        <div
-          className={cn(
-            "h-14 flex items-center",
-            isCollapsed ? "justify-center" : "px-4"
-          )}
-        >
-          <Button
-            variant="ghost"
-            size="smIcon"
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="text-muted-foreground hover:text-primary"
-          >
-            <PanelLeft
-              className={cn(
-                "h-4 w-4 transition-transform",
-                isCollapsed ? "rotate-180" : ""
-              )}
-            />
-          </Button>
+        {/* Tenant branding at the bottom */}
+        <div className="mt-auto">
+          <TenantBranding tenant={tenant} isLoading={isTenantLoading} />
         </div>
       </div>
     </div>
