@@ -76,7 +76,7 @@ export function SimpleFilter({
   });
 
   // UI state
-  const [activeValue, setActiveValue] = useState("filters");
+  const [activeValue, setActiveValue] = useState("");
 
   // Calculate active filter count
   const activeFilterCount = useMemo(() => {
@@ -158,9 +158,64 @@ export function SimpleFilter({
   }, [events, filters, tenantId]);
 
   // Notify parent of filtered events
+  const lastFilteredIdsRef = React.useRef<string>("");
   useEffect(() => {
-    onFilteredEventsChange(filteredEvents);
-  }, [filteredEvents, onFilteredEventsChange]);
+    // Apply the same filtering logic used in filteredEvents memo
+    const filtered = events.filter((event) => {
+      // Apply type filter first
+      if (event.type === "game" && !filters.eventTypes.games) {
+        return false;
+      }
+      if (event.type === "training" && !filters.eventTypes.trainings) {
+        return false;
+      }
+
+      // If no team filters are applied, return events that passed the type filter
+      if (
+        filters.teams.tenantTeams.length === 0 &&
+        filters.teams.opponentTeams.length === 0
+      ) {
+        return true;
+      }
+
+      // Apply team filters
+      if (event.type === "game") {
+        return matchesGameFilters(event.data as Game);
+      }
+
+      if (event.type === "training") {
+        const training = event.data as Training;
+
+        // No tenant team filters - show all trainings
+        if (filters.teams.tenantTeams.length === 0) {
+          return true;
+        }
+
+        // No team or no team ID - can't match filters
+        if (!training.team || training.team.id === null) {
+          return false;
+        }
+
+        // Check if team ID is in selected teams
+        return filters.teams.tenantTeams.includes(String(training.team.id));
+      }
+
+      // Unknown event type
+      return false;
+    });
+
+    // Only call the callback if we have a different array of events
+    const filteredIds = filtered
+      .map((e) => e.id)
+      .sort()
+      .join(",");
+    const previousFilteredIds = lastFilteredIdsRef.current;
+
+    if (filteredIds !== previousFilteredIds) {
+      lastFilteredIdsRef.current = filteredIds;
+      onFilteredEventsChange(filtered);
+    }
+  }, [events, filters, onFilteredEventsChange, tenantId]);
 
   // Helper: Process game teams for categorization
   function processGameTeams(
@@ -450,7 +505,7 @@ export function SimpleFilter({
     <Accordion
       type="single"
       collapsible
-      defaultValue="filters"
+      defaultValue=""
       value={activeValue}
       onValueChange={setActiveValue}
     >

@@ -261,13 +261,15 @@ export default function AddTrainingForm({
 
         // Create trainings in batch
         await addTrainingBatch.mutateAsync({
-          dates,
-          startTime: values.startTime,
-          endTime: values.endTime,
-          location,
-          teamId,
+          trainings: dates.map((date) => ({
+            date,
+            startTime: values.startTime,
+            endTime: values.endTime,
+            location,
+            teamId,
+            meta: values.note ? { note: values.note } : null,
+          })),
           seasonId: selectedSeason.id,
-          meta: values.note ? { note: values.note } : null,
         });
 
         toast.success(`Created ${dates.length} training sessions successfully`);

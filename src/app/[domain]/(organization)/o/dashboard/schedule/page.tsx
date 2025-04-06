@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { format } from "date-fns";
+import { format, startOfMonth } from "date-fns";
 import { CalendarEvent } from "@/components/calendar/EventCalendar";
 import { EventDetailsDialog } from "@/components/calendar/EventDetailsDialog";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
@@ -33,6 +33,11 @@ import { CalendarContainer } from "@/components/calendar/CalendarContainer";
 import { EventCalendar } from "@/components/calendar/EventCalendar";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Cog } from "lucide-react";
+import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
+import { useDeleteTraining } from "@/entities/training/Training.actions.client";
+import { useDeleteGame } from "@/entities/game/Game.actions.client";
+import { toast } from "sonner";
+import { isTrainingEvent, isGameEvent } from "@/components/calendar/types";
 
 // Define an enum for event types
 enum EventType {
@@ -58,9 +63,22 @@ export default function CalendarPage({ params }: PageProps) {
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<CalendarEvent[]>([]);
   const [isNoSeasonsDialogOpen, setIsNoSeasonsDialogOpen] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+
+  // Add state for delete confirmation dialog
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState<CalendarEvent | null>(
+    null
+  );
 
   const { data: tenant } = useTenantByDomain(params.domain);
   const { data: seasons } = useSeasonsByTenantId(tenant?.id?.toString() || "");
+
+  // Initialize the delete training mutation hook
+  const deleteTraining = useDeleteTraining(tenant?.id?.toString() || "");
+
+  // Initialize the delete game mutation hook
+  const deleteGame = useDeleteGame(tenant?.id?.toString() || "");
 
   // Add state for configuration status
   const [teamManagementConfigComplete, setTeamManagementConfigComplete] =
@@ -96,7 +114,100 @@ export default function CalendarPage({ params }: PageProps) {
   };
 
   const handleEventDelete = (event: CalendarEvent) => {
+    // Close the event details dialog
     setIsEventDetailsOpen(false);
+
+    // Store the event to delete and open confirmation dialog
+    setEventToDelete(event);
+    setIsDeleteConfirmOpen(true);
+  };
+
+  // Helper function to extract numeric ID from prefixed ID string
+  const extractNumericId = (
+    prefixedId: string | number,
+    prefix: string
+  ): number | null => {
+    if (typeof prefixedId === "number") return prefixedId;
+
+    if (typeof prefixedId === "string" && prefixedId.startsWith(prefix)) {
+      const idStr = prefixedId.replace(prefix, "");
+      const id = parseInt(idStr);
+      return isNaN(id) ? null : id;
+    }
+
+    // Try to parse the provided ID as a fallback
+    const fallbackId = parseInt(String(prefixedId));
+    return isNaN(fallbackId) ? null : fallbackId;
+  };
+
+  // Function to execute the delete operation after confirmation
+  const executeDeleteEvent = async (eventId: string) => {
+    if (!eventToDelete) return;
+
+    // Helper function to update event lists after deletion
+    const updateEventLists = (deletedEventId: string | number) => {
+      // Update the local state by removing the deleted event
+      const updatedEvents = calendarEvents.filter(
+        (e) => e.id !== deletedEventId
+      );
+      setCalendarEvents(updatedEvents);
+
+      // If filtered events are being shown, update those too
+      if (filteredEvents.length !== calendarEvents.length) {
+        const updatedFilteredEvents = filteredEvents.filter(
+          (e) => e.id !== deletedEventId
+        );
+        setFilteredEvents(updatedFilteredEvents);
+      }
+    };
+
+    try {
+      // Check if the event is a training event
+      if (isTrainingEvent(eventToDelete)) {
+        // Extract training ID with the 'training-' prefix
+        const trainingId = extractNumericId(eventToDelete.id, "training-");
+
+        if (!trainingId) {
+          console.error("Failed to parse training ID:", eventToDelete.id);
+          toast.error("Invalid training ID");
+          return;
+        }
+
+        // Execute the delete operation
+        await deleteTraining.mutateAsync(trainingId);
+
+        // Update the events lists
+        updateEventLists(eventToDelete.id);
+
+        toast.success("Training deleted successfully");
+      } else if (isGameEvent(eventToDelete)) {
+        // Extract game ID with the 'game-' prefix
+        const gameId = extractNumericId(eventToDelete.id, "game-");
+
+        if (!gameId) {
+          console.error("Failed to parse game ID:", eventToDelete.id);
+          toast.error("Invalid game ID");
+          return;
+        }
+
+        // Execute the delete operation
+        await deleteGame.mutateAsync(gameId);
+
+        // Update the events lists
+        updateEventLists(eventToDelete.id);
+
+        toast.success("Game deleted successfully");
+      } else {
+        // For other event types, show an error
+        toast.error("Deleting this event type is not supported yet");
+      }
+    } catch (error) {
+      console.error("Error deleting event:", error);
+      toast.error("Failed to delete event");
+    } finally {
+      // Reset state
+      setEventToDelete(null);
+    }
   };
 
   const handleSeasonChange = (seasonId: string) => {
@@ -106,21 +217,26 @@ export default function CalendarPage({ params }: PageProps) {
 
   // Event capture function for the calendar
   const handleEventsCapture = (events: CalendarEvent[]) => {
-    // Only set calendarEvents the first time to avoid replacing user-filtered events
-    if (events.length > 0 && calendarEvents.length === 0) {
-      console.log("Captured initial events:", events.length);
+    // Check if we actually have different events to avoid unnecessary state updates
+    const haveEventsChanged =
+      events.length !== calendarEvents.length ||
+      JSON.stringify(events.map((e) => e.id).sort()) !==
+        JSON.stringify(calendarEvents.map((e) => e.id).sort());
+
+    if (haveEventsChanged) {
       setCalendarEvents(events);
-      setFilteredEvents(events); // Initialize filtered events with all events
+
+      // Only reset filtered events if we need to (if they're based on old data)
+      const areFiltersApplied = filteredEvents.length !== calendarEvents.length;
+      if (!areFiltersApplied) {
+        setFilteredEvents(events);
+      }
     }
   };
 
   // This effect handles filtered events changes for debugging
   useEffect(() => {
-    if (filteredEvents.length > 0) {
-      console.log(
-        `Calendar showing ${filteredEvents.length} of ${calendarEvents.length} total events`
-      );
-    }
+    // Left intentionally empty - we only track changes
   }, [filteredEvents, calendarEvents]);
 
   // Handle filtered events from the SimpleFilter component
@@ -337,6 +453,9 @@ export default function CalendarPage({ params }: PageProps) {
               tenantId={tenant?.id?.toString() || ""}
               tenantName={tenant?.name || "Our Team"}
               onFilteredEventsChange={handleFilteredEventsChange}
+              key={`filter-${format(currentMonth, "yyyy-MM")}-${
+                calendarEvents.length
+              }`}
             />
           </CardContent>
         </Card>
@@ -345,39 +464,19 @@ export default function CalendarPage({ params }: PageProps) {
       {/* Main calendar component */}
       <Card>
         <CardContent className="py-6">
-          {calendarEvents.length === 0 ? (
-            <CalendarContainer
-              tenantId={tenant?.id?.toString() || ""}
-              selectedSeason={selectedSeason || null}
-              tenantName={tenant?.name || "Our Team"}
-              onEventClick={handleEventClick}
-              onEventsLoad={handleEventsCapture}
-              defaultView="day"
-            />
-          ) : (
-            <EventCalendar
-              events={filteredEvents}
-              onEventClick={handleEventClick}
-              defaultView="day"
-              isLoading={false}
-              seasonBreaks={selectedSeason?.breaks || []}
-              seasonDateRange={
-                selectedSeason
-                  ? {
-                      startDate: selectedSeason.startDate,
-                      endDate: selectedSeason.endDate,
-                    }
-                  : null
-              }
-              onDateRangeChange={(start, end) => {
-                // Only log the date change but don't reload events
-                console.log("Date range changed", {
-                  start: start.toISOString().split("T")[0],
-                  end: end.toISOString().split("T")[0],
-                });
-              }}
-            />
-          )}
+          <CalendarContainer
+            tenantId={tenant?.id?.toString() || ""}
+            selectedSeason={selectedSeason || null}
+            tenantName={tenant?.name || "Our Team"}
+            onEventClick={handleEventClick}
+            onEventsLoad={handleEventsCapture}
+            defaultView="month"
+            filteredEvents={
+              filteredEvents.length > 0 ? filteredEvents : undefined
+            }
+            currentMonth={currentMonth}
+            onMonthChange={setCurrentMonth}
+          />
         </CardContent>
       </Card>
 
@@ -446,6 +545,27 @@ export default function CalendarPage({ params }: PageProps) {
           )}
         </>
       </ResponsiveSheet>
+
+      {/* Add Delete Confirmation Dialog */}
+      {eventToDelete && (
+        <ConfirmDeleteDialog
+          categoryId={
+            // Use the extractNumericId helper to get the ID correctly for both game and training events
+            typeof eventToDelete.id === "string"
+              ? isTrainingEvent(eventToDelete)
+                ? extractNumericId(eventToDelete.id, "training-")?.toString() ||
+                  ""
+                : isGameEvent(eventToDelete)
+                ? extractNumericId(eventToDelete.id, "game-")?.toString() || ""
+                : eventToDelete.id
+              : eventToDelete.id.toString()
+          }
+          isOpen={isDeleteConfirmOpen}
+          setIsOpen={setIsDeleteConfirmOpen}
+          text={`This will permanently delete this ${eventToDelete.type} event. This action cannot be undone. Are you sure you want to proceed?`}
+          onConfirm={executeDeleteEvent}
+        />
+      )}
     </div>
   );
 }
