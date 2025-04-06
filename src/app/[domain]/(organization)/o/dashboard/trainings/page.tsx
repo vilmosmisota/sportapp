@@ -65,8 +65,8 @@ export default function TrainingsPage({
   const { data: upcomingTrainings, isLoading: isLoadingUpcoming } =
     useTrainingsByDayRange(tenant?.id.toString() ?? "", 7);
 
-  const updatePattern = useUpdateTrainingPattern();
-  const deletePattern = useDeleteTrainingPattern();
+  const updatePattern = useUpdateTrainingPattern(tenant?.id.toString() ?? "");
+  const deletePattern = useDeleteTrainingPattern(tenant?.id.toString() ?? "");
 
   const handleEditPattern = (training: GroupedTraining) => {
     setSelectedTraining(training);

@@ -56,7 +56,7 @@ export default function EditTrainingForm({
   seasonId,
 }: Props) {
   const locations = useTrainingLocations(domain);
-  const updatePattern = useUpdateTrainingPattern();
+  const updatePattern = useUpdateTrainingPattern(tenantId.toString());
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<FormValues>({
