@@ -106,7 +106,6 @@ export function useTrainingsCalendarEvents(
   seasonId: number,
   enabled = true
 ) {
-  // Make sure we use a consistent format for the query key
   const monthKey = format(startDate, "yyyy-MM");
 
   // Use the properly defined query key from the central cache keys file
@@ -115,6 +114,8 @@ export function useTrainingsCalendarEvents(
     monthKey,
     seasonId
   );
+
+  console.log("queryKey on fetching trainings calendar events", queryKey);
 
   // Get the Supabase client
   const client = useSupabase();

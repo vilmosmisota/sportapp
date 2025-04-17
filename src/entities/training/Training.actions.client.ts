@@ -37,7 +37,6 @@ const invalidateTrainingCalendarQueries = (
     queryKey: [queryKeys.training.grouped, tenantId],
   });
 
-  // Invalidate general calendar events cache
   queryClient.invalidateQueries({
     queryKey: queryKeys.training.allCalendarEvents(tenantId),
   });
@@ -45,9 +44,21 @@ const invalidateTrainingCalendarQueries = (
   // Get the month key for the specific month of the event
   const monthKey = format(date, "yyyy-MM");
 
-  // Invalidate the specific month's cache
+  // Invalidate the specific month's cache with seasonId
+  if (seasonId) {
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.training.calendarEvents(tenantId, monthKey, seasonId),
+    });
+  }
+
+  // Also invalidate without seasonId in case there are queries without it
   queryClient.invalidateQueries({
-    queryKey: queryKeys.training.calendarEvents(tenantId, monthKey, seasonId),
+    queryKey: queryKeys.training.calendarEvents(tenantId, monthKey),
+  });
+
+  // Invalidate date range queries that might include this date
+  queryClient.invalidateQueries({
+    queryKey: [queryKeys.training.byDateRange, tenantId],
   });
 
   // Also invalidate adjacent months in case the event is near month boundaries
@@ -56,20 +67,44 @@ const invalidateTrainingCalendarQueries = (
   const prevMonth = new Date(date);
   prevMonth.setMonth(prevMonth.getMonth() - 1);
 
+  const nextMonthKey = format(nextMonth, "yyyy-MM");
+  const prevMonthKey = format(prevMonth, "yyyy-MM");
+
+  // Invalidate next month with seasonId
+  if (seasonId) {
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.training.calendarEvents(
+        tenantId,
+        nextMonthKey,
+        seasonId
+      ),
+    });
+  }
+
+  // Invalidate next month without seasonId
   queryClient.invalidateQueries({
-    queryKey: queryKeys.training.calendarEvents(
-      tenantId,
-      format(nextMonth, "yyyy-MM"),
-      seasonId
-    ),
+    queryKey: queryKeys.training.calendarEvents(tenantId, nextMonthKey),
   });
 
+  // Invalidate previous month with seasonId
+  if (seasonId) {
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.training.calendarEvents(
+        tenantId,
+        prevMonthKey,
+        seasonId
+      ),
+    });
+  }
+
+  // Invalidate previous month without seasonId
   queryClient.invalidateQueries({
-    queryKey: queryKeys.training.calendarEvents(
-      tenantId,
-      format(prevMonth, "yyyy-MM"),
-      seasonId
-    ),
+    queryKey: queryKeys.training.calendarEvents(tenantId, prevMonthKey),
+  });
+
+  // Also invalidate the day range queries since they might include this training
+  queryClient.invalidateQueries({
+    queryKey: [queryKeys.training.byDayRange(7)],
   });
 };
 
@@ -183,40 +218,24 @@ export const useUpdateTraining = (trainingId: number, tenantId: string) => {
   return useMutation({
     mutationFn: (data: TrainingForm) =>
       updateTraining(client, trainingId, data, tenantId),
-    onSuccess: (_, data) => {
-      // First invalidate the specific training detail
+    onSuccess: (updatedTraining, data) => {
       queryClient.invalidateQueries({
         queryKey: [queryKeys.training.detail(tenantId, trainingId.toString())],
       });
 
-      // Invalidate day range queries that might include this training
       queryClient.invalidateQueries({
         queryKey: [queryKeys.training.byDayRange(7)],
       });
 
-      // Use the date from the training data for targeted invalidation
-      if (data.date) {
-        const trainingDate =
-          typeof data.date === "string" ? new Date(data.date) : data.date;
+      const trainingDate = updatedTraining.date;
+      const seasonId = updatedTraining.seasonId;
 
-        invalidateTrainingCalendarQueries(
-          queryClient,
-          tenantId,
-          trainingDate,
-          data.seasonId
-        );
-      } else {
-        // Fallback to broader invalidation
-        queryClient.invalidateQueries({
-          queryKey: [queryKeys.training.all],
-        });
-        queryClient.invalidateQueries({
-          queryKey: [queryKeys.training.grouped],
-        });
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.training.allCalendarEvents(tenantId),
-        });
-      }
+      invalidateTrainingCalendarQueries(
+        queryClient,
+        tenantId,
+        trainingDate,
+        seasonId
+      );
     },
   });
 };

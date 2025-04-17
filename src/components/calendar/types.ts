@@ -110,3 +110,11 @@ export function isGameEvent(event: { type: string }): boolean {
 export function isTrainingEvent(event: { type: string }): boolean {
   return event.type === "training";
 }
+
+/**
+ * Represents a date range with start and end dates
+ */
+export type DateRange = {
+  start: Date;
+  end: Date;
+};

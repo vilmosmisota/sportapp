@@ -7,6 +7,7 @@ import { EventDetailsDialog } from "@/components/calendar/EventDetailsDialog";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import {
   Plus,
   CalendarDays,
@@ -25,12 +26,12 @@ import {
 } from "@/components/ui/select";
 import AddEventForm from "./forms/AddEventForm";
 import AddTrainingForm from "./forms/AddTrainingForm";
+import EditTrainingForm from "./forms/EditTrainingForm";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/ui/page-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SimpleFilter } from "@/components/calendar/filters/SimpleFilter";
 import { CalendarContainer } from "@/components/calendar/CalendarContainer";
-import { EventCalendar } from "@/components/calendar/EventCalendar";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Cog } from "lucide-react";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
@@ -38,8 +39,9 @@ import { useDeleteTraining } from "@/entities/training/Training.actions.client";
 import { useDeleteGame } from "@/entities/game/Game.actions.client";
 import { toast } from "sonner";
 import { isTrainingEvent, isGameEvent } from "@/components/calendar/types";
+import { useTraining } from "@/entities/training/Training.query";
+import { extractNumericId } from "../../../../../../utils/string.utils";
 
-// Define an enum for event types
 enum EventType {
   Game = "game",
   Training = "training",
@@ -62,10 +64,13 @@ export default function CalendarPage({ params }: PageProps) {
   );
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<CalendarEvent[]>([]);
-  const [isNoSeasonsDialogOpen, setIsNoSeasonsDialogOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
 
-  // Add state for delete confirmation dialog
+  const [isEditFormOpen, setIsEditFormOpen] = useState(false);
+  const [editingTrainingId, setEditingTrainingId] = useState<number | null>(
+    null
+  );
+
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [eventToDelete, setEventToDelete] = useState<CalendarEvent | null>(
     null
@@ -74,30 +79,16 @@ export default function CalendarPage({ params }: PageProps) {
   const { data: tenant } = useTenantByDomain(params.domain);
   const { data: seasons } = useSeasonsByTenantId(tenant?.id?.toString() || "");
 
-  // Initialize the delete training mutation hook
+  const { data: editingTraining } = useTraining(
+    tenant?.id?.toString() || "",
+    editingTrainingId || 0
+  );
+
   const deleteTraining = useDeleteTraining(tenant?.id?.toString() || "");
 
-  // Initialize the delete game mutation hook
   const deleteGame = useDeleteGame(tenant?.id?.toString() || "");
 
-  // Add state for configuration status
-  const [teamManagementConfigComplete, setTeamManagementConfigComplete] =
-    useState<boolean | null>(null);
-  const [trainingLocationsConfigured, setTrainingLocationsConfigured] =
-    useState<boolean | null>(null);
-  const [gameLocationsConfigured, setGameLocationsConfigured] = useState<
-    boolean | null
-  >(null);
-
-  // Fetch configuration status - Simplified example, in a real app would call API
-  useEffect(() => {
-    if (tenant?.id) {
-      // These would be API calls in a real implementation
-      setTeamManagementConfigComplete(false); // Example placeholder
-      setTrainingLocationsConfigured(false); // Example placeholder
-      setGameLocationsConfigured(false); // Example placeholder
-    }
-  }, [tenant?.id]);
+  const isLoadingTenantData = !tenant || !seasons;
 
   const selectedSeason = useMemo(() => {
     if (!seasons) return undefined;
@@ -111,102 +102,68 @@ export default function CalendarPage({ params }: PageProps) {
 
   const handleEventEdit = (event: CalendarEvent) => {
     setIsEventDetailsOpen(false);
+
+    if (isTrainingEvent(event)) {
+      const trainingId = extractNumericId(event.id, "training-");
+
+      if (trainingId) {
+        setEditingTrainingId(trainingId);
+        setIsEditFormOpen(true);
+      } else {
+        toast.error("Invalid training ID");
+      }
+    } else if (isGameEvent(event)) {
+      toast.info("Game editing will be available in a future update");
+    }
   };
 
   const handleEventDelete = (event: CalendarEvent) => {
-    // Close the event details dialog
     setIsEventDetailsOpen(false);
-
-    // Store the event to delete and open confirmation dialog
     setEventToDelete(event);
     setIsDeleteConfirmOpen(true);
   };
 
-  // Helper function to extract numeric ID from prefixed ID string
-  const extractNumericId = (
-    prefixedId: string | number,
-    prefix: string
-  ): number | null => {
-    if (typeof prefixedId === "number") return prefixedId;
-
-    if (typeof prefixedId === "string" && prefixedId.startsWith(prefix)) {
-      const idStr = prefixedId.replace(prefix, "");
-      const id = parseInt(idStr);
-      return isNaN(id) ? null : id;
-    }
-
-    // Try to parse the provided ID as a fallback
-    const fallbackId = parseInt(String(prefixedId));
-    return isNaN(fallbackId) ? null : fallbackId;
-  };
-
-  // Function to execute the delete operation after confirmation
-  const executeDeleteEvent = async (eventId: string) => {
+  const executeDeleteEvent = async () => {
     if (!eventToDelete) return;
 
-    // Helper function to update event lists after deletion
-    const updateEventLists = (deletedEventId: string | number) => {
-      // Update the local state by removing the deleted event
-      const updatedEvents = calendarEvents.filter(
-        (e) => e.id !== deletedEventId
-      );
-      setCalendarEvents(updatedEvents);
-
-      // If filtered events are being shown, update those too
-      if (filteredEvents.length !== calendarEvents.length) {
-        const updatedFilteredEvents = filteredEvents.filter(
-          (e) => e.id !== deletedEventId
-        );
-        setFilteredEvents(updatedFilteredEvents);
-      }
-    };
-
     try {
-      // Check if the event is a training event
+      let deletedId: number;
+
       if (isTrainingEvent(eventToDelete)) {
-        // Extract training ID with the 'training-' prefix
         const trainingId = extractNumericId(eventToDelete.id, "training-");
-
         if (!trainingId) {
-          console.error("Failed to parse training ID:", eventToDelete.id);
-          toast.error("Invalid training ID");
-          return;
+          throw new Error(`Invalid training ID: ${eventToDelete.id}`);
         }
-
-        // Execute the delete operation
         await deleteTraining.mutateAsync(trainingId);
-
-        // Update the events lists
-        updateEventLists(eventToDelete.id);
-
-        toast.success("Training deleted successfully");
+        deletedId = trainingId;
       } else if (isGameEvent(eventToDelete)) {
-        // Extract game ID with the 'game-' prefix
         const gameId = extractNumericId(eventToDelete.id, "game-");
-
         if (!gameId) {
-          console.error("Failed to parse game ID:", eventToDelete.id);
-          toast.error("Invalid game ID");
-          return;
+          throw new Error(`Invalid game ID: ${eventToDelete.id}`);
         }
-
-        // Execute the delete operation
         await deleteGame.mutateAsync(gameId);
-
-        // Update the events lists
-        updateEventLists(eventToDelete.id);
-
-        toast.success("Game deleted successfully");
+        deletedId = gameId;
       } else {
-        // For other event types, show an error
-        toast.error("Deleting this event type is not supported yet");
+        throw new Error("Unsupported event type");
       }
+
+      const updateEvents = (events: CalendarEvent[]) =>
+        events.filter((e) => e.id !== eventToDelete.id);
+
+      setCalendarEvents(updateEvents);
+      setFilteredEvents((prev) =>
+        prev.length !== calendarEvents.length ? updateEvents(prev) : prev
+      );
+
+      toast.success(`${eventToDelete.type} deleted successfully`);
     } catch (error) {
       console.error("Error deleting event:", error);
-      toast.error("Failed to delete event");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to delete event"
+      );
     } finally {
-      // Reset state
       setEventToDelete(null);
+      setIsDeleteConfirmOpen(false);
     }
   };
 
@@ -215,9 +172,7 @@ export default function CalendarPage({ params }: PageProps) {
     if (!selected) return;
   };
 
-  // Event capture function for the calendar
   const handleEventsCapture = (events: CalendarEvent[]) => {
-    // Check if we actually have different events to avoid unnecessary state updates
     const haveEventsChanged =
       events.length !== calendarEvents.length ||
       JSON.stringify(events.map((e) => e.id).sort()) !==
@@ -226,35 +181,46 @@ export default function CalendarPage({ params }: PageProps) {
     if (haveEventsChanged) {
       setCalendarEvents(events);
 
-      // Only reset filtered events if we need to (if they're based on old data)
-      const areFiltersApplied = filteredEvents.length !== calendarEvents.length;
-      if (!areFiltersApplied) {
+      // Also update filtered events if any event in the filtered set has been updated
+      if (filteredEvents.length > 0) {
+        const updatedFilteredEvents = filteredEvents.map((filteredEvent) => {
+          // Try to find updated version of this event
+          const updatedEvent = events.find((e) => e.id === filteredEvent.id);
+          // Return updated version if found, otherwise keep the original
+          return updatedEvent || filteredEvent;
+        });
+
+        // Only update if there are actual changes
+        if (
+          JSON.stringify(updatedFilteredEvents) !==
+          JSON.stringify(filteredEvents)
+        ) {
+          setFilteredEvents(updatedFilteredEvents);
+        }
+      } else {
+        // If no filters are applied, filtered events should match all events
         setFilteredEvents(events);
       }
     }
   };
 
-  // This effect handles filtered events changes for debugging
-  useEffect(() => {
-    // Left intentionally empty - we only track changes
-  }, [filteredEvents, calendarEvents]);
-
-  // Handle filtered events from the SimpleFilter component
   const handleFilteredEventsChange = (filtered: CalendarEvent[]) => {
-    // Update state with the newly filtered events
-    setFilteredEvents(filtered);
+    // When filtered events change, we want to ensure they contain the latest data
+    // from calendarEvents for any matching events
+    if (calendarEvents.length > 0) {
+      const updatedFiltered = filtered.map((filteredEvent) => {
+        const latestEvent = calendarEvents.find(
+          (e) => e.id === filteredEvent.id
+        );
+        return latestEvent || filteredEvent;
+      });
+      setFilteredEvents(updatedFiltered);
+    } else {
+      setFilteredEvents(filtered);
+    }
   };
 
-  const isLoadingTenantData = !tenant || !seasons;
-  const hasNoSeasons =
-    !isLoadingTenantData && (!seasons || seasons.length === 0);
-  const isLoadingConfig =
-    teamManagementConfigComplete === null ||
-    trainingLocationsConfigured === null ||
-    gameLocationsConfigured === null;
-
-  // If there are no seasons, show the empty state
-  if (hasNoSeasons) {
+  if (seasons?.length === 0) {
     return (
       <div className="space-y-4">
         <PageHeader
@@ -267,112 +233,28 @@ export default function CalendarPage({ params }: PageProps) {
             <div className="bg-muted h-12 w-12 rounded-full flex items-center justify-center mb-4">
               <CalendarDays className="h-6 w-6 text-muted-foreground" />
             </div>
-            <h3 className="text-xl font-semibold mb-2">
-              Schedule Setup Required
-            </h3>
+            <h3 className="text-xl font-semibold mb-2">No Seasons Found</h3>
             <p className="text-muted-foreground mb-6">
-              Before you can start scheduling games and trainings, you need to
-              set up your organization and create a season. Please complete the
-              following setup steps:
+              To start scheduling games and trainings, you need to create a
+              season first. A season defines the date range and teams for your
+              schedule.
             </p>
 
-            <div className="w-full text-left mb-6 space-y-3 bg-muted p-4 rounded-lg">
-              <h4 className="font-medium">Setup Checklist:</h4>
-
-              <div className="flex items-start gap-2">
-                {isLoadingConfig ? (
-                  <Skeleton className="h-5 w-5 rounded-full mt-0.5" />
-                ) : teamManagementConfigComplete ? (
-                  <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                ) : (
-                  <XCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-                )}
-                <div>
-                  <div className="font-medium">
-                    Team Management Configuration
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Configure age groups, skill levels, and player positions in
-                    Organization settings
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-2">
-                {isLoadingConfig ? (
-                  <Skeleton className="h-5 w-5 rounded-full mt-0.5" />
-                ) : trainingLocationsConfigured ? (
-                  <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                ) : (
-                  <XCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-                )}
-                <div>
-                  <div className="font-medium">Training Locations</div>
-                  <div className="text-sm text-muted-foreground">
-                    Add at least one training location in Organization settings
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-2">
-                {isLoadingConfig ? (
-                  <Skeleton className="h-5 w-5 rounded-full mt-0.5" />
-                ) : gameLocationsConfigured ? (
-                  <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                ) : (
-                  <XCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-                )}
-                <div>
-                  <div className="font-medium">Game Locations</div>
-                  <div className="text-sm text-muted-foreground">
-                    Add at least one game location in Organization settings
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-2">
-                <XCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-                <div>
-                  <div className="font-medium">Season Creation</div>
-                  <div className="text-sm text-muted-foreground">
-                    Create at least one season to define the date range and
-                    teams for your schedule
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <Alert variant="destructive" className="mb-6">
+            <Alert variant="default" className="mb-6">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Configuration Required</AlertTitle>
+              <AlertTitle>Getting Started</AlertTitle>
               <AlertDescription>
-                Complete the organization setup before creating your first
-                season and scheduling events.
+                Create your first season to start managing your schedule. You
+                can set up multiple seasons and switch between them at any time.
               </AlertDescription>
             </Alert>
 
-            <div className="flex gap-3">
-              <Button
-                onClick={() => {
-                  window.location.href = `/o/dashboard/settings/organization`;
-                }}
-                variant="default"
-              >
-                <Cog className="h-4 w-4 mr-2" />
-                Organization Settings
-              </Button>
-
-              <Button
-                onClick={() => {
-                  window.location.href = `/o/dashboard/settings/seasons`;
-                }}
-                variant="outline"
-                disabled={!teamManagementConfigComplete}
-              >
+            <Link href="/o/dashboard/settings/seasons">
+              <Button size="lg">
                 <Plus className="h-4 w-4 mr-2" />
-                Create Season
+                Create Your First Season
               </Button>
-            </div>
+            </Link>
           </div>
         </Card>
       </div>
@@ -542,6 +424,42 @@ export default function CalendarPage({ params }: PageProps) {
                 />
               </TabsContent>
             </Tabs>
+          )}
+        </>
+      </ResponsiveSheet>
+
+      {/* Edit Training dialog */}
+      <ResponsiveSheet
+        isOpen={isEditFormOpen}
+        setIsOpen={(open) => {
+          setIsEditFormOpen(open);
+          if (!open) setEditingTrainingId(null);
+        }}
+        title="Edit Training"
+      >
+        <>
+          {isLoadingTenantData ||
+          !tenant ||
+          !selectedSeason ||
+          !editingTraining ? (
+            <div className="space-y-4">
+              <Skeleton className="h-8 w-[250px]" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-10 w-[120px] mt-4" />
+            </div>
+          ) : (
+            <EditTrainingForm
+              tenantId={tenant.id.toString()}
+              domain={params.domain}
+              selectedSeason={selectedSeason}
+              tenant={tenant}
+              setIsOpen={setIsEditFormOpen}
+              trainingToEdit={editingTraining}
+              trainingId={editingTrainingId}
+            />
           )}
         </>
       </ResponsiveSheet>

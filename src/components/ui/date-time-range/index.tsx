@@ -1,5 +1,14 @@
-import React, { useState, useEffect } from "react";
-import { format, addHours, isValid, isBefore, parse } from "date-fns";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import {
+  format,
+  addHours,
+  addMinutes,
+  isValid,
+  isBefore,
+  parse,
+  isAfter,
+  isSameDay,
+} from "date-fns";
 import { Calendar as CalendarIcon, Clock, ChevronDown, X } from "lucide-react";
 import { cn } from "@/libs/tailwind/utils";
 import { Alert, AlertDescription } from "../alert";
@@ -8,6 +17,7 @@ import { Skeleton } from "../skeleton";
 import { Calendar as CalendarComponent } from "../calendar";
 import { Label } from "../label";
 import { Input } from "../input";
+import { Switch } from "../switch";
 import {
   Accordion,
   AccordionContent,
@@ -22,6 +32,18 @@ import {
   SelectValue,
 } from "../select";
 
+type DurationPreset = {
+  label: string;
+  minutes: number;
+};
+
+const DURATION_PRESETS: DurationPreset[] = [
+  { label: "30m", minutes: 30 },
+  { label: "1h", minutes: 60 },
+  { label: "1.5h", minutes: 90 },
+  { label: "2h", minutes: 120 },
+];
+
 export interface DateTimeRangeProps {
   startDate?: Date;
   endDate?: Date;
@@ -33,6 +55,7 @@ export interface DateTimeRangeProps {
   error?: string;
   showDuration?: boolean;
   presetRanges?: { label: string; start: Date; end: Date }[];
+  defaultIsMultiDay?: boolean;
 }
 
 export function DateTimeRange({
@@ -46,29 +69,30 @@ export function DateTimeRange({
   error,
   showDuration = false,
   presetRanges,
+  defaultIsMultiDay = false,
 }: DateTimeRangeProps) {
+  const isInternalChange = useRef(false);
+
   const [localStartDate, setLocalStartDate] = useState<Date | undefined>(
     startDate
   );
   const [localEndDate, setLocalEndDate] = useState<Date | undefined>(endDate);
-  const [validationError, setValidationError] = useState<string | undefined>(
-    error
+  const [isMultiDay, setIsMultiDay] = useState<boolean>(
+    defaultIsMultiDay ||
+      (startDate && endDate && !isSameDay(startDate, endDate))
   );
 
-  // State for accordion open status
+  const [selectedDuration, setSelectedDuration] = useState<string | null>(null);
   const [accordionValue, setAccordionValue] = useState<string | undefined>(
     undefined
   );
 
-  // State for date picker
   const [startPickerMonth, setStartPickerMonth] = useState<Date>(
     startDate || new Date()
   );
   const [endPickerMonth, setEndPickerMonth] = useState<Date>(
     endDate || new Date()
   );
-
-  // State for time picker
   const [startPickerTime, setStartPickerTime] = useState<string>(
     format(startDate || new Date(), "HH:mm")
   );
@@ -76,8 +100,11 @@ export function DateTimeRange({
     format(endDate || addHours(new Date(), 1), "HH:mm")
   );
 
-  // Update local state when props change
   useEffect(() => {
+    if (isInternalChange.current) {
+      return;
+    }
+
     if (startDate) {
       setLocalStartDate(startDate);
       setStartPickerMonth(startDate);
@@ -88,57 +115,132 @@ export function DateTimeRange({
       setEndPickerMonth(endDate);
       setEndPickerTime(format(endDate, "HH:mm"));
     }
+
+    if (startDate && endDate && !isSameDay(startDate, endDate)) {
+      setIsMultiDay(true);
+    }
   }, [startDate, endDate]);
 
-  // Validate dates
+  const validationError = useMemo(() => {
+    if (localStartDate && localEndDate) {
+      if (isMultiDay) {
+        if (isBefore(localEndDate, localStartDate)) {
+          return "End date/time cannot be before start date/time";
+        }
+      } else {
+        const startTime = new Date(localStartDate);
+        const endTime = new Date(localEndDate);
+
+        if (
+          endTime.getHours() < startTime.getHours() ||
+          (endTime.getHours() === startTime.getHours() &&
+            endTime.getMinutes() < startTime.getMinutes())
+        ) {
+          return "End time cannot be before start time";
+        }
+      }
+    }
+    return error;
+  }, [localStartDate, localEndDate, isMultiDay, error]);
+
   useEffect(() => {
     if (localStartDate && localEndDate) {
-      if (isBefore(localEndDate, localStartDate)) {
-        setValidationError("End date/time cannot be before start date/time");
-      } else {
-        setValidationError(undefined);
-      }
-    } else {
-      setValidationError(error);
-    }
-  }, [localStartDate, localEndDate, error]);
+      const diff = Math.abs(localEndDate.getTime() - localStartDate.getTime());
+      const minutes = Math.floor(diff / (1000 * 60));
 
-  // Handle calendar selection
+      const matchedPreset = DURATION_PRESETS.find(
+        (preset) => preset.minutes === minutes
+      );
+
+      if (selectedDuration !== (matchedPreset ? matchedPreset.label : null)) {
+        setSelectedDuration(matchedPreset ? matchedPreset.label : null);
+      }
+    }
+  }, [localStartDate, localEndDate, selectedDuration]);
+
+  const duration = useMemo(() => {
+    if (!localStartDate || !localEndDate) return "";
+    return calculateDuration(localStartDate, localEndDate);
+  }, [localStartDate, localEndDate]);
+
   const handleStartCalendarSelect = (date: Date | undefined) => {
     if (date && localStartDate) {
-      // Keep the same time
-      const [hours, minutes] = startPickerTime.split(":").map(Number);
-      date.setHours(hours, minutes);
+      isInternalChange.current = true;
 
-      setLocalStartDate(date);
-      onStartDateChange?.(date);
+      const newDate = createDateWithTime(date, startPickerTime);
+      setLocalStartDate(newDate);
+      onStartDateChange?.(newDate);
+
+      if (!isMultiDay && localEndDate) {
+        const endDate = createDateWithTime(newDate, endPickerTime);
+
+        if (isAfter(endDate, newDate)) {
+          setLocalEndDate(endDate);
+          onEndDateChange?.(endDate);
+        } else {
+          const adjustedEndDate = addHours(new Date(newDate), 1);
+          setLocalEndDate(adjustedEndDate);
+          setEndPickerTime(format(adjustedEndDate, "HH:mm"));
+          onEndDateChange?.(adjustedEndDate);
+        }
+      } else if (isMultiDay && localEndDate) {
+        if (
+          isAfter(newDate, localEndDate) ||
+          isSameDay(newDate, localEndDate)
+        ) {
+          const nextDay = createNextDayDate(newDate);
+          nextDay.setHours(localEndDate.getHours(), localEndDate.getMinutes());
+
+          setLocalEndDate(nextDay);
+          setEndPickerMonth(nextDay);
+          onEndDateChange?.(nextDay);
+        }
+      }
+      setTimeout(() => {
+        isInternalChange.current = false;
+      }, 100);
     }
   };
 
   const handleEndCalendarSelect = (date: Date | undefined) => {
     if (date && localEndDate) {
-      // Keep the same time
-      const [hours, minutes] = endPickerTime.split(":").map(Number);
-      date.setHours(hours, minutes);
+      isInternalChange.current = true;
 
-      setLocalEndDate(date);
-      onEndDateChange?.(date);
+      const newDate = createDateWithTime(date, endPickerTime);
+
+      setLocalEndDate(newDate);
+      onEndDateChange?.(newDate);
+
+      setTimeout(() => {
+        isInternalChange.current = false;
+      }, 100);
     }
   };
 
-  // Handle time changes
   const handleStartTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const timeValue = e.target.value;
     setStartPickerTime(timeValue);
 
     if (localStartDate) {
-      const [hours, minutes] = timeValue.split(":").map(Number);
-      if (!isNaN(hours) && !isNaN(minutes)) {
-        const newDate = new Date(localStartDate);
-        newDate.setHours(hours, minutes);
-        setLocalStartDate(newDate);
-        onStartDateChange?.(newDate);
+      isInternalChange.current = true;
+
+      const newDate = createDateWithTime(localStartDate, timeValue);
+      setLocalStartDate(newDate);
+      onStartDateChange?.(newDate);
+
+      if (!isMultiDay && localEndDate) {
+        const endTime = new Date(localEndDate);
+        if (isBefore(endTime, newDate)) {
+          const adjustedEndDate = addHours(new Date(newDate), 1);
+          setLocalEndDate(adjustedEndDate);
+          setEndPickerTime(format(adjustedEndDate, "HH:mm"));
+          onEndDateChange?.(adjustedEndDate);
+        }
       }
+
+      setTimeout(() => {
+        isInternalChange.current = false;
+      }, 100);
     }
   };
 
@@ -147,17 +249,31 @@ export function DateTimeRange({
     setEndPickerTime(timeValue);
 
     if (localEndDate) {
-      const [hours, minutes] = timeValue.split(":").map(Number);
-      if (!isNaN(hours) && !isNaN(minutes)) {
-        const newDate = new Date(localEndDate);
-        newDate.setHours(hours, minutes);
-        setLocalEndDate(newDate);
-        onEndDateChange?.(newDate);
+      isInternalChange.current = true;
+
+      const newDate = createDateWithTime(localEndDate, timeValue);
+
+      if (!isMultiDay && localStartDate) {
+        newDate.setFullYear(
+          localStartDate.getFullYear(),
+          localStartDate.getMonth(),
+          localStartDate.getDate()
+        );
       }
+
+      setLocalEndDate(newDate);
+      onEndDateChange?.(newDate);
+
+      setTimeout(() => {
+        isInternalChange.current = false;
+      }, 100);
     }
   };
 
-  // Handle accordion toggle
+  const handleAccordionChange = (value: string) => {
+    setAccordionValue(value);
+  };
+
   const toggleStartAccordion = () => {
     if (disabled) return;
     setAccordionValue(
@@ -170,13 +286,11 @@ export function DateTimeRange({
     setAccordionValue(accordionValue === "end-date" ? undefined : "end-date");
   };
 
-  // Handle accordion change
-  const handleAccordionChange = (value: string) => {
-    setAccordionValue(value);
-  };
+  // ===== Preset Handlers =====
 
-  // Apply preset range
   const applyPresetRange = (start: Date, end: Date) => {
+    isInternalChange.current = true;
+
     setLocalStartDate(start);
     setLocalEndDate(end);
     setStartPickerMonth(start);
@@ -185,31 +299,71 @@ export function DateTimeRange({
     setEndPickerTime(format(end, "HH:mm"));
     onStartDateChange?.(start);
     onEndDateChange?.(end);
+
+    setIsMultiDay(!isSameDay(start, end));
+
+    setTimeout(() => {
+      isInternalChange.current = false;
+    }, 100);
   };
 
-  // Clear dates
-  const clearDates = () => {
-    setLocalStartDate(undefined);
-    setLocalEndDate(undefined);
-    setStartPickerTime("");
-    setEndPickerTime("");
-    onStartDateChange?.(undefined);
-    onEndDateChange?.(undefined);
-  };
+  const applyDurationPreset = (preset: DurationPreset) => {
+    if (localStartDate) {
+      isInternalChange.current = true;
 
-  // Calculate duration
-  const getDuration = () => {
-    if (!localStartDate || !localEndDate) return "";
+      const newEndDate = addMinutes(new Date(localStartDate), preset.minutes);
+      setLocalEndDate(newEndDate);
+      setEndPickerTime(format(newEndDate, "HH:mm"));
+      onEndDateChange?.(newEndDate);
+      setSelectedDuration(preset.label);
 
-    const diff = Math.abs(localEndDate.getTime() - localStartDate.getTime());
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-    if (hours > 0) {
-      return `${hours}h ${minutes > 0 ? `${minutes}m` : ""}`;
+      // Reset the flag after a short delay
+      setTimeout(() => {
+        isInternalChange.current = false;
+      }, 100);
     }
-    return `${minutes}m`;
   };
+
+  // ===== Multi-day Mode Handler =====
+
+  const handleMultiDayToggle = (checked: boolean) => {
+    setIsMultiDay(checked);
+
+    isInternalChange.current = true;
+
+    if (!checked && localStartDate && localEndDate) {
+      const endDate = createDateWithTime(localStartDate, endPickerTime);
+
+      if (isBefore(endDate, localStartDate)) {
+        const adjustedEndDate = addHours(new Date(localStartDate), 1);
+        setLocalEndDate(adjustedEndDate);
+        setEndPickerTime(format(adjustedEndDate, "HH:mm"));
+        onEndDateChange?.(adjustedEndDate);
+      } else {
+        setLocalEndDate(endDate);
+        onEndDateChange?.(endDate);
+      }
+    } else if (checked && localStartDate) {
+      const nextDay = createNextDayDate(localStartDate);
+      const formattedTime = format(nextDay, "HH:mm");
+
+      setLocalEndDate(nextDay);
+      setEndPickerMonth(nextDay);
+      setEndPickerTime(formattedTime);
+      onEndDateChange?.(nextDay);
+
+      if (accordionValue === "end-date") {
+        setAccordionValue(undefined);
+        setTimeout(() => setAccordionValue("end-date"), 0);
+      }
+    }
+
+    setTimeout(() => {
+      isInternalChange.current = false;
+    }, 100);
+  };
+
+  // ===== Rendering Logic =====
 
   if (isLoading) {
     return (
@@ -236,7 +390,7 @@ export function DateTimeRange({
           </Label>
           {showDuration && localStartDate && localEndDate && (
             <span className="text-xs text-muted-foreground">
-              Duration: {getDuration()}
+              Duration: {duration}
             </span>
           )}
         </div>
@@ -286,59 +440,77 @@ export function DateTimeRange({
             </div>
             <AccordionContent className="pt-3">
               <div className="rounded-md border bg-card shadow-sm">
-                <div className="p-4 pb-0">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Select
-                      value={startPickerMonth.getFullYear().toString()}
-                      onValueChange={(year) => {
-                        const newDate = new Date(startPickerMonth);
-                        newDate.setFullYear(parseInt(year));
-                        setStartPickerMonth(newDate);
-                      }}
-                    >
-                      <SelectTrigger className="w-[120px]">
-                        <SelectValue placeholder="Year" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from(
-                          {
-                            length: new Date().getFullYear() + 5 - 1940 + 1,
-                          },
-                          (_, i) => (
-                            <SelectItem
-                              key={new Date().getFullYear() + 5 - i}
-                              value={(
-                                new Date().getFullYear() +
-                                5 -
-                                i
-                              ).toString()}
-                            >
-                              {new Date().getFullYear() + 5 - i}
-                            </SelectItem>
-                          )
-                        )}
-                      </SelectContent>
-                    </Select>
+                <div className="p-4 pb-3">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <Select
+                        value={startPickerMonth.getFullYear().toString()}
+                        onValueChange={(year) => {
+                          const newDate = new Date(startPickerMonth);
+                          newDate.setFullYear(parseInt(year));
+                          setStartPickerMonth(newDate);
+                        }}
+                      >
+                        <SelectTrigger className="w-[120px]">
+                          <SelectValue placeholder="Year" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from(
+                            {
+                              length: new Date().getFullYear() + 5 - 1940 + 1,
+                            },
+                            (_, i) => (
+                              <SelectItem
+                                key={new Date().getFullYear() + 5 - i}
+                                value={(
+                                  new Date().getFullYear() +
+                                  5 -
+                                  i
+                                ).toString()}
+                              >
+                                {new Date().getFullYear() + 5 - i}
+                              </SelectItem>
+                            )
+                          )}
+                        </SelectContent>
+                      </Select>
 
-                    <Select
-                      value={startPickerMonth.getMonth().toString()}
-                      onValueChange={(monthStr) => {
-                        const newDate = new Date(startPickerMonth);
-                        newDate.setMonth(parseInt(monthStr));
-                        setStartPickerMonth(newDate);
-                      }}
-                    >
-                      <SelectTrigger className="w-[140px]">
-                        <SelectValue placeholder="Month" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from({ length: 12 }, (_, i) => (
-                          <SelectItem key={i} value={i.toString()}>
-                            {format(new Date(2000, i, 1), "MMMM")}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      <Select
+                        value={startPickerMonth.getMonth().toString()}
+                        onValueChange={(monthStr) => {
+                          const newDate = new Date(startPickerMonth);
+                          newDate.setMonth(parseInt(monthStr));
+                          setStartPickerMonth(newDate);
+                        }}
+                      >
+                        <SelectTrigger className="w-[140px]">
+                          <SelectValue placeholder="Month" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 12 }, (_, i) => (
+                            <SelectItem key={i} value={i.toString()}>
+                              {format(new Date(2000, i, 1), "MMMM")}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Multi-day Toggle - moved inside calendar header */}
+                    <div className="flex items-center gap-2">
+                      <Label
+                        htmlFor="multi-day-toggle"
+                        className="text-sm font-medium cursor-pointer whitespace-nowrap"
+                      >
+                        Multi-day event
+                      </Label>
+                      <Switch
+                        id="multi-day-toggle"
+                        checked={isMultiDay}
+                        onCheckedChange={handleMultiDayToggle}
+                        disabled={disabled}
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -354,12 +526,13 @@ export function DateTimeRange({
                     />
                   </div>
                   <div className="md:col-span-2 flex flex-col justify-start md:border-l md:pl-4">
+                    {/* Start Time Input */}
                     <div className="mb-4">
                       <Label
                         htmlFor="start-time-picker"
                         className="text-sm font-medium block mb-2"
                       >
-                        Time
+                        Start Time
                       </Label>
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-muted-foreground" />
@@ -375,6 +548,60 @@ export function DateTimeRange({
                         />
                       </div>
                     </div>
+
+                    {/* End Time Input for Single Day Events */}
+                    {!isMultiDay && (
+                      <div className="mb-4">
+                        <Label
+                          htmlFor="end-time-picker-single"
+                          className="text-sm font-medium block mb-2"
+                        >
+                          End Time
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                          <input
+                            id="end-time-picker-single"
+                            type="time"
+                            value={endPickerTime}
+                            onChange={handleEndTimeChange}
+                            className={cn(
+                              "flex-1 h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+                              validationError && "border-red-500"
+                            )}
+                            disabled={disabled}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Duration presets for single-day events */}
+                    {!isMultiDay && (
+                      <div className="mt-2">
+                        <Label className="text-sm font-medium block mb-2">
+                          Duration
+                        </Label>
+                        <div className="flex flex-wrap gap-2">
+                          {DURATION_PRESETS.map((preset) => (
+                            <Button
+                              type="button"
+                              key={preset.label}
+                              size="sm"
+                              variant={
+                                selectedDuration === preset.label
+                                  ? "default"
+                                  : "outline"
+                              }
+                              onClick={() => applyDurationPreset(preset)}
+                              disabled={disabled || !localStartDate}
+                              className="flex-1 min-w-[60px]"
+                            >
+                              {preset.label}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -383,153 +610,161 @@ export function DateTimeRange({
         </Accordion>
       </div>
 
-      {/* End Date/Time Row */}
-      <div className="space-y-2">
-        <Label htmlFor="end-date" className="text-sm font-medium">
-          End
-        </Label>
+      {/* End Date/Time Row - Only shown for multi-day events */}
+      {isMultiDay && (
+        <div className="space-y-2">
+          <Label htmlFor="end-date" className="text-sm font-medium">
+            End
+          </Label>
 
-        <Accordion
-          type="single"
-          collapsible
-          value={accordionValue}
-          onValueChange={handleAccordionChange}
-          className="border-0"
-        >
-          <AccordionItem value="end-date" className="border-0">
-            <div onClick={toggleEndAccordion} className="relative">
-              <div
-                className={cn(
-                  "group flex items-center justify-between h-10 w-full px-3 py-2 bg-background text-sm rounded-md border border-input",
-                  validationError && "border-red-500",
-                  disabled && "opacity-50 cursor-not-allowed",
-                  !disabled && "cursor-pointer hover:border-primary"
-                )}
-              >
-                <div className="flex items-center space-x-2">
-                  <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                  <span
-                    className={!localEndDate ? "text-muted-foreground" : ""}
-                  >
-                    {localEndDate
-                      ? format(localEndDate, "dd MMM yyyy")
-                      : "Pick a date"}
-                  </span>
-                  {localEndDate && (
-                    <>
-                      <span className="text-muted-foreground mx-1">at</span>
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      <span>{format(localEndDate, "HH:mm")}</span>
-                    </>
-                  )}
-                </div>
-                <ChevronDown
+          <Accordion
+            type="single"
+            collapsible
+            value={accordionValue}
+            onValueChange={handleAccordionChange}
+            className="border-0"
+          >
+            <AccordionItem value="end-date" className="border-0">
+              <div onClick={toggleEndAccordion} className="relative">
+                <div
                   className={cn(
-                    "h-4 w-4 text-muted-foreground transition-transform duration-200",
-                    accordionValue === "end-date" && "transform rotate-180"
+                    "group flex items-center justify-between h-10 w-full px-3 py-2 bg-background text-sm rounded-md border border-input",
+                    validationError && "border-red-500",
+                    disabled && "opacity-50 cursor-not-allowed",
+                    !disabled && "cursor-pointer hover:border-primary"
                   )}
-                />
-              </div>
-              <AccordionTrigger className="hidden" />
-            </div>
-            <AccordionContent className="pt-3">
-              <div className="rounded-md border bg-card shadow-sm">
-                <div className="p-4 pb-0">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Select
-                      value={endPickerMonth.getFullYear().toString()}
-                      onValueChange={(year) => {
-                        const newDate = new Date(endPickerMonth);
-                        newDate.setFullYear(parseInt(year));
-                        setEndPickerMonth(newDate);
-                      }}
+                >
+                  <div className="flex items-center space-x-2">
+                    <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                    <span
+                      className={!localEndDate ? "text-muted-foreground" : ""}
                     >
-                      <SelectTrigger className="w-[120px]">
-                        <SelectValue placeholder="Year" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from(
-                          {
-                            length: new Date().getFullYear() + 5 - 1940 + 1,
-                          },
-                          (_, i) => (
-                            <SelectItem
-                              key={new Date().getFullYear() + 5 - i}
-                              value={(
-                                new Date().getFullYear() +
-                                5 -
-                                i
-                              ).toString()}
-                            >
-                              {new Date().getFullYear() + 5 - i}
-                            </SelectItem>
-                          )
-                        )}
-                      </SelectContent>
-                    </Select>
-
-                    <Select
-                      value={endPickerMonth.getMonth().toString()}
-                      onValueChange={(monthStr) => {
-                        const newDate = new Date(endPickerMonth);
-                        newDate.setMonth(parseInt(monthStr));
-                        setEndPickerMonth(newDate);
-                      }}
-                    >
-                      <SelectTrigger className="w-[140px]">
-                        <SelectValue placeholder="Month" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from({ length: 12 }, (_, i) => (
-                          <SelectItem key={i} value={i.toString()}>
-                            {format(new Date(2000, i, 1), "MMMM")}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="p-4 pt-0 grid grid-cols-1 md:grid-cols-7 gap-4">
-                  <div className="md:col-span-5">
-                    <CalendarComponent
-                      mode="single"
-                      selected={localEndDate}
-                      onSelect={handleEndCalendarSelect}
-                      month={endPickerMonth}
-                      onMonthChange={setEndPickerMonth}
-                      className="rounded"
-                    />
-                  </div>
-                  <div className="md:col-span-2 flex flex-col justify-start md:border-l md:pl-4">
-                    <div className="mb-4">
-                      <Label
-                        htmlFor="end-time-picker"
-                        className="text-sm font-medium block mb-2"
-                      >
-                        Time
-                      </Label>
-                      <div className="flex items-center gap-2">
+                      {localEndDate
+                        ? format(localEndDate, "dd MMM yyyy")
+                        : "Pick a date"}
+                    </span>
+                    {localEndDate && (
+                      <>
+                        <span className="text-muted-foreground mx-1">at</span>
                         <Clock className="h-4 w-4 text-muted-foreground" />
-                        <input
-                          id="end-time-picker"
-                          type="time"
-                          value={endPickerTime}
-                          onChange={handleEndTimeChange}
-                          className={cn(
-                            "flex-1 h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        <span>{format(localEndDate, "HH:mm")}</span>
+                      </>
+                    )}
+                  </div>
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 text-muted-foreground transition-transform duration-200",
+                      accordionValue === "end-date" && "transform rotate-180"
+                    )}
+                  />
+                </div>
+                <AccordionTrigger className="hidden" />
+              </div>
+              <AccordionContent className="pt-3">
+                <div className="rounded-md border bg-card shadow-sm">
+                  <div className="p-4 pb-0">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Select
+                        value={endPickerMonth.getFullYear().toString()}
+                        onValueChange={(year) => {
+                          const newDate = new Date(endPickerMonth);
+                          newDate.setFullYear(parseInt(year));
+                          setEndPickerMonth(newDate);
+                        }}
+                      >
+                        <SelectTrigger className="w-[120px]">
+                          <SelectValue placeholder="Year" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from(
+                            {
+                              length: new Date().getFullYear() + 5 - 1940 + 1,
+                            },
+                            (_, i) => (
+                              <SelectItem
+                                key={new Date().getFullYear() + 5 - i}
+                                value={(
+                                  new Date().getFullYear() +
+                                  5 -
+                                  i
+                                ).toString()}
+                              >
+                                {new Date().getFullYear() + 5 - i}
+                              </SelectItem>
+                            )
                           )}
-                          disabled={disabled}
-                        />
+                        </SelectContent>
+                      </Select>
+
+                      <Select
+                        value={endPickerMonth.getMonth().toString()}
+                        onValueChange={(monthStr) => {
+                          const newDate = new Date(endPickerMonth);
+                          newDate.setMonth(parseInt(monthStr));
+                          setEndPickerMonth(newDate);
+                        }}
+                      >
+                        <SelectTrigger className="w-[140px]">
+                          <SelectValue placeholder="Month" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 12 }, (_, i) => (
+                            <SelectItem key={i} value={i.toString()}>
+                              {format(new Date(2000, i, 1), "MMMM")}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="p-4 pt-0 grid grid-cols-1 md:grid-cols-7 gap-4">
+                    <div className="md:col-span-5">
+                      <CalendarComponent
+                        mode="single"
+                        selected={localEndDate}
+                        onSelect={handleEndCalendarSelect}
+                        month={endPickerMonth}
+                        onMonthChange={setEndPickerMonth}
+                        className="rounded"
+                        fromDate={
+                          isMultiDay && localStartDate
+                            ? localStartDate
+                            : undefined
+                        }
+                        disabled={disabled}
+                      />
+                    </div>
+                    <div className="md:col-span-2 flex flex-col justify-start md:border-l md:pl-4">
+                      <div className="mb-4">
+                        <Label
+                          htmlFor="end-time-picker"
+                          className="text-sm font-medium block mb-2"
+                        >
+                          Time
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                          <input
+                            id="end-time-picker"
+                            type="time"
+                            value={endPickerTime}
+                            onChange={handleEndTimeChange}
+                            className={cn(
+                              "flex-1 h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            )}
+                            disabled={disabled}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
+      )}
 
       {/* Validation Error Message */}
       {validationError && (

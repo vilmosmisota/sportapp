@@ -4,6 +4,11 @@ import {
   isAfter,
   isBefore,
   isWithinInterval,
+  startOfDay,
+  endOfDay,
+  endOfWeek,
+  startOfWeek,
+  addMinutes,
 } from "date-fns";
 import { CalendarEvent } from "./EventCalendar";
 import { EventColors } from "./types";
@@ -145,3 +150,29 @@ export const generateTimeSlots = (
   }
   return slots;
 };
+
+/**
+ * Merges filtered events with their updated versions from allEvents
+ * This ensures filtered events contain the most up-to-date data
+ *
+ * @param filteredEvents - The currently filtered events
+ * @param allEvents - All available events (source of truth)
+ * @returns Updated filtered events with fresh data
+ */
+export function mergeFilteredWithUpdatedEvents(
+  filteredEvents: CalendarEvent[],
+  allEvents: CalendarEvent[]
+): CalendarEvent[] {
+  if (!filteredEvents || filteredEvents.length === 0) {
+    return allEvents;
+  }
+
+  if (!allEvents || allEvents.length === 0) {
+    return filteredEvents;
+  }
+
+  return filteredEvents.map((filteredEvent) => {
+    const updatedEvent = allEvents.find((e) => e.id === filteredEvent.id);
+    return updatedEvent || filteredEvent;
+  });
+}

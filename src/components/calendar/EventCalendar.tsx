@@ -75,6 +75,8 @@ export function EventCalendar({
     startOfWeek(currentDate)
   );
 
+  console.log("events from calendar", events);
+
   // Calculate date range based on current view and date
   const calculateDateRange = useCallback(
     (date: Date, viewType: CalendarViewType) => {

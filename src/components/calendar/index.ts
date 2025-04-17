@@ -1,9 +1,20 @@
-export { EventCalendar, type CalendarEvent } from "./EventCalendar";
-export { EventDetailsDialog } from "./EventDetailsDialog";
-export { MonthView } from "./MonthView";
-export { WeekView } from "./WeekView";
-export { AgendaView } from "./AgendaView";
-export { EventItem } from "./EventItem";
-export { DayView } from "./DayView";
-export { type CalendarViewType } from "./types";
-export { CalendarHeader } from "./CalendarHeader";
+// Components
+export * from "./CalendarContainer";
+export * from "./EventCalendar";
+export * from "./MonthView";
+export * from "./WeekView";
+export * from "./DayView";
+export * from "./AgendaView";
+export * from "./CalendarHeader";
+export * from "./EventDetailsDialog";
+export * from "./CalendarEventCard";
+
+// Types
+export * from "./types";
+
+// Hooks
+export * from "./hooks";
+
+// Utilities
+export * from "./utils";
+export * from "./event-item-utils";
