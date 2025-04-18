@@ -9,6 +9,7 @@ import ProfileContent from "./tabs/ProfileContent";
 import GroupTypesContent from "./tabs/GroupTypesContent";
 import TrainingSettingsContent from "./tabs/TrainingSettingsContent";
 import GameSettingsContent from "./tabs/GameSettingsContent";
+import PlayerManagementContent from "./tabs/PlayerManagementContent";
 
 export default function OrganizationDetailPage({
   params,
@@ -21,8 +22,13 @@ export default function OrganizationDetailPage({
   const isTeamManagementConfigComplete = Boolean(
     tenant?.groupTypes &&
       tenant.groupTypes.ageGroups?.length > 0 &&
-      tenant.groupTypes.skillLevels?.length > 0 &&
-      tenant.groupTypes.positions?.length > 0
+      tenant.groupTypes.skillLevels?.length > 0
+  );
+
+  // Check if player positions are configured (but not required)
+  const hasPlayerPositions = Boolean(
+    tenant?.playerSettings?.positions &&
+      tenant.playerSettings.positions.length > 0
   );
 
   // Check if training locations are configured
@@ -63,6 +69,12 @@ export default function OrganizationDetailPage({
                   Team Management
                 </TabsTrigger>
                 <TabsTrigger
+                  value="player-management"
+                  className="text-sm relative"
+                >
+                  Player Management
+                </TabsTrigger>
+                <TabsTrigger
                   value="training-settings"
                   className={cn(
                     "text-sm relative",
@@ -97,6 +109,9 @@ export default function OrganizationDetailPage({
             </TabsContent>
             <TabsContent value="group-types">
               <GroupTypesContent tenant={tenant} domain={params.domain} />
+            </TabsContent>
+            <TabsContent value="player-management">
+              <PlayerManagementContent tenant={tenant} domain={params.domain} />
             </TabsContent>
             <TabsContent value="training-settings">
               <TrainingSettingsContent tenant={tenant} domain={params.domain} />

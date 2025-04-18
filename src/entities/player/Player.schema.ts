@@ -85,7 +85,7 @@ export const createPlayerFormSchema = () =>
     gender: z.nativeEnum(PlayerGender, {
       required_error: "Gender is required",
     }),
-    position: z.string().min(1, "Position is required"),
+    position: z.string().optional(),
     teamIds: z.array(z.number()).default([]),
     parentUserIds: z.array(z.string().uuid()).default([]),
     ownerUserId: z.string().uuid().optional(),

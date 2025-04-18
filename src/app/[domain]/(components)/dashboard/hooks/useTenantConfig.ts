@@ -8,8 +8,7 @@ export function useTenantConfig(domain: string) {
   const teamManagementConfigComplete = Boolean(
     tenant?.groupTypes &&
       tenant.groupTypes.ageGroups?.length > 0 &&
-      tenant.groupTypes.skillLevels?.length > 0 &&
-      tenant.groupTypes.positions?.length > 0
+      tenant.groupTypes.skillLevels?.length > 0
   );
 
   // Check if training locations are configured

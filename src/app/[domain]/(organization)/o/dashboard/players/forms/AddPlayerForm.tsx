@@ -64,6 +64,7 @@ import {
 } from "@/entities/team/Team.schema";
 import { usePlayerUsers } from "@/entities/user/hooks/usePlayerUsers";
 import { DateInput } from "@/components/ui/date-input/DateInput";
+import { usePlayerSettings } from "../../../../../../../entities/tenant/hooks/usePlayerSettings";
 
 type AddPlayerFormProps = {
   tenantId: string;
@@ -128,10 +129,10 @@ export default function AddPlayerForm({
   const addPlayer = useAddPlayer(tenantId);
   const { data: teams } = useGetTeamsByTenantId(tenantId);
   const { data: existingPlayers } = usePlayers(tenantId);
-  const { ageGroups, skillLevels, positions } = useTenantGroupTypes(domain);
   const { data: parentUsers } = useParentUsers(tenantId);
   const { data: playerUsers } = usePlayerUsers(tenantId);
-
+  const playerSettings = usePlayerSettings(domain);
+  const positions = playerSettings?.positions || [];
   const form = useForm<PlayerForm>({
     resolver: zodResolver(createPlayerFormSchema()),
     defaultValues: {
@@ -170,7 +171,7 @@ export default function AddPlayerForm({
     const available: Team[] = [];
 
     const hasRequiredDetails = Boolean(
-      firstName && lastName && gender && position
+      firstName && lastName && gender && (positions.length === 0 || position)
     );
 
     if (hasRequiredDetails) {
@@ -413,33 +414,35 @@ export default function AddPlayerForm({
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="position"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Position *</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select position" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {positions.map((position) => (
-                                <SelectItem key={position} value={position}>
-                                  {position}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    {positions.length > 0 && (
+                      <FormField
+                        control={form.control}
+                        name="position"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Position *</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select position" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {positions.map((position: string) => (
+                                  <SelectItem key={position} value={position}>
+                                    {position}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
 
                     <FormField
                       control={form.control}

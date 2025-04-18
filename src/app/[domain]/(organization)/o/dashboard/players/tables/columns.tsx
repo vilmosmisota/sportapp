@@ -6,34 +6,18 @@ import DataTableColumnHeader from "@/components/ui/data-table/DataTableColumnHea
 import { format, differenceInYears } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Eye, MoreVertical, SquarePen, Trash2, Users } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import Link from "next/link";
+
 import { useState } from "react";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  getDisplayGender,
-  getDisplayAgeGroup,
-} from "@/entities/team/Team.schema";
+
 import { MarsIcon, VenusIcon } from "@/components/icons/icons";
 import { PermissionDropdownMenu } from "@/components/auth/PermissionDropdownMenu";
 import { Permission } from "@/entities/role/Role.permissions";
@@ -96,6 +80,7 @@ interface PlayersTableColumnsProps {
   onDelete: (playerId: number) => void;
   onShowConnectedUsers: (player: Player) => void;
   domain: string;
+  showPositionColumn?: boolean;
 }
 
 interface PlayersTableActionsProps {
@@ -163,6 +148,7 @@ export const columns = ({
   onDelete,
   onShowConnectedUsers,
   domain,
+  showPositionColumn,
 }: PlayersTableColumnsProps): ColumnDef<Player>[] => [
   {
     accessorKey: "name",
@@ -286,25 +272,32 @@ export const columns = ({
     size: 90,
     maxSize: 100,
   },
-  {
-    accessorKey: "position",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Position" />
-    ),
-    cell: ({ row }) => {
-      return (
-        <div className="flex w-[100px]">
-          <Badge variant="secondary">{row.original.position}</Badge>
-        </div>
-      );
-    },
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id));
-    },
-    minSize: 80,
-    size: 100,
-    maxSize: 120,
-  },
+  ...(showPositionColumn
+    ? [
+        {
+          accessorKey: "position",
+          // @ts-ignore - Same pattern as other column headers
+          header: ({ column }) => (
+            <DataTableColumnHeader column={column} title="Position" />
+          ),
+          // @ts-ignore - Same pattern as other column cells
+          cell: ({ row }) => {
+            return (
+              <div className="flex w-[100px]">
+                <Badge variant="secondary">{row.original.position}</Badge>
+              </div>
+            );
+          },
+          // @ts-ignore - Same pattern as other column filter functions
+          filterFn: (row, id, value) => {
+            return value.includes(row.getValue(id));
+          },
+          minSize: 80,
+          size: 100,
+          maxSize: 120,
+        },
+      ]
+    : []),
   {
     id: "teams",
     header: ({ column }) => (

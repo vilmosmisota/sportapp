@@ -11,7 +11,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { columns } from "./columns";
 import { DataTablePagination } from "@/components/ui/data-table/DataTablePagination";
 import { PlayersTableToolbar } from "./PlayersTableToolbar";
@@ -22,6 +22,7 @@ import { DataTable } from "@/components/ui/data-table/DataTable";
 import { ErrorBoundary } from "../../../../../../../components/ui/error-boundary";
 import EditPlayerForm from "../forms/EditPlayerForm";
 import ConnectedUsersDialog from "./ConnectedUsersDialog";
+import { usePlayerSettings } from "../../../../../../../entities/tenant/hooks/usePlayerSettings";
 
 interface PlayersTableProps {
   players: Player[];
@@ -42,6 +43,9 @@ export default function PlayersTable({
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [isConnectedUsersOpen, setIsConnectedUsersOpen] = useState(false);
   const deletePlayer = useDeletePlayer(tenantId);
+  const playerSettings = usePlayerSettings(domain);
+  const positions = playerSettings?.positions || [];
+  const showPositionColumn = positions.length > 0;
 
   const handleEdit = useCallback((player: Player) => {
     setSelectedPlayer(player);
@@ -72,8 +76,15 @@ export default function PlayersTable({
         onDelete: handleDelete,
         onShowConnectedUsers: handleShowConnectedUsers,
         domain,
+        showPositionColumn,
       }),
-    [domain, handleDelete, handleShowConnectedUsers, handleEdit]
+    [
+      domain,
+      handleDelete,
+      handleShowConnectedUsers,
+      handleEdit,
+      showPositionColumn,
+    ]
   );
 
   const table = useReactTable({
@@ -98,6 +109,9 @@ export default function PlayersTable({
       columnPinning: {
         left: ["name"],
         right: ["actions"],
+      },
+      columnVisibility: {
+        position: showPositionColumn,
       },
     },
   });

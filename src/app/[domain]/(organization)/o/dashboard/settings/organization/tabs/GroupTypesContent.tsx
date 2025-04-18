@@ -26,11 +26,9 @@ export default function GroupTypesContent({
   // Get group types directly from tenant
   const ageGroups = tenant?.groupTypes?.ageGroups || [];
   const skillLevels = tenant?.groupTypes?.skillLevels || [];
-  const positions = tenant?.groupTypes?.positions || [];
 
   // Check if team management configuration is complete
-  const isConfigComplete =
-    ageGroups.length > 0 && skillLevels.length > 0 && positions.length > 0;
+  const isConfigComplete = ageGroups.length > 0 && skillLevels.length > 0;
 
   return (
     <div className="space-y-8">
@@ -41,9 +39,9 @@ export default function GroupTypesContent({
             Team Management Configuration Required
           </AlertTitle>
           <AlertDescription className="text-amber-700">
-            Please configure age groups, skill levels, and player positions to
-            enable team management features. This is required before you can
-            create teams, add players, or manage seasons.
+            Please configure age groups and skill levels to enable team
+            management features. This is required before you can create teams,
+            add players, or manage seasons.
           </AlertDescription>
         </Alert>
       )}
@@ -76,8 +74,8 @@ export default function GroupTypesContent({
           <div className="space-y-5">
             <div>
               <h3 className="text-sm font-medium text-muted-foreground">
-                Manage your organization&apos;s age groups, skill levels, and
-                player positions for teams
+                Manage your organization&apos;s age groups and skill levels for
+                teams
               </h3>
             </div>
 
@@ -149,45 +147,6 @@ export default function GroupTypesContent({
                           className="capitalize"
                         >
                           {level}
-                        </Badge>
-                      ))
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Player Positions Card */}
-              <Card
-                className={`border ${
-                  positions.length === 0 ? "border-amber-300" : ""
-                }`}
-              >
-                <CardHeader
-                  className={`py-2 px-4 ${
-                    positions.length === 0
-                      ? "bg-amber-50/50"
-                      : "bg-secondary/20"
-                  } border-b`}
-                >
-                  <CardTitle className="flex items-center gap-2 text-sm font-medium">
-                    <Layers className="h-4 w-4" />
-                    Player Positions
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4">
-                  <div className="flex flex-wrap gap-2">
-                    {positions.length === 0 ? (
-                      <p className="text-sm text-amber-600 font-medium">
-                        No positions defined - Required
-                      </p>
-                    ) : (
-                      positions.map((position) => (
-                        <Badge
-                          key={position}
-                          variant="secondary"
-                          className="capitalize"
-                        >
-                          {position}
                         </Badge>
                       ))
                     )}

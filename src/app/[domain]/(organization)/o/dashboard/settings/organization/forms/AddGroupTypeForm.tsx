@@ -37,7 +37,6 @@ const formSchema = z.object({
     })
   ),
   skillLevels: z.array(z.string().min(1, "Value is required")),
-  positions: z.array(z.string().min(1, "Value is required")),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -47,7 +46,7 @@ export default function AddGroupTypeForm({
   domain,
   setIsParentModalOpen,
 }: AddGroupTypeFormProps) {
-  const { ageGroups, skillLevels, positions } = useTenantGroupTypes(domain);
+  const { ageGroups, skillLevels } = useTenantGroupTypes(domain);
   const updateTenant = useUpdateTenant(
     tenant?.id.toString() ?? "",
     tenant?.domain ?? ""
@@ -71,7 +70,6 @@ export default function AddGroupTypeForm({
           })
         : [{ name: "", minAge: 0, maxAge: 0 }],
       skillLevels: skillLevels.length ? skillLevels : [""],
-      positions: positions.length ? positions : [""],
     },
   });
 
@@ -98,13 +96,6 @@ export default function AddGroupTypeForm({
           (value) =>
             value.charAt(0).toUpperCase() + value.slice(1).toLowerCase()
         ),
-      positions: data.positions
-        .filter(Boolean)
-        .map((value) => value.trim())
-        .map(
-          (value) =>
-            value.charAt(0).toUpperCase() + value.slice(1).toLowerCase()
-        ),
     };
 
     const updateData: TenantForm = {
@@ -114,8 +105,9 @@ export default function AddGroupTypeForm({
       sport: tenant.sport,
       membershipCurrency: tenant.membershipCurrency,
       lateThresholdMinutes: tenant.lateThresholdMinutes,
-      groupTypes,
+
       isPublicSitePublished: tenant.isPublicSitePublished,
+      playerSettings: tenant.playerSettings || undefined,
     };
 
     updateTenant.mutate(updateData, {
@@ -158,22 +150,6 @@ export default function AddGroupTypeForm({
     form.setValue(
       "skillLevels",
       currentSkillLevels.filter((_, i) => i !== index),
-      {
-        shouldDirty: true,
-      }
-    );
-  };
-
-  const addPosition = () => {
-    const currentPositions = form.getValues("positions");
-    form.setValue("positions", [...currentPositions, ""]);
-  };
-
-  const removePosition = (index: number) => {
-    const currentPositions = form.getValues("positions");
-    form.setValue(
-      "positions",
-      currentPositions.filter((_, i) => i !== index),
       {
         shouldDirty: true,
       }
@@ -379,63 +355,6 @@ export default function AddGroupTypeForm({
                     variant="ghost"
                     size="icon"
                     onClick={() => removeSkillLevel(index)}
-                    className="h-9 w-9 absolute -top-2 -right-2 bg-background shadow-sm hover:bg-destructive hover:text-destructive-foreground"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <Separator className="my-8" />
-
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h4 className="text-base font-semibold">Player Positions</h4>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Define positions for your players
-                </p>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addPosition}
-                className="h-9 px-4 gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Add Position
-              </Button>
-            </div>
-            <div className="space-y-4">
-              {form.watch("positions").map((_, index) => (
-                <div
-                  key={index}
-                  className="relative flex gap-4 items-start p-4 rounded-lg border bg-card"
-                >
-                  <FormField
-                    control={form.control}
-                    name={`positions.${index}`}
-                    render={({ field }) => (
-                      <FormItem className="flex-1">
-                        <FormControl>
-                          <Input
-                            {...field}
-                            className="h-9"
-                            placeholder="e.g. Forward"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removePosition(index)}
                     className="h-9 w-9 absolute -top-2 -right-2 bg-background shadow-sm hover:bg-destructive hover:text-destructive-foreground"
                   >
                     <X className="h-4 w-4" />
