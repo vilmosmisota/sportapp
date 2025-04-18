@@ -32,6 +32,12 @@ import {
   SelectValue,
 } from "../select";
 
+import {
+  calculateDuration,
+  createDateWithTime,
+  createNextDayDate,
+} from "./utils";
+
 type DurationPreset = {
   label: string;
   minutes: number;
@@ -58,6 +64,8 @@ export interface DateTimeRangeProps {
   defaultIsMultiDay?: boolean;
 }
 
+type AccordionValueType = string | string[];
+
 export function DateTimeRange({
   startDate = new Date(),
   endDate = addHours(new Date(), 1),
@@ -83,9 +91,12 @@ export function DateTimeRange({
   );
 
   const [selectedDuration, setSelectedDuration] = useState<string | null>(null);
-  const [accordionValue, setAccordionValue] = useState<string | undefined>(
-    undefined
-  );
+  const [singleAccordionValue, setSingleAccordionValue] =
+    useState<string>("start-date");
+  const [multiAccordionValue, setMultiAccordionValue] = useState<string[]>([
+    "start-date",
+    "end-date",
+  ]);
 
   const [startPickerMonth, setStartPickerMonth] = useState<Date>(
     startDate || new Date()
@@ -120,6 +131,13 @@ export function DateTimeRange({
       setIsMultiDay(true);
     }
   }, [startDate, endDate]);
+
+  useEffect(() => {
+    // Update accordion value when multi-day mode changes
+    setMultiAccordionValue(
+      isMultiDay ? ["start-date", "end-date"] : ["start-date"]
+    );
+  }, [isMultiDay]);
 
   const validationError = useMemo(() => {
     if (localStartDate && localEndDate) {
@@ -270,20 +288,52 @@ export function DateTimeRange({
     }
   };
 
-  const handleAccordionChange = (value: string) => {
-    setAccordionValue(value);
+  const handleAccordionChange = (value: AccordionValueType) => {
+    if (value === undefined) {
+      setMultiAccordionValue(
+        isMultiDay ? ["start-date", "end-date"] : ["start-date"]
+      );
+    } else {
+      setMultiAccordionValue(value as string[]);
+    }
   };
 
   const toggleStartAccordion = () => {
     if (disabled) return;
-    setAccordionValue(
-      accordionValue === "start-date" ? undefined : "start-date"
-    );
+    if (isMultiDay) {
+      // For multi-day mode, handle array of values
+      setMultiAccordionValue((prev) => {
+        const prevArray = Array.isArray(prev) ? prev : [];
+        const hasValue = prevArray.includes("start-date");
+        return hasValue
+          ? prevArray.filter((v) => v !== "start-date")
+          : [...prevArray, "start-date"];
+      });
+    } else {
+      // For single day mode, handle single value
+      setSingleAccordionValue(
+        singleAccordionValue === "start-date" ? "" : "start-date"
+      );
+    }
   };
 
   const toggleEndAccordion = () => {
     if (disabled) return;
-    setAccordionValue(accordionValue === "end-date" ? undefined : "end-date");
+    if (isMultiDay) {
+      // For multi-day mode, handle array of values
+      setMultiAccordionValue((prev) => {
+        const prevArray = Array.isArray(prev) ? prev : [];
+        const hasValue = prevArray.includes("end-date");
+        return hasValue
+          ? prevArray.filter((v) => v !== "end-date")
+          : [...prevArray, "end-date"];
+      });
+    } else {
+      // For single day mode, handle single value
+      setSingleAccordionValue(
+        singleAccordionValue === "end-date" ? "" : "end-date"
+      );
+    }
   };
 
   // ===== Preset Handlers =====
@@ -352,9 +402,11 @@ export function DateTimeRange({
       setEndPickerTime(formattedTime);
       onEndDateChange?.(nextDay);
 
-      if (accordionValue === "end-date") {
-        setAccordionValue(undefined);
-        setTimeout(() => setAccordionValue("end-date"), 0);
+      if (multiAccordionValue.includes("end-date")) {
+        setMultiAccordionValue(
+          multiAccordionValue.filter((v) => v !== "end-date")
+        );
+        setTimeout(() => setMultiAccordionValue(["end-date"]), 0);
       }
     }
 
@@ -395,219 +447,435 @@ export function DateTimeRange({
           )}
         </div>
 
-        <Accordion
-          type="single"
-          collapsible
-          value={accordionValue}
-          onValueChange={handleAccordionChange}
-          className="border-0"
-        >
-          <AccordionItem value="start-date" className="border-0">
-            <div onClick={toggleStartAccordion} className="relative">
-              <div
-                className={cn(
-                  "group flex items-center justify-between h-10 w-full px-3 py-2 bg-background text-sm rounded-md border border-input",
-                  validationError && "border-red-500",
-                  disabled && "opacity-50 cursor-not-allowed",
-                  !disabled && "cursor-pointer hover:border-primary"
-                )}
-              >
-                <div className="flex items-center space-x-2">
-                  <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                  <span
-                    className={!localStartDate ? "text-muted-foreground" : ""}
-                  >
-                    {localStartDate
-                      ? format(localStartDate, "dd MMM yyyy")
-                      : "Pick a date"}
-                  </span>
-                  {localStartDate && (
-                    <>
-                      <span className="text-muted-foreground mx-1">at</span>
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      <span>{format(localStartDate, "HH:mm")}</span>
-                    </>
-                  )}
-                </div>
-                <ChevronDown
+        {isMultiDay ? (
+          <Accordion
+            type="multiple"
+            value={multiAccordionValue}
+            onValueChange={setMultiAccordionValue}
+            className="border-0"
+          >
+            <AccordionItem value="start-date" className="border-0">
+              <div onClick={toggleStartAccordion} className="relative">
+                <div
                   className={cn(
-                    "h-4 w-4 text-muted-foreground transition-transform duration-200",
-                    accordionValue === "start-date" && "transform rotate-180"
+                    "group flex items-center justify-between h-10 w-full px-3 py-2 bg-background text-sm rounded-md border border-input",
+                    validationError && "border-red-500",
+                    disabled && "opacity-50 cursor-not-allowed",
+                    !disabled && "cursor-pointer hover:border-primary"
                   )}
-                />
-              </div>
-              <AccordionTrigger className="hidden" />
-            </div>
-            <AccordionContent className="pt-3">
-              <div className="rounded-md border bg-card shadow-sm">
-                <div className="p-4 pb-3">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <Select
-                        value={startPickerMonth.getFullYear().toString()}
-                        onValueChange={(year) => {
-                          const newDate = new Date(startPickerMonth);
-                          newDate.setFullYear(parseInt(year));
-                          setStartPickerMonth(newDate);
-                        }}
-                      >
-                        <SelectTrigger className="w-[120px]">
-                          <SelectValue placeholder="Year" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Array.from(
-                            {
-                              length: new Date().getFullYear() + 5 - 1940 + 1,
-                            },
-                            (_, i) => (
-                              <SelectItem
-                                key={new Date().getFullYear() + 5 - i}
-                                value={(
-                                  new Date().getFullYear() +
-                                  5 -
-                                  i
-                                ).toString()}
-                              >
-                                {new Date().getFullYear() + 5 - i}
-                              </SelectItem>
-                            )
-                          )}
-                        </SelectContent>
-                      </Select>
-
-                      <Select
-                        value={startPickerMonth.getMonth().toString()}
-                        onValueChange={(monthStr) => {
-                          const newDate = new Date(startPickerMonth);
-                          newDate.setMonth(parseInt(monthStr));
-                          setStartPickerMonth(newDate);
-                        }}
-                      >
-                        <SelectTrigger className="w-[140px]">
-                          <SelectValue placeholder="Month" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Array.from({ length: 12 }, (_, i) => (
-                            <SelectItem key={i} value={i.toString()}>
-                              {format(new Date(2000, i, 1), "MMMM")}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Multi-day Toggle - moved inside calendar header */}
-                    <div className="flex items-center gap-2">
-                      <Label
-                        htmlFor="multi-day-toggle"
-                        className="text-sm font-medium cursor-pointer whitespace-nowrap"
-                      >
-                        Multi-day event
-                      </Label>
-                      <Switch
-                        id="multi-day-toggle"
-                        checked={isMultiDay}
-                        onCheckedChange={handleMultiDayToggle}
-                        disabled={disabled}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-4 pt-0 grid grid-cols-1 md:grid-cols-7 gap-4">
-                  <div className="md:col-span-5">
-                    <CalendarComponent
-                      mode="single"
-                      selected={localStartDate}
-                      onSelect={handleStartCalendarSelect}
-                      month={startPickerMonth}
-                      onMonthChange={setStartPickerMonth}
-                      className="rounded"
-                    />
-                  </div>
-                  <div className="md:col-span-2 flex flex-col justify-start md:border-l md:pl-4">
-                    {/* Start Time Input */}
-                    <div className="mb-4">
-                      <Label
-                        htmlFor="start-time-picker"
-                        className="text-sm font-medium block mb-2"
-                      >
-                        Start Time
-                      </Label>
-                      <div className="flex items-center gap-2">
+                >
+                  <div className="flex items-center space-x-2">
+                    <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                    <span
+                      className={!localStartDate ? "text-muted-foreground" : ""}
+                    >
+                      {localStartDate
+                        ? format(localStartDate, "dd MMM yyyy")
+                        : "Pick a date"}
+                    </span>
+                    {localStartDate && (
+                      <>
+                        <span className="text-muted-foreground mx-1">at</span>
                         <Clock className="h-4 w-4 text-muted-foreground" />
-                        <input
-                          id="start-time-picker"
-                          type="time"
-                          value={startPickerTime}
-                          onChange={handleStartTimeChange}
-                          className={cn(
-                            "flex-1 h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                          )}
+                        <span>{format(localStartDate, "HH:mm")}</span>
+                      </>
+                    )}
+                  </div>
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 text-muted-foreground transition-transform duration-200",
+                      multiAccordionValue.includes("start-date") &&
+                        "transform rotate-180"
+                    )}
+                  />
+                </div>
+                <AccordionTrigger className="hidden" />
+              </div>
+              <AccordionContent className="pt-3">
+                <div className="rounded-md border bg-card shadow-sm">
+                  <div className="p-4 pb-3">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <Select
+                          value={startPickerMonth.getFullYear().toString()}
+                          onValueChange={(year) => {
+                            const newDate = new Date(startPickerMonth);
+                            newDate.setFullYear(parseInt(year));
+                            setStartPickerMonth(newDate);
+                          }}
+                        >
+                          <SelectTrigger className="w-[120px]">
+                            <SelectValue placeholder="Year" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from(
+                              {
+                                length: new Date().getFullYear() + 5 - 1940 + 1,
+                              },
+                              (_, i) => (
+                                <SelectItem
+                                  key={new Date().getFullYear() + 5 - i}
+                                  value={(
+                                    new Date().getFullYear() +
+                                    5 -
+                                    i
+                                  ).toString()}
+                                >
+                                  {new Date().getFullYear() + 5 - i}
+                                </SelectItem>
+                              )
+                            )}
+                          </SelectContent>
+                        </Select>
+
+                        <Select
+                          value={startPickerMonth.getMonth().toString()}
+                          onValueChange={(monthStr) => {
+                            const newDate = new Date(startPickerMonth);
+                            newDate.setMonth(parseInt(monthStr));
+                            setStartPickerMonth(newDate);
+                          }}
+                        >
+                          <SelectTrigger className="w-[140px]">
+                            <SelectValue placeholder="Month" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 12 }, (_, i) => (
+                              <SelectItem key={i} value={i.toString()}>
+                                {format(new Date(2000, i, 1), "MMMM")}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Multi-day Toggle - moved inside calendar header */}
+                      <div className="flex items-center gap-2">
+                        <Label
+                          htmlFor="multi-day-toggle"
+                          className="text-sm font-medium cursor-pointer whitespace-nowrap"
+                        >
+                          Multi-day event
+                        </Label>
+                        <Switch
+                          id="multi-day-toggle"
+                          checked={isMultiDay}
+                          onCheckedChange={handleMultiDayToggle}
                           disabled={disabled}
                         />
                       </div>
                     </div>
+                  </div>
 
-                    {/* End Time Input for Single Day Events */}
-                    {!isMultiDay && (
+                  <div className="p-4 pt-0 grid grid-cols-1 md:grid-cols-7 gap-4">
+                    <div className="md:col-span-5">
+                      <CalendarComponent
+                        mode="single"
+                        selected={localStartDate}
+                        onSelect={handleStartCalendarSelect}
+                        month={startPickerMonth}
+                        onMonthChange={setStartPickerMonth}
+                        className="rounded"
+                      />
+                    </div>
+                    <div className="md:col-span-2 flex flex-col justify-start md:border-l md:pl-4">
+                      {/* Start Time Input */}
                       <div className="mb-4">
                         <Label
-                          htmlFor="end-time-picker-single"
+                          htmlFor="start-time-picker"
                           className="text-sm font-medium block mb-2"
                         >
-                          End Time
+                          Start Time
                         </Label>
                         <div className="flex items-center gap-2">
                           <Clock className="h-4 w-4 text-muted-foreground" />
                           <input
-                            id="end-time-picker-single"
+                            id="start-time-picker"
                             type="time"
-                            value={endPickerTime}
-                            onChange={handleEndTimeChange}
+                            value={startPickerTime}
+                            onChange={handleStartTimeChange}
                             className={cn(
-                              "flex-1 h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-                              validationError && "border-red-500"
+                              "flex-1 h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                             )}
                             disabled={disabled}
                           />
                         </div>
                       </div>
-                    )}
 
-                    {/* Duration presets for single-day events */}
-                    {!isMultiDay && (
-                      <div className="mt-2">
-                        <Label className="text-sm font-medium block mb-2">
-                          Duration
-                        </Label>
-                        <div className="flex flex-wrap gap-2">
-                          {DURATION_PRESETS.map((preset) => (
-                            <Button
-                              type="button"
-                              key={preset.label}
-                              size="sm"
-                              variant={
-                                selectedDuration === preset.label
-                                  ? "default"
-                                  : "outline"
-                              }
-                              onClick={() => applyDurationPreset(preset)}
-                              disabled={disabled || !localStartDate}
-                              className="flex-1 min-w-[60px]"
-                            >
-                              {preset.label}
-                            </Button>
-                          ))}
+                      {/* End Time Input for Single Day Events */}
+                      {!isMultiDay && (
+                        <div className="mb-4">
+                          <Label
+                            htmlFor="end-time-picker-single"
+                            className="text-sm font-medium block mb-2"
+                          >
+                            End Time
+                          </Label>
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-muted-foreground" />
+                            <input
+                              id="end-time-picker-single"
+                              type="time"
+                              value={endPickerTime}
+                              onChange={handleEndTimeChange}
+                              className={cn(
+                                "flex-1 h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+                                validationError && "border-red-500"
+                              )}
+                              disabled={disabled}
+                            />
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+
+                      {/* Duration presets for single-day events */}
+                      {!isMultiDay && (
+                        <div className="mt-2">
+                          <Label className="text-sm font-medium block mb-2">
+                            Duration
+                          </Label>
+                          <div className="flex flex-wrap gap-2">
+                            {DURATION_PRESETS.map((preset) => (
+                              <Button
+                                type="button"
+                                key={preset.label}
+                                size="sm"
+                                variant={
+                                  selectedDuration === preset.label
+                                    ? "default"
+                                    : "outline"
+                                }
+                                onClick={() => applyDurationPreset(preset)}
+                                disabled={disabled || !localStartDate}
+                                className="flex-1 min-w-[60px]"
+                              >
+                                {preset.label}
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        ) : (
+          <Accordion
+            type="single"
+            value={singleAccordionValue}
+            onValueChange={setSingleAccordionValue}
+            className="border-0"
+          >
+            <AccordionItem value="start-date" className="border-0">
+              <div onClick={toggleStartAccordion} className="relative">
+                <div
+                  className={cn(
+                    "group flex items-center justify-between h-10 w-full px-3 py-2 bg-background text-sm rounded-md border border-input",
+                    validationError && "border-red-500",
+                    disabled && "opacity-50 cursor-not-allowed",
+                    !disabled && "cursor-pointer hover:border-primary"
+                  )}
+                >
+                  <div className="flex items-center space-x-2">
+                    <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                    <span
+                      className={!localStartDate ? "text-muted-foreground" : ""}
+                    >
+                      {localStartDate
+                        ? format(localStartDate, "dd MMM yyyy")
+                        : "Pick a date"}
+                    </span>
+                    {localStartDate && (
+                      <>
+                        <span className="text-muted-foreground mx-1">at</span>
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <span>{format(localStartDate, "HH:mm")}</span>
+                      </>
+                    )}
+                  </div>
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 text-muted-foreground transition-transform duration-200",
+                      singleAccordionValue === "start-date" &&
+                        "transform rotate-180"
+                    )}
+                  />
+                </div>
+                <AccordionTrigger className="hidden" />
               </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+              <AccordionContent className="pt-3">
+                <div className="rounded-md border bg-card shadow-sm">
+                  <div className="p-4 pb-3">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <Select
+                          value={startPickerMonth.getFullYear().toString()}
+                          onValueChange={(year) => {
+                            const newDate = new Date(startPickerMonth);
+                            newDate.setFullYear(parseInt(year));
+                            setStartPickerMonth(newDate);
+                          }}
+                        >
+                          <SelectTrigger className="w-[120px]">
+                            <SelectValue placeholder="Year" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from(
+                              {
+                                length: new Date().getFullYear() + 5 - 1940 + 1,
+                              },
+                              (_, i) => (
+                                <SelectItem
+                                  key={new Date().getFullYear() + 5 - i}
+                                  value={(
+                                    new Date().getFullYear() +
+                                    5 -
+                                    i
+                                  ).toString()}
+                                >
+                                  {new Date().getFullYear() + 5 - i}
+                                </SelectItem>
+                              )
+                            )}
+                          </SelectContent>
+                        </Select>
+
+                        <Select
+                          value={startPickerMonth.getMonth().toString()}
+                          onValueChange={(monthStr) => {
+                            const newDate = new Date(startPickerMonth);
+                            newDate.setMonth(parseInt(monthStr));
+                            setStartPickerMonth(newDate);
+                          }}
+                        >
+                          <SelectTrigger className="w-[140px]">
+                            <SelectValue placeholder="Month" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 12 }, (_, i) => (
+                              <SelectItem key={i} value={i.toString()}>
+                                {format(new Date(2000, i, 1), "MMMM")}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Multi-day Toggle - moved inside calendar header */}
+                      <div className="flex items-center gap-2">
+                        <Label
+                          htmlFor="multi-day-toggle"
+                          className="text-sm font-medium cursor-pointer whitespace-nowrap"
+                        >
+                          Multi-day event
+                        </Label>
+                        <Switch
+                          id="multi-day-toggle"
+                          checked={isMultiDay}
+                          onCheckedChange={handleMultiDayToggle}
+                          disabled={disabled}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 pt-0 grid grid-cols-1 md:grid-cols-7 gap-4">
+                    <div className="md:col-span-5">
+                      <CalendarComponent
+                        mode="single"
+                        selected={localStartDate}
+                        onSelect={handleStartCalendarSelect}
+                        month={startPickerMonth}
+                        onMonthChange={setStartPickerMonth}
+                        className="rounded"
+                      />
+                    </div>
+                    <div className="md:col-span-2 flex flex-col justify-start md:border-l md:pl-4">
+                      {/* Start Time Input */}
+                      <div className="mb-4">
+                        <Label
+                          htmlFor="start-time-picker"
+                          className="text-sm font-medium block mb-2"
+                        >
+                          Start Time
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                          <input
+                            id="start-time-picker"
+                            type="time"
+                            value={startPickerTime}
+                            onChange={handleStartTimeChange}
+                            className={cn(
+                              "flex-1 h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            )}
+                            disabled={disabled}
+                          />
+                        </div>
+                      </div>
+
+                      {/* End Time Input for Single Day Events */}
+                      {!isMultiDay && (
+                        <div className="mb-4">
+                          <Label
+                            htmlFor="end-time-picker-single"
+                            className="text-sm font-medium block mb-2"
+                          >
+                            End Time
+                          </Label>
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-muted-foreground" />
+                            <input
+                              id="end-time-picker-single"
+                              type="time"
+                              value={endPickerTime}
+                              onChange={handleEndTimeChange}
+                              className={cn(
+                                "flex-1 h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+                                validationError && "border-red-500"
+                              )}
+                              disabled={disabled}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Duration presets for single-day events */}
+                      {!isMultiDay && (
+                        <div className="mt-2">
+                          <Label className="text-sm font-medium block mb-2">
+                            Duration
+                          </Label>
+                          <div className="flex flex-wrap gap-2">
+                            {DURATION_PRESETS.map((preset) => (
+                              <Button
+                                type="button"
+                                key={preset.label}
+                                size="sm"
+                                variant={
+                                  selectedDuration === preset.label
+                                    ? "default"
+                                    : "outline"
+                                }
+                                onClick={() => applyDurationPreset(preset)}
+                                disabled={disabled || !localStartDate}
+                                className="flex-1 min-w-[60px]"
+                              >
+                                {preset.label}
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        )}
       </div>
 
       {/* End Date/Time Row - Only shown for multi-day events */}
@@ -618,10 +886,9 @@ export function DateTimeRange({
           </Label>
 
           <Accordion
-            type="single"
-            collapsible
-            value={accordionValue}
-            onValueChange={handleAccordionChange}
+            type="multiple"
+            value={multiAccordionValue}
+            onValueChange={setMultiAccordionValue}
             className="border-0"
           >
             <AccordionItem value="end-date" className="border-0">
@@ -654,7 +921,8 @@ export function DateTimeRange({
                   <ChevronDown
                     className={cn(
                       "h-4 w-4 text-muted-foreground transition-transform duration-200",
-                      accordionValue === "end-date" && "transform rotate-180"
+                      multiAccordionValue.includes("end-date") &&
+                        "transform rotate-180"
                     )}
                   />
                 </div>

@@ -34,6 +34,7 @@ import { OpponentTeamSelector } from "@/components/ui/opponent-team-selector";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ColorPicker } from "@/components/ui/color-picker";
 import { DateTimeRange } from "@/components/ui/date-time-range";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Icons
 import {
@@ -47,6 +48,8 @@ import {
   Home,
   ExternalLink,
   Trophy,
+  Repeat,
+  PlusCircle,
 } from "lucide-react";
 
 // Entity Types & Schemas
@@ -67,13 +70,6 @@ import { Opponent } from "@/entities/opponent/Opponent.schema";
 import { useCreateGame } from "@/entities/game/Game.actions.client";
 import { useGetTeamsByTenantId } from "@/entities/team/Team.query";
 import { useOpponents } from "@/entities/opponent/Opponent.query";
-
-// Define event types (for future expansion)
-enum EventType {
-  Game = "game",
-  Training = "training",
-  Meeting = "meeting",
-}
 
 // Location type
 enum GameLocationType {
@@ -97,60 +93,53 @@ interface Props {
   selectedSeason: Season;
   tenant: Tenant; // For locations
   setIsOpen: (open: boolean) => void;
+  initialDate?: Date | null;
 }
 
-// Function to safely format competition type
 const formatCompetitionType = (name: string, color?: string): string => {
-  // Remove any # characters from both name and color
   const cleanName = name.replace(/#/g, "");
   const cleanColor = color?.replace(/#/g, "") || "";
 
-  // Only include color if it exists
   return cleanColor ? `${cleanName}#${cleanColor}` : cleanName;
 };
 
-export default function AddEventForm({
+export default function AddGameForm({
   tenantId,
   domain,
   selectedSeason,
   tenant,
   setIsOpen,
+  initialDate,
 }: Props) {
   // State for form submission
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
-
-  // State for the selected event type (defaulting to game)
-  const [eventType, setEventType] = useState<EventType>(EventType.Game);
 
   // State for organization's role (home/away)
   const [gameLocation, setGameLocation] = useState<GameLocationType>(
     GameLocationType.OrganizationHome
   );
 
-  // State for selected competition type - custom or from list
-  const [useCustomCompetitionType, setUseCustomCompetitionType] =
-    useState<boolean>(false);
-
-  // Get competition types from tenant
   const competitionTypes = tenant.competitionTypes || [];
-  const hasCompetitionTypes = competitionTypes.length > 0;
 
-  // Fetch data
   const { data: teams = [] } = useGetTeamsByTenantId(tenantId);
   const { data: opponents = [] } = useOpponents(tenantId);
 
-  // Get game creation mutation
   const createGame = useCreateGame(tenantId);
 
-  // Form setup with zod validation
   const form = useForm<GameForm>({
     resolver: zodResolver(GameFormSchema),
     defaultValues: {
       status: GameStatus.Scheduled,
-      date: new Date(),
-      startTime: "",
-      endTime: "",
+      date: initialDate || new Date(),
+      startTime: format(
+        set(initialDate || new Date(), { hours: 13, minutes: 0 }),
+        "HH:mm"
+      ),
+      endTime: format(
+        set(initialDate || new Date(), { hours: 14, minutes: 0 }),
+        "HH:mm"
+      ),
       homeTeamId: 0,
       awayTeamId: 0,
       location: null,
@@ -257,8 +246,8 @@ export default function AddEventForm({
     setIsDirty(true);
   };
 
-  // Handle form submission
-  const onSubmit = async (data: GameForm) => {
+  // Handle submitting the form and adding another game
+  const onSubmitAndAddAnother = async (data: GameForm) => {
     setIsSubmitting(true);
 
     try {
@@ -276,6 +265,10 @@ export default function AddEventForm({
         console.log("Fixed to:", fixedCompetitionType);
       }
 
+      // Get a reference to date before we modify anything
+      const gameDate = data.date ? new Date(data.date) : new Date();
+      const formattedDate = format(gameDate, "MMM d, yyyy");
+
       // Prepare the data with fixed values
       const formData = {
         ...data,
@@ -288,11 +281,152 @@ export default function AddEventForm({
 
       console.log("Submitting game data:", formData);
 
+      // Get team names for the success message
+      const homeTeam =
+        formData.homeTeamId > 0
+          ? teams.find((t) => t.id === formData.homeTeamId)?.name ||
+            opponents.find((o) => o.id === formData.homeTeamId)?.name ||
+            "Home Team"
+          : "Home Team";
+
+      const awayTeam =
+        formData.awayTeamId > 0
+          ? teams.find((t) => t.id === formData.awayTeamId)?.name ||
+            opponents.find((o) => o.id === formData.awayTeamId)?.name ||
+            "Away Team"
+          : "Away Team";
+
       // Create the game with the validated data
       await createGame.mutateAsync(formData);
 
-      // Show success message
-      toast.success("Game created successfully");
+      // Show success message with team names and date
+      toast.success(
+        `Game created: ${homeTeam} vs ${awayTeam} on ${formattedDate}`
+      );
+
+      // Clear any errors
+      form.clearErrors();
+
+      // Store the values we want to keep
+      const valuesToKeep = {
+        // Keep the current teams
+        homeTeamId: data.homeTeamId,
+        awayTeamId: data.awayTeamId,
+
+        // Keep the time settings
+        date: data.date,
+        startTime: data.startTime,
+        endTime: data.endTime,
+
+        // Keep location and competition type
+        location: data.location,
+        competitionType: fixedCompetitionType,
+
+        // Always keep the season ID
+        seasonId: selectedSeason.id,
+      };
+
+      // Partially reset the form - keeping the values we want
+      form.reset(
+        {
+          ...form.getValues(), // Start with current values
+          ...valuesToKeep, // Keep specific values
+
+          // Reset just these fields:
+          meta: { note: "" }, // Clear notes
+          homeScore: null, // Clear scores
+          awayScore: null,
+          status: GameStatus.Scheduled,
+        },
+        {
+          // Don't keep error or validation states
+          keepErrors: false,
+          keepDirty: false,
+          keepIsSubmitted: false,
+          keepTouched: false,
+          keepIsValid: false,
+          keepSubmitCount: false,
+        }
+      );
+
+      // Make sure the form is ready for the next submission
+      setIsDirty(true);
+
+      // Clean up any stray error messages
+      setTimeout(() => {
+        const errorElements = document.querySelectorAll('[role="alert"]');
+        errorElements.forEach((el) => {
+          if (el.parentNode) el.parentNode.removeChild(el);
+        });
+      }, 50);
+    } catch (error) {
+      console.error("Failed to create game:", error);
+
+      // Get more detailed error message if available
+      let errorMessage = "Failed to create game";
+      if (error instanceof Error) {
+        errorMessage = `Failed to create game: ${error.message}`;
+      }
+
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle form submission and close
+  const onSubmit = async (data: GameForm) => {
+    setIsSubmitting(true);
+
+    try {
+      // Fix competition type if it contains double hash
+      let fixedCompetitionType = data.competitionType;
+
+      if (fixedCompetitionType && fixedCompetitionType.includes("##")) {
+        const parts = fixedCompetitionType.split("#");
+        fixedCompetitionType = formatCompetitionType(
+          parts[0],
+          parts.slice(1).join("")
+        );
+        console.log("Fixed to:", fixedCompetitionType);
+      }
+
+      // Get a reference to date before we modify anything
+      const gameDate = data.date ? new Date(data.date) : new Date();
+      const formattedDate = format(gameDate, "MMM d, yyyy");
+
+      // Prepare the data with fixed values
+      const formData = {
+        ...data,
+        competitionType: fixedCompetitionType,
+        endTime: data.endTime || null,
+        meta: {
+          note: data.meta?.note || null,
+        },
+      };
+
+      console.log("Submitting game data:", formData);
+
+      // Get team names for the success message
+      const homeTeam =
+        formData.homeTeamId > 0
+          ? teams.find((t) => t.id === formData.homeTeamId)?.name ||
+            opponents.find((o) => o.id === formData.homeTeamId)?.name ||
+            "Home Team"
+          : "Home Team";
+
+      const awayTeam =
+        formData.awayTeamId > 0
+          ? teams.find((t) => t.id === formData.awayTeamId)?.name ||
+            opponents.find((o) => o.id === formData.awayTeamId)?.name ||
+            "Away Team"
+          : "Away Team";
+
+      // Create the game with the validated data
+      await createGame.mutateAsync(formData);
+
+      // Show success message with team names and date
+      toast.success(`Game created on ${formattedDate}`);
 
       // Close the modal
       setIsOpen(false);
@@ -306,7 +440,42 @@ export default function AddEventForm({
 
   // Reset form and close modal
   const onCancel = () => {
-    form.reset();
+    // Clear any errors first
+    form.clearErrors();
+
+    // Full form reset with clean options
+    form.reset(
+      {
+        status: GameStatus.Scheduled,
+        date: initialDate || new Date(),
+        startTime: format(
+          set(initialDate || new Date(), { hours: 13, minutes: 0 }),
+          "HH:mm"
+        ),
+        endTime: format(
+          set(initialDate || new Date(), { hours: 14, minutes: 0 }),
+          "HH:mm"
+        ),
+        homeTeamId: 0,
+        awayTeamId: 0,
+        location: null,
+        competitionType: "",
+        seasonId: selectedSeason.id,
+        meta: {
+          note: "",
+        },
+        homeScore: null,
+        awayScore: null,
+      },
+      {
+        keepDirty: false,
+        keepErrors: false,
+        keepIsSubmitted: false,
+        keepTouched: false,
+      }
+    );
+
+    // Close the modal
     setIsOpen(false);
   };
 
@@ -397,6 +566,7 @@ export default function AddEventForm({
                       name="homeTeamId"
                       placeholder="Select your team"
                       onChange={(value) => handleTeamChange(true, value)}
+                      key="home-team-selector"
                     />
                   </div>
 
@@ -412,6 +582,7 @@ export default function AddEventForm({
                         name="awayTeamId"
                         placeholder="Select opponent team"
                         onChange={(value) => handleTeamChange(false, value)}
+                        key="away-team-selector"
                       />
                     </div>
                   )}
@@ -429,6 +600,7 @@ export default function AddEventForm({
                       name="homeTeamId"
                       placeholder="Select opponent's home team"
                       onChange={(value) => handleTeamChange(true, value)}
+                      key="home-opponent-selector"
                     />
                   </div>
 
@@ -446,6 +618,7 @@ export default function AddEventForm({
                         name="awayTeamId"
                         placeholder="Select your team"
                         onChange={(value) => handleTeamChange(false, value)}
+                        key="away-org-selector"
                       />
                     </div>
                   )}
@@ -651,9 +824,19 @@ export default function AddEventForm({
         </Card>
 
         {/* Form Actions */}
-        <div className="bg-background sticky h-[100px] flex items-center justify-end bottom-0 left-0 right-0 border-t">
+        <div className="bg-background sticky h-[100px] flex items-center justify-between bottom-0 left-0 right-0 border-t">
+          <div className="pl-4">
+            <Button
+              type="button"
+              onClick={() => form.handleSubmit(onSubmitAndAddAnother)()}
+              disabled={isSubmitting}
+            >
+              <PlusCircle className="h-4 w-4 mr-2" />
+              {isSubmitting ? "Adding..." : "Add"}
+            </Button>
+          </div>
           <FormButtons
-            buttonText="Create Game"
+            buttonText="Add and close"
             isLoading={isSubmitting}
             isDirty={isDirty}
             onCancel={onCancel}

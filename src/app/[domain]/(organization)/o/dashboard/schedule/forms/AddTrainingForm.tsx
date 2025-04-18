@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { format, isWithinInterval } from "date-fns";
+import { format, isWithinInterval, set } from "date-fns";
 import { toast } from "sonner";
 
 // Components
@@ -31,6 +31,7 @@ import { DateTimeRange } from "@/components/ui/date-time-range";
 import { Toggle } from "@/components/ui/toggle";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Icons
 import {
@@ -63,7 +64,6 @@ const daysOfWeek = [
   { id: 0, name: "Sunday" },
 ];
 
-// Common fields for both types of training forms
 const commonFields = {
   startTime: z.string().min(1, "Start time is required"),
   endTime: z.string().min(1, "End time is required"),
@@ -72,26 +72,23 @@ const commonFields = {
   note: z.string().optional(),
 };
 
-// Combined schema that includes all possible fields
 const trainingFormSchema = z.object({
   ...commonFields,
   date: z.date().optional(),
   selectedDays: z.array(z.number()).default([]),
 });
 
-// Form mode type
 type TrainingMode = "single" | "repeating";
 
-// Combined form type
 type FormValues = z.infer<typeof trainingFormSchema>;
 
-// Props interface
 interface Props {
   tenantId: string;
   domain: string;
   selectedSeason: Season;
   tenant: Tenant;
   setIsOpen: (open: boolean) => void;
+  initialDate?: Date | null;
 }
 
 export default function AddTrainingForm({
@@ -100,27 +97,60 @@ export default function AddTrainingForm({
   selectedSeason,
   tenant,
   setIsOpen,
+  initialDate,
 }: Props) {
   const locations = useTrainingLocations(domain);
   const { data: teams = [] } = useGetTeamsByTenantId(tenantId);
   const addTraining = useAddTraining(tenantId);
   const addTrainingBatch = useAddTrainingBatch(tenantId);
   const [isLoading, setIsLoading] = useState(false);
-  const [trainingMode, setTrainingMode] = useState<TrainingMode>("single");
+
+  // Set initial training mode based on initialDate
+  const [trainingMode, setTrainingMode] = useState<TrainingMode>(
+    initialDate ? "repeating" : "single"
+  );
 
   const form = useForm<FormValues>({
     resolver: zodResolver(trainingFormSchema),
     defaultValues: {
-      date: new Date(),
-      startTime: "",
-      endTime: "",
+      date: initialDate || new Date(),
+      startTime: format(
+        set(initialDate || new Date(), { hours: 13, minutes: 0 }),
+        "HH:mm"
+      ),
+      endTime: format(
+        set(initialDate || new Date(), { hours: 14, minutes: 0 }),
+        "HH:mm"
+      ),
       locationId: "",
       teamId: "",
-      selectedDays: [],
+      selectedDays: initialDate ? [initialDate.getDay()] : [],
       note: "",
     },
     mode: "onSubmit",
   });
+
+  // Set initial mode and selected day based on initialDate - consolidated effect
+  useEffect(() => {
+    if (initialDate) {
+      // Only set the training mode on initial render
+      if (trainingMode !== "repeating") {
+        setTrainingMode("repeating");
+      }
+
+      // Always ensure the day of the week is selected
+      const dayOfWeek = initialDate.getDay();
+      const currentSelectedDays = form.getValues("selectedDays");
+
+      if (!currentSelectedDays.includes(dayOfWeek)) {
+        form.setValue("selectedDays", [...currentSelectedDays, dayOfWeek], {
+          shouldDirty: true,
+          shouldValidate: false,
+        });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialDate, trainingMode]);
 
   // Set end time to 1 hour after the start time
   const setEndTimeFromStartTime = (startTime: string) => {
@@ -141,12 +171,10 @@ export default function AddTrainingForm({
     });
   };
 
-  // Handle datetime range change
   const handleDateTimeRangeChange = (isStart: boolean, date?: Date) => {
     if (!date) return;
 
     if (isStart) {
-      // Update the date field if in single mode
       if (trainingMode === "single") {
         form.setValue("date", date, {
           shouldDirty: true,
@@ -154,15 +182,12 @@ export default function AddTrainingForm({
         });
       }
 
-      // Format and set the start time
       const timeString = format(date, "HH:mm");
       form.setValue("startTime", timeString, {
         shouldDirty: true,
         shouldValidate: false,
       });
 
-      // If endTime is not set or we want to always update it when start time changes
-      // Always update the end time to be 1 hour after the start time for better UX
       const endTime = form.getValues("endTime");
       const endDate = new Date(date);
       endDate.setHours(date.getHours() + 1);
@@ -172,7 +197,6 @@ export default function AddTrainingForm({
         shouldValidate: false,
       });
     } else {
-      // For end time, we only update the time part, not the date
       const timeString = format(date, "HH:mm");
       form.setValue("endTime", timeString, {
         shouldDirty: true,
@@ -196,7 +220,6 @@ export default function AddTrainingForm({
         return;
       }
 
-      // Handle teamId - convert to number
       const teamId = parseInt(values.teamId);
 
       if (trainingMode === "single") {
@@ -205,7 +228,6 @@ export default function AddTrainingForm({
           return;
         }
 
-        // Create a single training
         await addTraining.mutateAsync({
           date: format(values.date, "yyyy-MM-dd"),
           startTime: values.startTime,
@@ -218,17 +240,14 @@ export default function AddTrainingForm({
 
         toast.success("Training created successfully");
       } else {
-        // Validate selected days
         if (values.selectedDays.length === 0) {
           toast.error("Please select at least one day for repeating trainings");
           return;
         }
 
-        // Create repeating trainings
         const startDate = new Date(selectedSeason.startDate);
         const endDate = new Date(selectedSeason.endDate);
 
-        // Generate all dates between start and end date that match the selected days
         const dates: string[] = [];
         const currentDate = new Date(startDate);
         const today = new Date();
@@ -236,7 +255,6 @@ export default function AddTrainingForm({
 
         while (currentDate <= endDate) {
           if (values.selectedDays.includes(currentDate.getDay())) {
-            // Check if the date falls within any break period
             const isBreak = selectedSeason.breaks.some((breakPeriod) =>
               isWithinInterval(currentDate, {
                 start: new Date(breakPeriod.from),
@@ -244,7 +262,6 @@ export default function AddTrainingForm({
               })
             );
 
-            // Only add the date if it's not during a break AND is today or in the future
             if (!isBreak && currentDate >= today) {
               dates.push(currentDate.toISOString());
             }
@@ -259,7 +276,6 @@ export default function AddTrainingForm({
           return;
         }
 
-        // Create trainings in batch
         await addTrainingBatch.mutateAsync({
           trainings: dates.map((date) => ({
             date,
@@ -286,7 +302,21 @@ export default function AddTrainingForm({
     }
   };
 
-  // Watch for form changes
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const formValues = form.getValues();
+
+    // Handle the case where we have an endTime error but a valid startTime
+    if (form.formState.errors.endTime && formValues.startTime) {
+      setEndTimeFromStartTime(formValues.startTime);
+      formValues.endTime = form.getValues("endTime");
+      onSubmit(formValues);
+    } else {
+      form.handleSubmit(onSubmit)(e);
+    }
+  };
+
   const formDate = form.watch("date");
   const startTime = form.watch("startTime");
   const endTime = form.watch("endTime");
@@ -295,80 +325,61 @@ export default function AddTrainingForm({
   return (
     <Form {...form}>
       <form
-        onSubmit={(e) => {
-          e.preventDefault();
-
-          // Get current form values
-          const formValues = form.getValues();
-
-          // Check if we have a validation error for endTime but we do have a startTime
-          if (form.formState.errors.endTime && formValues.startTime) {
-            // Set a default endTime (1 hour after startTime)
-            setEndTimeFromStartTime(formValues.startTime);
-            formValues.endTime = form.getValues("endTime");
-
-            // Call onSubmit directly with fixed values
-            onSubmit(formValues);
-          } else {
-            // Regular form submission flow
-            form.handleSubmit(onSubmit)(e);
-          }
-        }}
+        onSubmit={handleFormSubmit}
         className="flex flex-col gap-6 relative h-[calc(100vh-8rem)] md:h-auto"
       >
-        {/* Mode Selector */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-medium flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              Training Type
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <RadioGroup
-              defaultValue="single"
-              value={trainingMode}
-              onValueChange={(value) => setTrainingMode(value as TrainingMode)}
-              className="grid grid-cols-2 gap-4"
-            >
-              <div>
-                <RadioGroupItem
-                  value="single"
-                  id="single"
-                  className="peer sr-only"
-                />
-                <label
-                  htmlFor="single"
-                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                >
-                  <CalendarIcon className="mb-3 h-6 w-6" />
-                  <p className="text-sm font-medium">Single Training</p>
-                  <p className="text-xs text-muted-foreground">
-                    Create a one-time training session
-                  </p>
-                </label>
-              </div>
+        <div className="mb-6">
+          <Tabs
+            value={trainingMode}
+            onValueChange={(value) => {
+              const newMode = value as TrainingMode;
+              setTrainingMode(newMode);
 
-              <div>
-                <RadioGroupItem
-                  value="repeating"
-                  id="repeating"
-                  className="peer sr-only"
-                />
-                <label
-                  htmlFor="repeating"
-                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                >
-                  <Repeat className="mb-3 h-6 w-6" />
-                  <p className="text-sm font-medium">Repeating Schedule</p>
-                  <p className="text-xs text-muted-foreground">
-                    Create multiple training sessions
-                  </p>
-                </label>
+              // When switching to repeating mode, pre-select the day of the week if none selected
+              if (newMode === "repeating") {
+                const currentSelectedDays = form.getValues("selectedDays");
+
+                if (currentSelectedDays.length === 0) {
+                  // Use either initialDate or the date from the form
+                  const currentDate =
+                    form.getValues("date") || initialDate || new Date();
+                  const dayOfWeek = currentDate.getDay();
+
+                  form.setValue("selectedDays", [dayOfWeek], {
+                    shouldDirty: true,
+                    shouldValidate: false,
+                  });
+                }
+              }
+            }}
+            className="w-full"
+          >
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="single">Single Training</TabsTrigger>
+              <TabsTrigger value="repeating">Repeating Schedule</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="single" className="py-4">
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <CalendarIcon className="h-4 w-4" />
+                <p>
+                  Create a one-time training session with a specific date and
+                  time.
+                </p>
               </div>
-            </RadioGroup>
-          </CardContent>
-        </Card>
+            </TabsContent>
+
+            <TabsContent value="repeating" className="py-4">
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <Repeat className="h-4 w-4" />
+                <p>
+                  Create multiple training sessions that repeat on selected days
+                  throughout the season.
+                </p>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
 
         {/* Schedule Section - conditionally rendered based on training mode */}
         <Card>
@@ -460,11 +471,26 @@ export default function AddTrainingForm({
                         "dd/MM/yyyy"
                       )}`;
 
-                      return `Trainings will be created for ${
+                      // If we have an initialDate, highlight it in the description
+                      let description = `Trainings will be created for ${
                         selectedSeason.customName
                           ? `${selectedSeason.customName} (${dateRange})`
                           : dateRange
                       }`;
+
+                      if (initialDate) {
+                        const dayName = daysOfWeek.find(
+                          (day) => day.id === initialDate.getDay()
+                        )?.name;
+                        if (dayName) {
+                          description += `, starting on ${format(
+                            initialDate,
+                            "dd/MM/yyyy"
+                          )} (${dayName})`;
+                        }
+                      }
+
+                      return description;
                     })()}
                   </p>
                 </div>

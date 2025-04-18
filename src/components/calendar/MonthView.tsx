@@ -32,6 +32,7 @@ interface MonthViewProps {
   isLoading?: boolean;
   seasonBreaks?: { from: Date; to: Date }[];
   seasonDateRange?: { startDate: Date; endDate: Date } | null;
+  onDayContextMenu?: (date: Date, event: React.MouseEvent) => void;
 }
 
 export function MonthView({
@@ -42,6 +43,7 @@ export function MonthView({
   isLoading = false,
   seasonBreaks = [],
   seasonDateRange = null,
+  onDayContextMenu,
 }: MonthViewProps) {
   const [days, setDays] = useState<DayCell[]>([]);
   const [visibleEventCounts, setVisibleEventCounts] = useState<
@@ -68,6 +70,17 @@ export function MonthView({
       isBefore(date, seasonDateRange.startDate) ||
       isAfter(date, seasonDateRange.endDate)
     );
+  };
+
+  // Helper function to check if a date is valid for adding events
+  const isDateValidForEvents = (date: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to beginning of day for proper comparison
+
+    // Check if date is not in the past (less than today)
+    const isNotPast = date >= today;
+
+    return isNotPast && !isDateOutsideSeason(date) && !isDateInBreak(date);
   };
 
   // Generate calendar days for the current month view
@@ -134,6 +147,14 @@ export function MonthView({
     };
   }, [days]);
 
+  // Handle right-click on a day cell
+  const handleDayContextMenu = (date: Date, event: React.MouseEvent) => {
+    if (onDayContextMenu && isDateValidForEvents(date)) {
+      event.preventDefault(); // Prevent default browser context menu
+      onDayContextMenu(date, event);
+    }
+  };
+
   // Rendering calendar grid
   return (
     <div className="h-full flex flex-col">
@@ -173,6 +194,9 @@ export function MonthView({
             const hasMoreEvents = dayEvents.length > maxVisibleEvents;
             const visibleEvents = dayEvents.slice(0, maxVisibleEvents);
 
+            // Check if this day is valid for adding events
+            const isValidForEvents = isDateValidForEvents(day.date);
+
             return (
               <div
                 key={dayKey}
@@ -180,12 +204,14 @@ export function MonthView({
                 className={cn(
                   "min-h-[100px] border rounded-md flex flex-col p-1 transition-colors relative",
                   day.isCurrentMonth
-                    ? "bg-background hover:bg-background/90"
+                    ? "bg-background/10 hover:bg-background/40"
                     : "bg-muted/10 opacity-60 border-dashed border-muted/40 hover:opacity-80 hover:bg-muted/20 transition-opacity",
                   day.isToday && "ring-2 ring-primary ring-offset-1",
                   day.isInBreak && day.isCurrentMonth && "bg-amber-50/50",
-                  day.isOutsideSeason && day.isCurrentMonth && "bg-gray-100"
+                  day.isOutsideSeason && day.isCurrentMonth && "bg-gray-100",
+                  !isValidForEvents && "cursor-not-allowed"
                 )}
+                onContextMenu={(event) => handleDayContextMenu(day.date, event)}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
@@ -214,7 +240,10 @@ export function MonthView({
                       !day.isCurrentMonth && "text-muted-foreground/60",
                       onDateClick && "cursor-pointer hover:bg-muted/30"
                     )}
-                    onClick={() => onDateClick && onDateClick(day.date)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDateClick && onDateClick(day.date);
+                    }}
                     title={format(day.date, "PPP")}
                   >
                     {format(day.date, "d")}
@@ -270,7 +299,8 @@ export function MonthView({
                           ? "text-muted-foreground hover:bg-muted/20 hover:text-foreground"
                           : "text-muted-foreground/60 hover:text-muted-foreground/80 hover:bg-muted/10"
                       )}
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         if (onDateClick) {
                           onDateClick(day.date);
                         }

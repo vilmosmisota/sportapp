@@ -26,6 +26,7 @@ interface CalendarContainerProps {
   filteredEvents?: CalendarEvent[];
   currentMonth?: Date;
   onMonthChange?: (newMonth: Date) => void;
+  onDayContextMenu?: (date: Date, event: React.MouseEvent) => void;
 }
 
 export function CalendarContainer({
@@ -38,6 +39,7 @@ export function CalendarContainer({
   filteredEvents,
   currentMonth: propCurrentMonth,
   onMonthChange,
+  onDayContextMenu,
 }: CalendarContainerProps) {
   const { currentMonth, updateCurrentMonth } = useCurrentMonth(
     propCurrentMonth,
@@ -121,6 +123,7 @@ export function CalendarContainer({
             }
           : null
       }
+      onDayContextMenu={onDayContextMenu}
     />
   );
 }

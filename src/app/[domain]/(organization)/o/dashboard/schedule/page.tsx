@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { format, startOfMonth } from "date-fns";
 import { CalendarEvent } from "@/components/calendar/EventCalendar";
 import { EventDetailsDialog } from "@/components/calendar/EventDetailsDialog";
@@ -14,6 +14,8 @@ import {
   AlertCircle,
   CheckCircle2,
   XCircle,
+  Trophy,
+  Dumbbell,
 } from "lucide-react";
 import { useSeasonsByTenantId } from "@/entities/season/Season.query";
 import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
@@ -24,9 +26,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import AddEventForm from "./forms/AddEventForm";
+import AddGameForm from "./forms/AddGameForm";
 import AddTrainingForm from "./forms/AddTrainingForm";
 import EditTrainingForm from "./forms/EditTrainingForm";
+import EditGameForm from "./forms/EditGameForm";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/ui/page-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -41,6 +44,19 @@ import { toast } from "sonner";
 import { isTrainingEvent, isGameEvent } from "@/components/calendar/types";
 import { useTraining } from "@/entities/training/Training.query";
 import { extractNumericId } from "../../../../../../utils/string.utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+import { useGameById } from "@/entities/game/Game.query";
 
 enum EventType {
   Game = "game",
@@ -70,11 +86,20 @@ export default function CalendarPage({ params }: PageProps) {
   const [editingTrainingId, setEditingTrainingId] = useState<number | null>(
     null
   );
+  const [editingGameId, setEditingGameId] = useState<number | null>(null);
 
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [eventToDelete, setEventToDelete] = useState<CalendarEvent | null>(
     null
   );
+
+  // Context menu state
+  const [contextMenuPosition, setContextMenuPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const contextMenuRef = useRef<HTMLDivElement>(null);
 
   const { data: tenant } = useTenantByDomain(params.domain);
   const { data: seasons } = useSeasonsByTenantId(tenant?.id?.toString() || "");
@@ -82,6 +107,11 @@ export default function CalendarPage({ params }: PageProps) {
   const { data: editingTraining } = useTraining(
     tenant?.id?.toString() || "",
     editingTrainingId || 0
+  );
+
+  const { data: editingGame } = useGameById(
+    tenant?.id?.toString() || "",
+    editingGameId || 0
   );
 
   const deleteTraining = useDeleteTraining(tenant?.id?.toString() || "");
@@ -105,7 +135,6 @@ export default function CalendarPage({ params }: PageProps) {
 
     if (isTrainingEvent(event)) {
       const trainingId = extractNumericId(event.id, "training-");
-
       if (trainingId) {
         setEditingTrainingId(trainingId);
         setIsEditFormOpen(true);
@@ -113,7 +142,13 @@ export default function CalendarPage({ params }: PageProps) {
         toast.error("Invalid training ID");
       }
     } else if (isGameEvent(event)) {
-      toast.info("Game editing will be available in a future update");
+      const gameId = extractNumericId(event.id, "game-");
+      if (gameId) {
+        setEditingGameId(gameId);
+        setIsEditFormOpen(true);
+      } else {
+        toast.error("Invalid game ID");
+      }
     }
   };
 
@@ -172,6 +207,49 @@ export default function CalendarPage({ params }: PageProps) {
     if (!selected) return;
   };
 
+  // Handle context menu on the calendar
+  const handleDayContextMenu = (date: Date, event: React.MouseEvent) => {
+    setContextMenuPosition({ x: event.clientX, y: event.clientY });
+    setSelectedDate(date);
+  };
+
+  // Handle context menu item clicks
+  const handleAddGame = () => {
+    if (selectedDate) {
+      setSelectedEventType(EventType.Game);
+      setIsCreateFormOpen(true);
+      setContextMenuPosition(null);
+    }
+  };
+
+  const handleAddTraining = () => {
+    if (selectedDate) {
+      setSelectedEventType(EventType.Training);
+      setIsCreateFormOpen(true);
+      setContextMenuPosition(null);
+    }
+  };
+
+  // Close context menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        contextMenuRef.current &&
+        !contextMenuRef.current.contains(event.target as Node)
+      ) {
+        setContextMenuPosition(null);
+      }
+    };
+
+    if (contextMenuPosition) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [contextMenuPosition]);
+
   const handleEventsCapture = (events: CalendarEvent[]) => {
     const haveEventsChanged =
       events.length !== calendarEvents.length ||
@@ -218,6 +296,19 @@ export default function CalendarPage({ params }: PageProps) {
     } else {
       setFilteredEvents(filtered);
     }
+  };
+
+  // Let's modify how we close the forms to ensure we also reset the selected date
+  const closeCreateForm = () => {
+    setIsCreateFormOpen(false);
+    setSelectedDate(null);
+  };
+
+  const closeEditForm = () => {
+    setIsEditFormOpen(false);
+    setEditingTrainingId(null);
+    setEditingGameId(null);
+    setSelectedDate(null);
   };
 
   if (seasons?.length === 0) {
@@ -317,10 +408,34 @@ export default function CalendarPage({ params }: PageProps) {
             {isLoadingTenantData ? (
               <Skeleton className="h-10 w-[120px]" />
             ) : (
-              <Button onClick={() => setIsCreateFormOpen(true)}>
-                <Plus className="h-4 w-4 mr-1" />
-                Add Event
-              </Button>
+              <DropdownMenu modal={false}>
+                <DropdownMenuTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Event
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setSelectedEventType(EventType.Game);
+                      setIsCreateFormOpen(true);
+                    }}
+                  >
+                    <Trophy className="mr-2 h-4 w-4" />
+                    <span>Game</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setSelectedEventType(EventType.Training);
+                      setIsCreateFormOpen(true);
+                    }}
+                  >
+                    <Dumbbell className="mr-2 h-4 w-4" />
+                    <span>Training</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </div>
         }
@@ -328,8 +443,8 @@ export default function CalendarPage({ params }: PageProps) {
 
       {/* Filter card */}
       {!isLoadingTenantData && (
-        <Card className="mb-4">
-          <CardContent className="py-4">
+        <Card className="mb-4 shadow-none">
+          <CardContent className="py-0">
             <SimpleFilter
               events={calendarEvents}
               tenantId={tenant?.id?.toString() || ""}
@@ -358,9 +473,39 @@ export default function CalendarPage({ params }: PageProps) {
             }
             currentMonth={currentMonth}
             onMonthChange={setCurrentMonth}
+            onDayContextMenu={handleDayContextMenu}
           />
         </CardContent>
       </Card>
+
+      {/* Context menu for adding events */}
+      {contextMenuPosition && (
+        <div
+          ref={contextMenuRef}
+          className="fixed z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95"
+          style={{
+            top: `${contextMenuPosition.y}px`,
+            left: `${contextMenuPosition.x}px`,
+          }}
+        >
+          <div className="flex flex-col">
+            <button
+              className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground cursor-pointer"
+              onClick={handleAddGame}
+            >
+              <Trophy className="mr-2 h-4 w-4" />
+              <span>Add Game</span>
+            </button>
+            <button
+              className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground cursor-pointer"
+              onClick={handleAddTraining}
+            >
+              <Dumbbell className="mr-2 h-4 w-4" />
+              <span>Add Training</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Event details dialog */}
       {selectedEvent && (
@@ -377,8 +522,15 @@ export default function CalendarPage({ params }: PageProps) {
       {/* Event creation dialog */}
       <ResponsiveSheet
         isOpen={isCreateFormOpen}
-        setIsOpen={setIsCreateFormOpen}
-        title="Create Event"
+        setIsOpen={(open) => {
+          setIsCreateFormOpen(open);
+          if (!open) setSelectedDate(null);
+        }}
+        title={
+          selectedEventType === EventType.Game
+            ? "Create Game"
+            : "Create Training"
+        }
       >
         <>
           {isLoadingTenantData || !tenant || !selectedSeason ? (
@@ -391,57 +543,56 @@ export default function CalendarPage({ params }: PageProps) {
               <Skeleton className="h-10 w-[120px] mt-4" />
             </div>
           ) : (
-            <Tabs
-              defaultValue={EventType.Game}
-              value={selectedEventType}
-              onValueChange={(value) =>
-                setSelectedEventType(value as EventType)
-              }
-              className="w-full"
-            >
-              <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value={EventType.Game}>Game</TabsTrigger>
-                <TabsTrigger value={EventType.Training}>Training</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value={EventType.Game}>
-                <AddEventForm
+            <>
+              {selectedEventType === EventType.Game ? (
+                <AddGameForm
                   tenantId={tenant.id.toString()}
                   domain={params.domain}
                   selectedSeason={selectedSeason}
                   tenant={tenant}
-                  setIsOpen={setIsCreateFormOpen}
+                  setIsOpen={(open) => {
+                    setIsCreateFormOpen(open);
+                    if (!open) setSelectedDate(null);
+                  }}
+                  initialDate={selectedDate}
                 />
-              </TabsContent>
-
-              <TabsContent value={EventType.Training}>
+              ) : (
                 <AddTrainingForm
                   tenantId={tenant.id.toString()}
                   domain={params.domain}
                   selectedSeason={selectedSeason}
                   tenant={tenant}
-                  setIsOpen={setIsCreateFormOpen}
+                  setIsOpen={(open) => {
+                    setIsCreateFormOpen(open);
+                    if (!open) setSelectedDate(null);
+                  }}
+                  initialDate={selectedDate}
                 />
-              </TabsContent>
-            </Tabs>
+              )}
+            </>
           )}
         </>
       </ResponsiveSheet>
 
-      {/* Edit Training dialog */}
+      {/* Edit Training/Game dialog */}
       <ResponsiveSheet
         isOpen={isEditFormOpen}
         setIsOpen={(open) => {
           setIsEditFormOpen(open);
-          if (!open) setEditingTrainingId(null);
+          if (!open) {
+            setEditingTrainingId(null);
+            setEditingGameId(null);
+            setSelectedDate(null);
+          }
         }}
-        title="Edit Training"
+        title={editingGameId ? "Edit Game" : "Edit Training"}
       >
         <>
           {isLoadingTenantData ||
           !tenant ||
           !selectedSeason ||
-          !editingTraining ? (
+          (editingGameId && !editingGame) ||
+          (editingTrainingId && !editingTraining) ? (
             <div className="space-y-4">
               <Skeleton className="h-8 w-[250px]" />
               <Skeleton className="h-10 w-full" />
@@ -450,17 +601,38 @@ export default function CalendarPage({ params }: PageProps) {
               <Skeleton className="h-20 w-full" />
               <Skeleton className="h-10 w-[120px] mt-4" />
             </div>
-          ) : (
+          ) : editingGameId && editingGame ? (
+            <EditGameForm
+              tenantId={tenant.id.toString()}
+              domain={params.domain}
+              selectedSeason={selectedSeason}
+              tenant={tenant}
+              game={editingGame}
+              setIsOpen={(open) => {
+                setIsEditFormOpen(open);
+                if (!open) {
+                  setEditingGameId(null);
+                  setSelectedDate(null);
+                }
+              }}
+            />
+          ) : editingTrainingId && editingTraining ? (
             <EditTrainingForm
               tenantId={tenant.id.toString()}
               domain={params.domain}
               selectedSeason={selectedSeason}
               tenant={tenant}
-              setIsOpen={setIsEditFormOpen}
+              setIsOpen={(open) => {
+                setIsEditFormOpen(open);
+                if (!open) {
+                  setEditingTrainingId(null);
+                  setSelectedDate(null);
+                }
+              }}
               trainingToEdit={editingTraining}
               trainingId={editingTrainingId}
             />
-          )}
+          ) : null}
         </>
       </ResponsiveSheet>
 

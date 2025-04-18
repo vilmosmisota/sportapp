@@ -1,4 +1,4 @@
-const calculateDuration = (startDate: Date, endDate: Date): string => {
+export const calculateDuration = (startDate: Date, endDate: Date): string => {
   const diff = Math.abs(endDate.getTime() - startDate.getTime());
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -22,7 +22,7 @@ const calculateDuration = (startDate: Date, endDate: Date): string => {
   return result;
 };
 
-const createDateWithTime = (date: Date, timeString: string): Date => {
+export const createDateWithTime = (date: Date, timeString: string): Date => {
   const [hours, minutes] = timeString.split(":").map(Number);
   const newDate = new Date(date);
   if (!isNaN(hours) && !isNaN(minutes)) {
@@ -31,7 +31,7 @@ const createDateWithTime = (date: Date, timeString: string): Date => {
   return newDate;
 };
 
-const createNextDayDate = (date: Date): Date => {
+export const createNextDayDate = (date: Date): Date => {
   return new Date(
     date.getFullYear(),
     date.getMonth(),

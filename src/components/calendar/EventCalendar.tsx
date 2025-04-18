@@ -54,6 +54,7 @@ interface EventCalendarProps {
   isLoading?: boolean;
   seasonBreaks?: { from: Date; to: Date }[];
   seasonDateRange?: { startDate: Date; endDate: Date } | null;
+  onDayContextMenu?: (date: Date, event: React.MouseEvent) => void;
 }
 
 export function EventCalendar({
@@ -64,6 +65,7 @@ export function EventCalendar({
   isLoading = false,
   seasonBreaks = [],
   seasonDateRange = null,
+  onDayContextMenu,
 }: EventCalendarProps) {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const [view, setView] = useState<CalendarViewType>(defaultView);
@@ -250,13 +252,14 @@ export function EventCalendar({
           className="h-full m-0 mt-0 p-0 data-[state=active]:block"
         >
           <MonthView
-            currentDate={currentDate}
+            currentDate={currentMonth}
             events={events}
             onEventClick={onEventClick}
             onDateClick={handleDateClick}
             isLoading={isLoading}
             seasonBreaks={seasonBreaks}
             seasonDateRange={seasonDateRange}
+            onDayContextMenu={onDayContextMenu}
           />
         </TabsContent>
       </Tabs>

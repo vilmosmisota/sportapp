@@ -510,10 +510,10 @@ export function SimpleFilter({
       onValueChange={setActiveValue}
     >
       <AccordionItem value="filters" className="border-b-0">
-        <AccordionTrigger className="py-3 hover:no-underline">
+        <AccordionTrigger className="h-11 py-0 hover:no-underline">
           <div className="flex items-center">
             <Filter className="h-4 w-4 mr-2 text-primary" />
-            <h3 className="text-base font-medium">Filters</h3>
+            <h3 className="text-sm font-medium">Filters</h3>
             {activeFilterCount > 0 && (
               <p className="text-sm text-muted-foreground ml-2">
                 {activeFilterCount}
@@ -538,7 +538,7 @@ export function SimpleFilter({
         )}
 
         <AccordionContent className=" pt-2 data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
-          <div className="flex justify-between items-center mb-3">
+          <div className="flex justify-between items-center mb-2">
             <p className="text-sm text-muted-foreground">
               Filter events by type and teams
             </p>
@@ -554,23 +554,26 @@ export function SimpleFilter({
             )}
           </div>
           {/* Horizontal filter layout using a grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-1">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-1">
             {/* Event Type Filter */}
             <Card className="shadow-sm border overflow-hidden">
               {/* Static header */}
-              <div className="px-4 py-3 bg-accent/20 border-b">
+              <div className="px-4 py-2 bg-accent/20 border-b">
                 <div className="flex items-center gap-2">
                   <SlidersHorizontal className="h-4 w-4 text-blue-500" />
-                  <span className="font-medium">Event Type</span>
+                  <span className="text-sm font-medium">Event Type</span>
                 </div>
               </div>
               {/* Content */}
-              <div className="px-4 pb-4 pt-2">
-                <div className="space-y-3">
+              <div className="px-4 pb-3 pt-2">
+                <div className="space-y-2">
                   <div className="flex items-center justify-between p-2 rounded-md hover:bg-accent/10">
                     <div className="flex items-center gap-2">
                       <Trophy className="h-4 w-4 text-amber-500" />
-                      <Label htmlFor="filter-games" className="cursor-pointer">
+                      <Label
+                        htmlFor="filter-games"
+                        className="cursor-pointer text-sm"
+                      >
                         Games
                       </Label>
                     </div>
@@ -587,7 +590,7 @@ export function SimpleFilter({
                       <Dumbbell className="h-4 w-4 text-blue-500" />
                       <Label
                         htmlFor="filter-trainings"
-                        className="cursor-pointer"
+                        className="cursor-pointer text-sm"
                       >
                         Trainings
                       </Label>
@@ -606,10 +609,10 @@ export function SimpleFilter({
             {/* Tenant Teams Filter */}
             <Card className="shadow-sm border overflow-hidden">
               {/* Static header */}
-              <div className="px-4 py-3 bg-accent/20 border-b">
+              <div className="px-4 py-2 bg-accent/20 border-b">
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4 text-green-500" />
-                  <span className="font-medium">
+                  <span className="text-sm font-medium">
                     {tenantName || "Your teams"}
                   </span>
                   {filters.teams.tenantTeams.length > 0 && (
@@ -620,8 +623,8 @@ export function SimpleFilter({
                 </div>
               </div>
               {/* Content */}
-              <div className="px-4 pb-4 pt-2">
-                <div className="space-y-1 max-h-40 overflow-y-auto">
+              <div className="px-4 pb-3 pt-2">
+                <div className="space-y-1 max-h-32 overflow-y-auto">
                   {tenantTeams.length === 0 ? (
                     <p className="text-sm text-muted-foreground">
                       No teams available
@@ -662,10 +665,10 @@ export function SimpleFilter({
             {/* Opponent Teams Filter */}
             <Card className="shadow-sm border overflow-hidden">
               {/* Static header */}
-              <div className="px-4 py-3 bg-accent/20 border-b">
+              <div className="px-4 py-2 bg-accent/20 border-b">
                 <div className="flex items-center gap-2">
                   <Shield className="h-4 w-4 text-red-500" />
-                  <span className="font-medium">Opponents</span>
+                  <span className="text-sm font-medium">Opponents</span>
                   {filters.teams.opponentTeams.length > 0 && (
                     <Badge variant="secondary" className="ml-1 h-5 px-1">
                       {filters.teams.opponentTeams.length}
@@ -674,8 +677,8 @@ export function SimpleFilter({
                 </div>
               </div>
               {/* Content */}
-              <div className="px-4 pb-4 pt-2">
-                <div className="space-y-1 max-h-40 overflow-y-auto">
+              <div className="px-4 pb-3 pt-2">
+                <div className="space-y-1 max-h-32 overflow-y-auto">
                   {opponentTeams.length === 0 ? (
                     <p className="text-sm text-muted-foreground">
                       No opponent teams found in your events

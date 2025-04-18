@@ -466,23 +466,6 @@ export function EventDetailsDialog({
                 )}
               </div>
 
-              {/* Score if available */}
-              {((event.data as GameData).homeScore !== undefined ||
-                (event.data as GameData).awayScore !== undefined) && (
-                <div>
-                  <h3 className="text-sm font-medium mb-2">Score</h3>
-                  <div className="flex items-center justify-between bg-muted p-3 rounded-md">
-                    <div className="text-xl font-bold">
-                      {(event.data as GameData).homeScore ?? "-"}
-                    </div>
-                    <div className="text-xs text-muted-foreground mx-2">:</div>
-                    <div className="text-xl font-bold">
-                      {(event.data as GameData).awayScore ?? "-"}
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {/* Notes if available */}
               {(event.data as GameData).meta?.note && (
                 <div>
