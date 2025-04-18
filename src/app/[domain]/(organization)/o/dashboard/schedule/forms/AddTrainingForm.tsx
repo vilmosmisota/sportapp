@@ -105,10 +105,8 @@ export default function AddTrainingForm({
   const addTrainingBatch = useAddTrainingBatch(tenantId);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Set initial training mode based on initialDate
-  const [trainingMode, setTrainingMode] = useState<TrainingMode>(
-    initialDate ? "repeating" : "single"
-  );
+  // Always default to single training mode
+  const [trainingMode, setTrainingMode] = useState<TrainingMode>("single");
 
   const form = useForm<FormValues>({
     resolver: zodResolver(trainingFormSchema),
@@ -124,33 +122,13 @@ export default function AddTrainingForm({
       ),
       locationId: "",
       teamId: "",
-      selectedDays: initialDate ? [initialDate.getDay()] : [],
+      selectedDays: [],
       note: "",
     },
     mode: "onSubmit",
   });
 
-  // Set initial mode and selected day based on initialDate - consolidated effect
-  useEffect(() => {
-    if (initialDate) {
-      // Only set the training mode on initial render
-      if (trainingMode !== "repeating") {
-        setTrainingMode("repeating");
-      }
-
-      // Always ensure the day of the week is selected
-      const dayOfWeek = initialDate.getDay();
-      const currentSelectedDays = form.getValues("selectedDays");
-
-      if (!currentSelectedDays.includes(dayOfWeek)) {
-        form.setValue("selectedDays", [...currentSelectedDays, dayOfWeek], {
-          shouldDirty: true,
-          shouldValidate: false,
-        });
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialDate, trainingMode]);
+  // We don't need to pre-select days on mount since we're always starting in single mode
 
   // Set end time to 1 hour after the start time
   const setEndTimeFromStartTime = (startTime: string) => {
@@ -335,21 +313,28 @@ export default function AddTrainingForm({
               const newMode = value as TrainingMode;
               setTrainingMode(newMode);
 
-              // When switching to repeating mode, pre-select the day of the week if none selected
               if (newMode === "repeating") {
-                const currentSelectedDays = form.getValues("selectedDays");
+                // When switching to repeating mode, always pre-select the day of the week
+                // from either the current form date or initialDate
+                const currentDate =
+                  form.getValues("date") || initialDate || new Date();
+                const dayOfWeek = currentDate.getDay();
 
-                if (currentSelectedDays.length === 0) {
-                  // Use either initialDate or the date from the form
-                  const currentDate =
-                    form.getValues("date") || initialDate || new Date();
-                  const dayOfWeek = currentDate.getDay();
-
-                  form.setValue("selectedDays", [dayOfWeek], {
-                    shouldDirty: true,
-                    shouldValidate: false,
-                  });
-                }
+                // Always set the day, replacing any previous selection
+                form.setValue("selectedDays", [dayOfWeek], {
+                  shouldDirty: true,
+                  shouldValidate: false,
+                });
+              } else if (
+                newMode === "single" &&
+                initialDate &&
+                !form.getValues("date")
+              ) {
+                // When switching to single mode, ensure date is set from initialDate if available
+                form.setValue("date", initialDate, {
+                  shouldDirty: true,
+                  shouldValidate: false,
+                });
               }
             }}
             className="w-full"
@@ -478,13 +463,16 @@ export default function AddTrainingForm({
                           : dateRange
                       }`;
 
-                      if (initialDate) {
+                      // Check for either initialDate or the current form date
+                      const referenceDate =
+                        form.getValues("date") || initialDate;
+                      if (referenceDate) {
                         const dayName = daysOfWeek.find(
-                          (day) => day.id === initialDate.getDay()
+                          (day) => day.id === referenceDate.getDay()
                         )?.name;
                         if (dayName) {
                           description += `, starting on ${format(
-                            initialDate,
+                            referenceDate,
                             "dd/MM/yyyy"
                           )} (${dayName})`;
                         }
