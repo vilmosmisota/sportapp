@@ -206,15 +206,6 @@ export default function AddGameForm({
     form.setValue("awayTeamId", 0);
   }, [gameLocation, form]);
 
-  // Handle competition type selection with color
-  const handleCompetitionTypeChange = (name: string, color: string) => {
-    // Use the helper function to format properly
-    const formattedType = formatCompetitionType(name, color);
-
-    form.setValue("competitionType", formattedType);
-    setIsDirty(true);
-  };
-
   // Handle competition type selection from dropdown
   const handleCompetitionTypeSelect = (competitionType: CompetitionType) => {
     // Use the helper function to format properly
