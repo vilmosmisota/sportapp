@@ -263,8 +263,6 @@ export default function CreateOpponentForm({
 
   const onSubmit = async (data: OpponentFormType) => {
     try {
-      console.log("Form submitted with data:", data);
-
       // Process basic form data
       const processedData = prepareFormData(data);
 

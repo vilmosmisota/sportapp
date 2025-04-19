@@ -110,11 +110,30 @@ export default function PlayersTable({
         left: ["name"],
         right: ["actions"],
       },
-      columnVisibility: {
-        position: showPositionColumn,
-      },
+      ...(showPositionColumn
+        ? {
+            columnVisibility: {
+              position: showPositionColumn,
+            },
+          }
+        : {}),
     },
   });
+
+  // Update column visibility when showPositionColumn changes
+  useEffect(() => {
+    // Check if position column exists in table
+    const hasPositionColumn = table
+      .getAllColumns()
+      .some((col) => col.id === "position");
+
+    if (hasPositionColumn) {
+      setColumnVisibility((prev) => ({
+        ...prev,
+        position: showPositionColumn,
+      }));
+    }
+  }, [showPositionColumn, table]);
 
   return (
     <ErrorBoundary>

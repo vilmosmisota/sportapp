@@ -24,9 +24,18 @@ export function PlayersTableToolbar<TData>({
 }: PlayersTableToolbarProps<TData>) {
   const { data: teams } = useGetTeamsByTenantId(tenantId);
   const isFiltered = table.getState().columnFilters.length > 0;
+  // Check if position column exists upfront to avoid multiple checks
+  const positionColumnExists = !!table
+    .getAllColumns()
+    .find((col) => col.id === "position");
 
   // Helper function to get filtered rows excluding a specific column
   const getFilteredRowsExcluding = (excludeColumn: string) => {
+    // Check if the column exists before trying to filter
+    if (!table.getColumn(excludeColumn)) {
+      return table.getPreFilteredRowModel().rows;
+    }
+
     const filters = table.getState().columnFilters;
     const tempFilters = filters.filter((f) => f.id !== excludeColumn);
 
@@ -54,6 +63,11 @@ export function PlayersTableToolbar<TData>({
     columnId: string,
     filteredRows: Row<TData>[]
   ) => {
+    // If the column doesn't exist, return an empty array
+    if (!table.getColumn(columnId)) {
+      return [];
+    }
+
     const valueMap = new Map<string, number>();
 
     filteredRows.forEach((row) => {
@@ -109,9 +123,13 @@ export function PlayersTableToolbar<TData>({
 
   // Get filtered rows for each column
   const genderRows = getFilteredRowsExcluding("gender");
-  const positionRows = getFilteredRowsExcluding("position");
+  // Only process position rows if the column exists
+  const positionRows = positionColumnExists
+    ? getFilteredRowsExcluding("position")
+    : [];
   const teamRows = getFilteredRowsExcluding("teams");
 
+  // Build the filter groups
   const filterGroups = [
     {
       title: "Gender",
@@ -123,17 +141,21 @@ export function PlayersTableToolbar<TData>({
           .getColumn("gender")
           ?.setFilterValue(values.length ? values : undefined),
     },
-    {
-      title: "Position",
-      options: getOptionsWithCounts("position", positionRows),
-      selectedValues:
-        (table.getColumn("position")?.getFilterValue() as string[]) || [],
-      onSelectionChange: (values: string[]) =>
-        table
-          .getColumn("position")
-          ?.setFilterValue(values.length ? values : undefined),
-    },
   ];
+
+  // Only add position filter if the position column exists
+  if (positionColumnExists) {
+    const positionColumn = table.getColumn("position");
+    if (positionColumn) {
+      filterGroups.push({
+        title: "Position",
+        options: getOptionsWithCounts("position", positionRows),
+        selectedValues: (positionColumn.getFilterValue() as string[]) || [],
+        onSelectionChange: (values: string[]) =>
+          positionColumn.setFilterValue(values.length ? values : undefined),
+      });
+    }
+  }
 
   if (teams?.length) {
     filterGroups.push({

@@ -210,7 +210,7 @@ export default function AddGameForm({
   const handleCompetitionTypeChange = (name: string, color: string) => {
     // Use the helper function to format properly
     const formattedType = formatCompetitionType(name, color);
-    console.log("Setting competition type:", formattedType);
+
     form.setValue("competitionType", formattedType);
     setIsDirty(true);
   };
@@ -222,7 +222,7 @@ export default function AddGameForm({
       competitionType.name,
       competitionType.color || undefined
     );
-    console.log("Selected competition type:", formattedType);
+
     form.setValue("competitionType", formattedType);
     setIsDirty(true);
   };
@@ -255,14 +255,12 @@ export default function AddGameForm({
       let fixedCompetitionType = data.competitionType;
 
       if (fixedCompetitionType && fixedCompetitionType.includes("##")) {
-        console.log("Found malformed competition type:", fixedCompetitionType);
         // Extract the parts and reformat correctly
         const parts = fixedCompetitionType.split("#");
         fixedCompetitionType = formatCompetitionType(
           parts[0],
           parts.slice(1).join("")
         );
-        console.log("Fixed to:", fixedCompetitionType);
       }
 
       // Get a reference to date before we modify anything
@@ -278,8 +276,6 @@ export default function AddGameForm({
           note: data.meta?.note || null,
         },
       };
-
-      console.log("Submitting game data:", formData);
 
       // Get team names for the success message
       const homeTeam =
@@ -388,7 +384,6 @@ export default function AddGameForm({
           parts[0],
           parts.slice(1).join("")
         );
-        console.log("Fixed to:", fixedCompetitionType);
       }
 
       // Get a reference to date before we modify anything
@@ -404,8 +399,6 @@ export default function AddGameForm({
           note: data.meta?.note || null,
         },
       };
-
-      console.log("Submitting game data:", formData);
 
       // Get team names for the success message
       const homeTeam =

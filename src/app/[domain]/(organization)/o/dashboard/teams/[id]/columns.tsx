@@ -59,12 +59,14 @@ interface PlayersTableColumnsProps {
   onRemove: (playerId: number) => void;
   canManageTeams: boolean;
   teamGender: string;
+  showPositionColumn?: boolean;
 }
 
 export const playerColumns = ({
   onRemove,
   canManageTeams,
   teamGender,
+  showPositionColumn = true,
 }: PlayersTableColumnsProps): ColumnDef<TeamPlayer>[] => {
   const columns: ColumnDef<TeamPlayer>[] = [
     {
@@ -100,7 +102,11 @@ export const playerColumns = ({
       },
       enableSorting: true,
     },
-    {
+  ];
+
+  // Only add position column if showPositionColumn is true
+  if (showPositionColumn) {
+    columns.push({
       accessorKey: "position",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Position" />
@@ -113,8 +119,8 @@ export const playerColumns = ({
         );
       },
       enableSorting: true,
-    },
-  ];
+    });
+  }
 
   // Only add the gender column if the team is mixed
   if (teamGender.toLowerCase() === "mixed") {

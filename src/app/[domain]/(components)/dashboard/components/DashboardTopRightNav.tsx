@@ -41,7 +41,7 @@ function DashboardTopRightNav({
       <div
         className={cn(
           "flex h-full items-center justify-end gap-2 px-4 relative rounded-md transition-all duration-300",
-          isCollapsed ? "bg-primary-50/30 backdrop-blur-sm" : ""
+          isCollapsed ? "bg-primary/20 backdrop-blur-sm" : ""
         )}
       >
         {/* Settings Dropdown */}

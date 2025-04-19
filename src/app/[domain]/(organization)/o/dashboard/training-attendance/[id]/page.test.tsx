@@ -654,10 +654,3 @@ describe("AttendanceSessionPage", () => {
     expect(screen.getByText("18:05")).toBeTruthy();
   });
 });
-
-// Skip ManageAttendanceForm tests since it's not exported
-describe("ManageAttendanceForm", () => {
-  it("skipped: tests require component to be exported", () => {
-    console.log("ManageAttendanceForm tests skipped - component not exported");
-  });
-});

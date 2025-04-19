@@ -115,8 +115,6 @@ export function useTrainingsCalendarEvents(
     seasonId
   );
 
-  console.log("queryKey on fetching trainings calendar events", queryKey);
-
   // Get the Supabase client
   const client = useSupabase();
 

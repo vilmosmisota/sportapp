@@ -184,13 +184,9 @@ function ManagePlayerPositionsForm({
   };
 
   const handleRemovePosition = (index: number) => {
-    console.log("Remove button clicked for index:", index);
-
     const currentPositions = form.getValues("positions");
-    console.log("Current positions:", currentPositions);
 
     const newPositions = currentPositions.filter((_, i) => i !== index);
-    console.log("New positions:", newPositions);
 
     form.setValue("positions", newPositions, {
       shouldDirty: true,

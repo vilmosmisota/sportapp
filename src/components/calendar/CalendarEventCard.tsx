@@ -85,8 +85,6 @@ export function CalendarEventCard({
     ? (event.data as TrainingData)
     : event.data;
 
-  console.log("eventData", eventData);
-
   // Get team color for training cards
   const getTeamColor = () => {
     if (

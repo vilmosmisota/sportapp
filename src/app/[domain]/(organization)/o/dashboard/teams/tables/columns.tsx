@@ -36,7 +36,7 @@ const TeamsTableActions = ({
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8 opacity-0 group-hover/row:opacity-100 transition-opacity"
+        className="h-8 w-8 opacity-50 group-hover/row:opacity-100 transition-opacity"
         asChild
       >
         <Link href={`/o/dashboard/teams/${team.id}`}>

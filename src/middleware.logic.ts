@@ -109,7 +109,6 @@ export function validateUserAccess(
   userRoles: UserRole[] | null
 ): boolean {
   if (!userRoles || userRoles.length === 0) {
-    console.log("No roles - access denied");
     return false;
   }
 
@@ -119,7 +118,6 @@ export function validateUserAccess(
   );
 
   if (hasSystemRole) {
-    console.log("System role - access granted to all routes");
     return true;
   }
 
@@ -153,9 +151,6 @@ export function validateUserAccess(
     });
 
     if (!hasManagementRole) {
-      console.log(
-        "Organization dashboard requires management role with appropriate permissions"
-      );
       return false;
     }
   }
@@ -166,7 +161,6 @@ export function validateUserAccess(
       (userRole) => userRole.role?.domain === RoleDomain.FAMILY
     );
     if (!hasFamilyRole) {
-      console.log("Parent dashboard requires family role");
       return false;
     }
   }
@@ -177,12 +171,10 @@ export function validateUserAccess(
       (userRole) => userRole.role?.domain === RoleDomain.PLAYER
     );
     if (!hasPlayerRole) {
-      console.log("Player dashboard requires player role");
       return false;
     }
   }
 
-  console.log("Access granted");
   return true;
 }
 

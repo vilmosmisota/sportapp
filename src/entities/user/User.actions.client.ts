@@ -193,11 +193,8 @@ export const useLogIn = (domain: string) => {
   return useMutation({
     mutationFn: (formData: UserLogin) => logIn(formData, domain),
     onSuccess: ({ tenantType }) => {
-      console.log("tenantType", tenantType);
       // Redirect based on tenant type with domain
       if (tenantType === TenantType.ORGANIZATION) {
-        console.log("pushing to /o/dashboard");
-        console.log(`/o/dashboard`);
         router.push(`/o/dashboard`);
       } else if (tenantType === TenantType.LEAGUE) {
         router.push(`/l/dashboard`);
