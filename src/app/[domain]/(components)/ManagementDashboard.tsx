@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Cog, PanelLeft, UserRound } from "lucide-react";
+import { PanelLeft } from "lucide-react";
 import { useParams, usePathname } from "next/navigation";
 import { Button } from "../../../components/ui/button";
 import { Sidebar } from "./dashboard/Sidebar";
@@ -11,43 +11,11 @@ import { useTenantConfig } from "./dashboard/hooks/useTenantConfig";
 import { useNavigation } from "./dashboard/hooks/useNavigation";
 import DashboardTopRightNav from "./dashboard/components/DashboardTopRightNav";
 import { DashboardMainFrame } from "./dashboard/components/DashboardMainFrame";
-import { usePinnedItems } from "./dashboard/hooks/usePinnedItems";
-import { NavItem } from "./dashboard/constants";
+
 import { cn } from "../../../lib/utils";
-import Link from "next/link";
 
-// Component to show pinned items in the top navbar
-const PinnedNav = ({
-  pinnedItems,
-  pathname,
-}: {
-  pinnedItems: NavItem[];
-  pathname: string;
-}) => {
-  if (pinnedItems.length === 0) return null;
-
-  return (
-    <div className="flex h-full items-center justify-start gap-2 relative">
-      {pinnedItems.map((item) => {
-        const Icon = getIcon(item.iconName);
-        return (
-          <Link
-            key={item.id}
-            href={item.href}
-            className={cn(
-              "flex items-center justify-center h-8 w-8 rounded-md transition-all",
-              pathname === item.href
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
-            )}
-          >
-            {Icon}
-          </Link>
-        );
-      })}
-    </div>
-  );
-};
+import { PinnedNav } from "./dashboard/components/PinnedNav";
+import { useUIState } from "../../../browserStorage/localStorage/ui-storage";
 
 /**
  * ManagementDashboard - Main layout component for the organization dashboard
@@ -59,7 +27,10 @@ export default function ManagementDashboard({
 }) {
   // UI state
   const [isOpen, setIsOpen] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useUIState({
+    key: "dashboard.sidebar.collapsed",
+    defaultValue: false,
+  });
   const [openSections, setOpenSections] = useState<string[]>([]);
 
   // Routing and tenant data
@@ -82,24 +53,13 @@ export default function ManagementDashboard({
     gameLocationsConfigured
   );
 
-  const { pinnedItemIds, isRequiredPin } = usePinnedItems();
-
-  // Create a flat list of all nav items
-  const allNavItems = navItems.flatMap((section) => section.items);
-
-  // Filter out pinned items
-  const pinnedItems = allNavItems.filter((item) =>
-    pinnedItemIds.includes(item.id)
-  );
-
   return (
     <div className="flex min-h-screen relative">
       {/* Top-left area for pinned items */}
       <div className="absolute flex flex-col h-12 top-0 left-0 z-50 pt-4">
         <div
           className={cn(
-            "flex h-full items-center justify-start gap-2 px-4 relative rounded-md transition-all duration-300",
-            isCollapsed ? "bg-primary-300/30 backdrop-blur-sm" : ""
+            "flex h-full items-center justify-start gap-2 px-4 relative rounded-md transition-all duration-300"
           )}
         >
           <Button
@@ -117,9 +77,7 @@ export default function ManagementDashboard({
           </Button>
 
           {/* Only show the pinned nav when sidebar is collapsed */}
-          {isCollapsed && (
-            <PinnedNav pinnedItems={pinnedItems} pathname={pathname} />
-          )}
+          {isCollapsed && <PinnedNav navItems={navItems} pathname={pathname} />}
         </div>
       </div>
 

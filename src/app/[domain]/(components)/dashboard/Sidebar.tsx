@@ -27,6 +27,12 @@ interface SidebarProps {
   isTenantLoading: boolean;
 }
 
+/**
+ * Sidebar component for the dashboard
+ * Uses localStorage for persisting:
+ * - Pinned items (via usePinnedItems hook)
+ * - Open sections (via parent component with useUIState)
+ */
 export const Sidebar: React.FC<SidebarProps> = ({
   isCollapsed,
   setIsCollapsed,
@@ -40,6 +46,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   tenantId,
   isTenantLoading,
 }) => {
+  // Get pinned items functionality (using localStorage via the hook)
   const { pinnedItemIds, togglePinItem, isPinned, isRequiredPin } =
     usePinnedItems();
 
@@ -53,7 +60,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const defaultItems =
     navItems.find((section) => section.section === "Default")?.items || [];
 
-  // Filter out pinned items
+  // Filter out pinned items (these are persisted in localStorage)
   const pinnedItems = [...defaultItems, ...allNavItems].filter((item) =>
     pinnedItemIds.includes(item.id)
   );
@@ -77,7 +84,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           />
         </div>
 
-        {/* Pinned nav items */}
+        {/* Pinned nav items - stored in localStorage */}
         {pinnedItems.length > 0 && (
           <div className={cn("py-2", isCollapsed ? "px-2" : "px-4")}>
             <div className="space-y-1">

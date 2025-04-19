@@ -37,11 +37,11 @@ function DashboardTopRightNav({
   const { data: user } = useCurrentUser();
 
   return (
-    <div className="absolute flex flex-col h-12 top-0 right-0 z-50 pt-4">
+    <div className="absolute flex flex-col h-12 px-4 top-0 right-0 z-50 pt-4">
       <div
         className={cn(
-          "flex h-full items-center justify-end gap-2 px-4 relative rounded-md transition-all duration-300",
-          isCollapsed ? "bg-primary/20 backdrop-blur-sm" : ""
+          "flex h-full items-center justify-end gap-2 px-4  relative rounded-md transition-all duration-300",
+          isCollapsed ? "bg-primary/10 backdrop-blur-sm" : ""
         )}
       >
         {/* Settings Dropdown */}
