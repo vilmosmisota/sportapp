@@ -13,7 +13,7 @@ import {
   loadUIState,
   saveUIState,
   useUIState,
-} from "../../utils/ui-storage";
+} from "./ui-storage";
 
 // Mock localStorage
 const localStorageMock = (() => {
@@ -235,7 +235,7 @@ describe("React Hook: useUIState", () => {
 
     // Update with function
     act(() => {
-      result.current[1]((prev) => prev + 1);
+      result.current[1]((prev: number) => prev + 1);
     });
 
     // Run the setTimeout callback

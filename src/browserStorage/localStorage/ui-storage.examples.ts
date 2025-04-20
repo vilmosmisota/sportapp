@@ -5,7 +5,7 @@
  * These examples are for reference and should not be used directly in production.
  */
 
-import { createUIStateManager, useUIState } from "../../utils/ui-storage";
+import { createUIStateManager, useUIState } from "./ui-storage";
 
 /**
  * Example 1: Basic usage with individual hooks
@@ -21,7 +21,7 @@ export function BasicUsageExample() {
 
   // Example for toggling sidebar
   const toggleSidebar = () => {
-    setSidebarCollapsed((prev) => !prev);
+    setSidebarCollapsed((prev: boolean) => !prev);
   };
 
   return {
@@ -76,16 +76,18 @@ export function SidebarManagerExample() {
       sidebarStateManager.useState("pinnedItems");
 
     function toggleSidebar() {
-      setCollapsed((prev) => !prev);
+      setCollapsed((prev: boolean) => !prev);
       sidebarStateManager.setState("lastOpenTimestamp", Date.now());
     }
 
     function addPinnedItem(id: string) {
-      setPinnedItems((prev) => [...prev, id]);
+      setPinnedItems((prev: string[]) => [...prev, id]);
     }
 
     function removePinnedItem(id: string) {
-      setPinnedItems((prev) => prev.filter((item) => item !== id));
+      setPinnedItems((prev: string[]) =>
+        prev.filter((item: string) => item !== id)
+      );
     }
 
     // Clear all sidebar state if needed
