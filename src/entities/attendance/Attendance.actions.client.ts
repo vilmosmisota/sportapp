@@ -57,11 +57,22 @@ export const useCreateAttendanceSession = () => {
 
       return session;
     },
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
+      // Invalidate all attendance data
       queryClient.invalidateQueries({
         queryKey: queryKeys.attendance.all,
       });
-      router.push(`/o/dashboard/training-attendance/${data.id}`);
+
+      // Specifically invalidate active sessions to update the carousel
+      // Include the tenant ID in the query key
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.attendance.activeSessions, variables.tenantId],
+      });
+
+      // Invalidate training data if there are any dependencies
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.training.all,
+      });
     },
   });
 };
@@ -102,8 +113,19 @@ export const useCreateAttendanceRecord = (
       );
     },
     onSuccess: () => {
+      // Invalidate specific records for this session
       queryClient.invalidateQueries({
-        queryKey: [queryKeys.attendance.records],
+        queryKey: [queryKeys.attendance.records, sessionId, tenantId],
+      });
+
+      // Invalidate session detail
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.attendance.detail(tenantId, sessionId.toString())],
+      });
+
+      // Invalidate active sessions (in case this affects the session status in the carousel)
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.attendance.activeSessions, tenantId],
       });
     },
   });
@@ -133,12 +155,12 @@ export const useCloseAttendanceSession = () => {
       // Return the result to be used in onSuccess/onError callbacks
       return result;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       // Since the records are now deleted, we need to invalidate different queries
 
-      // Invalidate active sessions
+      // Invalidate active sessions with the tenant ID
       queryClient.invalidateQueries({
-        queryKey: queryKeys.attendance.activeSessions,
+        queryKey: [queryKeys.attendance.activeSessions, variables.tenantId],
       });
 
       // Invalidate all attendance data
@@ -160,7 +182,7 @@ export const useCloseAttendanceSession = () => {
       // We don't need to invalidate records for this session since they're deleted
       // But we should invalidate the session itself
       queryClient.invalidateQueries({
-        queryKey: [queryKeys.attendance.sessions],
+        queryKey: [queryKeys.attendance.sessions, variables.tenantId],
       });
     },
     onError: (error) => {
@@ -184,10 +206,23 @@ export const useDeleteAttendanceSession = () => {
     }) => {
       await deleteAttendanceSession(client, sessionId, tenantId);
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
+      // Invalidate all attendance data
       queryClient.invalidateQueries({
         queryKey: queryKeys.attendance.all,
       });
+
+      // Invalidate active sessions with the tenant ID
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.attendance.activeSessions, variables.tenantId],
+      });
+
+      // Invalidate sessions list with the tenant ID
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.attendance.sessions, variables.tenantId],
+      });
+
+      // Invalidate aggregate stats
       queryClient.invalidateQueries({
         queryKey: [queryKeys.attendance.teamStats],
       });
@@ -269,13 +304,24 @@ export const useUpdateAttendanceStatuses = (
       );
     },
     onSuccess: () => {
-      // Invalidate relevant queries
+      // Invalidate session detail
       queryClient.invalidateQueries({
         queryKey: [queryKeys.attendance.detail(tenantId, sessionId.toString())],
       });
 
+      // Invalidate specific records for this session
       queryClient.invalidateQueries({
         queryKey: [queryKeys.attendance.records, sessionId, tenantId],
+      });
+
+      // Invalidate active sessions carousel
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.attendance.activeSessions, tenantId],
+      });
+
+      // Invalidate any potential aggregated stats
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.attendance.stats],
       });
     },
   });

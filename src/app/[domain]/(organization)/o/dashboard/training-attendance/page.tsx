@@ -287,7 +287,19 @@ export default function AttendancePage({
             isClosingSession={closeSession.isPending}
             tenantId={tenant?.id.toString() ?? ""}
           />
-        ) : null}
+        ) : (
+          <Card className="mb-6">
+            <CardContent className="py-6">
+              <div className="flex flex-col items-center justify-center h-40 text-center">
+                <h3 className="text-lg font-medium mb-2">No Active Sessions</h3>
+                <p className="text-sm text-muted-foreground max-w-md">
+                  There are no active attendance sessions at the moment. Start a
+                  session for an upcoming training to track attendance.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Upcoming trainings without active sessions */}
         {isLoading ? (
@@ -315,7 +327,21 @@ export default function AttendancePage({
             isStartingSession={createSession.isPending}
             tenantId={tenant?.id.toString() ?? ""}
           />
-        ) : null}
+        ) : (
+          <Card className="mb-6">
+            <CardContent className="py-6">
+              <div className="flex flex-col items-center justify-center h-40 text-center">
+                <h3 className="text-lg font-medium mb-2">
+                  No Upcoming Trainings
+                </h3>
+                <p className="text-sm text-muted-foreground max-w-md">
+                  There are no trainings scheduled for the next 7 days. Once
+                  trainings are scheduled, they will appear here.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </ErrorBoundary>
   );

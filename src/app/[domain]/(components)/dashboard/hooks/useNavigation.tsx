@@ -87,7 +87,7 @@ export function useNavigation(
       items: [
         {
           id: 7,
-          name: "Live Tracker",
+          name: "Attendance Tracker",
           href: "/o/dashboard/training-attendance/",
           iconName: "ClipboardList",
           description: "Monitor live attendance and session participation",
@@ -99,7 +99,7 @@ export function useNavigation(
         },
         {
           id: 8,
-          name: "Performance Analytics",
+          name: "Attendance Analytics",
           href: "/o/dashboard/training-analytics",
           iconName: "Activity",
           description:
