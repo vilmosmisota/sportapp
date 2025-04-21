@@ -12,17 +12,18 @@ import {
 import FormButtons from "@/components/ui/form-buttons";
 import { useAddSeason } from "@/entities/season/Season.actions.client";
 import { SeasonForm } from "@/entities/season/Season.schema";
-import { format } from "date-fns";
+import { format, addDays, addMonths } from "date-fns";
 import { CalendarDays, Clock } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { DateInput } from "@/components/ui/date-input/DateInput";
+import { DateRange } from "@/components/ui/date-range";
 import BreaksEditor from "./BreaksEditor";
 
+type Break = { id: number; from: Date; to: Date };
 type AddSeasonFormProps = {
   tenantId: string;
   domain: string;
@@ -31,27 +32,75 @@ type AddSeasonFormProps = {
 
 export function AddSeasonForm({
   tenantId,
-
   setIsParentModalOpen,
 }: AddSeasonFormProps) {
   const addSeason = useAddSeason(tenantId);
 
-  const [breaks, setBreaks] = useState<{ id: number; from: Date; to: Date }[]>(
-    []
-  );
+  const [breaks, setBreaks] = useState<Break[]>([]);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = addDays(today, 1);
+  tomorrow.setHours(0, 0, 0, 0);
+
+  // Store these as simple states instead of derived states
+  const [minBreakDate, setMinBreakDate] = useState<Date>(today);
+  const [maxBreakDate, setMaxBreakDate] = useState<Date>(tomorrow);
 
   const form = useForm<SeasonForm>({
     defaultValues: {
-      startDate: new Date(),
-      endDate: new Date(),
+      startDate: today,
+      endDate: tomorrow,
       breaks: [],
       isActive: false,
       customName: "",
     },
   });
 
+  // Memoize this handler to prevent unnecessary re-renders
+  const handleStartDateChange = useCallback(
+    (date: Date | undefined) => {
+      if (!date) return;
+
+      // Create a new date object to avoid mutation issues
+      const newDate = new Date(date);
+      newDate.setHours(0, 0, 0, 0);
+
+      form.setValue("startDate", newDate, { shouldDirty: true });
+      setMinBreakDate(newDate);
+
+      // Only update end date if necessary
+      const currentEndDate = form.getValues("endDate");
+      if (newDate >= currentEndDate) {
+        const newEndDate = addDays(new Date(newDate), 1);
+        form.setValue("endDate", newEndDate, { shouldDirty: true });
+        setMaxBreakDate(newEndDate);
+      }
+    },
+    [form]
+  );
+
+  // Memoize this handler to prevent unnecessary re-renders
+  const handleEndDateChange = useCallback(
+    (date: Date | undefined) => {
+      if (!date) return;
+
+      // Create a new date object to avoid mutation issues
+      const newDate = new Date(date);
+      newDate.setHours(23, 59, 59, 999);
+
+      form.setValue("endDate", newDate, { shouldDirty: true });
+      setMaxBreakDate(newDate);
+    },
+    [form]
+  );
+
   const { handleSubmit } = form;
   const { isDirty, isLoading } = form.formState;
+
+  // Use state values instead of form.getValues() which doesn't trigger re-renders
+  const startDate = form.watch("startDate");
+  const endDate = form.watch("endDate");
 
   const onSubmit = (data: SeasonForm) => {
     // Format the breaks according to the schema
@@ -85,7 +134,6 @@ export function AddSeasonForm({
   const onCancel = () => {
     form.reset();
     setBreaks([]);
-
     setIsParentModalOpen(false);
   };
 
@@ -126,43 +174,20 @@ export function AddSeasonForm({
                 )}
               />
 
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="startDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Start Date</FormLabel>
-                      <FormControl>
-                        <DateInput
-                          value={field.value}
-                          onChange={(date) => field.onChange(date)}
-                          error={!!form.formState.errors.startDate}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="endDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>End Date</FormLabel>
-                      <FormControl>
-                        <DateInput
-                          value={field.value}
-                          onChange={(date) => field.onChange(date)}
-                          error={!!form.formState.errors.endDate}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              {/* We've moved to direct form handlers rather than nested form fields */}
+              <FormItem>
+                <FormLabel>Season Dates</FormLabel>
+                <FormControl>
+                  <DateRange
+                    startDate={startDate}
+                    endDate={endDate}
+                    onStartDateChange={handleStartDateChange}
+                    onEndDateChange={handleEndDateChange}
+                    showDuration={true}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
 
               <FormField
                 control={form.control}
@@ -199,8 +224,8 @@ export function AddSeasonForm({
               <BreaksEditor
                 breaks={breaks}
                 onUpdate={setBreaks}
-                minDate={form.getValues("startDate")}
-                maxDate={form.getValues("endDate")}
+                minDate={minBreakDate}
+                maxDate={maxBreakDate}
               />
             </CardContent>
           </Card>

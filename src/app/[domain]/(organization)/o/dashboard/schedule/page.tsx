@@ -298,19 +298,6 @@ export default function CalendarPage({ params }: PageProps) {
     }
   };
 
-  // Let's modify how we close the forms to ensure we also reset the selected date
-  const closeCreateForm = () => {
-    setIsCreateFormOpen(false);
-    setSelectedDate(null);
-  };
-
-  const closeEditForm = () => {
-    setIsEditFormOpen(false);
-    setEditingTrainingId(null);
-    setEditingGameId(null);
-    setSelectedDate(null);
-  };
-
   if (seasons?.length === 0) {
     return (
       <div className="space-y-4">
@@ -340,7 +327,7 @@ export default function CalendarPage({ params }: PageProps) {
               </AlertDescription>
             </Alert>
 
-            <Link href="/o/dashboard/settings/seasons">
+            <Link href="/o/dashboard/seasons">
               <Button size="lg">
                 <Plus className="h-4 w-4 mr-2" />
                 Create Your First Season

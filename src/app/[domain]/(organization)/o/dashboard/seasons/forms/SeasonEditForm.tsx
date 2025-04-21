@@ -16,15 +16,15 @@ import FormButtons from "@/components/ui/form-buttons";
 import { useUpdateSeason } from "@/entities/season/Season.actions.client";
 import { Season, SeasonForm } from "@/entities/season/Season.schema";
 import { cn } from "@/libs/tailwind/utils";
-import { format } from "date-fns";
+import { format, addMonths, addDays } from "date-fns";
 import { CalendarIcon, Calendar as CalendarDays, Clock } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { DateInput } from "@/components/ui/date-input/DateInput";
+import { DateRange } from "@/components/ui/date-range";
 import { parseISO } from "date-fns";
 import BreaksEditor from "./BreaksEditor";
 
@@ -65,6 +65,9 @@ export function SeasonEditForm({
     }))
   );
 
+  const [minBreakDate, setMinBreakDate] = useState<Date>(season.startDate);
+  const [maxBreakDate, setMaxBreakDate] = useState<Date>(season.endDate);
+
   const form = useForm<SeasonForm>({
     defaultValues: {
       startDate: season.startDate,
@@ -74,6 +77,21 @@ export function SeasonEditForm({
       customName: season.customName,
     },
   });
+
+  // Update break date boundaries when form values change
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === "startDate" || name === "endDate") {
+        const startDate = value.startDate as Date;
+        const endDate = value.endDate as Date;
+
+        if (startDate) setMinBreakDate(startDate);
+        if (endDate) setMaxBreakDate(endDate);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [form.watch]);
 
   // Function to check if breaks or phases have changed
   const isComponentsDirty = () => {
@@ -162,43 +180,40 @@ export function SeasonEditForm({
                 )}
               />
 
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="startDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Start Date</FormLabel>
-                      <FormControl>
-                        <DateInput
-                          value={field.value}
-                          onChange={(date) => field.onChange(date)}
-                          error={!!form.formState.errors.startDate}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="endDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>End Date</FormLabel>
-                      <FormControl>
-                        <DateInput
-                          value={field.value}
-                          onChange={(date) => field.onChange(date)}
-                          error={!!form.formState.errors.endDate}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="startDate"
+                render={({ field: startDateField }) => (
+                  <FormField
+                    control={form.control}
+                    name="endDate"
+                    render={({ field: endDateField }) => (
+                      <FormItem>
+                        <FormLabel>Season Dates</FormLabel>
+                        <FormControl>
+                          <DateRange
+                            startDate={startDateField.value}
+                            endDate={endDateField.value}
+                            onStartDateChange={(date) => {
+                              if (date) {
+                                startDateField.onChange(date);
+                                // Update end date to be one day after start date
+                                const newEndDate = addDays(new Date(date), 1);
+                                endDateField.onChange(newEndDate);
+                              }
+                            }}
+                            onEndDateChange={(date) => {
+                              if (date) endDateField.onChange(date);
+                            }}
+                            showDuration={true}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+              />
 
               <FormField
                 control={form.control}
@@ -235,8 +250,8 @@ export function SeasonEditForm({
               <BreaksEditor
                 breaks={breaks}
                 onUpdate={setBreaks}
-                minDate={form.getValues("startDate")}
-                maxDate={form.getValues("endDate")}
+                minDate={minBreakDate}
+                maxDate={maxBreakDate}
               />
             </CardContent>
           </Card>
