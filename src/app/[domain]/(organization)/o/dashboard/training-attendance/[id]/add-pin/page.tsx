@@ -292,7 +292,7 @@ export default function AddPinPage() {
   };
 
   return (
-    <div className="w-screen h-screen bg-background absolute top-0 left-0 flex flex-col z-50">
+    <div className="w-screen h-screen bg-background fixed top-0 left-0 flex flex-col z-50">
       {/* Navigation */}
       <div className="flex justify-between items-center border-b border-border px-4 h-14 shrink-0">
         <Button variant="ghost" className="p-2" onClick={handleBackNavigation}>
