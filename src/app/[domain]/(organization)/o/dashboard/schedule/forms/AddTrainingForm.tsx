@@ -241,7 +241,7 @@ export default function AddTrainingForm({
             );
 
             if (!isBreak && currentDate >= today) {
-              dates.push(currentDate.toISOString());
+              dates.push(format(currentDate, "yyyy-MM-dd"));
             }
           }
           currentDate.setDate(currentDate.getDate() + 1);

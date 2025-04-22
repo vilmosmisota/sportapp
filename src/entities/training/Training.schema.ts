@@ -14,6 +14,7 @@ export const TrainingSchema = z.object({
   teamId: z.number().nullable(),
   seasonId: z.number(),
   meta: MetaSchema,
+  isAggregated: z.boolean().default(false),
   team: TeamSchema.omit({
     tenantId: true,
     playerTeamConnections: true,
@@ -38,6 +39,7 @@ export const createTrainingFormSchema = z.object({
   teamId: z.number().nullable(),
   seasonId: z.number(),
   meta: MetaSchema,
+  isAggregated: z.boolean().default(false).optional(),
 });
 
 export type TrainingFormSchema = typeof createTrainingFormSchema;
@@ -103,6 +105,7 @@ export const TrainingCreateSchema = z.object({
   teamId: z.number().nullable(),
   seasonId: z.number(),
   meta: MetaSchema,
+  isAggregated: z.boolean().default(false).optional(),
 });
 
 export const TrainingUpdateSchema = z.object({
@@ -113,6 +116,7 @@ export const TrainingUpdateSchema = z.object({
   teamId: z.number().nullable(),
   seasonId: z.number(),
   meta: MetaSchema,
+  isAggregated: z.boolean().optional(),
 });
 
 export const TrainingUpdateFormSchema = z.object({
@@ -123,4 +127,5 @@ export const TrainingUpdateFormSchema = z.object({
   teamId: z.number().nullable(),
   seasonId: z.number(),
   meta: MetaSchema,
+  isAggregated: z.boolean().optional(),
 });

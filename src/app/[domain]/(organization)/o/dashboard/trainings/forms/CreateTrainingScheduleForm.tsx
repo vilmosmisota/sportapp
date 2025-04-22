@@ -126,7 +126,7 @@ export default function CreateTrainingScheduleForm({
 
           // Only add the date if it's not during a break AND is today or in the future
           if (!isBreak && currentDate >= today) {
-            dates.push(currentDate.toISOString());
+            dates.push(format(currentDate, "yyyy-MM-dd"));
           }
         }
         currentDate.setDate(currentDate.getDate() + 1);

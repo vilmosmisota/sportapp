@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { Training } from "@/entities/training/Training.schema";
-import { MapPin, Dumbbell } from "lucide-react";
+import { MapPin, Dumbbell, CheckCircle2 } from "lucide-react";
 import { formatEventTime } from "./utils";
 import {
   EventItemProps,
@@ -28,6 +28,7 @@ export function TrainingEventItem({
   getCustomStyles,
 }: TrainingEventItemProps) {
   const training = event.data as Training;
+  const isAggregated = training.isAggregated || false;
 
   // Minimal variant (for month view cells with limited space)
   if (variant === "minimal") {
@@ -49,6 +50,14 @@ export function TrainingEventItem({
 
         {/* Content - all on one line */}
         <span className="truncate">{event.title}</span>
+
+        {/* Aggregated indicator */}
+        {isAggregated && (
+          <CheckCircle2
+            className="w-3 h-3 text-green-600 ml-1 flex-shrink-0"
+            strokeWidth={2.5}
+          />
+        )}
       </MinimalEventWrapper>
     );
   }
@@ -77,6 +86,16 @@ export function TrainingEventItem({
 
           {/* Content */}
           <span className="truncate">{event.title}</span>
+
+          {/* Aggregated indicator */}
+          {isAggregated && (
+            <div className="flex items-center ml-auto">
+              <CheckCircle2
+                className="w-3.5 h-3.5 text-green-600 flex-shrink-0"
+                strokeWidth={2.5}
+              />
+            </div>
+          )}
         </div>
       </CompactEventWrapper>
     );
@@ -92,13 +111,21 @@ export function TrainingEventItem({
       getCustomStyles={getCustomStyles}
     >
       {/* Header section with event type and time */}
-      <div className="flex items-start mb-2">
+      <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-1.5">
           {getTrainingIcon("large")}
           <span className="font-medium text-xs">
             {formatEventTime(event.start, event.end, event.type)}
           </span>
         </div>
+
+        {/* Aggregated indicator */}
+        {isAggregated && (
+          <div className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-green-100 text-green-800 rounded-full text-xs">
+            <CheckCircle2 className="w-3 h-3" strokeWidth={2.5} />
+            <span className="text-xs font-medium">Aggregated</span>
+          </div>
+        )}
       </div>
 
       {/* Training title */}

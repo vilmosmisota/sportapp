@@ -142,7 +142,7 @@ export default function AttendancePage({
         const trainingDate = new Date(training.date);
         trainingDate.setHours(0, 0, 0, 0);
 
-        return trainingDate >= today;
+        return trainingDate >= today && !training.isAggregated;
       })
       .sort(
         (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
@@ -151,13 +151,15 @@ export default function AttendancePage({
   // Get upcoming trainings with active sessions
   const upcomingTrainingsWithActiveSessions = upcomingTrainings.filter(
     (training) =>
-      activeSessions?.some((session) => session.trainingId === training.id)
+      activeSessions?.some((session) => session.trainingId === training.id) &&
+      !training.isAggregated
   );
 
   // Get upcoming trainings without active sessions
   const upcomingTrainingsWithoutActiveSessions = upcomingTrainings.filter(
     (training) =>
-      !activeSessions?.some((session) => session.trainingId === training.id)
+      !activeSessions?.some((session) => session.trainingId === training.id) &&
+      !training.isAggregated
   );
 
   // Get past trainings with active sessions
@@ -172,7 +174,10 @@ export default function AttendancePage({
 
         return (
           trainingDate < today &&
-          activeSessions?.some((session) => session.trainingId === training.id)
+          activeSessions?.some(
+            (session) => session.trainingId === training.id
+          ) &&
+          !training.isAggregated
         );
       })
       .sort(
