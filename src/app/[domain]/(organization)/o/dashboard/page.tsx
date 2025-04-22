@@ -3,21 +3,7 @@
 import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 import { useSeasonsByTenantId } from "@/entities/season/Season.query";
 import { TenantHeader } from "@/components/ui/tenant-header";
-import { Season } from "@/entities/season/Season.schema";
-import { format, differenceInDays, isThisYear } from "date-fns";
-import { Tag, CalendarDays, Calendar } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-  TooltipProvider,
-} from "@/components/ui/tooltip";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  getSeasonInfo,
-  formatSeasonDateRange,
-} from "@/entities/season/Season.utils";
+
 import { ActiveSeasonBlock } from "../../../(components)/homepage/ActiveSeasonBlock";
 import { TeamPlayerStatsBlock } from "../../../(components)/homepage/TeamPlayerStatsBlock";
 import { UpcomingEventsBlock } from "@/components/calendar";

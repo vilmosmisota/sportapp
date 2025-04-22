@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Tooltip,
   TooltipContent,
@@ -6,9 +6,10 @@ import {
   TooltipTrigger,
 } from "../../../../../components/ui/tooltip";
 import Link from "next/link";
+import { useRouter, usePathname as useNextPathname } from "next/navigation";
 import { cn } from "../../../../../lib/utils";
 import { NavItem, ICON_MAP } from "../constants";
-import { Pin, PinOff, Lock } from "lucide-react";
+import { Pin, PinOff, Lock, Loader2 } from "lucide-react";
 
 interface NavItemProps {
   item: NavItem;
@@ -29,7 +30,37 @@ export default function DashboardNavItem({
 }: NavItemProps) {
   const [openTooltip, setOpenTooltip] = useState<string | null>(null);
   const [showPinIcon, setShowPinIcon] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isMountedRef = useRef(false);
+  const LOADING_THRESHOLD = 100;
+
+  const router = useRouter();
+  const currentPathname = useNextPathname();
   const Icon = ICON_MAP[item.iconName as keyof typeof ICON_MAP];
+
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    return () => {
+      isMountedRef.current = false;
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+        loadingTimeoutRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isMountedRef.current) {
+      setIsLoading(false);
+    }
+
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+      loadingTimeoutRef.current = null;
+    }
+  }, [currentPathname]);
 
   const handleTogglePin = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -37,6 +68,25 @@ export default function DashboardNavItem({
     if (onTogglePin && item.pinnable && !isRequiredPin) {
       onTogglePin(item.id);
     }
+  };
+
+  const handleNavigation = (e: React.MouseEvent) => {
+    if (pathname === item.href || item.disabled) return;
+
+    e.preventDefault();
+
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+    }
+
+    router.push(item.href);
+
+    loadingTimeoutRef.current = setTimeout(() => {
+      if (isMountedRef.current && currentPathname === pathname) {
+        setIsLoading(true);
+      }
+      loadingTimeoutRef.current = null;
+    }, LOADING_THRESHOLD);
   };
 
   const PinIcon = isRequiredPin ? Lock : isPinned ? PinOff : Pin;
@@ -125,6 +175,7 @@ export default function DashboardNavItem({
           >
             <Link
               href={item.href}
+              onClick={handleNavigation}
               className={cn(
                 "group/item flex rounded-md transition-all duration-200 relative",
                 isCollapsed
@@ -142,7 +193,11 @@ export default function DashboardNavItem({
                     : "flex items-center gap-x-3 w-full"
                 )}
               >
-                {Icon && <Icon className="h-4 w-4" />}
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  Icon && <Icon className="h-4 w-4" />
+                )}
                 {!isCollapsed && (
                   <span className="text-sm font-medium truncate">
                     {item.name}
