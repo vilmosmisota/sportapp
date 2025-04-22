@@ -8,6 +8,7 @@ export * from "./AgendaView";
 export * from "./CalendarHeader";
 export * from "./EventDetailsDialog";
 export * from "./CalendarEventCard";
+export * from "./UpcomingEventsBlock";
 
 // Types
 export * from "./types";
