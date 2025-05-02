@@ -8,6 +8,8 @@ import {
   startOfDay,
   endOfDay,
   addDays,
+  startOfMonth,
+  endOfMonth,
 } from "date-fns";
 import {
   Card,
@@ -44,20 +46,25 @@ export function UpcomingEventsBlock({
   domain = "",
   className,
 }: UpcomingEventsBlockProps) {
-  // Calculate date range for today and tomorrow
-  const today = startOfDay(new Date());
+  // Calculate date range for the entire current month (to match schedule page)
+  const currentDate = new Date();
+  const monthStart = startOfMonth(currentDate);
+  const monthEnd = endOfMonth(currentDate);
+
+  // Also calculate today and tomorrow for filtering
+  const today = startOfDay(currentDate);
   const tomorrow = endOfDay(addDays(today, 1));
 
   // Enable fetching only if we have required data
   const fetchingEnabled = !!tenantId && !!activeSeason;
   const seasonId = activeSeason?.id || 0;
 
-  // Fetch games and trainings
+  // Fetch games and trainings for the entire month (same as schedule page)
   const { data: gameEvents = [], isLoading: isLoadingGames } =
     useGamesCalendarEvents(
       tenantId,
-      today,
-      tomorrow,
+      monthStart,
+      monthEnd,
       seasonId,
       fetchingEnabled,
       tenantName
@@ -66,8 +73,8 @@ export function UpcomingEventsBlock({
   const { data: trainingEvents = [], isLoading: isLoadingTrainings } =
     useTrainingsCalendarEvents(
       tenantId,
-      today,
-      tomorrow,
+      monthStart,
+      monthEnd,
       seasonId,
       fetchingEnabled
     );
@@ -77,20 +84,20 @@ export function UpcomingEventsBlock({
     return sortEvents([...gameEvents, ...trainingEvents]);
   }, [gameEvents, trainingEvents]);
 
-  // Group events by day (today/tomorrow)
+  // Group events by day (today/tomorrow) - only filtering after getting all month data
   const { todayEvents, tomorrowEvents } = useMemo(() => {
-    const today: CalendarEvent[] = [];
-    const tomorrow: CalendarEvent[] = [];
+    const todayFiltered: CalendarEvent[] = [];
+    const tomorrowFiltered: CalendarEvent[] = [];
 
     allEvents.forEach((event) => {
       if (isToday(event.start)) {
-        today.push(event);
+        todayFiltered.push(event);
       } else if (isTomorrow(event.start)) {
-        tomorrow.push(event);
+        tomorrowFiltered.push(event);
       }
     });
 
-    return { todayEvents: today, tomorrowEvents: tomorrow };
+    return { todayEvents: todayFiltered, tomorrowEvents: tomorrowFiltered };
   }, [allEvents]);
 
   const componentIsLoading = isLoading || isLoadingGames || isLoadingTrainings;
