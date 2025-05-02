@@ -1,16 +1,6 @@
 import { getAdminClient } from "@/libs/supabase/admin";
 import { NextResponse } from "next/server";
 
-type DomainUpdate = {
-  id: number;
-  userId: string;
-  tenantId: number;
-  domain: string;
-  teamId: number | null;
-  isPrimary: boolean;
-  roles: string[];
-};
-
 export async function POST(request: Request) {
   try {
     const { userData, tenantId } = await request.json();

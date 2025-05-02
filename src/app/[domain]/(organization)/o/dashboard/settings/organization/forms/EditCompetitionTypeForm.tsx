@@ -15,11 +15,11 @@ import {
 import { Input } from "@/components/ui/input";
 import FormButtons from "@/components/ui/form-buttons";
 import { useUpdateTenant } from "@/entities/tenant/Tenant.actions.client";
-import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 import { toast } from "sonner";
 import {
   CompetitionType,
   CompetitionTypeSchema,
+  Tenant,
 } from "@/entities/tenant/Tenant.schema";
 import { ColorPicker } from "@/components/ui/color-picker";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,7 +47,7 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 interface EditCompetitionTypeFormProps {
-  domain: string;
+  tenant?: Tenant;
   competitionType: CompetitionType;
   setIsOpen: (value: boolean) => void;
 }
@@ -56,12 +56,14 @@ interface EditCompetitionTypeFormProps {
 const DEFAULT_COLOR = "#7c3aed"; // Vivid purple
 
 export default function EditCompetitionTypeForm({
-  domain,
+  tenant,
   competitionType,
   setIsOpen,
 }: EditCompetitionTypeFormProps) {
-  const { data: tenant } = useTenantByDomain(domain);
-  const tenantUpdate = useUpdateTenant(tenant?.id.toString() ?? "", domain);
+  const tenantUpdate = useUpdateTenant(
+    tenant?.id?.toString() ?? "",
+    tenant?.domain ?? ""
+  );
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),

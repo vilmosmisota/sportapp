@@ -88,10 +88,8 @@ const RequiredLabel = ({ children }: { children: React.ReactNode }) => {
 
 // Props interface
 interface Props {
-  tenantId: string;
-  domain: string;
   selectedSeason: Season;
-  tenant: Tenant; // For locations
+  tenant: Tenant;
   setIsOpen: (open: boolean) => void;
   initialDate?: Date | null;
 }
@@ -104,8 +102,6 @@ const formatCompetitionType = (name: string, color?: string): string => {
 };
 
 export default function AddGameForm({
-  tenantId,
-  domain,
   selectedSeason,
   tenant,
   setIsOpen,
@@ -122,10 +118,10 @@ export default function AddGameForm({
 
   const competitionTypes = tenant.competitionTypes || [];
 
-  const { data: teams = [] } = useGetTeamsByTenantId(tenantId);
-  const { data: opponents = [] } = useOpponents(tenantId);
+  const { data: teams = [] } = useGetTeamsByTenantId(tenant.id.toString());
+  const { data: opponents = [] } = useOpponents(tenant.id.toString());
 
-  const createGame = useCreateGame(tenantId);
+  const createGame = useCreateGame(tenant.id.toString());
 
   const form = useForm<GameForm>({
     resolver: zodResolver(GameFormSchema),

@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import {
   CompetitionType,
   CompetitionTypeSchema,
+  Tenant,
 } from "@/entities/tenant/Tenant.schema";
 import { ColorPicker } from "@/components/ui/color-picker";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,16 +38,18 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 interface AddCompetitionTypeFormProps {
-  domain: string;
+  tenant?: Tenant;
   setIsOpen: (value: boolean) => void;
 }
 
 export default function AddCompetitionTypeForm({
-  domain,
+  tenant,
   setIsOpen,
 }: AddCompetitionTypeFormProps) {
-  const { data: tenant } = useTenantByDomain(domain);
-  const tenantUpdate = useUpdateTenant(tenant?.id.toString() ?? "", domain);
+  const tenantUpdate = useUpdateTenant(
+    tenant?.id?.toString() ?? "",
+    tenant?.domain ?? ""
+  );
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),

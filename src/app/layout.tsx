@@ -1,10 +1,9 @@
 import { GeistSans } from "geist/font/sans";
-import { MainMenu } from "./components/menu/MainMenu";
 
 import "../styles/globals.css";
-import RootStyleLoader from "./components/RootStyleLoader";
 import ReactQueryClientProvider from "@/providers/ReactQueryClientProvider";
 import { Toaster } from "@/components/ui/sonner";
+import SupabaseAuthListener from "../providers/SupabaseAuthListener";
 
 export const metadata = {
   title: "Title",
@@ -18,14 +17,14 @@ export default function RootLayout({
 }>) {
   return (
     <ReactQueryClientProvider>
-      <html lang="en" className={`${GeistSans.variable}`}>
-        <body className={"min-h-screen bg-background antialiased"}>
-          {/* <RootStyleLoader /> */}
-
-          {children}
-          <Toaster />
-        </body>
-      </html>
+      <SupabaseAuthListener>
+        <html lang="en" className={`${GeistSans.variable}`}>
+          <body className={"min-h-screen bg-background antialiased"}>
+            {children}
+            <Toaster />
+          </body>
+        </html>
+      </SupabaseAuthListener>
     </ReactQueryClientProvider>
   );
 }

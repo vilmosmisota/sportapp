@@ -11,13 +11,10 @@ import { Permission } from "@/entities/role/Role.permissions";
 
 import { CreateOpponentForm } from "./form";
 import OpponentsDataTable from "./components/OpponentsDataTable";
+import { useTenantAndUserAccessContext } from "../../../../../../components/auth/TenantAndUserAccessContext";
 
-export default function OpponentsPage({
-  params,
-}: {
-  params: { domain: string };
-}) {
-  const { data: tenant } = useTenantByDomain(params.domain);
+export default function OpponentsPage() {
+  const { tenant } = useTenantAndUserAccessContext();
   const { data: opponents, error } = useOpponents(tenant?.id.toString() ?? "");
   const [isAddOpponentOpen, setIsAddOpponentOpen] = useState(false);
 

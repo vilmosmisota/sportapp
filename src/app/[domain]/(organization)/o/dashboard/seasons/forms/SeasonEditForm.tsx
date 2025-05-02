@@ -33,7 +33,6 @@ import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 type SeasonEditFormProps = {
   season: Season;
   tenantId: string;
-  domain: string;
   setSheetOpen: (open: boolean) => void;
   setIsParentModalOpen?: (value: boolean) => void;
 };
@@ -41,12 +40,10 @@ type SeasonEditFormProps = {
 export function SeasonEditForm({
   season,
   tenantId,
-  domain,
   setSheetOpen,
   setIsParentModalOpen,
 }: SeasonEditFormProps) {
   const seasonMutation = useUpdateSeason(season.id.toString(), tenantId);
-  const { data: tenant } = useTenantByDomain(domain);
 
   // Store initial values for comparison
   const [initialBreaks] = useState(

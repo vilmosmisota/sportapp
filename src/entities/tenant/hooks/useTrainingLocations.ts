@@ -1,9 +1,7 @@
 import { useMemo } from "react";
-import { useTenantByDomain } from "../Tenant.query";
+import { Tenant } from "../Tenant.schema";
 
-export function useTrainingLocations(domain: string) {
-  const { data: tenant } = useTenantByDomain(domain);
-
+export function useTrainingLocations(tenant: Tenant) {
   const locations = useMemo(() => {
     if (!tenant?.trainingLocations) return [];
     return tenant.trainingLocations;

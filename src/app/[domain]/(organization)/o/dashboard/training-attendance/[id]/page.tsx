@@ -76,7 +76,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
+import { useTenantAndUserAccessContext } from "../../../../../../../components/auth/TenantAndUserAccessContext";
 type PlayerAttendanceRow = {
   id: number;
   attendanceSessionId: number | null;
@@ -192,7 +192,7 @@ function ConfirmCloseDialog({
 export default function AttendanceSessionPage() {
   const params = useParams();
   const router = useRouter();
-  const { data: tenant } = useTenantByDomain(params.domain as string);
+  const { tenant } = useTenantAndUserAccessContext();
   const closeSession = useCloseAttendanceSession();
 
   const deleteSession = useDeleteAttendanceSession();

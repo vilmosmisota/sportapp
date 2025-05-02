@@ -11,15 +11,15 @@ import AddGameLocationForm from "../forms/AddGameLocationForm";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import CompetitionTypesContent from "./CompetitionTypesContent";
 import { Separator } from "@/components/ui/separator";
+import { Tenant } from "../../../../../../../../entities/tenant/Tenant.schema";
 
 interface GameSettingsContentProps {
-  domain: string;
+  tenant?: Tenant;
 }
 
 export default function GameSettingsContent({
-  domain,
+  tenant,
 }: GameSettingsContentProps) {
-  const { data: tenant } = useTenantByDomain(domain);
   const [isAddLocationOpen, setIsAddLocationOpen] = useState(false);
   const [isAddCompetitionTypeOpen, setIsAddCompetitionTypeOpen] =
     useState(false);
@@ -71,7 +71,6 @@ export default function GameSettingsContent({
         <CardContent className="p-6">
           <CompetitionTypesContent
             tenant={tenant}
-            domain={domain}
             isAddOpen={isAddCompetitionTypeOpen}
             setIsAddOpen={setIsAddCompetitionTypeOpen}
             hideAddButton
@@ -146,8 +145,7 @@ export default function GameSettingsContent({
       >
         <div className="p-4">
           <AddGameLocationForm
-            tenantId={tenant?.id.toString() ?? ""}
-            domain={domain}
+            tenant={tenant}
             setIsOpen={setIsAddLocationOpen}
           />
         </div>

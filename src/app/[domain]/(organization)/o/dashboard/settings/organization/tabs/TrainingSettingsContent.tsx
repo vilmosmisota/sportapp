@@ -18,19 +18,20 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface TrainingSettingsContentProps {
   tenant: Tenant | undefined;
-  domain: string;
 }
 
 export default function TrainingSettingsContent({
   tenant,
-  domain,
 }: TrainingSettingsContentProps) {
   const [isAddLocationOpen, setIsAddLocationOpen] = useState(false);
   const [lateThreshold, setLateThreshold] = useState(
     tenant?.lateThresholdMinutes?.toString() ?? "5"
   );
 
-  const updateTenant = useUpdateTenant(tenant?.id?.toString() ?? "", domain);
+  const updateTenant = useUpdateTenant(
+    tenant?.id?.toString() ?? "",
+    tenant?.domain ?? ""
+  );
 
   if (!tenant) return null;
 
@@ -159,7 +160,6 @@ export default function TrainingSettingsContent({
                   key={location.id}
                   location={location}
                   tenant={tenant}
-                  domain={domain}
                 />
               ))}
               {(!tenant.trainingLocations ||
@@ -193,7 +193,6 @@ export default function TrainingSettingsContent({
         open={isAddLocationOpen}
         onOpenChange={setIsAddLocationOpen}
         tenant={tenant}
-        domain={domain}
       />
     </div>
   );

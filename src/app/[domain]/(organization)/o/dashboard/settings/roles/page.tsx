@@ -2,17 +2,15 @@
 
 import { useRolesByTenant } from "@/entities/role/Role.query";
 import { RoleDomain, Permission } from "@/entities/role/Role.permissions";
-import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RoleList } from "./components/RoleList";
 import { Plus } from "lucide-react";
-import { useParams } from "next/navigation";
 import { useState } from "react";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { RoleForm } from "./components/RoleForm";
-import { RequirePermission } from "@/components/auth/RequirePermission";
 import { PermissionButton } from "@/components/auth/PermissionButton";
+import { useTenantAndUserAccessContext } from "../../../../../../../components/auth/TenantAndUserAccessContext";
 
 export default function RolesPage() {
   return <RolesPageContent />;
@@ -20,16 +18,12 @@ export default function RolesPage() {
 
 function RolesPageContent() {
   const [isOpen, setIsOpen] = useState(false);
-  const params = useParams();
-  const { data: tenant, isLoading: isLoadingTenant } = useTenantByDomain(
-    params.domain as string
-  );
+  const { tenant } = useTenantAndUserAccessContext();
 
   const { data: roles, isLoading: isLoadingRoles } = useRolesByTenant(
     tenant?.id
   );
 
-  // Filter roles by domain, excluding system roles
   const managementRoles =
     roles?.filter((role) => role.domain === RoleDomain.MANAGEMENT) || [];
   const familyRoles =
@@ -37,12 +31,12 @@ function RolesPageContent() {
   const playerRoles =
     roles?.filter((role) => role.domain === RoleDomain.PLAYER) || [];
 
-  if (isLoadingTenant) {
-    return null; // or a loading spinner
+  if (isLoadingRoles) {
+    return null;
   }
 
   if (!tenant) {
-    return null; // or an error message
+    return null;
   }
 
   return (

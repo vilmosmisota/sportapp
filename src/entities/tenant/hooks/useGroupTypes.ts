@@ -1,9 +1,7 @@
 import { useMemo } from "react";
-import { useTenantByDomain } from "../Tenant.query";
+import { Tenant } from "../Tenant.schema";
 
-export function useTenantGroupTypes(domain: string) {
-  const { data: tenant } = useTenantByDomain(domain);
-
+export function useTenantGroupTypes(tenant?: Tenant) {
   const ageGroups = useMemo(() => {
     if (!tenant?.groupTypes?.ageGroups) return [];
     return tenant.groupTypes.ageGroups;

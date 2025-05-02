@@ -93,10 +93,7 @@ const RequiredLabel = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-// Props interface
 interface Props {
-  tenantId: string;
-  domain: string;
   selectedSeason: Season;
   tenant: Tenant;
   game: ExtendedGameWithViewDetails;
@@ -110,16 +107,14 @@ const formatCompetitionType = (name: string, color?: string): string => {
 };
 
 export default function EditGameForm({
-  tenantId,
-  domain,
   selectedSeason,
   tenant,
   game,
   setIsOpen,
 }: Props) {
-  // State for form submission
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
+  const tenantId = tenant.id.toString();
 
   // State for organization's role (home/away)
   const [gameLocation, setGameLocation] = useState<GameLocationType>(() => {

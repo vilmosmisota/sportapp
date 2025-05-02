@@ -13,14 +13,10 @@ import AddGroupTypeForm from "../forms/AddGroupTypeForm";
 import { getDisplayAgeGroup } from "@/entities/team/Team.schema";
 
 interface GroupTypesContentProps {
-  tenant: Tenant | undefined;
-  domain: string;
+  tenant?: Tenant;
 }
 
-export default function GroupTypesContent({
-  tenant,
-  domain,
-}: GroupTypesContentProps) {
+export default function GroupTypesContent({ tenant }: GroupTypesContentProps) {
   const [isAddOpen, setIsAddOpen] = useState(false);
 
   // Get group types directly from tenant
@@ -163,11 +159,7 @@ export default function GroupTypesContent({
         setIsOpen={setIsAddOpen}
         title="Add Group Types"
       >
-        <AddGroupTypeForm
-          tenant={tenant}
-          domain={domain}
-          setIsParentModalOpen={setIsAddOpen}
-        />
+        <AddGroupTypeForm tenant={tenant} setIsParentModalOpen={setIsAddOpen} />
       </ResponsiveSheet>
     </div>
   );

@@ -9,16 +9,10 @@ import { useState } from "react";
 import { Season } from "@/entities/season/Season.schema";
 import { cn } from "@/libs/tailwind/utils";
 import { Badge } from "@/components/ui/badge";
-import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
-import { getCurrencySymbol } from "@/entities/player-fee-category/PlayerFeeCategory.utils";
+
 import { PermissionDropdownMenu } from "@/components/auth/PermissionDropdownMenu";
 import { Permission } from "@/entities/role/Role.permissions";
 
-import {
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
 import { useDeleteSeason } from "@/entities/season/Season.actions.client";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
 import { toast } from "sonner";
@@ -27,13 +21,11 @@ import { SeasonEditForm } from "../forms/SeasonEditForm";
 type SeasonItemProps = {
   season: Season;
   tenantId: string;
-  domain: string;
 };
 
-export function SeasonItem({ season, tenantId, domain }: SeasonItemProps) {
+export function SeasonItem({ season, tenantId }: SeasonItemProps) {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const { data: tenant } = useTenantByDomain(domain);
 
   const deleteSeason = useDeleteSeason(tenantId);
 
@@ -93,7 +85,6 @@ export function SeasonItem({ season, tenantId, domain }: SeasonItemProps) {
         <SeasonEditForm
           season={season}
           tenantId={tenantId}
-          domain={domain}
           setSheetOpen={setIsEditOpen}
           setIsParentModalOpen={setIsEditOpen}
         />

@@ -34,7 +34,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-
+import { useTenantAndUserAccessContext } from "../../../../../../components/auth/TenantAndUserAccessContext";
 export default function TrainingsPage({
   params,
 }: {
@@ -45,10 +45,8 @@ export default function TrainingsPage({
   const [isEditItemsOpen, setIsEditItemsOpen] = useState(false);
   const [selectedTraining, setSelectedTraining] =
     useState<GroupedTraining | null>(null);
-  const [selectedUpcomingTraining, setSelectedUpcomingTraining] =
-    useState<Training | null>(null);
 
-  const { data: tenant } = useTenantByDomain(params.domain);
+  const { tenant } = useTenantAndUserAccessContext();
   const { data: teams } = useGetTeamsByTenantId(tenant?.id.toString() ?? "");
   const { data: seasons } = useSeasonsByTenantId(tenant?.id.toString() ?? "");
   const { data: selectedSeason } = useSeasonsByTenantId(

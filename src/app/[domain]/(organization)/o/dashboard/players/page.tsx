@@ -10,23 +10,20 @@ import { PageHeader } from "@/components/ui/page-header";
 import AddPlayerForm from "./forms/AddPlayerForm";
 import PlayersTable from "./tables/PlayersTable";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
+import { useTenantAndUserAccessContext } from "../../../../../../components/auth/TenantAndUserAccessContext";
 
 export default function PlayersPage({
   params,
 }: {
   params: { domain: string };
 }) {
-  const { data: tenant, isLoading: isTenantLoading } = useTenantByDomain(
-    params.domain
-  );
+  const { tenant } = useTenantAndUserAccessContext();
   const {
     data: players,
     error,
-    isLoading: isPlayersLoading,
+    isLoading,
   } = usePlayers(tenant?.id ? tenant.id.toString() : undefined);
   const [isAddPlayerOpen, setIsAddPlayerOpen] = useState(false);
-
-  const isLoading = isTenantLoading || isPlayersLoading;
 
   if (isLoading) {
     return (

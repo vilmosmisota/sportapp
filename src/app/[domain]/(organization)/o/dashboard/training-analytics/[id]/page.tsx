@@ -32,6 +32,7 @@ import {
   calculateAccuracyRate,
 } from "@/entities/attendance/Attendance.utils";
 import { useTeamAttendanceAggregates } from "@/entities/attendance/Attendance.actions.client";
+import { useTenantAndUserAccessContext } from "../../../../../../../components/auth/TenantAndUserAccessContext";
 
 function formatTeamName(team: {
   name?: string | null | undefined;
@@ -80,9 +81,8 @@ function StatItem({
 
 export default function TeamAttendanceStatisticsPage() {
   const params = useParams();
-  const domain = params?.domain as string;
   const teamId = params?.id ? parseInt(params.id as string) : 0;
-  const { data: tenant, isLoading: tenantLoading } = useTenantByDomain(domain);
+  const { tenant } = useTenantAndUserAccessContext();
   const { data: seasons, isLoading: isSeasonsLoading } = useSeasonsByTenantId(
     tenant?.id?.toString() || ""
   );
@@ -92,7 +92,7 @@ export default function TeamAttendanceStatisticsPage() {
   const team = teams?.find((t) => t.id === teamId);
   const currentSeason = seasons?.find((s) => s.isActive);
 
-  if (tenantLoading || isSeasonsLoading || teamsLoading) {
+  if (isSeasonsLoading || teamsLoading) {
     return (
       <div className="space-y-6" data-testid="team-statistics-loading">
         <div className="space-y-2">

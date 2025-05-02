@@ -10,9 +10,10 @@ import TeamsTable from "./tables/TeamsTable";
 import AddTeamForm from "./forms/AddTeamForm";
 import { PermissionButton } from "@/components/auth/PermissionButton";
 import { Permission } from "@/entities/role/Role.permissions";
+import { useTenantAndUserAccessContext } from "../../../../../../components/auth/TenantAndUserAccessContext";
 
 export default function TeamsPage({ params }: { params: { domain: string } }) {
-  const { data: tenant } = useTenantByDomain(params.domain);
+  const { tenant } = useTenantAndUserAccessContext();
   const { data: teams, error } = useGetTeamsByTenantId(
     tenant?.id.toString() ?? ""
   );

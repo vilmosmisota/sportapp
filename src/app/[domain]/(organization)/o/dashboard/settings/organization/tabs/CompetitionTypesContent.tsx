@@ -17,7 +17,6 @@ const DEFAULT_COLOR = "#7c3aed"; // Vivid purple
 
 interface CompetitionTypesContentProps {
   tenant: Tenant | undefined;
-  domain: string;
   isAddOpen?: boolean;
   setIsAddOpen?: Dispatch<SetStateAction<boolean>>;
   hideAddButton?: boolean;
@@ -25,7 +24,6 @@ interface CompetitionTypesContentProps {
 
 export default function CompetitionTypesContent({
   tenant,
-  domain,
   isAddOpen: externalIsAddOpen,
   setIsAddOpen: externalSetIsAddOpen,
   hideAddButton = false,
@@ -158,7 +156,7 @@ export default function CompetitionTypesContent({
       >
         <div className="p-4">
           <AddCompetitionTypeForm
-            domain={domain}
+            tenant={tenant}
             setIsOpen={setIsAddCompetitionTypeOpen}
           />
         </div>
@@ -173,7 +171,7 @@ export default function CompetitionTypesContent({
         <div className="p-4">
           {editCompetitionType && (
             <EditCompetitionTypeForm
-              domain={domain}
+              tenant={tenant}
               competitionType={editCompetitionType}
               setIsOpen={() => setEditCompetitionType(null)}
             />

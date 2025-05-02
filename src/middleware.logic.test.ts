@@ -21,7 +21,7 @@ import {
   getDashboardRedirect,
   constructRedirectUrl,
   UserEntity,
-} from "./middleware.logic";
+} from "./middleware.logic_old";
 
 describe("Middleware Logic", () => {
   describe("parseDomain", () => {

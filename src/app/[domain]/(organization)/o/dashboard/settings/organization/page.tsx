@@ -10,25 +10,16 @@ import GroupTypesContent from "./tabs/GroupTypesContent";
 import TrainingSettingsContent from "./tabs/TrainingSettingsContent";
 import GameSettingsContent from "./tabs/GameSettingsContent";
 import PlayerManagementContent from "./tabs/PlayerManagementContent";
+import { useTenantAndUserAccessContext } from "../../../../../../../components/auth/TenantAndUserAccessContext";
 
-export default function OrganizationDetailPage({
-  params,
-}: {
-  params: { domain: string };
-}) {
-  const { data: tenant, isPending, error } = useTenantByDomain(params.domain);
+export default function OrganizationDetailPage() {
+  const { tenant } = useTenantAndUserAccessContext();
 
   // Check if team management configuration is complete
   const isTeamManagementConfigComplete = Boolean(
     tenant?.groupTypes &&
       tenant.groupTypes.ageGroups?.length > 0 &&
       tenant.groupTypes.skillLevels?.length > 0
-  );
-
-  // Check if player positions are configured (but not required)
-  const hasPlayerPositions = Boolean(
-    tenant?.playerSettings?.positions &&
-      tenant.playerSettings.positions.length > 0
   );
 
   // Check if training locations are configured
@@ -40,10 +31,6 @@ export default function OrganizationDetailPage({
   const hasGameLocations = Boolean(
     tenant?.gameLocations && tenant.gameLocations.length > 0
   );
-
-  if (error) {
-    return <div>{error.message}</div>;
-  }
 
   return (
     <div className="w-full">
@@ -108,16 +95,16 @@ export default function OrganizationDetailPage({
               <ProfileContent tenant={tenant} />
             </TabsContent>
             <TabsContent value="group-types">
-              <GroupTypesContent tenant={tenant} domain={params.domain} />
+              <GroupTypesContent tenant={tenant} />
             </TabsContent>
             <TabsContent value="player-management">
-              <PlayerManagementContent tenant={tenant} domain={params.domain} />
+              <PlayerManagementContent tenant={tenant} />
             </TabsContent>
             <TabsContent value="training-settings">
-              <TrainingSettingsContent tenant={tenant} domain={params.domain} />
+              <TrainingSettingsContent tenant={tenant} />
             </TabsContent>
             <TabsContent value="game-settings">
-              <GameSettingsContent domain={params.domain} />
+              <GameSettingsContent tenant={tenant} />
             </TabsContent>
           </div>
         </Tabs>

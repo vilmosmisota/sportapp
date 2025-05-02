@@ -9,8 +9,6 @@ export default function ReactQueryClientProvider({
 }: {
   children: React.ReactNode;
 }) {
-  // Create a new QueryClient instance for each request to prevent
-  // shared state between users/requests
   const [queryClient] = useState(
     () =>
       new QueryClient({

@@ -23,19 +23,14 @@ import { ConfirmDeleteDialog } from "../../../../../../../../components/ui/confi
 type LocationItemProps = {
   location: TrainingLocation;
   tenant: Tenant;
-  domain: string;
 };
 
-export default function LocationItem({
-  location,
-  tenant,
-  domain,
-}: LocationItemProps) {
+export default function LocationItem({ location, tenant }: LocationItemProps) {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const { mutateAsync: updateTenant } = useUpdateTenant(
     tenant.id.toString(),
-    domain
+    tenant.domain
   );
 
   const handleDelete = async () => {
@@ -118,7 +113,6 @@ export default function LocationItem({
         <EditLocationForm
           location={location}
           tenant={tenant}
-          domain={domain}
           setSheetOpen={setIsEditOpen}
         />
       </ResponsiveSheet>

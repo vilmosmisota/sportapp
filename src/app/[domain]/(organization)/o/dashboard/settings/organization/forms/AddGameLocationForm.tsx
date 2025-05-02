@@ -18,23 +18,24 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { nanoid } from "nanoid";
+import { Tenant } from "../../../../../../../../entities/tenant/Tenant.schema";
 
 const formSchema = LocationSchema.omit({ id: true });
 type FormValues = z.infer<typeof formSchema>;
 
 interface AddGameLocationFormProps {
-  tenantId: string;
-  domain: string;
+  tenant?: Tenant;
   setIsOpen: (value: boolean) => void;
 }
 
 export default function AddGameLocationForm({
-  tenantId,
-  domain,
+  tenant,
   setIsOpen,
 }: AddGameLocationFormProps) {
-  const { data: tenant } = useTenantByDomain(domain);
-  const updateTenant = useUpdateTenant(tenantId, domain);
+  const updateTenant = useUpdateTenant(
+    tenant?.id?.toString() ?? "",
+    tenant?.domain ?? ""
+  );
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),

@@ -83,8 +83,6 @@ type TrainingMode = "single" | "repeating";
 type FormValues = z.infer<typeof trainingFormSchema>;
 
 interface Props {
-  tenantId: string;
-  domain: string;
   selectedSeason: Season;
   tenant: Tenant;
   setIsOpen: (open: boolean) => void;
@@ -92,17 +90,15 @@ interface Props {
 }
 
 export default function AddTrainingForm({
-  tenantId,
-  domain,
   selectedSeason,
   tenant,
   setIsOpen,
   initialDate,
 }: Props) {
-  const locations = useTrainingLocations(domain);
-  const { data: teams = [] } = useGetTeamsByTenantId(tenantId);
-  const addTraining = useAddTraining(tenantId);
-  const addTrainingBatch = useAddTrainingBatch(tenantId);
+  const locations = useTrainingLocations(tenant);
+  const { data: teams = [] } = useGetTeamsByTenantId(tenant.id.toString());
+  const addTraining = useAddTraining(tenant.id.toString());
+  const addTrainingBatch = useAddTrainingBatch(tenant.id.toString());
   const [isLoading, setIsLoading] = useState(false);
 
   // Always default to single training mode

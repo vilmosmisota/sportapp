@@ -24,19 +24,17 @@ type FormValues = z.infer<typeof formSchema>;
 interface EditLocationFormProps {
   location: TrainingLocation;
   tenant: Tenant;
-  domain: string;
   setSheetOpen: Dispatch<SetStateAction<boolean>>;
 }
 
 export default function EditLocationForm({
   location,
   tenant,
-  domain,
   setSheetOpen,
 }: EditLocationFormProps) {
   const { mutateAsync: updateTenant } = useUpdateTenant(
     tenant.id.toString(),
-    domain
+    tenant.domain
   );
 
   const form = useForm<FormValues>({

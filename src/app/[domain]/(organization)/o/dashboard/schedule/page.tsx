@@ -18,7 +18,7 @@ import {
   Dumbbell,
 } from "lucide-react";
 import { useSeasonsByTenantId } from "@/entities/season/Season.query";
-import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
+
 import {
   Select,
   SelectContent,
@@ -32,11 +32,9 @@ import EditTrainingForm from "./forms/EditTrainingForm";
 import EditGameForm from "./forms/EditGameForm";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/ui/page-header";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SimpleFilter } from "@/components/calendar/filters/SimpleFilter";
 import { CalendarContainer } from "@/components/calendar/CalendarContainer";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Cog } from "lucide-react";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
 import { useDeleteTraining } from "@/entities/training/Training.actions.client";
 import { useDeleteGame } from "@/entities/game/Game.actions.client";
@@ -50,26 +48,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from "@/components/ui/context-menu";
+
 import { useGameById } from "@/entities/game/Game.query";
+import { useTenantAndUserAccessContext } from "../../../../../../components/auth/TenantAndUserAccessContext";
 
 enum EventType {
   Game = "game",
   Training = "training",
 }
 
-type PageProps = {
-  params: {
-    domain: string;
-  };
-};
+export default function CalendarPage() {
+  const { tenant } = useTenantAndUserAccessContext();
 
-export default function CalendarPage({ params }: PageProps) {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
     null
   );
@@ -101,7 +91,6 @@ export default function CalendarPage({ params }: PageProps) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const contextMenuRef = useRef<HTMLDivElement>(null);
 
-  const { data: tenant } = useTenantByDomain(params.domain);
   const { data: seasons } = useSeasonsByTenantId(tenant?.id?.toString() || "");
 
   const { data: editingTraining } = useTraining(
@@ -533,8 +522,6 @@ export default function CalendarPage({ params }: PageProps) {
             <>
               {selectedEventType === EventType.Game ? (
                 <AddGameForm
-                  tenantId={tenant.id.toString()}
-                  domain={params.domain}
                   selectedSeason={selectedSeason}
                   tenant={tenant}
                   setIsOpen={(open) => {
@@ -545,8 +532,6 @@ export default function CalendarPage({ params }: PageProps) {
                 />
               ) : (
                 <AddTrainingForm
-                  tenantId={tenant.id.toString()}
-                  domain={params.domain}
                   selectedSeason={selectedSeason}
                   tenant={tenant}
                   setIsOpen={(open) => {
@@ -590,8 +575,6 @@ export default function CalendarPage({ params }: PageProps) {
             </div>
           ) : editingGameId && editingGame ? (
             <EditGameForm
-              tenantId={tenant.id.toString()}
-              domain={params.domain}
               selectedSeason={selectedSeason}
               tenant={tenant}
               game={editingGame}
@@ -605,8 +588,6 @@ export default function CalendarPage({ params }: PageProps) {
             />
           ) : editingTrainingId && editingTraining ? (
             <EditTrainingForm
-              tenantId={tenant.id.toString()}
-              domain={params.domain}
               selectedSeason={selectedSeason}
               tenant={tenant}
               setIsOpen={(open) => {

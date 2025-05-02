@@ -53,6 +53,7 @@ import {
   calculateAttendanceRate,
   calculateAccuracyRate,
 } from "@/entities/attendance/Attendance.utils";
+import { useTenantAndUserAccessContext } from "../../../../../../components/auth/TenantAndUserAccessContext";
 
 function StatItem({
   icon: Icon,
@@ -581,9 +582,7 @@ export default function AttendanceStatisticsPage({
   params: { domain: string };
 }) {
   const [selectedTeamId, setSelectedTeamId] = useState<string>("all");
-  const { data: tenant, isLoading: isTenantLoading } = useTenantByDomain(
-    params.domain
-  );
+  const { tenant } = useTenantAndUserAccessContext();
   const { data: teams, isLoading: isTeamsLoading } = useGetTeamsByTenantId(
     tenant?.id.toString() ?? ""
   );
@@ -593,7 +592,7 @@ export default function AttendanceStatisticsPage({
   );
   const activeSeason = selectedSeason?.find((s: Season) => s.isActive) ?? null;
 
-  const isLoading = isTenantLoading || isTeamsLoading;
+  const isLoading = isTeamsLoading;
 
   if (isLoading) {
     return <Skeleton className="w-full h-[400px]" data-testid="skeleton" />;

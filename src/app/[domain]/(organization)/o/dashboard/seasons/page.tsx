@@ -10,13 +10,10 @@ import { AddSeasonForm } from "./forms/AddSeasonForm";
 import { SeasonItem } from "./items/SeasonItem";
 import { PermissionButton } from "@/components/auth/PermissionButton";
 import { Permission } from "@/entities/role/Role.permissions";
+import { useTenantAndUserAccessContext } from "@/components/auth/TenantAndUserAccessContext";
 
-export default function SeasonsPage({
-  params,
-}: {
-  params: { domain: string };
-}) {
-  const { data: tenant } = useTenantByDomain(params.domain);
+export default function SeasonsPage() {
+  const { tenant } = useTenantAndUserAccessContext();
   const { data: seasons } = useSeasons(tenant?.id?.toString());
 
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -43,7 +40,6 @@ export default function SeasonsPage({
             key={season.id}
             season={season}
             tenantId={tenant?.id?.toString() ?? ""}
-            domain={params.domain}
           />
         ))}
       </div>
@@ -56,7 +52,6 @@ export default function SeasonsPage({
         {tenant && (
           <AddSeasonForm
             tenantId={tenant.id.toString()}
-            domain={params.domain}
             setIsParentModalOpen={setIsAddOpen}
           />
         )}

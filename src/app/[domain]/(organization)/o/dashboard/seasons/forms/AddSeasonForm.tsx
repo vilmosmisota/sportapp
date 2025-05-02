@@ -26,7 +26,6 @@ import BreaksEditor from "./BreaksEditor";
 type Break = { id: number; from: Date; to: Date };
 type AddSeasonFormProps = {
   tenantId: string;
-  domain: string;
   setIsParentModalOpen: (value: boolean) => void;
 };
 

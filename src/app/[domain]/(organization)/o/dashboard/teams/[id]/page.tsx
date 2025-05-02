@@ -54,6 +54,7 @@ import { useRouter } from "next/navigation";
 import { useDeleteTeam } from "@/entities/team/Team.actions.client";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
 import { usePlayerSettings } from "../../../../../../../entities/tenant/hooks/usePlayerSettings";
+import { useTenantAndUserAccessContext } from "../../../../../../../components/auth/TenantAndUserAccessContext";
 
 export default function TeamPage({
   params,
@@ -61,9 +62,7 @@ export default function TeamPage({
   params: { domain: string; id: string };
 }) {
   const router = useRouter();
-  const { data: tenant, isLoading: isTenantLoading } = useTenantByDomain(
-    params.domain
-  );
+  const { tenant } = useTenantAndUserAccessContext();
   const { data: teams, isLoading: isTeamsLoading } = useGetTeamsByTenantId(
     tenant?.id.toString() ?? ""
   );
@@ -72,7 +71,7 @@ export default function TeamPage({
   const [isEditTeamOpen, setIsEditTeamOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const isLoading = isTenantLoading || isTeamsLoading || !teams;
+  const isLoading = isTeamsLoading || !teams;
   const team = teams?.find((t) => t.id === parseInt(params.id));
 
   // Get player settings to check if positions are configured

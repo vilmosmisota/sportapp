@@ -8,9 +8,10 @@ import { useState } from "react";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import UsersTable from "./tables/UsersTable";
 import AddUserForm from "./forms/AddUserForm";
+import { useTenantAndUserAccessContext } from "../../../../../../../components/auth/TenantAndUserAccessContext";
 
-export default function UsersPage({ params }: { params: { domain: string } }) {
-  const { data: tenant } = useTenantByDomain(params.domain);
+export default function UsersPage() {
+  const { tenant } = useTenantAndUserAccessContext();
   const { data: users, error } = useUsers(tenant?.id.toString() ?? "");
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
 

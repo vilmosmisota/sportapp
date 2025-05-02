@@ -56,8 +56,6 @@ type FormValues = z.infer<typeof trainingFormSchema>;
 
 // Props interface
 interface Props {
-  tenantId: string;
-  domain: string;
   selectedSeason: Season;
   tenant: Tenant;
   setIsOpen: (open: boolean) => void;
@@ -66,17 +64,18 @@ interface Props {
 }
 
 export default function EditTrainingForm({
-  tenantId,
-  domain,
   selectedSeason,
   tenant,
   setIsOpen,
   trainingId,
   trainingToEdit,
 }: Props) {
-  const locations = useTrainingLocations(domain);
-  const { data: teams = [] } = useGetTeamsByTenantId(tenantId);
-  const updateTraining = useUpdateTraining(trainingId || 0, tenantId);
+  const locations = useTrainingLocations(tenant);
+  const { data: teams = [] } = useGetTeamsByTenantId(tenant.id.toString());
+  const updateTraining = useUpdateTraining(
+    trainingId || 0,
+    tenant.id.toString()
+  );
   const [isLoading, setIsLoading] = useState(false);
 
   // Convert training date to Date object if it's a string

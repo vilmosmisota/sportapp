@@ -23,8 +23,7 @@ import { useTenantGroupTypes } from "@/entities/tenant/hooks/useGroupTypes";
 import FormButtons from "@/components/ui/form-buttons";
 
 interface AddGroupTypeFormProps {
-  tenant: Tenant | undefined;
-  domain: string;
+  tenant?: Tenant;
   setIsParentModalOpen: (value: boolean) => void;
 }
 
@@ -43,10 +42,9 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function AddGroupTypeForm({
   tenant,
-  domain,
   setIsParentModalOpen,
 }: AddGroupTypeFormProps) {
-  const { ageGroups, skillLevels } = useTenantGroupTypes(domain);
+  const { ageGroups, skillLevels } = useTenantGroupTypes(tenant);
   const updateTenant = useUpdateTenant(
     tenant?.id.toString() ?? "",
     tenant?.domain ?? ""

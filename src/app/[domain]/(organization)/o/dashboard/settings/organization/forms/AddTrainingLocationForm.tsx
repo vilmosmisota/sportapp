@@ -27,18 +27,16 @@ interface AddTrainingLocationFormProps {
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
   tenant: Tenant;
-  domain: string;
 }
 
 export default function AddTrainingLocationForm({
   open,
   onOpenChange,
   tenant,
-  domain,
 }: AddTrainingLocationFormProps) {
   const { mutateAsync: updateTenant } = useUpdateTenant(
     tenant.id.toString(),
-    domain
+    tenant.domain
   );
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),

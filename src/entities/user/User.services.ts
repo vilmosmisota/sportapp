@@ -34,7 +34,9 @@ export const getCurrentUser = async (client: TypedClient) => {
     .eq("id", user.id)
     .single();
 
-  if (error || !data) return null;
+  if (error || !data) throw new Error(error?.message ?? "Failed to fetch user");
+
+  console.log("user data", data);
 
   return UserSchema.parse({
     ...data,

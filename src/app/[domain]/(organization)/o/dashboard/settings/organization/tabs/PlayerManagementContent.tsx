@@ -27,12 +27,10 @@ import FormButtons from "@/components/ui/form-buttons";
 
 interface PlayerManagementContentProps {
   tenant: Tenant | undefined;
-  domain: string;
 }
 
 export default function PlayerManagementContent({
   tenant,
-  domain,
 }: PlayerManagementContentProps) {
   const [isAddOpen, setIsAddOpen] = useState(false);
 
@@ -104,7 +102,6 @@ export default function PlayerManagementContent({
       >
         <ManagePlayerPositionsForm
           tenant={tenant}
-          domain={domain}
           setIsParentModalOpen={setIsAddOpen}
         />
       </ResponsiveSheet>
@@ -115,7 +112,6 @@ export default function PlayerManagementContent({
 // Form for managing player positions
 interface ManagePlayerPositionsFormProps {
   tenant: Tenant | undefined;
-  domain: string;
   setIsParentModalOpen: (value: boolean) => void;
 }
 
@@ -127,7 +123,6 @@ type FormValues = z.infer<typeof formSchema>;
 
 function ManagePlayerPositionsForm({
   tenant,
-  domain,
   setIsParentModalOpen,
 }: ManagePlayerPositionsFormProps) {
   const updateTenant = useUpdateTenant(

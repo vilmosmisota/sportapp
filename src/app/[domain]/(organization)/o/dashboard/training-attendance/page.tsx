@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
-import { format } from "date-fns";
 import { toast } from "sonner";
 
 // Components
@@ -27,34 +26,11 @@ import {
 
 // Types
 import { Training } from "@/entities/training/Training.schema";
+import { useTenantAndUserAccessContext } from "../../../../../../components/auth/TenantAndUserAccessContext";
 
-function formatTimeString(timeStr: string) {
-  try {
-    // Create a date object for today with the given time
-    const today = new Date();
-    const [hours, minutes] = timeStr.split(":");
-    const date = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      today.getDate(),
-      parseInt(hours),
-      parseInt(minutes)
-    );
-    return format(date, "h:mm a");
-  } catch (error) {
-    console.error("Error parsing time:", error);
-    return timeStr;
-  }
-}
+export default function AttendancePage() {
+  const { tenant } = useTenantAndUserAccessContext();
 
-export default function AttendancePage({
-  params,
-}: {
-  params: { domain: string };
-}) {
-  const { data: tenant, isLoading: isTenantLoading } = useTenantByDomain(
-    params.domain
-  );
   const { data: trainings, isLoading: isTrainingsLoading } =
     useTrainingsByDayRange(
       tenant?.id?.toString() ?? "",
@@ -130,7 +106,7 @@ export default function AttendancePage({
     closeSession,
   ]);
 
-  const isLoading = isTenantLoading || isTrainingsLoading;
+  const isLoading = isTrainingsLoading;
 
   // Get all upcoming trainings sorted by date
   const upcomingTrainings =
@@ -189,14 +165,6 @@ export default function AttendancePage({
     ...upcomingTrainingsWithActiveSessions,
     ...pastTrainingsWithActiveSessions,
   ];
-
-  // Add these helper functions for the carousel
-  const hasActiveSession = (trainingId: number) => {
-    return (
-      activeSessions?.some((session) => session.trainingId === trainingId) ||
-      false
-    );
-  };
 
   const getActiveSessionId = (trainingId: number) => {
     return activeSessions?.find((session) => session.trainingId === trainingId)

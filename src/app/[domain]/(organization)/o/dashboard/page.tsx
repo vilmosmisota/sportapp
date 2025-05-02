@@ -7,20 +7,20 @@ import { TenantHeader } from "@/components/ui/tenant-header";
 import { ActiveSeasonBlock } from "../../../(components)/homepage/ActiveSeasonBlock";
 import { TeamPlayerStatsBlock } from "../../../(components)/homepage/TeamPlayerStatsBlock";
 import { UpcomingEventsBlock } from "@/components/calendar";
+import { useTenantAndUserAccessContext } from "@/components/auth/TenantAndUserAccessContext";
 
 export default function OrgDashboardPage({
   params,
 }: {
   params: { domain: string };
 }) {
-  const { data: tenant, isLoading: isTenantLoading } = useTenantByDomain(
-    params.domain
-  );
+  const { tenant } = useTenantAndUserAccessContext();
+
   const { data: seasons, isLoading: isSeasonsLoading } = useSeasonsByTenantId(
     tenant?.id?.toString() || ""
   );
 
-  const isLoading = isTenantLoading || isSeasonsLoading;
+  const isLoading = isSeasonsLoading;
   const activeSeason = seasons?.find((season) => season.isActive);
 
   return (
