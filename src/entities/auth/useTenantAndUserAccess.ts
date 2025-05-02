@@ -6,6 +6,11 @@ import { useCurrentUser } from "../user/User.query";
 import { RoleDomain } from "../role/Role.permissions";
 import { useRouter } from "next/navigation";
 
+export type AccessDenialReason =
+  | "NO_USER"
+  | "NO_TENANT_ACCESS"
+  | "NO_DOMAIN_ROLE_ACCESS";
+
 export default function useTenantAndUserAccess(tenantDomain: string) {
   const router = useRouter();
   const currentRoleDomain = useCurrentRoleDomain();
@@ -45,6 +50,14 @@ export default function useTenantAndUserAccess(tenantDomain: string) {
 
   const hasAccess = hasAccessToTenant && hasAccessToDomainRole;
 
+  // Determine the specific reason for access denial
+  const accessDenialReason = useMemo((): AccessDenialReason | null => {
+    if (!user) return "NO_USER";
+    if (!hasAccessToTenant) return "NO_TENANT_ACCESS";
+    if (!hasAccessToDomainRole) return "NO_DOMAIN_ROLE_ACCESS";
+    return null;
+  }, [user, hasAccessToTenant, hasAccessToDomainRole]);
+
   useEffect(() => {
     if (isLoading) return;
 
@@ -57,10 +70,12 @@ export default function useTenantAndUserAccess(tenantDomain: string) {
 
     if (!hasAccess) {
       startTransition(() => {
-        router.push("/no-access");
+        router.push(
+          `/no-access?reason=${accessDenialReason}&domain=${tenantDomain}`
+        );
       });
     }
-  }, [isLoading, user, hasAccess, router]);
+  }, [isLoading, user, hasAccess, router, accessDenialReason, tenantDomain]);
 
   return useMemo(
     () => ({
@@ -71,6 +86,7 @@ export default function useTenantAndUserAccess(tenantDomain: string) {
       hasAccess,
       hasAccessToTenant,
       hasAccessToDomainRole,
+      accessDenialReason,
     }),
     [
       tenant,
@@ -80,6 +96,7 @@ export default function useTenantAndUserAccess(tenantDomain: string) {
       hasAccess,
       hasAccessToTenant,
       hasAccessToDomainRole,
+      accessDenialReason,
     ]
   );
 }

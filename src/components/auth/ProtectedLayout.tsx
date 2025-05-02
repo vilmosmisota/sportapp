@@ -3,6 +3,7 @@
 import { ReactNode } from "react";
 import useTenantAndUserAccess from "@/entities/auth/useTenantAndUserAccess";
 import { TenantAndUserAccessContext } from "./TenantAndUserAccessContext";
+import AccessLoadingFallback from "./AccessLoadingFallback";
 
 /**
  * ProtectedLayout component for wrapping layouts/pages that require authentication and tenant access
@@ -19,7 +20,7 @@ import { TenantAndUserAccessContext } from "./TenantAndUserAccessContext";
 export default function ProtectedLayout({
   domain,
   children,
-  fallback = <div>Loading...</div>,
+  fallback = <AccessLoadingFallback />,
   errorComponent = (error: Error) => <div>Error: {error.message}</div>,
 }: {
   domain: string;
@@ -36,8 +37,9 @@ export default function ProtectedLayout({
   // Show error state if there's an error
   if (error) return <>{errorComponent(error)}</>;
 
-  // Don't render children if there's no user or no access
-  if (!user || !hasAccess || !tenant) {
+  // Don't render children if there's no access
+  // The hook will handle redirection with the appropriate reason
+  if (!hasAccess || !user || !tenant) {
     return <>{fallback}</>;
   }
 
