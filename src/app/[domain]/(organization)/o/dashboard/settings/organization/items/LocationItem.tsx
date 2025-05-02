@@ -23,6 +23,7 @@ import { ConfirmDeleteDialog } from "../../../../../../../../components/ui/confi
 type LocationItemProps = {
   location: TrainingLocation;
   tenant: Tenant;
+  domain?: string;
 };
 
 export default function LocationItem({ location, tenant }: LocationItemProps) {
