@@ -436,7 +436,7 @@ export default function CalendarPage() {
 
       {/* Main calendar component */}
       <Card>
-        <CardContent className="py-6">
+        <CardContent className="p-0 md:p-6 pt-6 md:py-6">
           <CalendarContainer
             tenantId={tenant?.id?.toString() || ""}
             selectedSeason={selectedSeason || null}

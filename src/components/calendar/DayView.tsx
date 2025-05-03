@@ -326,23 +326,30 @@ export function DayView({
       {/* Date header with status indicators */}
       <div
         className={cn(
-          "py-1.5 mb-4 flex items-center justify-between",
-          isInBreak && "bg-amber-50/70 rounded-lg px-3",
-          isOutsideSeason && "bg-gray-100 rounded-lg px-3"
+          "py-1.5 mb-4 flex flex-wrap items-center justify-between",
+          isInBreak && "bg-amber-50/70 rounded-lg px-2 md:px-3",
+          isOutsideSeason && "bg-gray-100 rounded-lg px-2 md:px-3"
         )}
       >
-        <div className="font-medium text-base flex items-center gap-1">
-          {format(currentDate, "EEEE, MMMM d, yyyy")}
+        <div className="font-medium text-sm md:text-base flex items-center gap-1 flex-wrap">
+          <span className="hidden xs:inline">
+            {format(currentDate, "EEEE, MMMM d, yyyy")}
+          </span>
+          <span className="inline xs:hidden">
+            {format(currentDate, "EEE, MMM d")}
+          </span>
           {isInBreak && (
-            <span className="inline-flex items-center text-amber-500 text-xs ml-2">
-              <Pause className="h-3.5 w-3.5 mr-1" />
-              Season Break
+            <span className="inline-flex items-center text-amber-500 text-xs ml-1 md:ml-2">
+              <Pause className="h-3 w-3 md:h-3.5 md:w-3.5 mr-0.5 md:mr-1" />
+              <span className="hidden xs:inline">Season Break</span>
+              <span className="inline xs:hidden">Break</span>
             </span>
           )}
           {isOutsideSeason && (
-            <span className="inline-flex items-center text-gray-400 text-xs ml-2">
-              <CalendarIcon className="h-3.5 w-3.5 mr-1" />
-              Outside Season
+            <span className="inline-flex items-center text-gray-400 text-xs ml-1 md:ml-2">
+              <CalendarIcon className="h-3 w-3 md:h-3.5 md:w-3.5 mr-0.5 md:mr-1" />
+              <span className="hidden xs:inline">Outside Season</span>
+              <span className="inline xs:hidden">Outside</span>
             </span>
           )}
         </div>

@@ -52,7 +52,7 @@ export function GameEventItem({
     if (variant === "minimal" && !useBadgeStyle) {
       return (
         <span
-          className="ml-1 text-2xs px-1 py-0.5 rounded-sm truncate text-muted-foreground"
+          className="ml-0.5 md:ml-1 text-xs px-0.5 py-0 md:px-1 md:py-0.5 rounded-sm truncate text-muted-foreground"
           style={style}
         >
           {competition.name}
@@ -65,7 +65,7 @@ export function GameEventItem({
 
     return (
       <span
-        className={`ml-1 text-xs px-1.5 py-0.5 ${shapeClass} truncate ${
+        className={`ml-0.5 md:ml-1 text-xs px-1 py-0 md:px-1.5 md:py-0.5 ${shapeClass} truncate ${
           !useBadgeStyle ? "text-muted-foreground" : "font-medium"
         }`}
         style={style}
@@ -104,12 +104,12 @@ export function GameEventItem({
     return (
       <div className="flex items-center gap-1">
         <div
-          className="h-3 w-3 rounded-full flex-shrink-0"
+          className="h-2 w-2 md:h-3 md:w-3 rounded-full flex-shrink-0"
           style={{ backgroundColor: opponentTeam.color }}
         />
         <span className="text-xs">vs</span>
         <div
-          className="h-3 w-3 rounded-full flex-shrink-0"
+          className="h-2 w-2 md:h-3 md:w-3 rounded-full flex-shrink-0"
           style={{ backgroundColor: tenantTeam.color }}
         />
       </div>
@@ -127,15 +127,15 @@ export function GameEventItem({
         getCustomStyles={getCustomStyles}
       >
         {/* Time */}
-        <span className="font-semibold whitespace-nowrap">
+        <span className="font-semibold whitespace-nowrap text-xs">
           {format(event.start, "HH:mm")}
         </span>
 
         {/* Icon */}
-        {getGameIcon("small")}
+        <span className="flex-shrink-0">{getGameIcon("small")}</span>
 
         {/* Content - all on one line */}
-        <span className="truncate">{getGameTitle()}</span>
+        <span className="truncate text-xs">{getGameTitle()}</span>
 
         {/* Competition badge */}
         {getCompetitionBadge()}
@@ -157,7 +157,7 @@ export function GameEventItem({
         className={className}
         getCustomStyles={getCustomStyles}
       >
-        <div className="flex items-center gap-2 w-full">
+        <div className="flex items-center gap-1 md:gap-2 w-full">
           {/* Time */}
           <span className="font-semibold whitespace-nowrap">
             {format(event.start, "HH:mm")}
@@ -165,7 +165,7 @@ export function GameEventItem({
 
           {/* Icon */}
           <Trophy
-            className="w-3.5 h-3.5 text-amber-600 flex-shrink-0"
+            className="w-3 h-3 md:w-3.5 md:h-3.5 text-amber-600 flex-shrink-0"
             strokeWidth={3}
           />
 
@@ -173,15 +173,17 @@ export function GameEventItem({
           {hasTeams ? (
             <span className="whitespace-nowrap truncate">
               {opponentTeam.name}
+              {/* Hide details on small screens */}
               {opponentTeam.details && (
-                <span className="text-2xs text-muted-foreground ml-1">
+                <span className="text-2xs text-muted-foreground ml-0.5 md:ml-1 hidden md:inline">
                   {opponentTeam.details}
                 </span>
               )}
-              <span className="mx-1">vs</span>
+              <span className="mx-0.5 md:mx-1">vs</span>
               {tenantTeam.name}
+              {/* Hide details on small screens */}
               {tenantTeam.details && (
-                <span className="text-2xs text-muted-foreground ml-1">
+                <span className="text-2xs text-muted-foreground ml-0.5 md:ml-1 hidden md:inline">
                   {tenantTeam.details}
                 </span>
               )}
@@ -204,12 +206,12 @@ export function GameEventItem({
       getCustomStyles={getCustomStyles}
     >
       {/* Header section with event type, time and competition type */}
-      <div className="flex items-start justify-between mb-2">
+      <div className="flex items-start justify-between mb-1 md:mb-2">
         {/* Left side with icon and time */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1 md:gap-2">
+          <div className="flex items-center gap-1 md:gap-1.5">
             {getGameIcon("large")}
-            <span className="font-medium text-xs">
+            <span className="font-medium text-2xs md:text-xs">
               {formatEventTime(event.start, event.end, event.type)}
             </span>
           </div>
@@ -220,9 +222,11 @@ export function GameEventItem({
       </div>
 
       {/* Teams section */}
-      <div className="mb-3">
+      <div className="mb-2 md:mb-3">
         {!displayDetails ? (
-          <div className="font-semibold">{event.title}</div>
+          <div className="font-semibold text-sm md:text-base">
+            {event.title}
+          </div>
         ) : (
           (() => {
             const { homeTeam, awayTeam } = displayDetails;
@@ -230,34 +234,36 @@ export function GameEventItem({
               game.homeScore !== null && game.awayScore !== null;
 
             return (
-              <div className="flex flex-col gap-2.5">
+              <div className="flex flex-col gap-1.5 md:gap-2.5">
                 {/* Home team */}
                 <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 md:gap-2">
                     <div
-                      className="h-4 w-4 rounded-full flex-shrink-0"
+                      className="h-3 w-3 md:h-4 md:w-4 rounded-full flex-shrink-0"
                       style={{ backgroundColor: homeTeam.color }}
                     />
                     <div>
-                      <div className="font-semibold text-sm">
+                      <div className="font-semibold text-xs md:text-sm">
                         {homeTeam.name}
                       </div>
                       {homeTeam.details && (
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-2xs md:text-xs text-muted-foreground">
                           {homeTeam.details}
                         </div>
                       )}
                     </div>
                   </div>
                   {hasScores && (
-                    <div className="font-bold text-base">{game.homeScore}</div>
+                    <div className="font-bold text-sm md:text-base">
+                      {game.homeScore}
+                    </div>
                   )}
                 </div>
 
                 {/* Versus divider */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 md:gap-2">
                   <div className="h-px bg-gray-200 flex-1"></div>
-                  <span className="text-xs font-medium text-muted-foreground">
+                  <span className="text-2xs md:text-xs font-medium text-muted-foreground">
                     vs
                   </span>
                   <div className="h-px bg-gray-200 flex-1"></div>
@@ -265,24 +271,26 @@ export function GameEventItem({
 
                 {/* Away team */}
                 <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 md:gap-2">
                     <div
-                      className="h-4 w-4 rounded-full flex-shrink-0"
+                      className="h-3 w-3 md:h-4 md:w-4 rounded-full flex-shrink-0"
                       style={{ backgroundColor: awayTeam.color }}
                     />
                     <div>
-                      <div className="font-semibold text-sm">
+                      <div className="font-semibold text-xs md:text-sm">
                         {awayTeam.name}
                       </div>
                       {awayTeam.details && (
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-2xs md:text-xs text-muted-foreground">
                           {awayTeam.details}
                         </div>
                       )}
                     </div>
                   </div>
                   {hasScores && (
-                    <div className="font-bold text-base">{game.awayScore}</div>
+                    <div className="font-bold text-sm md:text-base">
+                      {game.awayScore}
+                    </div>
                   )}
                 </div>
               </div>
@@ -292,9 +300,11 @@ export function GameEventItem({
       </div>
 
       {/* Footer with location */}
-      <div className="flex items-center gap-1.5 text-muted-foreground">
-        <MapPin className="w-3.5 h-3.5" />
-        <span className="text-xs">{getLocation(event)}</span>
+      <div className="flex items-center gap-1 md:gap-1.5 text-muted-foreground">
+        <MapPin className="w-3 h-3 md:w-3.5 md:h-3.5" />
+        <span className="text-2xs md:text-xs truncate">
+          {getLocation(event)}
+        </span>
       </div>
     </FullEventWrapper>
   );

@@ -157,7 +157,7 @@ export function MonthView({
 
   // Rendering calendar grid
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col overflow-hidden">
       {/* Weekday headers */}
       <div className="grid grid-cols-7 mb-2">
         {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
@@ -172,7 +172,7 @@ export function MonthView({
 
       {/* Calendar grid */}
       {isLoading ? (
-        <div className="grid grid-cols-7 gap-1 flex-grow">
+        <div className="grid grid-cols-7 gap-0 md:gap-1 flex-grow">
           {Array.from({ length: 35 }).map((_, index) => (
             <div key={index} className="min-h-[100px] border rounded-md p-1">
               <Skeleton className="h-6 w-6 mb-1 rounded-full" />
@@ -182,7 +182,7 @@ export function MonthView({
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-7 gap-1 flex-grow">
+        <div className="grid grid-cols-7 gap-0 md:gap-1 flex-grow">
           {days.map((day) => {
             const dayKey = format(day.date, "yyyy-MM-dd");
             const dayEvents = sortEvents(getEventsForDay(day.date, events));
@@ -202,7 +202,8 @@ export function MonthView({
                 key={dayKey}
                 ref={(el) => (dayRefs.current[dayKey] = el)}
                 className={cn(
-                  "min-h-[100px] border rounded-md flex flex-col p-1 transition-colors relative",
+                  "min-h-[80px] md:min-h-[100px] border flex flex-col p-0.5 md:p-1 transition-colors relative",
+                  "md:rounded-md", // Only rounded on medium screens and up
                   day.isCurrentMonth
                     ? "bg-background/10 hover:bg-background/40"
                     : "bg-muted/10 opacity-60 border-dashed border-muted/40 hover:opacity-80 hover:bg-muted/20 transition-opacity",
@@ -220,7 +221,7 @@ export function MonthView({
                         className="inline-flex items-center text-amber-500 mr-1"
                         title="Season Break"
                       >
-                        <Pause className="h-4 w-4" />
+                        <Pause className="h-3 w-3 md:h-4 md:w-4" />
                       </div>
                     )}
                     {day.isOutsideSeason && day.isCurrentMonth && (
@@ -228,13 +229,13 @@ export function MonthView({
                         className="inline-flex items-center text-gray-400 mr-1"
                         title="Outside Season"
                       >
-                        <Calendar className="h-4 w-4" />
+                        <Calendar className="h-3 w-3 md:h-4 md:w-4" />
                       </div>
                     )}
                   </div>
                   <span
                     className={cn(
-                      "inline-flex h-6 w-6 items-center justify-center rounded-full text-sm",
+                      "inline-flex h-5 w-5 md:h-6 md:w-6 items-center justify-center rounded-full text-xs md:text-sm",
                       day.isToday &&
                         "bg-primary text-primary-foreground font-medium",
                       !day.isCurrentMonth && "text-muted-foreground/60",
@@ -250,22 +251,24 @@ export function MonthView({
                   </span>
                 </div>
 
-                <div className="flex-1 overflow-hidden flex flex-col gap-1 mt-1">
+                <div className="flex-1 overflow-hidden flex flex-col gap-0.5 md:gap-1 mt-0.5 md:mt-1">
                   {day.isInBreak && day.isCurrentMonth && (
-                    <div className="text-xs text-amber-600 bg-amber-100/70 px-1.5 py-0.5 rounded border border-amber-200 text-center mb-1">
-                      Season Break
+                    <div className="text-xs text-amber-600 bg-amber-100/70 px-0.5 md:px-1 py-0.5 rounded border border-amber-200 text-center mb-0.5 md:mb-1 truncate">
+                      <span className="inline md:hidden">Break</span>
+                      <span className="hidden md:inline">Season Break</span>
                     </div>
                   )}
 
                   {day.isOutsideSeason && day.isCurrentMonth && (
-                    <div className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 text-center mb-1">
-                      Outside Season
+                    <div className="text-xs text-gray-500 bg-gray-100 px-0.5 md:px-1 py-0.5 rounded border border-gray-200 text-center mb-0.5 md:mb-1 truncate">
+                      <span className="inline md:hidden">Outside</span>
+                      <span className="hidden md:inline">Outside Season</span>
                     </div>
                   )}
 
                   {/* Render dots for mobile/small screens */}
                   {isMobile && (
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-wrap gap-0.5">
                       {dayEvents.map((event) => (
                         <EventItem
                           key={event.id}
@@ -294,7 +297,7 @@ export function MonthView({
                   {hasMoreEvents && dayEvents.length > 0 && (
                     <div
                       className={cn(
-                        "text-xs px-2 py-0.5 mt-1 cursor-pointer rounded-sm border border-muted/40 transition-colors text-center",
+                        "text-2xs md:text-xs px-1 md:px-2 py-0.5 mt-0.5 md:mt-1 cursor-pointer rounded-sm border border-muted/40 transition-colors text-center",
                         day.isCurrentMonth
                           ? "text-muted-foreground hover:bg-muted/20 hover:text-foreground"
                           : "text-muted-foreground/60 hover:text-muted-foreground/80 hover:bg-muted/10"

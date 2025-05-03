@@ -190,13 +190,14 @@ export function CompactEventWrapper({
   return (
     <div
       className={cn(
-        "px-2 py-1 rounded-md text-xs cursor-pointer truncate flex items-center border",
+        "rounded-md cursor-pointer truncate flex items-center border relative overflow-hidden",
+        // Responsive padding and text size (mobile first)
+        "px-1 py-0.5 text-2xs md:px-2 md:py-1 md:text-xs",
         // Only apply status colors if not using custom styling
         !useCustomStyling && colors.bg,
         !useCustomStyling && colors.text,
         !useCustomStyling && colors.border,
-        className,
-        "relative overflow-hidden"
+        className
       )}
       onClick={onClick ? () => onClick(event) : undefined}
       style={getCustomStyles()}
@@ -227,13 +228,14 @@ export function FullEventWrapper({
   return (
     <div
       className={cn(
-        "p-3 rounded-md cursor-pointer border",
+        "rounded-md cursor-pointer border relative overflow-hidden",
+        // Responsive padding (mobile first)
+        "p-2 md:p-3",
         // Only apply status colors if not using custom styling
         !useCustomStyling && colors.bg,
         !useCustomStyling && colors.text,
         !useCustomStyling && colors.border,
-        className,
-        "relative overflow-hidden"
+        className
       )}
       onClick={onClick ? () => onClick(event) : undefined}
       style={getCustomStyles()}

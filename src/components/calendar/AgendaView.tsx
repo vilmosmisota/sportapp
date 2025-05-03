@@ -130,7 +130,7 @@ export function AgendaView({
                 <div className="flex items-center">
                   <div
                     className={cn(
-                      "w-10 h-10 rounded-full flex items-center justify-center mr-2 text-sm",
+                      "w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center mr-2 text-xs md:text-sm",
                       isToday(date) && "bg-primary text-primary-foreground"
                     )}
                   >
@@ -141,18 +141,22 @@ export function AgendaView({
                       {format(date, "EEEE")}
                       {isInBreak && (
                         <span className="inline-flex items-center text-amber-500 text-xs">
-                          <Pause className="h-3.5 w-3.5 mr-1" />
-                          Season Break
+                          <Pause className="h-3 w-3 md:h-3.5 md:w-3.5 mr-0.5 md:mr-1" />
+                          <span className="hidden xs:inline">Season Break</span>
+                          <span className="inline xs:hidden">Break</span>
                         </span>
                       )}
                       {isOutsideSeason && (
                         <span className="inline-flex items-center text-gray-400 text-xs">
-                          <Calendar className="h-3.5 w-3.5 mr-1" />
-                          Outside Season
+                          <Calendar className="h-3 w-3 md:h-3.5 md:w-3.5 mr-0.5 md:mr-1" />
+                          <span className="hidden xs:inline">
+                            Outside Season
+                          </span>
+                          <span className="inline xs:hidden">Outside</span>
                         </span>
                       )}
                     </div>
-                    <div className="text-muted-foreground text-sm">
+                    <div className="text-muted-foreground text-xs md:text-sm">
                       {format(date, "MMMM yyyy")}
                     </div>
                   </div>
@@ -160,16 +164,24 @@ export function AgendaView({
               </div>
 
               {/* Events for this day */}
-              <div className="space-y-2 pl-12">
+              <div className="space-y-2 pl-6 md:pl-12">
                 {isInBreak && dayEvents.length === 0 && (
-                  <div className="text-sm py-2 px-3 bg-amber-50 border border-amber-200 rounded text-amber-700">
-                    No events during this break period
+                  <div className="text-xs md:text-sm py-1.5 md:py-2 px-2 md:px-3 bg-amber-50 border border-amber-200 rounded text-amber-700">
+                    <span className="hidden md:inline">
+                      No events during this break period
+                    </span>
+                    <span className="inline md:hidden">No events in break</span>
                   </div>
                 )}
 
                 {isOutsideSeason && dayEvents.length === 0 && (
-                  <div className="text-sm py-2 px-3 bg-gray-100 border border-gray-200 rounded text-gray-500">
-                    No events outside season range
+                  <div className="text-xs md:text-sm py-1.5 md:py-2 px-2 md:px-3 bg-gray-100 border border-gray-200 rounded text-gray-500">
+                    <span className="hidden md:inline">
+                      No events outside season range
+                    </span>
+                    <span className="inline md:hidden">
+                      No events outside season
+                    </span>
                   </div>
                 )}
 

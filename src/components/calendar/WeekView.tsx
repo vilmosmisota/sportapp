@@ -142,7 +142,7 @@ export function WeekView({
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="h-full flex flex-col">
       {/* Week day headers */}
       <div className="grid grid-cols-8 border-b">
         {/* Time column header (empty) */}
@@ -209,8 +209,8 @@ export function WeekView({
           </div>
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto">
-          <div className="grid grid-cols-8 min-h-[1200px] relative">
+        <div className="flex-1 overflow-auto relative">
+          <div className="grid grid-cols-[auto_repeat(7,_1fr)] grid-rows-[auto_repeat(24,_minmax(60px,_1fr))]">
             {/* Current time indicator */}
             {weekDays.some((day) => isToday(day)) && (
               <div
@@ -254,15 +254,21 @@ export function WeekView({
                     >
                       {isInBreak && slot.hour === 12 && (
                         <div className="absolute inset-x-0 text-center z-10 pointer-events-none">
-                          <div className="text-xs py-1 px-2 bg-amber-100/70 border border-amber-200 rounded text-amber-600 inline-block">
-                            Season Break
+                          <div className="text-xs py-0.5 md:py-1 px-1 md:px-2 bg-amber-100/70 border border-amber-200 rounded text-amber-600 inline-block truncate">
+                            <span className="inline md:hidden">Break</span>
+                            <span className="hidden md:inline">
+                              Season Break
+                            </span>
                           </div>
                         </div>
                       )}
                       {isOutsideSeason && slot.hour === 12 && (
                         <div className="absolute inset-x-0 text-center z-10 pointer-events-none">
-                          <div className="text-xs py-1 px-2 bg-gray-100 border border-gray-200 rounded text-gray-500 inline-block">
-                            Outside Season
+                          <div className="text-xs py-0.5 md:py-1 px-1 md:px-2 bg-gray-100 border border-gray-200 rounded text-gray-500 inline-block truncate">
+                            <span className="inline md:hidden">Outside</span>
+                            <span className="hidden md:inline">
+                              Outside Season
+                            </span>
                           </div>
                         </div>
                       )}
