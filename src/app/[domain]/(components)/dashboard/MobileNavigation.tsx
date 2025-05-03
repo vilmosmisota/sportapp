@@ -8,11 +8,7 @@ import {
   TooltipTrigger,
 } from "../../../../components/ui/tooltip";
 import { Button } from "../../../../components/ui/button";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerTrigger,
-} from "../../../../components/ui/drawer";
+import { Drawer, DrawerContent } from "../../../../components/ui/drawer";
 import { NavSection } from "./constants";
 import { cn } from "../../../../lib/utils";
 import DashboardMobileNavItems from "./components/DashboardMobileNavItems";
@@ -37,13 +33,8 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
   const { pinnedItemIds, togglePinItem } = usePinnedItems();
 
   return (
-    <div className="fixed top-4 right-4 z-40 lg:hidden">
+    <div className="fixed top-0 right-0 z-40 lg:hidden">
       <Drawer open={isOpen} onOpenChange={setIsOpen}>
-        <DrawerTrigger asChild>
-          <Button className="h-9 w-9" variant="outline" size="icon">
-            <MenuIcon className="h-4 w-4" />
-          </Button>
-        </DrawerTrigger>
         <DrawerContent className="h-[100dvh]">
           <div className="flex h-full flex-col">
             {/* Mobile Header */}

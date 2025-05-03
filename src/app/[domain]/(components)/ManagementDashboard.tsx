@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { PanelLeft } from "lucide-react";
+import { Menu, PanelLeft } from "lucide-react";
 import { useParams, usePathname } from "next/navigation";
 import { Button } from "../../../components/ui/button";
 import { Sidebar } from "./dashboard/Sidebar";
@@ -16,6 +16,7 @@ import { cn } from "../../../lib/utils";
 
 import { PinnedNav } from "./dashboard/components/PinnedNav";
 import { useUIState } from "../../../browserStorage/localStorage/ui-storage";
+import { useMediaQuery } from "../../../utils/hooks";
 
 /**
  * ManagementDashboard - Main layout component for the organization dashboard
@@ -32,6 +33,9 @@ export default function ManagementDashboard({
     defaultValue: false,
   });
   const [openSections, setOpenSections] = useState<string[]>([]);
+
+  // Use the media query hook to detect mobile screens
+  const isMobile = useMediaQuery("(max-width: 1023px)");
 
   // Routing and tenant data
   const pathname = usePathname();
@@ -53,6 +57,20 @@ export default function ManagementDashboard({
     gameLocationsConfigured
   );
 
+  // Handle sidebar toggle based on screen size
+  const handleToggleSidebar = () => {
+    // On mobile, we want to open the mobile navigation drawer
+    if (isMobile) {
+      setIsOpen(true);
+    } else {
+      // On desktop, we toggle the sidebar
+      setIsCollapsed(!isCollapsed);
+    }
+  };
+
+  // Show pinned items if on mobile or if the sidebar is collapsed on desktop
+  const shouldShowPinnedNav = isMobile || isCollapsed;
+
   return (
     <div className="flex min-h-screen relative">
       {/* Top-left area for pinned items */}
@@ -65,19 +83,26 @@ export default function ManagementDashboard({
           <Button
             variant="ghost"
             size="smIcon"
-            onClick={() => setIsCollapsed(!isCollapsed)}
+            onClick={handleToggleSidebar}
             className="text-muted-foreground hover:text-primary"
+            aria-label="Toggle navigation"
           >
-            <PanelLeft
-              className={cn(
-                "h-4 w-4 transition-transform",
-                isCollapsed ? "rotate-180" : ""
-              )}
-            />
+            {isMobile ? (
+              <Menu className="h-4 w-4" />
+            ) : (
+              <PanelLeft
+                className={cn(
+                  "h-4 w-4 transition-transform",
+                  isCollapsed ? "rotate-180" : ""
+                )}
+              />
+            )}
           </Button>
 
-          {/* Only show the pinned nav when sidebar is collapsed */}
-          {isCollapsed && <PinnedNav navItems={navItems} pathname={pathname} />}
+          {/* Show pinned nav when on mobile or when sidebar is collapsed on desktop */}
+          {shouldShowPinnedNav && (
+            <PinnedNav navItems={navItems} pathname={pathname} />
+          )}
         </div>
       </div>
 

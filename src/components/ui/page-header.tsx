@@ -20,27 +20,37 @@ export function PageHeader({
   backButton,
 }: PageHeaderProps) {
   return (
-    <div className="flex items-center justify-between pb-6 ">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 sm:pb-6">
       <div className="space-y-1">
         {backButton && (
           <Button
             variant="ghost"
             size="sm"
-            className="mb-2 -ml-4 h-8 text-muted-foreground"
+            className="mb-1 sm:mb-2 -ml-3 sm:-ml-4 h-7 sm:h-8 text-muted-foreground"
             asChild
           >
             <Link href={backButton.href}>
-              <ChevronLeft className="h-4 w-4 mr-1" />
-              {backButton.label || "Back"}
+              <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+              <span className="text-xs sm:text-sm">
+                {backButton.label || "Back"}
+              </span>
             </Link>
           </Button>
         )}
-        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+        <h1 className="text-xl sm:text-2xl font-semibold tracking-tight line-clamp-2">
+          {title}
+        </h1>
         {description && (
-          <p className="text-sm text-muted-foreground">{description}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
+            {description}
+          </p>
         )}
       </div>
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
+      {actions && (
+        <div className="flex items-center flex-wrap justify-start sm:justify-end gap-2 mt-2 sm:mt-0">
+          {actions}
+        </div>
+      )}
     </div>
   );
 }
