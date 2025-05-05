@@ -20,21 +20,47 @@ const SelectValue = SelectPrimitive.Value;
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
->(({ className, children, ...props }, ref) => (
-  <SelectPrimitive.Trigger
-    ref={ref}
-    className={cn(
-      "flex h-11 w-full items-center justify-between whitespace-nowrap rounded-xl border border-input bg-gradient-to-b from-background/50 to-background px-3 py-2 text-sm shadow-sm transition-all duration-200 ring-offset-background placeholder:text-muted-foreground hover:shadow-md focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
-      className
-    )}
-    {...props}
-  >
-    {children}
-    <SelectPrimitive.Icon asChild>
-      <CaretSortIcon className="h-4 w-4 opacity-50 transition-transform duration-200 ease-in-out group-hover:opacity-70" />
-    </SelectPrimitive.Icon>
-  </SelectPrimitive.Trigger>
-));
+>(({ className, children, ...props }, ref) => {
+  // Create a ref to track if we're dealing with a touch event
+  const isTouchRef = React.useRef(false);
+
+  return (
+    <SelectPrimitive.Trigger
+      ref={ref}
+      className={cn(
+        "flex h-11 w-full items-center justify-between whitespace-nowrap rounded-xl border border-input bg-gradient-to-b from-background/50 to-background px-3 py-2 text-sm shadow-sm transition-all duration-200 ring-offset-background placeholder:text-muted-foreground hover:shadow-md focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+        className
+      )}
+      onPointerDown={(e) => {
+        // If it's a touch event, prevent the default behavior
+        if (e.pointerType === "touch") {
+          isTouchRef.current = true;
+          e.preventDefault();
+        } else {
+          // For mouse/keyboard events, allow default behavior
+          isTouchRef.current = false;
+          // Call any original onPointerDown handler
+          props.onPointerDown?.(e);
+        }
+      }}
+      onClick={(e) => {
+        // For touch events, we'll handle opening in the click event
+        if (isTouchRef.current) {
+          // Reset the ref
+          isTouchRef.current = false;
+        }
+        // Call any original onClick handler
+        props.onClick?.(e);
+      }}
+      {...props}
+    >
+      {children}
+      <SelectPrimitive.Icon asChild>
+        <CaretSortIcon className="h-4 w-4 opacity-50 transition-transform duration-200 ease-in-out group-hover:opacity-70" />
+      </SelectPrimitive.Icon>
+    </SelectPrimitive.Trigger>
+  );
+});
 SelectTrigger.displayName = SelectPrimitive.Trigger.displayName;
 
 const SelectScrollUpButton = React.forwardRef<
