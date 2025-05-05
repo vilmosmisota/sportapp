@@ -24,9 +24,9 @@ import { Training } from "@/entities/training/Training.schema";
 import { CalendarViewType } from "./types";
 import { CalendarHeader } from "./CalendarHeader";
 import { MonthView } from "./MonthView";
-import { WeekView } from "./WeekView";
 import { DayView } from "./DayView";
-import { Season } from "@/entities/season/Season.schema";
+import { SwipeIndicator } from "@/components/swipe/SwipeIndicator";
+import { useSwipeGesture } from "../swipe/useSwipeGesture";
 
 export type CalendarEvent = {
   id: string | number;
@@ -185,6 +185,12 @@ export function EventCalendar({
     [onDateRangeChange]
   );
 
+  const { swipeDirection, isSwipeActive, ...swipeHandlers } = useSwipeGesture({
+    onSwipeLeft: handleNextMonth,
+    onSwipeRight: handlePreviousMonth,
+    swipeThreshold: 50,
+  });
+
   const formatTitle = () => {
     switch (view) {
       case "month":
@@ -198,6 +204,8 @@ export function EventCalendar({
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
+      <SwipeIndicator direction={swipeDirection} isActive={isSwipeActive} />
+
       <div className="flex items-center justify-between mb-5 pb-2 px-4 md:px-0">
         <CalendarHeader
           title={formatTitle()}
@@ -245,6 +253,7 @@ export function EventCalendar({
         <TabsContent
           value="month"
           className="h-full m-0 mt-0 p-0 data-[state=active]:block"
+          {...swipeHandlers}
         >
           <MonthView
             currentDate={currentMonth}
