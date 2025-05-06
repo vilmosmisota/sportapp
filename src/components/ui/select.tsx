@@ -21,10 +21,10 @@ const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
 >(({ className, children, ...props }, ref) => {
-  // Create a ref to track if we're dealing with a touch event
-  const isTouchRef = React.useRef(false);
-  const touchTimerRef = React.useRef<NodeJS.Timeout | null>(null);
-  const touchStartYRef = React.useRef<number | null>(null);
+  // Track if this is an intentional tap (not a scroll)
+  const isIntentionalTap = React.useRef(true);
+  // Track the starting position of touch
+  const touchStartY = React.useRef<number | null>(null);
 
   return (
     <SelectPrimitive.Trigger
@@ -34,41 +34,35 @@ const SelectTrigger = React.forwardRef<
         className
       )}
       onTouchStart={(e) => {
-        touchStartYRef.current = e.touches[0].clientY;
-
-        isTouchRef.current = true;
-
+        // Reset our tracking state at the start of a touch
+        isIntentionalTap.current = true;
+        touchStartY.current = e.touches[0].clientY;
         props.onTouchStart?.(e);
       }}
       onTouchMove={(e) => {
-        if (touchStartYRef.current !== null) {
+        // If the user scrolls more than a small threshold, mark it as not a tap
+        if (touchStartY.current !== null) {
           const touchMoveY = e.touches[0].clientY;
-          const yDiff = Math.abs(touchMoveY - touchStartYRef.current);
+          const yDiff = Math.abs(touchMoveY - touchStartY.current);
 
           if (yDiff > 5) {
-            isTouchRef.current = false;
+            isIntentionalTap.current = false;
           }
         }
-
         props.onTouchMove?.(e);
       }}
       onTouchEnd={(e) => {
-        touchStartYRef.current = null;
+        touchStartY.current = null;
         props.onTouchEnd?.(e);
-        props.onTouchEnd?.(e);
-      }}
-      onPointerDown={(e) => {
-        if (e.pointerType !== "touch") {
-          props.onPointerDown?.(e);
-        } else {
-          e.preventDefault();
-        }
       }}
       onClick={(e) => {
-        if (isTouchRef.current) {
-          isTouchRef.current = false;
+        // Only prevent the default behavior if this was a scroll, not a tap
+        if (!isIntentionalTap.current) {
+          e.preventDefault();
+          // Reset the state for next interaction
+          isIntentionalTap.current = true;
         }
-
+        // Always call the original onClick handler
         props.onClick?.(e);
       }}
       {...props}
