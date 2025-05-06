@@ -26,7 +26,7 @@ import { CalendarHeader } from "./CalendarHeader";
 import { MonthView } from "./MonthView";
 import { DayView } from "./DayView";
 import { SwipeIndicator } from "@/components/swipe/SwipeIndicator";
-import { useSwipeGesture } from "../swipe/useSwipeGesture";
+import { useSwipeGesture } from "@/components/swipe/useSwipeGesture";
 
 export type CalendarEvent = {
   id: string | number;
@@ -185,10 +185,12 @@ export function EventCalendar({
     [onDateRangeChange]
   );
 
+  // Swipe gesture handlers for touch devices
   const { swipeDirection, isSwipeActive, ...swipeHandlers } = useSwipeGesture({
-    onSwipeLeft: handleNextMonth,
-    onSwipeRight: handlePreviousMonth,
-    swipeThreshold: 50,
+    onSwipeLeft: handleNextMonth, // Swipe left to go to next month
+    onSwipeRight: handlePreviousMonth, // Swipe right to go to previous month
+    swipeThreshold: 50, // Minimum distance to detect a swipe
+    blockScrollWhenActive: true, // Prevent vertical scrolling during horizontal swipes
   });
 
   const formatTitle = () => {
@@ -204,7 +206,11 @@ export function EventCalendar({
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      <SwipeIndicator direction={swipeDirection} isActive={isSwipeActive} />
+      <SwipeIndicator
+        direction={swipeDirection}
+        isActive={isSwipeActive}
+        currentMonth={currentMonth}
+      />
 
       <div className="flex items-center justify-between mb-5 pb-2 px-4 md:px-0">
         <CalendarHeader
