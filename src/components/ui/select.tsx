@@ -23,6 +23,8 @@ const SelectTrigger = React.forwardRef<
 >(({ className, children, ...props }, ref) => {
   // Create a ref to track if we're dealing with a touch event
   const isTouchRef = React.useRef(false);
+  const touchTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const touchStartYRef = React.useRef<number | null>(null);
 
   return (
     <SelectPrimitive.Trigger
@@ -31,25 +33,42 @@ const SelectTrigger = React.forwardRef<
         "flex h-11 w-full items-center justify-between whitespace-nowrap rounded-xl border border-input bg-gradient-to-b from-background/50 to-background px-3 py-2 text-sm shadow-sm transition-all duration-200 ring-offset-background placeholder:text-muted-foreground hover:shadow-md focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
         className
       )}
+      onTouchStart={(e) => {
+        touchStartYRef.current = e.touches[0].clientY;
+
+        isTouchRef.current = true;
+
+        props.onTouchStart?.(e);
+      }}
+      onTouchMove={(e) => {
+        if (touchStartYRef.current !== null) {
+          const touchMoveY = e.touches[0].clientY;
+          const yDiff = Math.abs(touchMoveY - touchStartYRef.current);
+
+          if (yDiff > 5) {
+            isTouchRef.current = false;
+          }
+        }
+
+        props.onTouchMove?.(e);
+      }}
+      onTouchEnd={(e) => {
+        touchStartYRef.current = null;
+        props.onTouchEnd?.(e);
+        props.onTouchEnd?.(e);
+      }}
       onPointerDown={(e) => {
-        // If it's a touch event, prevent the default behavior
-        if (e.pointerType === "touch") {
-          isTouchRef.current = true;
-          e.preventDefault();
-        } else {
-          // For mouse/keyboard events, allow default behavior
-          isTouchRef.current = false;
-          // Call any original onPointerDown handler
+        if (e.pointerType !== "touch") {
           props.onPointerDown?.(e);
+        } else {
+          e.preventDefault();
         }
       }}
       onClick={(e) => {
-        // For touch events, we'll handle opening in the click event
         if (isTouchRef.current) {
-          // Reset the ref
           isTouchRef.current = false;
         }
-        // Call any original onClick handler
+
         props.onClick?.(e);
       }}
       {...props}
