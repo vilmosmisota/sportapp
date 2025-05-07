@@ -28,6 +28,12 @@ interface SwipeGestureResult {
   isSwipeActive: boolean;
 }
 
+// This function will be attached to the document to prevent scroll
+// We need to define it outside the hook to maintain proper reference
+const preventDefault = (e: Event) => {
+  e.preventDefault();
+};
+
 /**
  * A hook for detecting horizontal swipe gestures on touch devices
  * Provides both event handlers and current swipe state
@@ -55,37 +61,36 @@ export function useSwipeGesture({
   const mouseDown = useRef<boolean>(false);
   const mouseStartX = useRef<number | null>(null);
 
-  // Keep track of original body style to restore it later
-  const originalBodyStyle = useRef<string | null>(null);
-  const bodyScrollLocked = useRef<boolean>(false);
+  // Track if we're currently blocking scroll
+  const isBlockingScroll = useRef(false);
 
-  // Helper to lock body scroll
-  const lockBodyScroll = useCallback(() => {
-    if (!bodyScrollLocked.current && blockScrollWhenActive) {
-      originalBodyStyle.current = document.body.style.overflow;
-      document.body.style.overflow = "hidden";
-      bodyScrollLocked.current = true;
+  // Helper to lock scrolling by adding event listeners to the document
+  const lockScrolling = useCallback(() => {
+    if (!isBlockingScroll.current && blockScrollWhenActive) {
+      // These options are crucial - passive: false lets us call preventDefault
+      document.addEventListener("touchmove", preventDefault, {
+        passive: false,
+      });
+      document.addEventListener("wheel", preventDefault, { passive: false });
+      isBlockingScroll.current = true;
     }
   }, [blockScrollWhenActive]);
 
-  // Helper to unlock body scroll
-  const unlockBodyScroll = useCallback(() => {
-    if (bodyScrollLocked.current && blockScrollWhenActive) {
-      if (originalBodyStyle.current !== null) {
-        document.body.style.overflow = originalBodyStyle.current;
-      } else {
-        document.body.style.overflow = "";
-      }
-      bodyScrollLocked.current = false;
+  // Helper to unlock scrolling by removing event listeners
+  const unlockScrolling = useCallback(() => {
+    if (isBlockingScroll.current && blockScrollWhenActive) {
+      document.removeEventListener("touchmove", preventDefault);
+      document.removeEventListener("wheel", preventDefault);
+      isBlockingScroll.current = false;
     }
   }, [blockScrollWhenActive]);
 
-  // Cleanup when component unmounts
+  // Clean up event listeners when component unmounts
   useEffect(() => {
     return () => {
-      unlockBodyScroll();
+      unlockScrolling();
     };
-  }, [unlockBodyScroll]);
+  }, [unlockScrolling]);
 
   // Helper to determine current swipe direction based on movement
   const updateSwipeDirection = useCallback(
@@ -129,23 +134,26 @@ export function useSwipeGesture({
         (horizontalDiff > 10 || verticalDiff > 10)
       ) {
         isHorizontalSwipe.current = horizontalDiff > verticalDiff;
+
+        // If it's a horizontal swipe, prevent all scrolling immediately
+        if (isHorizontalSwipe.current) {
+          lockScrolling();
+        }
       }
 
       // Only prevent default and update visuals if we've determined this is a horizontal swipe
       if (isHorizontalSwipe.current) {
         e.preventDefault(); // Prevent scrolling when swiping horizontally
-        // Lock body scroll immediately when we detect a horizontal swipe
-        lockBodyScroll();
         // Update direction for indicator
         updateSwipeDirection(currentX, touchStartX.current);
       }
     },
-    [updateSwipeDirection, lockBodyScroll]
+    [updateSwipeDirection, lockScrolling]
   );
 
   const handleTouchEnd = useCallback(() => {
-    // Always unlock scroll when touch ends
-    unlockBodyScroll();
+    // Always unlock scrolling when touch ends
+    unlockScrolling();
 
     if (touchStartX.current === null || touchEndX.current === null) {
       setIsSwipeActive(false);
@@ -177,7 +185,7 @@ export function useSwipeGesture({
     onSwipeRight,
     swipeThreshold,
     updateSwipeDirection,
-    unlockBodyScroll,
+    unlockScrolling,
   ]);
 
   // Handle mouse events for touch pads
@@ -196,20 +204,24 @@ export function useSwipeGesture({
       // Only prevent default if it's potentially a swipe
       if (Math.abs(currentX - mouseStartX.current) > 10) {
         e.preventDefault();
-        isHorizontalSwipe.current = true;
-        // Lock body scroll immediately when we detect a significant movement
-        lockBodyScroll();
+
+        // If we haven't marked this as a horizontal swipe yet, do so and lock scrolling
+        if (!isHorizontalSwipe.current) {
+          isHorizontalSwipe.current = true;
+          lockScrolling();
+        }
+
         // Update direction for indicator
         updateSwipeDirection(currentX, mouseStartX.current);
       }
     },
-    [updateSwipeDirection, lockBodyScroll]
+    [updateSwipeDirection, lockScrolling]
   );
 
   const handleMouseUp = useCallback(
     (e: MouseEvent) => {
-      // Always unlock scroll when mouse up
-      unlockBodyScroll();
+      // Always unlock scrolling when mouse up
+      unlockScrolling();
 
       if (!mouseDown.current || mouseStartX.current === null) {
         mouseDown.current = false;
@@ -242,21 +254,21 @@ export function useSwipeGesture({
       onSwipeRight,
       swipeThreshold,
       updateSwipeDirection,
-      unlockBodyScroll,
+      unlockScrolling,
     ]
   );
 
   // Also handle mouse leave to avoid stuck states
   const handleMouseLeave = useCallback(() => {
-    // Always unlock scroll when mouse leaves
-    unlockBodyScroll();
+    // Always unlock scrolling when mouse leaves
+    unlockScrolling();
 
     mouseDown.current = false;
     mouseStartX.current = null;
     isHorizontalSwipe.current = false;
     setIsSwipeActive(false);
     setSwipeDirection(null);
-  }, [unlockBodyScroll]);
+  }, [unlockScrolling]);
 
   return {
     onTouchStart: handleTouchStart,
