@@ -109,7 +109,6 @@ export default function AddGameForm({
 }: Props) {
   // State for form submission
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDirty, setIsDirty] = useState(false);
 
   // State for organization's role (home/away)
   const [gameLocation, setGameLocation] = useState<GameLocationType>(
@@ -149,37 +148,7 @@ export default function AddGameForm({
     },
   });
 
-  // Watch for form changes to set form as dirty
-  useEffect(() => {
-    const subscription = form.watch(() => {
-      setIsDirty(form.formState.isDirty);
-    });
-
-    // Clean up subscription on unmount
-    return () => subscription.unsubscribe();
-  }, [form]);
-
-  // Handle datetime range change
-  const handleDateTimeRangeChange = (isStart: boolean, date?: Date) => {
-    if (!date) return;
-
-    if (isStart) {
-      // Update the date field
-      form.setValue("date", date);
-
-      // Format and set the start time
-      const timeString = format(date, "HH:mm");
-      form.setValue("startTime", timeString);
-    } else {
-      // For end time, we only update the time part, not the date
-      const timeString = format(date, "HH:mm");
-      form.setValue("endTime", timeString);
-    }
-
-    setIsDirty(true);
-  };
-
-  // Extract form values for conditional logic
+  // Watch for specific form values needed for conditional logic
   const homeTeamId = form.watch("homeTeamId");
   const awayTeamId = form.watch("awayTeamId");
   const currentCompetitionType = form.watch("competitionType");
@@ -187,22 +156,71 @@ export default function AddGameForm({
   const startTime = form.watch("startTime");
   const endTime = form.watch("endTime");
 
-  // Extract and sanitize competition name and color
   const competitionName = useMemo(() => {
-    // Get the original name and make sure it doesn't have hash characters
     return getCompetitionName(currentCompetitionType).replace(/#/g, "");
   }, [currentCompetitionType]);
 
-  const competitionColor = getCompetitionColor(currentCompetitionType);
-
-  // Reset team values when changing home/away selection
   useEffect(() => {
-    // Reset team values when changing game location type
-    form.setValue("homeTeamId", 0);
-    form.setValue("awayTeamId", 0);
-  }, [gameLocation, form]);
+    form.setValue("homeTeamId", 0, { shouldDirty: true });
+    form.setValue("awayTeamId", 0, { shouldDirty: true });
+  }, [gameLocation]);
 
-  // Handle competition type selection from dropdown
+  const processFormData = (data: GameForm) => {
+    let fixedCompetitionType = data.competitionType;
+
+    if (fixedCompetitionType && fixedCompetitionType.includes("##")) {
+      const parts = fixedCompetitionType.split("#");
+      fixedCompetitionType = formatCompetitionType(
+        parts[0],
+        parts.slice(1).join("")
+      );
+    }
+
+    // TIMEZONE FIX: Create a date at noon to avoid timezone boundary issues
+    // Extract the year, month, and day from the original date
+    const userSelectedDate = data.date;
+    const year = userSelectedDate.getFullYear();
+    const month = userSelectedDate.getMonth();
+    const day = userSelectedDate.getDate();
+
+    // Set time to noon to prevent timezone-related date changes
+    const fixedDate = set(new Date(year, month, day), {
+      hours: 12,
+      minutes: 0,
+      seconds: 0,
+    });
+
+    // Prepare the data with fixed values and timezone-safe date
+    return {
+      ...data,
+      date: fixedDate,
+      competitionType: fixedCompetitionType,
+      endTime: data.endTime || null,
+      meta: {
+        note: data.meta?.note || null,
+      },
+    };
+  };
+
+  // Handle datetime range change
+  const handleDateTimeRangeChange = (isStart: boolean, date?: Date) => {
+    if (!date) return;
+
+    if (isStart) {
+      // Update the date field
+      form.setValue("date", date, { shouldDirty: true });
+
+      // Format and set the start time
+      const timeString = format(date, "HH:mm");
+      form.setValue("startTime", timeString, { shouldDirty: true });
+    } else {
+      // For end time, we only update the time part, not the date
+      const timeString = format(date, "HH:mm");
+      form.setValue("endTime", timeString, { shouldDirty: true });
+    }
+  };
+
+  // Handle competition type selection from dropdown - fixed missing setValue
   const handleCompetitionTypeSelect = (competitionType: CompetitionType) => {
     // Use the helper function to format properly
     const formattedType = formatCompetitionType(
@@ -210,27 +228,26 @@ export default function AddGameForm({
       competitionType.color || undefined
     );
 
-    form.setValue("competitionType", formattedType);
-    setIsDirty(true);
+    // Actually set the value in the form (this was missing before)
+    form.setValue("competitionType", formattedType, { shouldDirty: true });
   };
 
   // Handle team selection based on home/away choice
   const handleTeamChange = (isHome: boolean, value: string) => {
     const teamId = parseInt(value);
     if (isHome) {
-      form.setValue("homeTeamId", teamId);
+      form.setValue("homeTeamId", teamId, { shouldDirty: true });
       // Reset away team if it's the same as home
       if (form.getValues("awayTeamId") === teamId) {
-        form.setValue("awayTeamId", 0);
+        form.setValue("awayTeamId", 0, { shouldDirty: true });
       }
     } else {
-      form.setValue("awayTeamId", teamId);
+      form.setValue("awayTeamId", teamId, { shouldDirty: true });
       // Reset home team if it's the same as away
       if (form.getValues("homeTeamId") === teamId) {
-        form.setValue("homeTeamId", 0);
+        form.setValue("homeTeamId", 0, { shouldDirty: true });
       }
     }
-    setIsDirty(true);
   };
 
   // Handle submitting the form and adding another game
@@ -238,31 +255,11 @@ export default function AddGameForm({
     setIsSubmitting(true);
 
     try {
-      // Fix competition type if it contains double hash
-      let fixedCompetitionType = data.competitionType;
-
-      if (fixedCompetitionType && fixedCompetitionType.includes("##")) {
-        // Extract the parts and reformat correctly
-        const parts = fixedCompetitionType.split("#");
-        fixedCompetitionType = formatCompetitionType(
-          parts[0],
-          parts.slice(1).join("")
-        );
-      }
+      const formData = processFormData(data);
 
       // Get a reference to date before we modify anything
-      const gameDate = data.date ? new Date(data.date) : new Date();
+      const gameDate = formData.date ? new Date(formData.date) : new Date();
       const formattedDate = format(gameDate, "MMM d, yyyy");
-
-      // Prepare the data with fixed values
-      const formData = {
-        ...data,
-        competitionType: fixedCompetitionType,
-        endTime: data.endTime || null,
-        meta: {
-          note: data.meta?.note || null,
-        },
-      };
 
       // Get team names for the success message
       const homeTeam =
@@ -287,61 +284,34 @@ export default function AddGameForm({
         `Game created: ${homeTeam} vs ${awayTeam} on ${formattedDate}`
       );
 
-      // Clear any errors
-      form.clearErrors();
-
-      // Store the values we want to keep
-      const valuesToKeep = {
-        // Keep the current teams
-        homeTeamId: data.homeTeamId,
-        awayTeamId: data.awayTeamId,
-
-        // Keep the time settings
+      // Define the reset values more clearly
+      const resetValues = {
+        status: GameStatus.Scheduled,
         date: data.date,
         startTime: data.startTime,
         endTime: data.endTime,
-
-        // Keep location and competition type
+        homeTeamId: data.homeTeamId,
+        awayTeamId: data.awayTeamId,
         location: data.location,
-        competitionType: fixedCompetitionType,
-
-        // Always keep the season ID
+        competitionType: formData.competitionType,
         seasonId: selectedSeason.id,
+        meta: { note: "" },
+        homeScore: null,
+        awayScore: null,
       };
 
-      // Partially reset the form - keeping the values we want
-      form.reset(
-        {
-          ...form.getValues(), // Start with current values
-          ...valuesToKeep, // Keep specific values
+      // Reset the form with a clean approach
+      form.reset(resetValues, {
+        keepErrors: false,
+        keepDirty: true, // Keep dirty state to allow additional submissions
+        keepIsSubmitted: false,
+        keepTouched: false,
+        keepIsValid: false,
+        keepSubmitCount: false,
+      });
 
-          // Reset just these fields:
-          meta: { note: "" }, // Clear notes
-          homeScore: null, // Clear scores
-          awayScore: null,
-          status: GameStatus.Scheduled,
-        },
-        {
-          // Don't keep error or validation states
-          keepErrors: false,
-          keepDirty: false,
-          keepIsSubmitted: false,
-          keepTouched: false,
-          keepIsValid: false,
-          keepSubmitCount: false,
-        }
-      );
-
-      // Make sure the form is ready for the next submission
-      setIsDirty(true);
-
-      // Clean up any stray error messages
-      setTimeout(() => {
-        const errorElements = document.querySelectorAll('[role="alert"]');
-        errorElements.forEach((el) => {
-          if (el.parentNode) el.parentNode.removeChild(el);
-        });
-      }, 50);
+      // Clear any errors
+      form.clearErrors();
     } catch (error) {
       console.error("Failed to create game:", error);
 
@@ -362,45 +332,10 @@ export default function AddGameForm({
     setIsSubmitting(true);
 
     try {
-      // Fix competition type if it contains double hash
-      let fixedCompetitionType = data.competitionType;
+      const formData = processFormData(data);
 
-      if (fixedCompetitionType && fixedCompetitionType.includes("##")) {
-        const parts = fixedCompetitionType.split("#");
-        fixedCompetitionType = formatCompetitionType(
-          parts[0],
-          parts.slice(1).join("")
-        );
-      }
-
-      // Get a reference to date before we modify anything
       const gameDate = data.date ? new Date(data.date) : new Date();
       const formattedDate = format(gameDate, "MMM d, yyyy");
-
-      // Prepare the data with fixed values
-      const formData = {
-        ...data,
-        competitionType: fixedCompetitionType,
-        endTime: data.endTime || null,
-        meta: {
-          note: data.meta?.note || null,
-        },
-      };
-
-      // Get team names for the success message
-      const homeTeam =
-        formData.homeTeamId > 0
-          ? teams.find((t) => t.id === formData.homeTeamId)?.name ||
-            opponents.find((o) => o.id === formData.homeTeamId)?.name ||
-            "Home Team"
-          : "Home Team";
-
-      const awayTeam =
-        formData.awayTeamId > 0
-          ? teams.find((t) => t.id === formData.awayTeamId)?.name ||
-            opponents.find((o) => o.id === formData.awayTeamId)?.name ||
-            "Away Team"
-          : "Away Team";
 
       // Create the game with the validated data
       await createGame.mutateAsync(formData);
@@ -634,13 +569,27 @@ export default function AddGameForm({
                     .split(":")
                     .map(Number);
                   if (!isNaN(startHours) && !isNaN(startMinutes)) {
+                    // Create a clean copy of the date to avoid timezone issues
+                    const dateWithoutTime = new Date(
+                      startDate.getFullYear(),
+                      startDate.getMonth(),
+                      startDate.getDate()
+                    );
+                    // Then set the time parts
+                    dateWithoutTime.setHours(startHours, startMinutes);
+                    // Use this as our start date
                     startDate.setHours(startHours, startMinutes);
                   }
                 }
 
                 if (field.value && endTime) {
                   // Create end date with same date but different time
-                  endDate = new Date(field.value);
+                  // Create a clean copy of the date first
+                  endDate = new Date(
+                    startDate.getFullYear(),
+                    startDate.getMonth(),
+                    startDate.getDate()
+                  );
                   const [endHours, endMinutes] = endTime.split(":").map(Number);
                   if (!isNaN(endHours) && !isNaN(endMinutes)) {
                     endDate.setHours(endHours, endMinutes);
@@ -818,7 +767,7 @@ export default function AddGameForm({
           <FormButtons
             buttonText="Add and close"
             isLoading={isSubmitting}
-            isDirty={isDirty}
+            isDirty={form.formState.isDirty}
             onCancel={onCancel}
           />
         </div>

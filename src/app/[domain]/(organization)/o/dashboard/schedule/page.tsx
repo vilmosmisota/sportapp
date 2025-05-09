@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
-import { format, startOfMonth } from "date-fns";
+import { format, startOfMonth, startOfDay } from "date-fns";
 import { CalendarEvent } from "@/components/calendar/EventCalendar";
 import { EventDetailsDialog } from "@/components/calendar/EventDetailsDialog";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
@@ -71,6 +71,7 @@ export default function CalendarPage() {
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<CalendarEvent[]>([]);
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [activeDay, setActiveDay] = useState<Date | null>(null);
 
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [editingTrainingId, setEditingTrainingId] = useState<number | null>(
@@ -117,10 +118,16 @@ export default function CalendarPage() {
   const handleEventClick = (event: CalendarEvent) => {
     setSelectedEvent(event);
     setIsEventDetailsOpen(true);
+
+    // Set the active day to the event's start date
+    setActiveDay(startOfDay(event.start));
   };
 
   const handleEventEdit = (event: CalendarEvent) => {
     setIsEventDetailsOpen(false);
+
+    // Set the active day to the event's start date when editing
+    setActiveDay(startOfDay(event.start));
 
     if (isTrainingEvent(event)) {
       const trainingId = extractNumericId(event.id, "training-");
@@ -200,6 +207,9 @@ export default function CalendarPage() {
   const handleDayContextMenu = (date: Date, event: React.MouseEvent) => {
     setContextMenuPosition({ x: event.clientX, y: event.clientY });
     setSelectedDate(date);
+
+    // Set the active day when opening context menu
+    setActiveDay(date);
   };
 
   // Handle context menu item clicks
@@ -284,6 +294,40 @@ export default function CalendarPage() {
       setFilteredEvents(updatedFiltered);
     } else {
       setFilteredEvents(filtered);
+    }
+  };
+
+  // Update setActiveDay when a form is closed to make sure the active day is set to the event day
+  const handleCreateFormClose = (
+    value: boolean | ((prevState: boolean) => boolean)
+  ) => {
+    // Convert function to boolean if needed
+    const open = typeof value === "function" ? value(isCreateFormOpen) : value;
+    setIsCreateFormOpen(open);
+    if (!open) {
+      // Preserve the selected date as the active day when closing the create form
+      if (selectedDate) {
+        setActiveDay(selectedDate);
+      }
+      setSelectedDate(null);
+    }
+  };
+
+  const handleEditFormClose = (
+    value: boolean | ((prevState: boolean) => boolean)
+  ) => {
+    // Convert function to boolean if needed
+    const open = typeof value === "function" ? value(isEditFormOpen) : value;
+    setIsEditFormOpen(open);
+    if (!open) {
+      // For editing, we want to preserve the active day for the event being edited
+      if (editingTraining) {
+        setActiveDay(startOfDay(new Date(editingTraining.date)));
+      } else if (editingGame) {
+        setActiveDay(startOfDay(new Date(editingGame.date)));
+      }
+      setEditingTrainingId(null);
+      setEditingGameId(null);
     }
   };
 
@@ -450,6 +494,8 @@ export default function CalendarPage() {
             currentMonth={currentMonth}
             onMonthChange={setCurrentMonth}
             onDayContextMenu={handleDayContextMenu}
+            activeDay={activeDay}
+            setActiveDay={setActiveDay}
           />
         </CardContent>
       </Card>
@@ -498,10 +544,7 @@ export default function CalendarPage() {
       {/* Event creation dialog */}
       <ResponsiveSheet
         isOpen={isCreateFormOpen}
-        setIsOpen={(open) => {
-          setIsCreateFormOpen(open);
-          if (!open) setSelectedDate(null);
-        }}
+        setIsOpen={handleCreateFormClose}
         title={
           selectedEventType === EventType.Game
             ? "Create Game"
@@ -524,20 +567,14 @@ export default function CalendarPage() {
                 <AddGameForm
                   selectedSeason={selectedSeason}
                   tenant={tenant}
-                  setIsOpen={(open) => {
-                    setIsCreateFormOpen(open);
-                    if (!open) setSelectedDate(null);
-                  }}
+                  setIsOpen={handleCreateFormClose}
                   initialDate={selectedDate}
                 />
               ) : (
                 <AddTrainingForm
                   selectedSeason={selectedSeason}
                   tenant={tenant}
-                  setIsOpen={(open) => {
-                    setIsCreateFormOpen(open);
-                    if (!open) setSelectedDate(null);
-                  }}
+                  setIsOpen={handleCreateFormClose}
                   initialDate={selectedDate}
                 />
               )}
@@ -549,14 +586,7 @@ export default function CalendarPage() {
       {/* Edit Training/Game dialog */}
       <ResponsiveSheet
         isOpen={isEditFormOpen}
-        setIsOpen={(open) => {
-          setIsEditFormOpen(open);
-          if (!open) {
-            setEditingTrainingId(null);
-            setEditingGameId(null);
-            setSelectedDate(null);
-          }
-        }}
+        setIsOpen={handleEditFormClose}
         title={editingGameId ? "Edit Game" : "Edit Training"}
       >
         <>
@@ -578,25 +608,13 @@ export default function CalendarPage() {
               selectedSeason={selectedSeason}
               tenant={tenant}
               game={editingGame}
-              setIsOpen={(open) => {
-                setIsEditFormOpen(open);
-                if (!open) {
-                  setEditingGameId(null);
-                  setSelectedDate(null);
-                }
-              }}
+              setIsOpen={handleEditFormClose}
             />
           ) : editingTrainingId && editingTraining ? (
             <EditTrainingForm
               selectedSeason={selectedSeason}
               tenant={tenant}
-              setIsOpen={(open) => {
-                setIsEditFormOpen(open);
-                if (!open) {
-                  setEditingTrainingId(null);
-                  setSelectedDate(null);
-                }
-              }}
+              setIsOpen={handleEditFormClose}
               trainingToEdit={editingTraining}
               trainingId={editingTrainingId}
             />

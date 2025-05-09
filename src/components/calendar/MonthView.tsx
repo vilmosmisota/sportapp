@@ -33,6 +33,8 @@ interface MonthViewProps {
   seasonBreaks?: { from: Date; to: Date }[];
   seasonDateRange?: { startDate: Date; endDate: Date } | null;
   onDayContextMenu?: (date: Date, event: React.MouseEvent) => void;
+  activeDay?: Date | null;
+  setActiveDay?: (date: Date | null) => void;
 }
 
 export function MonthView({
@@ -44,6 +46,8 @@ export function MonthView({
   seasonBreaks = [],
   seasonDateRange = null,
   onDayContextMenu,
+  activeDay,
+  setActiveDay,
 }: MonthViewProps) {
   const [days, setDays] = useState<DayCell[]>([]);
   const [visibleEventCounts, setVisibleEventCounts] = useState<
@@ -81,6 +85,11 @@ export function MonthView({
     const isNotPast = date >= today;
 
     return isNotPast && !isDateOutsideSeason(date) && !isDateInBreak(date);
+  };
+
+  // Helper function to check if a date is the active day
+  const isActiveDay = (date: Date) => {
+    return activeDay ? isSameDay(date, activeDay) : false;
   };
 
   // Generate calendar days for the current month view
@@ -155,6 +164,29 @@ export function MonthView({
     }
   };
 
+  // Handle double-click on a day cell
+  const handleDayDoubleClick = (date: Date, event: React.MouseEvent) => {
+    if (onDayContextMenu && isDateValidForEvents(date)) {
+      // For double-click, we'll position the context menu at the center of the cell
+      // instead of at the mouse position to make it more predictable
+      const rect = (
+        event.currentTarget as HTMLDivElement
+      ).getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+
+      // Create a new mouse event with the center coordinates
+      const centerEvent = {
+        ...event,
+        clientX: centerX,
+        clientY: centerY,
+        preventDefault: () => {},
+      } as React.MouseEvent;
+
+      onDayContextMenu(date, centerEvent);
+    }
+  };
+
   // Rendering calendar grid
   return (
     <div className="h-full flex flex-col overflow-hidden">
@@ -197,6 +229,9 @@ export function MonthView({
             // Check if this day is valid for adding events
             const isValidForEvents = isDateValidForEvents(day.date);
 
+            // Check if this day is the active day
+            const dayIsActive = isActiveDay(day.date);
+
             return (
               <div
                 key={dayKey}
@@ -210,9 +245,20 @@ export function MonthView({
                   day.isToday && "ring-2 ring-primary ring-offset-1",
                   day.isInBreak && day.isCurrentMonth && "bg-amber-50/50",
                   day.isOutsideSeason && day.isCurrentMonth && "bg-gray-100",
-                  !isValidForEvents && "cursor-not-allowed"
+                  !isValidForEvents && "cursor-not-allowed",
+                  dayIsActive &&
+                    "ring-2 ring-indigo-500 ring-offset-2 bg-indigo-50/20"
                 )}
                 onContextMenu={(event) => handleDayContextMenu(day.date, event)}
+                onDoubleClick={(event) => handleDayDoubleClick(day.date, event)}
+                onClick={() => {
+                  if (setActiveDay && day.isCurrentMonth) {
+                    setActiveDay(day.date);
+                  }
+                }}
+                title={
+                  isValidForEvents ? "Double-click to add an event" : undefined
+                }
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
@@ -239,7 +285,8 @@ export function MonthView({
                       day.isToday &&
                         "bg-primary text-primary-foreground font-medium",
                       !day.isCurrentMonth && "text-muted-foreground/60",
-                      onDateClick && "cursor-pointer hover:bg-muted/30"
+                      onDateClick && "cursor-pointer hover:bg-muted/30",
+                      dayIsActive && "bg-indigo-100 text-indigo-800 font-medium"
                     )}
                     onClick={(e) => {
                       e.stopPropagation();

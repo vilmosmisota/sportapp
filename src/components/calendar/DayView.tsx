@@ -76,6 +76,9 @@ interface DayViewProps {
   seasonDateRange?: { startDate: Date; endDate: Date } | null;
   onDateChange?: (date: Date) => void;
   showEmptyTimeSlots?: boolean;
+  activeDay?: Date | null;
+  setActiveDay?: (date: Date | null) => void;
+  onDayContextMenu?: (date: Date, event: React.MouseEvent) => void;
 }
 
 export function DayView({
@@ -87,6 +90,9 @@ export function DayView({
   seasonDateRange = null,
   onDateChange,
   showEmptyTimeSlots = true,
+  activeDay,
+  setActiveDay,
+  onDayContextMenu,
 }: DayViewProps) {
   // Create time slots for the day view (from 6am to 10pm by default)
   const timeSlots = generateTimeSlots(6, 22, 60);
@@ -113,14 +119,26 @@ export function DayView({
 
   // Helper functions for date navigation
   const handlePreviousDay = () => {
+    const previousDay = subDays(currentDate, 1);
     if (onDateChange) {
-      onDateChange(subDays(currentDate, 1));
+      onDateChange(previousDay);
+    }
+
+    // Update activeDay when navigating
+    if (setActiveDay) {
+      setActiveDay(previousDay);
     }
   };
 
   const handleNextDay = () => {
+    const nextDay = addDays(currentDate, 1);
     if (onDateChange) {
-      onDateChange(addDays(currentDate, 1));
+      onDateChange(nextDay);
+    }
+
+    // Update activeDay when navigating
+    if (setActiveDay) {
+      setActiveDay(nextDay);
     }
   };
 
@@ -128,12 +146,23 @@ export function DayView({
     if (onDateChange) {
       onDateChange(date);
     }
+
+    // Update activeDay when clicking a day
+    if (setActiveDay) {
+      setActiveDay(date);
+    }
   };
 
   // Navigate to today
   const handleTodayClick = () => {
+    const today = new Date();
     if (onDateChange) {
-      onDateChange(new Date());
+      onDateChange(today);
+    }
+
+    // Update activeDay when navigating to today
+    if (setActiveDay) {
+      setActiveDay(today);
     }
   };
 
@@ -205,6 +234,14 @@ export function DayView({
   // Check if current date is in a break or outside season
   const isInBreak = isDateInBreak(currentDate);
   const isOutsideSeason = isDateOutsideSeason(currentDate);
+
+  // Handle double-click on the time grid
+  const handleGridDoubleClick = (event: React.MouseEvent) => {
+    if (onDayContextMenu && !isInBreak && !isOutsideSeason) {
+      // Position the context menu at the click position
+      onDayContextMenu(currentDate, event);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -361,6 +398,12 @@ export function DayView({
         <div
           className="border rounded-lg shadow-sm overflow-hidden w-1/2"
           style={{ height: `${gridHeight}px` }}
+          onDoubleClick={handleGridDoubleClick}
+          title={
+            !isInBreak && !isOutsideSeason
+              ? "Double-click to add an event"
+              : undefined
+          }
         >
           <div className="relative w-full h-full">
             {/* Current time indicator */}
@@ -434,7 +477,12 @@ export function DayView({
         {/* Detailed event cards panel */}
         <div
           className="w-1/2 overflow-y-auto"
-          // style={{ height: `${gridHeight}px` }}
+          onDoubleClick={handleGridDoubleClick}
+          title={
+            !isInBreak && !isOutsideSeason
+              ? "Double-click to add an event"
+              : undefined
+          }
         >
           <div className="space-y-4">
             <h3 className="text-sm font-medium text-muted-foreground mx-1">
@@ -452,7 +500,15 @@ export function DayView({
                 ))}
               </div>
             ) : (
-              <Card className="flex flex-col items-center justify-center py-6 text-center">
+              <Card
+                className="flex flex-col items-center justify-center py-6 text-center"
+                onDoubleClick={handleGridDoubleClick}
+                title={
+                  !isInBreak && !isOutsideSeason
+                    ? "Double-click to add an event"
+                    : undefined
+                }
+              >
                 <CardContent className="pt-6">
                   <CalendarIcon className="h-8 w-8 mb-3 text-muted-foreground/50 mx-auto" />
                   <div className="text-muted-foreground mb-1">

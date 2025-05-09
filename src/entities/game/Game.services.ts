@@ -280,6 +280,8 @@ export const createGame = async (
       tenantId: parseInt(tenantId),
     };
 
+    console.log("gameData", gameData);
+
     // Create the game
     const { data: newGame, error } = await client
       .from("games")

@@ -55,6 +55,8 @@ interface EventCalendarProps {
   seasonBreaks?: { from: Date; to: Date }[];
   seasonDateRange?: { startDate: Date; endDate: Date } | null;
   onDayContextMenu?: (date: Date, event: React.MouseEvent) => void;
+  activeDay?: Date | null;
+  setActiveDay?: (date: Date | null) => void;
 }
 
 export function EventCalendar({
@@ -66,6 +68,8 @@ export function EventCalendar({
   seasonBreaks = [],
   seasonDateRange = null,
   onDayContextMenu,
+  activeDay,
+  setActiveDay,
 }: EventCalendarProps) {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const [view, setView] = useState<CalendarViewType>(defaultView);
@@ -174,6 +178,11 @@ export function EventCalendar({
       setCurrentDate(date);
       setView("day");
 
+      // Set the active day when clicking on a date
+      if (setActiveDay) {
+        setActiveDay(date);
+      }
+
       if (onDateRangeChange) {
         // For day view, use the start and end of the day as the range
         const start = startOfDay(date);
@@ -182,7 +191,7 @@ export function EventCalendar({
         onDateRangeChange(start, end);
       }
     },
-    [onDateRangeChange]
+    [onDateRangeChange, setActiveDay]
   );
 
   // Swipe gesture handlers for touch devices
@@ -253,6 +262,9 @@ export function EventCalendar({
             seasonBreaks={seasonBreaks}
             seasonDateRange={seasonDateRange}
             onDateChange={handleDayChange}
+            activeDay={activeDay}
+            setActiveDay={setActiveDay}
+            onDayContextMenu={onDayContextMenu}
           />
         </TabsContent>
 
@@ -270,6 +282,8 @@ export function EventCalendar({
             seasonBreaks={seasonBreaks}
             seasonDateRange={seasonDateRange}
             onDayContextMenu={onDayContextMenu}
+            activeDay={activeDay}
+            setActiveDay={setActiveDay}
           />
         </TabsContent>
       </Tabs>

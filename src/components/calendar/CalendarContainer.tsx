@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
-import { startOfMonth } from "date-fns";
+import { useCallback, useMemo, useState } from "react";
+import { startOfMonth, startOfDay } from "date-fns";
 import { EventCalendar, CalendarEvent } from "./EventCalendar";
 import { Season } from "@/entities/season/Season.schema";
 import { CalendarViewType } from "./types";
@@ -27,6 +27,8 @@ interface CalendarContainerProps {
   currentMonth?: Date;
   onMonthChange?: (newMonth: Date) => void;
   onDayContextMenu?: (date: Date, event: React.MouseEvent) => void;
+  activeDay?: Date | null;
+  setActiveDay?: (date: Date | null) => void;
 }
 
 export function CalendarContainer({
@@ -40,11 +42,21 @@ export function CalendarContainer({
   currentMonth: propCurrentMonth,
   onMonthChange,
   onDayContextMenu,
+  activeDay: propActiveDay,
+  setActiveDay: propSetActiveDay,
 }: CalendarContainerProps) {
   const { currentMonth, updateCurrentMonth } = useCurrentMonth(
     propCurrentMonth,
     onMonthChange
   );
+
+  // If activeDay is not provided as a prop, manage it internally
+  const [internalActiveDay, setInternalActiveDay] = useState<Date | null>(null);
+
+  // Use the prop values if provided, otherwise use internal state
+  const activeDay =
+    propActiveDay !== undefined ? propActiveDay : internalActiveDay;
+  const setActiveDay = propSetActiveDay || setInternalActiveDay;
 
   const dateRange = useDateRangeAndPrefetch(
     currentMonth,
@@ -93,6 +105,20 @@ export function CalendarContainer({
   const isSuccess = isGamesSuccess && isTrainingsSuccess;
   useEventLoadNotification(allEvents, isSuccess, currentMonth, onEventsLoad);
 
+  // Custom event click handler that also sets the active day
+  const handleEventClick = useCallback(
+    (event: CalendarEvent) => {
+      // Set the active day to the start date of the event
+      setActiveDay(startOfDay(event.start));
+
+      // Call the original onEventClick handler if provided
+      if (onEventClick) {
+        onEventClick(event);
+      }
+    },
+    [onEventClick, setActiveDay]
+  );
+
   const handleDateRangeChange = useCallback(
     (start: Date, end: Date) => {
       const monthOfRange = startOfMonth(start);
@@ -110,7 +136,7 @@ export function CalendarContainer({
   return (
     <EventCalendar
       events={eventsToShow}
-      onEventClick={onEventClick}
+      onEventClick={handleEventClick}
       onDateRangeChange={handleDateRangeChange}
       defaultView={defaultView}
       isLoading={isLoading}
@@ -124,6 +150,8 @@ export function CalendarContainer({
           : null
       }
       onDayContextMenu={onDayContextMenu}
+      activeDay={activeDay}
+      setActiveDay={setActiveDay}
     />
   );
 }
