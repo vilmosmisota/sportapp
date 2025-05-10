@@ -420,10 +420,10 @@ export default function AddPlayerForm({
                         name="position"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Position *</FormLabel>
+                            <FormLabel>Position</FormLabel>
                             <Select
                               onValueChange={field.onChange}
-                              value={field.value}
+                              value={field.value || ""}
                             >
                               <FormControl>
                                 <SelectTrigger>

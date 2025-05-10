@@ -20,7 +20,7 @@ export interface TeamPlayer {
   firstName: string;
   lastName: string;
   dateOfBirth: string;
-  position: string;
+  position: string | null;
   gender: string;
 }
 
@@ -112,9 +112,10 @@ export const playerColumns = ({
         <DataTableColumnHeader column={column} title="Position" />
       ),
       cell: ({ row }) => {
+        const position = row.getValue("position");
         return (
           <Badge variant="secondary" className="capitalize">
-            {row.getValue("position")}
+            {position ? String(position).toLowerCase() : "-"}
           </Badge>
         );
       },

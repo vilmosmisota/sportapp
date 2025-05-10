@@ -15,7 +15,7 @@ const PlayerInConnectionSchema = z.object({
   lastName: z.string(),
   dateOfBirth: z.string(),
   gender: z.nativeEnum(PlayerGender),
-  position: z.string(),
+  position: z.string().nullable(),
 });
 
 const TeamInConnectionSchema = z.object({
