@@ -42,7 +42,7 @@ export function useNavigation(
       ],
     },
     {
-      section: "Rostering",
+      section: "Management",
       items: [
         {
           id: 4,
@@ -58,7 +58,7 @@ export function useNavigation(
         },
         {
           id: 5,
-          name: "Player Roster",
+          name: "Players",
           href: "/o/dashboard/players",
           iconName: "Users",
           description: "Manage player profiles",
@@ -70,7 +70,7 @@ export function useNavigation(
         },
         {
           id: 6,
-          name: "Team Management",
+          name: "Teams",
           href: "/o/dashboard/teams",
           iconName: "Users2",
           description: "Manage teams and rosters",
@@ -87,7 +87,7 @@ export function useNavigation(
       items: [
         {
           id: 7,
-          name: "Attendance Tracker",
+          name: "Attendance Manager",
           href: "/o/dashboard/training-attendance/",
           iconName: "ClipboardList",
           description: "Monitor live attendance and session participation",
