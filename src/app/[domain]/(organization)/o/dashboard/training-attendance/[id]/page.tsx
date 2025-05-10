@@ -271,11 +271,13 @@ export default function AttendanceSessionPage() {
         const status = row.getValue("status") as AttendanceStatus | null;
 
         if (status === AttendanceStatus.ABSENT) {
-          return <Badge variant="outline">Absent</Badge>;
+          return <Badge variant="destructive">Absent</Badge>;
         }
 
         if (status === AttendanceStatus.LATE) {
-          return <Badge variant="destructive">Late</Badge>;
+          return (
+            <Badge className="bg-amber-500 hover:bg-amber-600">Late</Badge>
+          );
         }
 
         if (status === AttendanceStatus.PRESENT) {
