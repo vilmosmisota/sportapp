@@ -382,7 +382,7 @@ export default function EditPlayerForm({
                             <FormLabel>Position</FormLabel>
                             <Select
                               onValueChange={field.onChange}
-                              defaultValue={field.value}
+                              defaultValue={field.value || undefined}
                             >
                               <FormControl>
                                 <SelectTrigger>
