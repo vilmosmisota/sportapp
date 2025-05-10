@@ -80,6 +80,9 @@ export const useUpdatePlayerPin = (tenantId: string) => {
       // Invalidate all player queries
       queryClient.invalidateQueries({ queryKey: queryKeys.player.all });
 
+      // Invalidate the players query for this specific tenant
+      queryClient.invalidateQueries({ queryKey: ["players", tenantId] });
+
       // If teamId is provided, invalidate the specific team players query
       if (data.teamId) {
         const flatKey = ["team", "players", tenantId, data.teamId];

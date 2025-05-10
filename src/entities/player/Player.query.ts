@@ -14,6 +14,10 @@ export const useUpdatePlayerPin = (tenantId: string) => {
       queryClient.invalidateQueries({
         queryKey: [queryKeys.player.all],
       });
+
+      queryClient.invalidateQueries({
+        queryKey: ["players", tenantId],
+      });
     },
   });
 };

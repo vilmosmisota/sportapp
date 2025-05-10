@@ -4,7 +4,14 @@ import { useParams, useRouter } from "next/navigation";
 import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 import { useAttendanceSessionById } from "@/entities/attendance/Attendance.query";
 import { usePlayersByTeamId } from "@/entities/team/Team.query";
-import { Loader2, ArrowLeft, UserCheck, Delete } from "lucide-react";
+import {
+  Loader2,
+  ArrowLeft,
+  UserCheck,
+  Delete,
+  AlertCircle,
+  CheckCircle2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import {
@@ -20,6 +27,7 @@ import { toast } from "sonner";
 import { PlayerGender } from "@/entities/player/Player.schema";
 import { cn } from "@/libs/tailwind/utils";
 import { useQueryClient } from "@tanstack/react-query";
+import { usePlayers } from "@/entities/player/Player.actions.client";
 
 import { BackConfirmationDialog } from "../../components/BackConfirmationDialog";
 
@@ -30,6 +38,7 @@ function NumericKeypad({
   pin,
   isPinValid,
   error,
+  pinStatus,
 }: {
   onKeyPress: (num: string) => void;
   onDelete: () => void;
@@ -37,6 +46,7 @@ function NumericKeypad({
   pin: string;
   isPinValid: boolean;
   error: string | null;
+  pinStatus: "idle" | "valid" | "invalid";
 }) {
   const [showPin, setShowPin] = useState(true);
   const numbers = [
@@ -99,8 +109,25 @@ function NumericKeypad({
             </Button>
           )}
         </div>
-        <div className="h-4 flex justify-center mt-1">
+        <div className="flex justify-center mt-2 h-6">
           {error && <p className="text-destructive text-sm">{error}</p>}
+          {!error && pin.length === 4 && (
+            <div className="flex items-center gap-1.5">
+              {pinStatus === "valid" ? (
+                <>
+                  <CheckCircle2 className="h-4 w-4 text-green-500" />
+                  <p className="text-green-500 text-sm">PIN is unique</p>
+                </>
+              ) : pinStatus === "invalid" ? (
+                <>
+                  <AlertCircle className="h-4 w-4 text-destructive" />
+                  <p className="text-destructive text-sm">
+                    PIN is already in use
+                  </p>
+                </>
+              ) : null}
+            </div>
+          )}
         </div>
       </div>
 
@@ -138,7 +165,9 @@ function NumericKeypad({
         <div className="mt-4">
           <Button
             variant="default"
-            disabled={!isPinValid || pin.length !== 4}
+            disabled={
+              !isPinValid || pin.length !== 4 || pinStatus === "invalid"
+            }
             className="w-full h-12 text-lg rounded-full bg-primary hover:bg-primary/90 transition-colors duration-200"
             onClick={() => handleKeyPress("submit")}
           >
@@ -166,13 +195,33 @@ function CreatePinDialog({
   const [pin, setPin] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPinValid, setIsPinValid] = useState(true);
+  const [pinStatus, setPinStatus] = useState<"idle" | "valid" | "invalid">(
+    "idle"
+  );
   const updatePlayerPin = useUpdatePlayerPin(tenantId);
+  const { data: allPlayers, isLoading: isPlayersLoading } =
+    usePlayers(tenantId);
+
+  const validatePinUniqueness = (pinValue: string) => {
+    if (pinValue.length === 4) {
+      const isPinUnique = !allPlayers?.some((p) => p.pin === pinValue);
+      setPinStatus(isPinUnique ? "valid" : "invalid");
+      return isPinUnique;
+    }
+    setPinStatus("idle");
+    return true;
+  };
 
   const handleKeyPress = (num: string) => {
     if (pin.length < 4) {
       const newPin = pin + num;
       setPin(newPin);
       setError(null);
+      if (newPin.length === 4) {
+        validatePinUniqueness(newPin);
+      } else {
+        setPinStatus("idle");
+      }
     }
   };
 
@@ -180,11 +229,18 @@ function CreatePinDialog({
     setPin((prev) => prev.slice(0, -1));
     setError(null);
     setIsPinValid(true);
+    setPinStatus("idle");
   };
 
   const handleSubmit = async () => {
     if (pin.length !== 4) {
       setError("Please enter a 4-digit PIN");
+      return;
+    }
+
+    const isPinUnique = validatePinUniqueness(pin);
+    if (!isPinUnique) {
+      setError("This PIN is already in use");
       return;
     }
 
@@ -198,6 +254,7 @@ function CreatePinDialog({
       toast.success("Successfully created PIN!");
       onOpenChange(false);
       setPin("");
+      setPinStatus("idle");
     } catch (error) {
       toast.error("Failed to create PIN");
     }
@@ -208,6 +265,7 @@ function CreatePinDialog({
       setPin("");
       setError(null);
       setIsPinValid(true);
+      setPinStatus("idle");
     }
     onOpenChange(open);
   };
@@ -228,6 +286,7 @@ function CreatePinDialog({
           pin={pin}
           isPinValid={isPinValid}
           error={error}
+          pinStatus={pinStatus}
         />
       </DialogContent>
     </Dialog>
