@@ -47,10 +47,12 @@ export const useTeamPlayers = (teamId: number, tenantId: string) => {
 
 export const usePlayersByTeamId = (teamId: number, tenantId: string) => {
   const client = useSupabase();
-  const queryKey = [queryKeys.team.players(tenantId, teamId)];
+
+  // Use a simple flat array to ensure perfect match with invalidation
+  const flatKey = ["team", "players", tenantId, teamId];
 
   return useQuery({
-    queryKey,
+    queryKey: flatKey,
     queryFn: () => getPlayersByTeamId(client, teamId, tenantId),
     enabled: !!teamId && !!tenantId,
   });

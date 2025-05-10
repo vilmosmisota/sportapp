@@ -62,11 +62,31 @@ export const useUpdatePlayerPin = (tenantId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ playerId, pin }: { playerId: number; pin: string }) =>
-      updatePlayerPin(client, playerId, pin, tenantId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["players", tenantId] });
-      queryClient.invalidateQueries({ queryKey: ["team-players"] });
+    mutationFn: async ({
+      playerId,
+      pin,
+      teamId,
+    }: {
+      playerId: number;
+      pin: string;
+      teamId?: number;
+    }) => {
+      // Call the actual update service
+      const result = await updatePlayerPin(client, playerId, pin, tenantId);
+      // Return the result along with the teamId
+      return { result, teamId };
+    },
+    onSuccess: (data) => {
+      // Invalidate all player queries
+      queryClient.invalidateQueries({ queryKey: queryKeys.player.all });
+
+      // If teamId is provided, invalidate the specific team players query
+      if (data.teamId) {
+        const flatKey = ["team", "players", tenantId, data.teamId];
+        queryClient.invalidateQueries({
+          queryKey: flatKey,
+        });
+      }
     },
   });
 };

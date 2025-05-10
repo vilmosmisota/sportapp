@@ -167,7 +167,6 @@ function CreatePinDialog({
   const [error, setError] = useState<string | null>(null);
   const [isPinValid, setIsPinValid] = useState(true);
   const updatePlayerPin = useUpdatePlayerPin(tenantId);
-  const queryClient = useQueryClient();
 
   const handleKeyPress = (num: string) => {
     if (pin.length < 4) {
@@ -193,11 +192,7 @@ function CreatePinDialog({
       await updatePlayerPin.mutateAsync({
         playerId: player.id,
         pin,
-      });
-
-      // Invalidate the usePlayersByTeamId query
-      queryClient.invalidateQueries({
-        queryKey: ["team", "players", teamId, tenantId],
+        teamId,
       });
 
       toast.success("Successfully created PIN!");

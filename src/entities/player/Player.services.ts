@@ -76,13 +76,21 @@ export const addPlayerToTenant = async (
   try {
     const { teamIds, parentUserIds, ownerUserId, ...playerData } = data;
 
+    // Process the pin field to ensure it's null if not valid
+    const processedPlayerData = {
+      ...playerData,
+      // Set pin to null if it's empty, undefined, or doesn't match the 4-digit format
+      pin:
+        playerData.pin && /^\d{4}$/.test(playerData.pin)
+          ? playerData.pin
+          : null,
+      tenantId: Number(tenantId),
+    };
+
     // Insert the player
     const { data: newPlayer, error: insertError } = await client
       .from("players")
-      .insert({
-        ...playerData,
-        tenantId: Number(tenantId),
-      })
+      .insert(processedPlayerData)
       .select()
       .single();
 
@@ -155,10 +163,20 @@ export const updatePlayer = async (
   try {
     const { teamIds, parentUserIds, ownerUserId, ...playerData } = data;
 
+    // Process the pin field to ensure it's null if not valid
+    const processedPlayerData = {
+      ...playerData,
+      // Set pin to null if it's empty, undefined, or doesn't match the 4-digit format
+      pin:
+        playerData.pin && /^\d{4}$/.test(playerData.pin)
+          ? playerData.pin
+          : null,
+    };
+
     // Update player base data
     const { error: updateError } = await client
       .from("players")
-      .update(playerData)
+      .update(processedPlayerData)
       .eq("id", playerId)
       .eq("tenantId", tenantId);
 
@@ -283,9 +301,12 @@ export const updatePlayerPin = async (
   pin: string,
   tenantId: string
 ) => {
+  // Process the pin to ensure it's null if not valid
+  const processedPin = pin && /^\d{4}$/.test(pin) ? pin : null;
+
   const { data, error } = await client
     .from("players")
-    .update({ pin })
+    .update({ pin: processedPin })
     .eq("id", playerId)
     .eq("tenantId", tenantId)
     .select(
