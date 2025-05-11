@@ -88,7 +88,7 @@ export function useNavigation(
         {
           id: 7,
           name: "Attendance Manager",
-          href: "/o/dashboard/training-attendance/",
+          href: "/o/dashboard/training-attendance",
           iconName: "ClipboardList",
           description: "Monitor live attendance and session participation",
           permissions: [

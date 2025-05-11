@@ -39,6 +39,12 @@ export default function DashboardNavItem({
   const currentPathname = useNextPathname();
   const Icon = ICON_MAP[item.iconName as keyof typeof ICON_MAP];
 
+  const isHome = item.href === "/o/dashboard";
+  const isActive = isHome
+    ? pathname === item.href
+    : pathname === item.href ||
+      (item.href !== "/" && pathname.startsWith(item.href + "/"));
+
   useEffect(() => {
     isMountedRef.current = true;
 
@@ -181,7 +187,7 @@ export default function DashboardNavItem({
                 isCollapsed
                   ? "w-10 h-10 justify-center items-center"
                   : "px-3 py-1.5 items-center",
-                pathname === item.href
+                isActive
                   ? "bg-accent text-accent-foreground"
                   : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
               )}
