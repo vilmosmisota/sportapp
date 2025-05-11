@@ -10,6 +10,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { UpcomingAttendanceCarousel } from "./components/UpcomingAttendanceCarousel";
 import { ActiveSessionsCarousel } from "./components/ActiveSessionsCarousel";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { ConfirmCloseDialog } from "./components/ConfirmCloseDialog";
 
 // Data fetching
 import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
@@ -59,52 +69,6 @@ export default function AttendancePage() {
     selectedSessionId ?? 0,
     tenant?.id?.toString() ?? ""
   );
-
-  // Use useEffect to handle the session closing logic when data is available
-  useEffect(() => {
-    const closeActiveSession = async () => {
-      if (
-        !selectedTeamId ||
-        !selectedSessionId ||
-        !tenant ||
-        !players ||
-        !records
-      )
-        return;
-
-      try {
-        // Find players who haven't checked in
-        const notCheckedInPlayerIds = players
-          .filter((p) => !records.some((r) => r.playerId === p.player.id))
-          .map((p) => p.player.id);
-
-        await closeSession.mutateAsync({
-          sessionId: selectedSessionId,
-          tenantId: tenant.id.toString(),
-          notCheckedInPlayerIds,
-        });
-        toast.success("Session closed successfully");
-      } catch (error) {
-        console.error("Error closing session:", error);
-        toast.error("Failed to close attendance session");
-      } finally {
-        // Reset the selected IDs
-        setSelectedTeamId(null);
-        setSelectedSessionId(null);
-      }
-    };
-
-    if (selectedTeamId && selectedSessionId && tenant && players && records) {
-      closeActiveSession();
-    }
-  }, [
-    selectedTeamId,
-    selectedSessionId,
-    tenant,
-    players,
-    records,
-    closeSession,
-  ]);
 
   const isLoading = isTrainingsLoading;
 
@@ -194,15 +158,50 @@ export default function AttendancePage() {
     }
   };
 
+  const [isCloseDialogOpen, setIsCloseDialogOpen] = useState(false);
+  const [pendingClose, setPendingClose] = useState(false);
+
+  // Refactor handleCloseSessionFromCarousel to open dialog
   const handleCloseSessionFromCarousel = async (
     sessionId: number,
     teamId?: number
   ) => {
     if (!teamId || !tenant) return;
-
-    // Set the selected team and session IDs to trigger the useEffect
     setSelectedTeamId(teamId);
     setSelectedSessionId(sessionId);
+    setIsCloseDialogOpen(true);
+  };
+
+  // Add the close session handler
+  const handleConfirmCloseSession = async () => {
+    if (
+      !selectedTeamId ||
+      !selectedSessionId ||
+      !tenant ||
+      !players ||
+      !records
+    )
+      return;
+    setPendingClose(true);
+    try {
+      const notCheckedInPlayerIds = players
+        .filter((p) => !records.some((r) => r.playerId === p.player.id))
+        .map((p) => p.player.id);
+      await closeSession.mutateAsync({
+        sessionId: selectedSessionId,
+        tenantId: tenant.id.toString(),
+        notCheckedInPlayerIds,
+      });
+      toast.success("Session closed successfully");
+      setIsCloseDialogOpen(false);
+      setSelectedTeamId(null);
+      setSelectedSessionId(null);
+    } catch (error) {
+      console.error("Error closing session:", error);
+      toast.error("Failed to close attendance session");
+    } finally {
+      setPendingClose(false);
+    }
   };
 
   if (isLoading) {
@@ -315,6 +314,13 @@ export default function AttendancePage() {
             </CardContent>
           </Card>
         )}
+
+        <ConfirmCloseDialog
+          isOpen={isCloseDialogOpen}
+          setIsOpen={setIsCloseDialogOpen}
+          onConfirm={handleConfirmCloseSession}
+          isPending={pendingClose || closeSession.isPending}
+        />
       </div>
     </ErrorBoundary>
   );
