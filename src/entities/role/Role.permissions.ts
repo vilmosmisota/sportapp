@@ -40,6 +40,22 @@ export enum Permission {
 
   // Dashboard access
   VIEW_DASHBOARD = "view_dashboard",
+
+  // Settings - Users
+  VIEW_SETTINGS_USERS = "view_settings_users",
+  MANAGE_SETTINGS_USERS = "manage_settings_users",
+
+  // Settings - Roles
+  VIEW_SETTINGS_ROLES = "view_settings_roles",
+  MANAGE_SETTINGS_ROLES = "manage_settings_roles",
+
+  // Settings - Organization
+  VIEW_SETTINGS_ORGANIZATION = "view_settings_organization",
+  MANAGE_SETTINGS_ORGANIZATION = "manage_settings_organization",
+
+  // Schedule management
+  VIEW_SCHEDULE = "view_schedule",
+  MANAGE_SCHEDULE = "manage_schedule",
 }
 
 // Define which permissions are available for each domain
@@ -60,6 +76,15 @@ export const DomainPermissions: Record<RoleDomain, Permission[]> = {
     Permission.MANAGE_ATTENDANCE,
     Permission.VIEW_TRAINING,
     Permission.MANAGE_TRAINING,
+    // Settings permissions
+    Permission.VIEW_SETTINGS_USERS,
+    Permission.MANAGE_SETTINGS_USERS,
+    Permission.VIEW_SETTINGS_ROLES,
+    Permission.MANAGE_SETTINGS_ROLES,
+    Permission.VIEW_SETTINGS_ORGANIZATION,
+    Permission.MANAGE_SETTINGS_ORGANIZATION,
+    Permission.VIEW_SCHEDULE,
+    Permission.MANAGE_SCHEDULE,
   ],
   [RoleDomain.FAMILY]: [], // No permissions needed - access is controlled by domain
   [RoleDomain.SYSTEM]: [
@@ -87,6 +112,14 @@ export const PermissionDescriptions: Record<Permission, string> = {
   [Permission.VIEW_TRAINING]: "View training schedules",
   [Permission.MANAGE_TRAINING]: "Create and manage trainings",
   [Permission.VIEW_DASHBOARD]: "Access dashboard",
+  [Permission.VIEW_SETTINGS_USERS]: "View users in organization settings",
+  [Permission.MANAGE_SETTINGS_USERS]: "Manage users in organization settings",
+  [Permission.VIEW_SETTINGS_ROLES]: "View roles in organization settings",
+  [Permission.MANAGE_SETTINGS_ROLES]: "Manage roles in organization settings",
+  [Permission.VIEW_SETTINGS_ORGANIZATION]: "View organization settings",
+  [Permission.MANAGE_SETTINGS_ORGANIZATION]: "Manage organization settings",
+  [Permission.VIEW_SCHEDULE]: "View schedule and events",
+  [Permission.MANAGE_SCHEDULE]: "Manage schedule and events",
 };
 
 // Helper to get available permissions for a domain
@@ -233,6 +266,60 @@ export const RolePermissions = {
       checkPermissions({
         userDomains,
         requiredPermissions: [Permission.VIEW_TRAINING],
+      }),
+  },
+  Settings: {
+    Users: {
+      manage: (userDomains?: UserRole[] | null) =>
+        checkPermissions({
+          userDomains,
+          domain: RoleDomain.MANAGEMENT,
+          requiredPermissions: [Permission.MANAGE_SETTINGS_USERS],
+        }),
+      view: (userDomains?: UserRole[] | null) =>
+        checkPermissions({
+          userDomains,
+          requiredPermissions: [Permission.VIEW_SETTINGS_USERS],
+        }),
+    },
+    Roles: {
+      manage: (userDomains?: UserRole[] | null) =>
+        checkPermissions({
+          userDomains,
+          domain: RoleDomain.MANAGEMENT,
+          requiredPermissions: [Permission.MANAGE_SETTINGS_ROLES],
+        }),
+      view: (userDomains?: UserRole[] | null) =>
+        checkPermissions({
+          userDomains,
+          requiredPermissions: [Permission.VIEW_SETTINGS_ROLES],
+        }),
+    },
+    Organization: {
+      manage: (userDomains?: UserRole[] | null) =>
+        checkPermissions({
+          userDomains,
+          domain: RoleDomain.MANAGEMENT,
+          requiredPermissions: [Permission.MANAGE_SETTINGS_ORGANIZATION],
+        }),
+      view: (userDomains?: UserRole[] | null) =>
+        checkPermissions({
+          userDomains,
+          requiredPermissions: [Permission.VIEW_SETTINGS_ORGANIZATION],
+        }),
+    },
+  },
+  Schedule: {
+    manage: (userDomains?: UserRole[] | null) =>
+      checkPermissions({
+        userDomains,
+        domain: RoleDomain.MANAGEMENT,
+        requiredPermissions: [Permission.MANAGE_SCHEDULE],
+      }),
+    view: (userDomains?: UserRole[] | null) =>
+      checkPermissions({
+        userDomains,
+        requiredPermissions: [Permission.VIEW_SCHEDULE],
       }),
   },
 };
