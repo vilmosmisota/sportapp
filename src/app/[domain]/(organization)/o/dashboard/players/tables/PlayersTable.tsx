@@ -22,7 +22,6 @@ import { DataTable } from "@/components/ui/data-table/DataTable";
 import { ErrorBoundary } from "../../../../../../../components/ui/error-boundary";
 import EditPlayerForm from "../forms/EditPlayerForm";
 import ConnectedUsersDialog from "./ConnectedUsersDialog";
-import { usePlayerSettings } from "../../../../../../../entities/tenant/hooks/usePlayerSettings";
 
 interface PlayersTableProps {
   players: Player[];
@@ -43,9 +42,6 @@ export default function PlayersTable({
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [isConnectedUsersOpen, setIsConnectedUsersOpen] = useState(false);
   const deletePlayer = useDeletePlayer(tenantId);
-  const playerSettings = usePlayerSettings(domain);
-  const positions = playerSettings?.positions || [];
-  const showPositionColumn = positions.length > 0;
 
   const handleEdit = useCallback((player: Player) => {
     setSelectedPlayer(player);
@@ -76,15 +72,8 @@ export default function PlayersTable({
         onDelete: handleDelete,
         onShowConnectedUsers: handleShowConnectedUsers,
         domain,
-        showPositionColumn,
       }),
-    [
-      domain,
-      handleDelete,
-      handleShowConnectedUsers,
-      handleEdit,
-      showPositionColumn,
-    ]
+    [domain, handleDelete, handleShowConnectedUsers, handleEdit]
   );
 
   const table = useReactTable({
@@ -110,30 +99,8 @@ export default function PlayersTable({
         left: ["name"],
         right: ["actions"],
       },
-      ...(showPositionColumn
-        ? {
-            columnVisibility: {
-              position: showPositionColumn,
-            },
-          }
-        : {}),
     },
   });
-
-  // Update column visibility when showPositionColumn changes
-  useEffect(() => {
-    // Check if position column exists in table
-    const hasPositionColumn = table
-      .getAllColumns()
-      .some((col) => col.id === "position");
-
-    if (hasPositionColumn) {
-      setColumnVisibility((prev) => ({
-        ...prev,
-        position: showPositionColumn,
-      }));
-    }
-  }, [showPositionColumn, table]);
 
   return (
     <ErrorBoundary>

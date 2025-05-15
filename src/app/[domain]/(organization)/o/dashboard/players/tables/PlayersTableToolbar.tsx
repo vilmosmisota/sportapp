@@ -4,7 +4,6 @@ import { Table } from "@tanstack/react-table";
 import { Input } from "@/components/ui/input";
 import DataTableViewOptions from "@/components/ui/data-table/DataTableViewOptions";
 import { MultiSelectFilters } from "@/components/ui/multi-select-filters";
-import { PlayerGender } from "@/entities/player/Player.schema";
 import { useGetTeamsByTenantId } from "@/entities/team/Team.query";
 
 import { Row } from "@tanstack/react-table";

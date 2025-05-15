@@ -117,11 +117,6 @@ const PlayerTable = ({
                     {player.gender?.toLowerCase() ?? "-"}
                   </Badge>
                 </TableCell>
-                <TableCell>
-                  <Badge variant="secondary" className="capitalize">
-                    {player.position?.toLowerCase() ?? "-"}
-                  </Badge>
-                </TableCell>
               </TableRow>
             );
           })}

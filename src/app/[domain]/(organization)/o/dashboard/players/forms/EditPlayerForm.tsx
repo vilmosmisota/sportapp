@@ -40,13 +40,10 @@ import {
   X,
 } from "lucide-react";
 import { useGetTeamsByTenantId } from "@/entities/team/Team.query";
-import { useTenantGroupTypes } from "@/entities/tenant/hooks/useGroupTypes";
 import { usePlayers } from "@/entities/player/Player.actions.client";
 import { format, differenceInYears, parseISO } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/libs/tailwind/utils";
-import { z } from "zod";
-import { DatePicker } from "@/components/ui/date-picker/DatePicker";
+
 import { useParentUsers } from "@/entities/user/hooks/useParentUsers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -56,7 +53,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import {
   Team,
   TeamGender,
@@ -64,7 +61,6 @@ import {
 } from "@/entities/team/Team.schema";
 import { usePlayerUsers } from "@/entities/user/hooks/usePlayerUsers";
 import { DateInput } from "@/components/ui/date-input/DateInput";
-import { usePlayerSettings } from "../../../../../../../entities/tenant/hooks/usePlayerSettings";
 
 type EditPlayerFormProps = {
   player: Player;
@@ -131,8 +127,6 @@ export default function EditPlayerForm({
   const { data: existingPlayers } = usePlayers(tenantId);
   const { data: parentUsers } = useParentUsers(tenantId);
   const { data: playerUsers } = usePlayerUsers(tenantId);
-  const playerSettings = usePlayerSettings(domain);
-  const positions = playerSettings?.positions || [];
 
   const form = useForm<PlayerForm>({
     resolver: zodResolver(createPlayerFormSchema()),
@@ -142,7 +136,6 @@ export default function EditPlayerForm({
       dateOfBirth: player.dateOfBirth || "",
       pin: player.pin || "",
       gender: player.gender || undefined,
-      position: player.position || undefined,
       teamIds: player.teamConnections?.map((tc) => tc.teamId) || [],
       parentUserIds:
         player.userConnections
@@ -160,7 +153,6 @@ export default function EditPlayerForm({
   const firstName = watch("firstName");
   const lastName = watch("lastName");
   const gender = watch("gender");
-  const position = watch("position");
   const selectedTeams = watch("teamIds") || [];
 
   // Calculate player's age
@@ -175,9 +167,7 @@ export default function EditPlayerForm({
     const recommended: Team[] = [];
     const available: Team[] = [];
 
-    const hasRequiredDetails = Boolean(
-      firstName && lastName && gender && (positions.length === 0 || position)
-    );
+    const hasRequiredDetails = Boolean(firstName && lastName && gender);
 
     if (hasRequiredDetails) {
       teams.forEach((team) => {
@@ -213,7 +203,7 @@ export default function EditPlayerForm({
     }
 
     return { recommended, available };
-  }, [teams, playerAge, firstName, lastName, gender, position]);
+  }, [teams, playerAge, firstName, lastName, gender]);
 
   // Generate a random 4-digit PIN
   const generateRandomPin = () => {
@@ -373,36 +363,6 @@ export default function EditPlayerForm({
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
-                    {positions.length > 0 && (
-                      <FormField
-                        control={form.control}
-                        name="position"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Position</FormLabel>
-                            <Select
-                              onValueChange={field.onChange}
-                              defaultValue={field.value || undefined}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select position" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {positions.map((position: string) => (
-                                  <SelectItem key={position} value={position}>
-                                    {position}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    )}
-
                     <FormField
                       control={form.control}
                       name="pin"

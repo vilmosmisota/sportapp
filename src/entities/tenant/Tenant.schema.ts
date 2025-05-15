@@ -24,10 +24,6 @@ export const GroupTypeSchema = z.object({
   positions: z.array(z.string()).default([]),
 });
 
-export const PlayerSettingsSchema = z.object({
-  positions: z.array(z.string()).optional().nullable(),
-});
-
 export type GroupType = z.infer<typeof GroupTypeSchema>;
 
 export type TrainingLocation = z.infer<typeof LocationSchema>;
@@ -68,7 +64,6 @@ export const TenantSchema = z.object({
   lateThresholdMinutes: z.number().min(0).nullable().default(5),
   isPublicSitePublished: z.boolean().nullable().default(false),
   competitionTypes: z.array(CompetitionTypeSchema).nullable(),
-  playerSettings: PlayerSettingsSchema.nullable(),
 });
 
 export type Tenant = z.infer<typeof TenantSchema>;
@@ -86,7 +81,6 @@ export const TenantFormSchema = TenantSchema.omit({
   trainingLocations: z.array(LocationSchema).optional(),
   gameLocations: z.array(LocationSchema).optional(),
   competitionTypes: z.array(CompetitionTypeSchema).optional(),
-  playerSettings: PlayerSettingsSchema.optional(),
 });
 
 export type TenantForm = z.infer<typeof TenantFormSchema>;

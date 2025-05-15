@@ -103,9 +103,7 @@ export default function AddGroupTypeForm({
       sport: tenant.sport,
       membershipCurrency: tenant.membershipCurrency,
       lateThresholdMinutes: tenant.lateThresholdMinutes,
-
       isPublicSitePublished: tenant.isPublicSitePublished,
-      playerSettings: tenant.playerSettings || undefined,
     };
 
     updateTenant.mutate(updateData, {

@@ -60,7 +60,6 @@ export const PlayerSchema = z.object({
   ]),
   tenantId: z.number().nullable(),
   gender: z.nativeEnum(PlayerGender).nullable(),
-  position: z.string().nullable(),
   teamConnections: z.array(PlayerTeamConnectionSchema).optional().default([]),
   userConnections: z.array(PlayerUserConnectionSchema).optional().default([]),
 });
@@ -85,7 +84,6 @@ export const createPlayerFormSchema = () =>
     gender: z.nativeEnum(PlayerGender, {
       required_error: "Gender is required",
     }),
-    position: z.string().optional().nullable(),
     teamIds: z.array(z.number()).default([]),
     parentUserIds: z.array(z.string().uuid()).default([]),
     ownerUserId: z.string().uuid().optional(),

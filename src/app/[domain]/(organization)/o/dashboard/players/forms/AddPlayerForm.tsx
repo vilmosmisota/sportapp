@@ -64,7 +64,6 @@ import {
 } from "@/entities/team/Team.schema";
 import { usePlayerUsers } from "@/entities/user/hooks/usePlayerUsers";
 import { DateInput } from "@/components/ui/date-input/DateInput";
-import { usePlayerSettings } from "../../../../../../../entities/tenant/hooks/usePlayerSettings";
 
 type AddPlayerFormProps = {
   tenantId: string;
@@ -131,8 +130,6 @@ export default function AddPlayerForm({
   const { data: existingPlayers } = usePlayers(tenantId);
   const { data: parentUsers } = useParentUsers(tenantId);
   const { data: playerUsers } = usePlayerUsers(tenantId);
-  const playerSettings = usePlayerSettings(domain);
-  const positions = playerSettings?.positions || [];
   const form = useForm<PlayerForm>({
     resolver: zodResolver(createPlayerFormSchema()),
     defaultValues: {
@@ -141,7 +138,6 @@ export default function AddPlayerForm({
       dateOfBirth: "",
       pin: "",
       gender: undefined,
-      position: undefined,
       teamIds: [],
       parentUserIds: [],
       ownerUserId: undefined,
@@ -155,7 +151,6 @@ export default function AddPlayerForm({
   const firstName = watch("firstName");
   const lastName = watch("lastName");
   const gender = watch("gender");
-  const position = watch("position");
   const selectedTeams = watch("teamIds") || [];
 
   // Calculate player's age
@@ -170,9 +165,7 @@ export default function AddPlayerForm({
     const recommended: Team[] = [];
     const available: Team[] = [];
 
-    const hasRequiredDetails = Boolean(
-      firstName && lastName && gender && (positions.length === 0 || position)
-    );
+    const hasRequiredDetails = Boolean(firstName && lastName && gender);
 
     if (hasRequiredDetails) {
       teams.forEach((team) => {
@@ -208,7 +201,7 @@ export default function AddPlayerForm({
     }
 
     return { recommended, available };
-  }, [teams, playerAge, firstName, lastName, gender, position]);
+  }, [teams, playerAge, firstName, lastName, gender]);
 
   // Generate a random 4-digit PIN
   const generateRandomPin = () => {
@@ -242,7 +235,6 @@ export default function AddPlayerForm({
     form.setValue("dateOfBirth", "");
     form.setValue("pin", "");
     form.setValue("gender", "" as any);
-    form.setValue("position", "" as any);
     form.setValue("teamIds", []);
     form.setValue("parentUserIds", []);
     form.setValue("ownerUserId", undefined);
@@ -414,36 +406,6 @@ export default function AddPlayerForm({
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
-                    {positions.length > 0 && (
-                      <FormField
-                        control={form.control}
-                        name="position"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Position</FormLabel>
-                            <Select
-                              onValueChange={field.onChange}
-                              value={field.value || ""}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select position" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {positions.map((position: string) => (
-                                  <SelectItem key={position} value={position}>
-                                    {position}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    )}
-
                     <FormField
                       control={form.control}
                       name="pin"

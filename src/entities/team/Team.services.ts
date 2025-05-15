@@ -28,7 +28,6 @@ export const getTeamsByTenantId = async (
           firstName,
           lastName,
           dateOfBirth,
-          position,
           gender,
           pin
         )
@@ -107,7 +106,6 @@ export const createTeam = async (
           firstName,
           lastName,
           dateOfBirth,
-          position,
           gender,
           pin
         )
@@ -189,7 +187,6 @@ export const getTeamPlayers = async (
         firstName,
         lastName,
         dateOfBirth,
-        position,
         gender,
         pin
       )
@@ -218,7 +215,6 @@ export const getPlayersByTeamId = async (
         firstName,
         lastName,
         dateOfBirth,
-        position,
         gender,
         pin
       )

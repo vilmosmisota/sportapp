@@ -53,7 +53,6 @@ import EditTeamForm from "../forms/EditTeamForm";
 import { useRouter } from "next/navigation";
 import { useDeleteTeam } from "@/entities/team/Team.actions.client";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
-import { usePlayerSettings } from "../../../../../../../entities/tenant/hooks/usePlayerSettings";
 import { useTenantAndUserAccessContext } from "../../../../../../../components/auth/TenantAndUserAccessContext";
 
 export default function TeamPage({
@@ -74,15 +73,6 @@ export default function TeamPage({
   const isLoading = isTeamsLoading || !teams;
   const team = teams?.find((t) => t.id === parseInt(params.id));
 
-  // Get player settings to check if positions are configured
-  const playerSettings = usePlayerSettings(params.domain);
-  const positions = playerSettings?.positions || [];
-  const showPositionColumn = positions.length > 0;
-
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
-    position: showPositionColumn,
-  });
-
   // Memoize players array to prevent unnecessary re-renders
   const players: TeamPlayer[] = useMemo(
     () =>
@@ -94,7 +84,6 @@ export default function TeamPage({
             firstName: connection.player.firstName ?? "",
             lastName: connection.player.lastName ?? "",
             dateOfBirth: connection.player.dateOfBirth,
-            position: connection.player.position,
             gender: connection.player.gender,
           };
         })
@@ -131,24 +120,10 @@ export default function TeamPage({
       onRemove: handleRemovePlayer,
       canManageTeams: true,
       teamGender: team?.gender ?? "",
-      showPositionColumn,
     }),
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    state: {
-      columnVisibility,
-    },
-    initialState: {
-      ...(showPositionColumn
-        ? {
-            columnVisibility: {
-              position: showPositionColumn,
-            },
-          }
-        : {}),
-    },
   });
 
   const deleteTeam = useDeleteTeam(tenant?.id.toString() ?? "");
@@ -165,21 +140,6 @@ export default function TeamPage({
     },
     [deleteTeam, router, params.domain]
   );
-
-  // Update column visibility when showPositionColumn changes
-  useEffect(() => {
-    // Check if position column exists in table
-    const hasPositionColumn = table
-      .getAllColumns()
-      .some((col) => col.id === "position");
-
-    if (hasPositionColumn) {
-      setColumnVisibility((prev) => ({
-        ...prev,
-        position: showPositionColumn,
-      }));
-    }
-  }, [showPositionColumn, table]);
 
   if (isLoading) {
     return (
@@ -333,7 +293,6 @@ export default function TeamPage({
                         onRemove: handleRemovePlayer,
                         canManageTeams: true,
                         teamGender: team?.gender ?? "",
-                        showPositionColumn,
                       })}
                       data={players}
                       rowClassName="group/row"

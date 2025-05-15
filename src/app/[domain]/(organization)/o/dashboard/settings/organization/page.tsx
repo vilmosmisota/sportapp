@@ -98,7 +98,7 @@ export default function OrganizationDetailPage() {
               <GroupTypesContent tenant={tenant} />
             </TabsContent>
             <TabsContent value="player-management">
-              <PlayerManagementContent tenant={tenant} />
+              <PlayerManagementContent />
             </TabsContent>
             <TabsContent value="training-settings">
               <TrainingSettingsContent tenant={tenant} />

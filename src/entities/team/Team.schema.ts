@@ -51,7 +51,6 @@ export const PlayerTeamConnectionSchema = z.object({
     firstName: z.string(),
     lastName: z.string(),
     dateOfBirth: z.string(),
-    position: z.string().nullable(),
     gender: z.string(),
     pin: z.union([
       z.string().regex(/^\d{4}$/, "If provided, PIN must be a 4-digit number"),
