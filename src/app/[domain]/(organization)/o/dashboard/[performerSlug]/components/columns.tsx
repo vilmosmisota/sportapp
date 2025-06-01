@@ -3,23 +3,16 @@
 import { PermissionDropdownMenu } from "@/components/auth/PermissionDropdownMenu";
 import { MarsIcon, VenusIcon } from "@/components/icons/icons";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
 import DataTableColumnHeader from "@/components/ui/data-table/DataTableColumnHeader";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Group, MemberWithRelations } from "@/entities/member/Member.schema";
+import { Group, Performer } from "@/entities/member/Performer.schema";
 import { Permission } from "@/entities/role/Role.permissions";
 import { ColumnDef } from "@tanstack/react-table";
 import { differenceInYears } from "date-fns";
-import { SquarePen, Trash2, UserCheck, UserPlus, Users } from "lucide-react";
+import { SquarePen, Trash2 } from "lucide-react";
 import { useState } from "react";
 
-const GroupsCell = ({ member }: { member: MemberWithRelations }) => {
+const GroupsCell = ({ member }: { member: Performer }) => {
   if (!member.groupConnections?.length) {
     return <div className="text-muted-foreground text-sm">No groups</div>;
   }
@@ -38,117 +31,24 @@ const GroupsCell = ({ member }: { member: MemberWithRelations }) => {
     <div className="flex flex-wrap gap-1">
       {groups.map((group) => (
         <Badge key={group.id} variant="secondary" className="text-xs">
-          {group.ageRange} {group.gender && `(${group.gender})`}
+          {group.ageRange || `Group ${group.id}`}{" "}
+          {group.gender && `(${group.gender})`}
         </Badge>
       ))}
     </div>
   );
 };
 
-const ConnectedUsersCell = ({
-  member,
-  onShowConnectedUsers,
-}: {
-  member: MemberWithRelations;
-  onShowConnectedUsers: (member: MemberWithRelations) => void;
-}) => {
-  const hasUser = member.user || member.users;
-  const hasParents =
-    member.performerConnections && member.performerConnections.length > 0;
-  const hasChildren =
-    member.parentConnections && member.parentConnections.length > 0;
-
-  // If no connections at all
-  if (!hasUser && !hasParents && !hasChildren) {
-    return <div className="text-muted-foreground text-sm">No connections</div>;
-  }
-
-  return (
-    <TooltipProvider>
-      <div className="flex items-center gap-2">
-        {/* User Connection Icon */}
-        {hasUser && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="flex items-center">
-                <UserCheck className="h-4 w-4 text-green-600" />
-              </div>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{member.user?.email || member.users?.email}</p>
-            </TooltipContent>
-          </Tooltip>
-        )}
-
-        {/* Parent Connection Icons */}
-        {hasParents &&
-          member.performerConnections?.map(
-            (connection) =>
-              connection.parent && (
-                <Tooltip key={connection.id}>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center">
-                      <UserPlus className="h-4 w-4 text-blue-600" />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>
-                      Parent: {connection.parent.firstName}{" "}
-                      {connection.parent.lastName}
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              )
-          )}
-
-        {/* Children Connection Icons */}
-        {hasChildren &&
-          member.parentConnections?.map(
-            (connection) =>
-              connection.performer && (
-                <Tooltip key={connection.id}>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center">
-                      <Users className="h-4 w-4 text-purple-600" />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>
-                      Child: {connection.performer.firstName}{" "}
-                      {connection.performer.lastName}
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              )
-          )}
-
-        {/* Click to show more details */}
-        {(hasUser || hasParents || hasChildren) && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="p-1 h-auto hover:bg-muted/50 ml-1"
-            onClick={() => onShowConnectedUsers(member)}
-          >
-            <span className="text-xs text-muted-foreground">Details</span>
-          </Button>
-        )}
-      </div>
-    </TooltipProvider>
-  );
-};
-
 interface MembersTableColumnsProps {
-  onEdit: (member: MemberWithRelations) => void;
+  onEdit: (member: Performer) => void;
   onDelete: (memberId: number) => void;
-  onShowConnectedUsers: (member: MemberWithRelations) => void;
   domain: string;
   displayName: string;
 }
 
 interface MembersTableActionsProps {
-  member: MemberWithRelations;
-  onEdit: (member: MemberWithRelations) => void;
+  member: Performer;
+  onEdit: (member: Performer) => void;
   onDelete: (memberId: number) => void;
   domain: string;
   displayName: string;
@@ -197,10 +97,9 @@ const MembersTableActions = ({
 export const columns = ({
   onEdit,
   onDelete,
-  onShowConnectedUsers,
   domain,
   displayName,
-}: MembersTableColumnsProps): ColumnDef<MemberWithRelations>[] => [
+}: MembersTableColumnsProps): ColumnDef<Performer>[] => [
   {
     id: "actions",
     header: "Actions",
@@ -311,19 +210,6 @@ export const columns = ({
       <DataTableColumnHeader column={column} title="Groups" />
     ),
     cell: ({ row }) => <GroupsCell member={row.original} />,
-    enableSorting: false,
-  },
-  {
-    accessorKey: "connectedUsers",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Connected User" />
-    ),
-    cell: ({ row }) => (
-      <ConnectedUsersCell
-        member={row.original}
-        onShowConnectedUsers={onShowConnectedUsers}
-      />
-    ),
     enableSorting: false,
   },
 ];

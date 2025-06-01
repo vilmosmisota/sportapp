@@ -1,30 +1,29 @@
-import React from "react";
-import { cn } from "../../../../../lib/utils";
+import {
+  Bell,
+  Building2,
+  CircleUser,
+  Cog,
+  HelpCircle,
+  LogOut,
+  Settings,
+  ShieldCheck,
+  UserRound,
+  Users,
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Button } from "../../../../../components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuGroup,
 } from "../../../../../components/ui/dropdown-menu";
-import Link from "next/link";
-import { Button } from "../../../../../components/ui/button";
-import {
-  Cog,
-  UserRound,
-  Users,
-  ShieldCheck,
-  Building2,
-  CircleUser,
-  Bell,
-  HelpCircle,
-  LogOut,
-  Settings,
-} from "lucide-react";
-import { usePathname } from "next/navigation";
 import { useCurrentUser } from "../../../../../entities/user/User.query";
+import { cn } from "../../../../../lib/utils";
 
 interface DashboardTopRightNavProps {
   isCollapsed?: boolean;
@@ -59,11 +58,11 @@ function DashboardTopRightNav({
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
                 <Link
-                  href="/o/dashboard/settings"
+                  href="/o/dashboard/settings/organization"
                   className="flex items-center"
                 >
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span className="truncate flex-1">General Settings</span>
+                  <Building2 className="mr-2 h-4 w-4" />
+                  <span className="truncate flex-1">Organization Details</span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
@@ -84,15 +83,6 @@ function DashboardTopRightNav({
                   <span className="truncate flex-1">Roles & Permissions</span>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link
-                  href="/o/dashboard/settings/organization"
-                  className="flex items-center"
-                >
-                  <Building2 className="mr-2 h-4 w-4" />
-                  <span className="truncate flex-1">Organization Details</span>
-                </Link>
-              </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -109,11 +99,6 @@ function DashboardTopRightNav({
               <>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      {user.firstName && user.lastName
-                        ? `${user.firstName} ${user.lastName}`
-                        : user.email}
-                    </p>
                     <p className="text-xs leading-none text-muted-foreground">
                       {user.email}
                     </p>

@@ -1,6 +1,6 @@
 import {
-  getMemberDisplayName,
-  getMemberSlug,
+  getTenantPerformerName,
+  getTenantPerformerSlug,
 } from "../../../../../entities/member/Member.utils";
 import { Permission } from "../../../../../entities/role/Role.permissions";
 import { Tenant } from "../../../../../entities/tenant/Tenant.schema";
@@ -66,10 +66,10 @@ export function useNavigation(
           ? [
               {
                 id: 5,
-                name: getMemberDisplayName(tenant),
-                href: `/o/dashboard/${getMemberSlug(tenant)}`,
+                name: getTenantPerformerName(tenant),
+                href: `/o/dashboard/${getTenantPerformerSlug(tenant)}`,
                 iconName: "Users",
-                description: `Manage your organization's ${getMemberDisplayName(
+                description: `Manage your organization's ${getTenantPerformerName(
                   tenant
                 ).toLowerCase()} and their teams`,
                 permissions: [

@@ -17,24 +17,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MemberForm, MemberGender } from "@/entities/member/Member.schema";
+import { MemberGender } from "@/entities/member/Member.schema";
 import { getAgeFromDateOfBirth } from "@/entities/member/Member.utils";
+import { Performer, PerformerForm } from "@/entities/member/Performer.schema";
 import { ContactRound } from "lucide-react";
 import { Control } from "react-hook-form";
 
-type PerformerDetailsTabProps = {
-  control: Control<MemberForm>;
+type EditPerformerDetailsTabProps = {
+  control: Control<PerformerForm>;
   dateOfBirth: string;
   singularDisplayName: string;
   errors: any;
+  member: Performer;
 };
 
-export default function PerformerDetailsTab({
+export default function EditPerformerDetailsTab({
   control,
   dateOfBirth,
   singularDisplayName,
   errors,
-}: PerformerDetailsTabProps) {
+  member,
+}: EditPerformerDetailsTabProps) {
   const memberAge = getAgeFromDateOfBirth(dateOfBirth);
 
   return (

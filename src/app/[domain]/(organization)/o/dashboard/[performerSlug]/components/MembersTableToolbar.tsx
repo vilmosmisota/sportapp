@@ -105,7 +105,7 @@ export function MembersTableToolbar<TData>({
             const value = event.target.value;
             table.getColumn("name")?.setFilterValue(value);
           }}
-          className="h-auto w-full md:w-[300px] bg-background"
+          className="h-auto w-full md:w-[300px] bg-card"
         />
         <MultiSelectFilters groups={filterGroups} />
       </div>

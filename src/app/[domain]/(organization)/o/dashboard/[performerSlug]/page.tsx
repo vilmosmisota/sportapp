@@ -3,19 +3,20 @@
 import { Button } from "@/components/ui/button";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { PageHeader } from "@/components/ui/page-header";
-import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
-import { usePerformers } from "@/entities/member/Member.query";
-import { MemberWithRelations } from "@/entities/member/Member.schema";
 import {
-  getMemberDisplayName,
-  getMemberSingularDisplayName,
-  getMemberSlug,
+  getTenantPerformerName,
+  getTenantPerformerSingularName,
+  getTenantPerformerSlug,
 } from "@/entities/member/Member.utils";
-import { Loader2, Plus } from "lucide-react";
+import { usePerformers } from "@/entities/member/Performer.query";
+import { Performer } from "@/entities/member/Performer.schema";
+import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useTenantAndUserAccessContext } from "../../../../../../components/auth/TenantAndUserAccessContext";
+import { ResponsiveSheet } from "../../../../../../components/ui/responsive-sheet";
+import AddPerformerForm from "./components/forms/add/AddPerformerForm";
 import MembersTable from "./components/MembersTable";
-import AddPerformerForm from "./forms/add/AddPerformerForm";
+import PerformerPageLoader from "./components/PerformerPageLoader";
 
 export default function DynamicMembersPage({
   params,
@@ -28,11 +29,7 @@ export default function DynamicMembersPage({
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
 
   if (isLoading) {
-    return (
-      <div className="w-full h-48 flex items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <PerformerPageLoader />;
   }
 
   if (!tenant || !tenantId) {
@@ -46,9 +43,9 @@ export default function DynamicMembersPage({
     );
   }
 
-  const displayName = getMemberDisplayName(tenant);
-  const configSlug = getMemberSlug(tenant);
-  const singularDisplayName = getMemberSingularDisplayName(tenant);
+  const displayName = getTenantPerformerName(tenant);
+  const configSlug = getTenantPerformerSlug(tenant);
+  const singularDisplayName = getTenantPerformerSingularName(tenant);
 
   const isValidSlug = params.performerSlug === configSlug;
 
@@ -63,8 +60,8 @@ export default function DynamicMembersPage({
     );
   }
 
-  // Convert members to MemberWithRelations type (they should already have the relations from the query)
-  const membersWithRelations = (members || []) as MemberWithRelations[];
+  // Use the performers directly as they already have the correct structure
+  const performers = (members || []) as Performer[];
 
   return (
     <ErrorBoundary>
@@ -86,9 +83,9 @@ export default function DynamicMembersPage({
           </div>
         )}
 
-        {membersWithRelations && (
+        {performers && (
           <MembersTable
-            members={membersWithRelations}
+            members={performers}
             tenantId={tenantId}
             domain={params.domain}
             displayName={displayName}

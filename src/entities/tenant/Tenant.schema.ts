@@ -29,25 +29,6 @@ export const TenantGeneralConfigSchema = z.object({
   location: LocationSchema.optional(),
 });
 
-export const TenantGroupsConfigSchema = z
-  .object({
-    customAgeCategories: z
-      .array(
-        z.object({
-          label: z.string(),
-          value: z.string(),
-          sortOrder: z.number().default(0),
-        })
-      )
-      .optional(),
-  })
-  .merge(DisplaySlugSchema)
-  .transform((data) => ({
-    ...data,
-    displayName: data.displayName ?? "groups",
-    slug: data.slug ?? "groups",
-  }));
-
 export const TenantDevelopmentConfigSchema = z.object({
   lateThreshold: z.number().default(5),
   trainingLocations: z.array(LocationSchema).optional(),
@@ -67,7 +48,6 @@ export enum TenantType {
   LEAGUE = "league",
 }
 
-// Schema for the tenantConfigs table
 export const TenantConfigSchema = z.object({
   id: z.number(),
   createdAt: z.string().refine((val) => !isNaN(Date.parse(val)), {
@@ -77,7 +57,6 @@ export const TenantConfigSchema = z.object({
     message: "Invalid date format",
   }),
   general: TenantGeneralConfigSchema.nullable().optional(),
-  groups: TenantGroupsConfigSchema.nullable().optional(),
   development: TenantDevelopmentConfigSchema.nullable().optional(),
   performers: TenantPerformersConfigSchema.nullable().optional(),
 });
@@ -102,7 +81,6 @@ export const TenantFormSchema = z.object({
   tenantConfig: z
     .object({
       general: TenantGeneralConfigSchema.optional(),
-      groups: TenantGroupsConfigSchema.optional(),
       development: TenantDevelopmentConfigSchema.optional(),
       performers: TenantPerformersConfigSchema.optional(),
     })
@@ -114,7 +92,6 @@ export type Tenant = z.infer<typeof TenantSchema>;
 export type TenantConfig = z.infer<typeof TenantConfigSchema>;
 export type TenantForm = z.infer<typeof TenantFormSchema>;
 export type TenantGeneralConfig = z.infer<typeof TenantGeneralConfigSchema>;
-export type TenantGroupsConfig = z.infer<typeof TenantGroupsConfigSchema>;
 export type TenantDevelopmentConfig = z.infer<
   typeof TenantDevelopmentConfigSchema
 >;

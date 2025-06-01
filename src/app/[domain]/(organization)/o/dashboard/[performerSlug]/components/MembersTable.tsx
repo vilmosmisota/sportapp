@@ -3,8 +3,8 @@
 import { DataTable } from "@/components/ui/data-table/DataTable";
 import { DataTablePagination } from "@/components/ui/data-table/DataTablePagination";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
-import { useDeleteMember } from "@/entities/member/Member.actions.client";
-import { MemberWithRelations } from "@/entities/member/Member.schema";
+import { useDeletePerformer } from "@/entities/member/Performer.actions.client";
+import { Performer } from "@/entities/member/Performer.schema";
 import {
   ColumnFiltersState,
   SortingState,
@@ -19,12 +19,11 @@ import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ErrorBoundary } from "../../../../../../../components/ui/error-boundary";
 import { columns } from "./columns";
-import ConnectedUsersDialog from "./ConnectedUsersDialog";
 import EditMemberForm from "./EditMemberForm";
 import { MembersTableToolbar } from "./MembersTableToolbar";
 
 interface MembersTableProps {
-  members: MemberWithRelations[];
+  members: Performer[];
   tenantId: string;
   domain: string;
   displayName: string;
@@ -41,12 +40,10 @@ export default function MembersTable({
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [selectedMember, setSelectedMember] =
-    useState<MemberWithRelations | null>(null);
-  const [isConnectedUsersOpen, setIsConnectedUsersOpen] = useState(false);
-  const deleteMember = useDeleteMember(tenantId);
+  const [selectedMember, setSelectedMember] = useState<Performer | null>(null);
+  const deletePerformer = useDeletePerformer(tenantId);
 
-  const handleEdit = useCallback((member: MemberWithRelations) => {
+  const handleEdit = useCallback((member: Performer) => {
     setSelectedMember(member);
     setIsEditOpen(true);
   }, []);
@@ -54,7 +51,7 @@ export default function MembersTable({
   const handleDelete = useCallback(
     async (memberId: number) => {
       try {
-        await deleteMember.mutateAsync(memberId);
+        await deletePerformer.mutateAsync(memberId);
         toast.success(`${displayName.slice(0, -1)} deleted successfully`);
       } catch (error) {
         toast.error(
@@ -62,15 +59,7 @@ export default function MembersTable({
         );
       }
     },
-    [deleteMember, displayName]
-  );
-
-  const handleShowConnectedUsers = useCallback(
-    (member: MemberWithRelations) => {
-      setSelectedMember(member);
-      setIsConnectedUsersOpen(true);
-    },
-    []
+    [deletePerformer, displayName]
   );
 
   const tableColumns = useMemo(
@@ -78,11 +67,10 @@ export default function MembersTable({
       columns({
         onEdit: handleEdit,
         onDelete: handleDelete,
-        onShowConnectedUsers: handleShowConnectedUsers,
         domain,
         displayName,
       }),
-    [domain, handleDelete, handleShowConnectedUsers, handleEdit, displayName]
+    [domain, handleDelete, handleEdit, displayName]
   );
 
   const table = useReactTable({
@@ -128,28 +116,16 @@ export default function MembersTable({
         <DataTablePagination table={table} />
 
         {selectedMember && (
-          <>
-            <ResponsiveSheet
-              isOpen={isEditOpen}
-              setIsOpen={setIsEditOpen}
-              title={`Edit ${displayName.slice(0, -1)}`}
-            >
-              <EditMemberForm
-                member={selectedMember}
-                tenantId={tenantId}
-                domain={domain}
-                setIsParentModalOpen={setIsEditOpen}
-                displayName={displayName}
-              />
-            </ResponsiveSheet>
-
-            <ConnectedUsersDialog
+          <ResponsiveSheet
+            isOpen={isEditOpen}
+            setIsOpen={setIsEditOpen}
+            title={`Edit ${displayName.slice(0, -1)}`}
+          >
+            <EditMemberForm
               member={selectedMember}
-              isOpen={isConnectedUsersOpen}
-              setIsOpen={setIsConnectedUsersOpen}
-              displayName={displayName}
+              setIsParentModalOpen={setIsEditOpen}
             />
-          </>
+          </ResponsiveSheet>
         )}
       </div>
     </ErrorBoundary>

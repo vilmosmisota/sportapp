@@ -7,7 +7,7 @@ import { Tenant } from "../tenant/Tenant.schema";
  * @param domain - The domain for the route
  * @returns The complete path to the dynamic member route
  */
-export function getMemberRoutePath(tenant: Tenant, domain: string): string {
+export function getPerformerRoutePath(tenant: Tenant, domain: string): string {
   const performersConfig = tenant.tenantConfigs?.performers;
   const slug = performersConfig?.slug || "performers";
   return `/${domain}/o/dashboard/${slug}`;
@@ -18,7 +18,7 @@ export function getMemberRoutePath(tenant: Tenant, domain: string): string {
  * @param tenant - The tenant object with configuration
  * @returns The display name for members
  */
-export function getMemberDisplayName(tenant: Tenant): string {
+export function getTenantPerformerName(tenant: Tenant): string {
   const performersConfig = tenant.tenantConfigs?.performers;
   return performersConfig?.displayName || "Performers";
 }
@@ -28,7 +28,7 @@ export function getMemberDisplayName(tenant: Tenant): string {
  * @param tenant - The tenant object with configuration
  * @returns The slug for members
  */
-export function getMemberSlug(tenant: Tenant): string {
+export function getTenantPerformerSlug(tenant: Tenant): string {
   const performersConfig = tenant.tenantConfigs?.performers;
   return performersConfig?.slug || "performers";
 }
@@ -38,8 +38,8 @@ export function getMemberSlug(tenant: Tenant): string {
  * @param tenant - The tenant object with configuration
  * @returns The singular display name for members
  */
-export function getMemberSingularDisplayName(tenant: Tenant): string {
-  const displayName = getMemberDisplayName(tenant);
+export function getTenantPerformerSingularName(tenant: Tenant): string {
+  const displayName = getTenantPerformerName(tenant);
   return displayName.endsWith("s") ? displayName.slice(0, -1) : displayName;
 }
 

@@ -16,7 +16,6 @@ export const getTenantByDomain = async (
         updatedAt,
         general,
         performers,
-        groups,
         development
       )
     `
@@ -52,7 +51,6 @@ export const updateTenant = async (
         updatedAt,
         general,
         performers,
-        groups,
         development
       )
     `
@@ -71,7 +69,6 @@ export const updateTenant = async (
       .update({
         general: tenantConfig.general,
         performers: tenantConfig.performers,
-        groups: tenantConfig.groups,
         development: tenantConfig.development,
       })
       .eq("id", (tenant as any).tenantConfigId);
@@ -92,7 +89,6 @@ export const updateTenant = async (
           updatedAt,
           general,
           performers,
-          groups,
           development
         )
       `
@@ -122,7 +118,6 @@ export const createTenant = async (
     .insert({
       general: tenantConfig?.general,
       performers: tenantConfig?.performers,
-      groups: tenantConfig?.groups,
       development: tenantConfig?.development,
     })
     .select()
@@ -147,7 +142,6 @@ export const createTenant = async (
         updatedAt,
         general,
         performers,
-        groups,
         development
       )
     `

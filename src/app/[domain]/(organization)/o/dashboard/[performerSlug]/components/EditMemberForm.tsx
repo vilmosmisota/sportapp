@@ -1,23 +1,17 @@
 "use client";
 
-import { MemberWithRelations } from "@/entities/member/Member.schema";
+import { Performer } from "@/entities/member/Performer.schema";
 import { useTenantAndUserAccessContext } from "../../../../../../../components/auth/TenantAndUserAccessContext";
-import EditPerformerForm from "../forms/edit/EditPerformerForm";
+import EditPerformerForm from "./forms/edit/EditPerformerForm";
 
 interface EditMemberFormProps {
-  member: MemberWithRelations;
-  tenantId: string;
-  domain: string;
+  member: Performer;
   setIsParentModalOpen: (open: boolean) => void;
-  displayName: string;
 }
 
 export default function EditMemberForm({
   member,
-  tenantId,
-  domain,
   setIsParentModalOpen,
-  displayName,
 }: EditMemberFormProps) {
   const { tenant } = useTenantAndUserAccessContext();
 

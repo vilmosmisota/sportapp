@@ -2,11 +2,9 @@
 
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/libs/tailwind/utils";
 import { useTenantAndUserAccessContext } from "../../../../../../../components/auth/TenantAndUserAccessContext";
 import { PageHeader } from "../../../../../../../components/ui/page-header";
 import GeneralContent from "./tabs/GeneralContent";
-import GroupsContent from "./tabs/GroupsContent";
 import MembersContent from "./tabs/MembersContent";
 import TrainingDevelopmentContent from "./tabs/TrainingDevelopmentContent";
 
@@ -26,9 +24,6 @@ export default function OrganizationDetailPage() {
               <TabsList className="mb-3 w-full inline-flex h-10 items-center justify-start rounded-md p-1 text-muted-foreground">
                 <TabsTrigger value="general" className="text-sm">
                   General
-                </TabsTrigger>
-                <TabsTrigger value="groups" className={cn("text-sm relative")}>
-                  Groups
                 </TabsTrigger>
                 <TabsTrigger
                   value="player-management"
@@ -50,9 +45,6 @@ export default function OrganizationDetailPage() {
           <div className="mt-4 md:px-0">
             <TabsContent value="general">
               <GeneralContent tenant={tenant} />
-            </TabsContent>
-            <TabsContent value="groups">
-              <GroupsContent tenant={tenant} />
             </TabsContent>
             <TabsContent value="player-management">
               <MembersContent tenant={tenant} />
