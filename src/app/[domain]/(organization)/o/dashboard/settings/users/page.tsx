@@ -1,34 +1,55 @@
 "use client";
 
+import { PermissionButton } from "@/components/auth/PermissionButton";
+import { Permission } from "@/entities/role/Role.permissions";
 import { useUsers } from "@/entities/user/User.query";
-import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
-import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useState } from "react";
-import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
-import UsersTable from "./tables/UsersTable";
-import AddUserForm from "./forms/AddUserForm";
 import { useTenantAndUserAccessContext } from "../../../../../../../components/auth/TenantAndUserAccessContext";
+import { PageHeader } from "../../../../../../../components/ui/page-header";
+import { ResponsiveSheet } from "../../../../../../../components/ui/responsive-sheet";
+import AddUserForm from "./forms/AddUserForm";
+import UsersTable from "./tables/UsersTable";
 
 export default function UsersPage() {
   const { tenant } = useTenantAndUserAccessContext();
-  const { data: users, error } = useUsers(tenant?.id.toString() ?? "");
+  const {
+    data: users,
+    error,
+    isLoading,
+  } = useUsers(tenant?.id.toString() ?? "");
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
 
-  if (error) return <div>{error.message}</div>;
+  if (isLoading) {
+    return null;
+  }
+
+  if (error) {
+    return <div>Error loading users: {error.message}</div>;
+  }
+
+  if (!tenant) {
+    return null;
+  }
 
   return (
     <div className="w-full space-y-6">
-      <div className="flex justify-end mb-4">
-        <Button onClick={() => setIsAddUserOpen(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Add User
-        </Button>
-      </div>
+      <PageHeader
+        title="Users"
+        description="Manage users and their access to your organization"
+        actions={
+          <PermissionButton
+            permission={Permission.MANAGE_SETTINGS_USERS}
+            allowSystemRole={true}
+            onClick={() => setIsAddUserOpen(true)}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add User
+          </PermissionButton>
+        }
+      />
 
-      {users && (
-        <UsersTable users={users} tenantId={tenant?.id.toString() ?? ""} />
-      )}
+      <UsersTable users={users || []} tenantId={tenant.id.toString()} />
 
       <ResponsiveSheet
         isOpen={isAddUserOpen}
@@ -36,7 +57,7 @@ export default function UsersPage() {
         title="Add User"
       >
         <AddUserForm
-          tenantId={tenant?.id.toString() ?? ""}
+          tenantId={tenant.id.toString()}
           setIsParentModalOpen={setIsAddUserOpen}
         />
       </ResponsiveSheet>

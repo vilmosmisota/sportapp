@@ -15,17 +15,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useUpdateTeam } from "@/entities/team/Team.actions.client";
+import { useUpdateTeam } from "@/entities/group/Group.actions.client";
 import {
   Team,
   TeamForm,
   TeamGender,
   createTeamFormSchema,
-} from "@/entities/team/Team.schema";
+} from "@/entities/group/Group.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { useGetCoachesByTenantId } from "@/entities/team/Team.query";
+import { useGetCoachesByTenantId } from "@/entities/group/Group.query";
 import { useTenantGroupTypes } from "@/entities/tenant/hooks/useGroupTypes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Palette, Eye } from "lucide-react";

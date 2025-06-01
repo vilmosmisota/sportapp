@@ -1,16 +1,16 @@
 "use client";
 
-import { Table, Row } from "@tanstack/react-table";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
-import { User } from "@/entities/user/User.schema";
 import DataTableViewOptions from "@/components/ui/data-table/DataTableViewOptions";
+import { Input } from "@/components/ui/input";
 import { MultiSelectFilters } from "@/components/ui/multi-select-filters";
-import { RoleDomain } from "@/entities/role/Role.permissions";
+import { MemberType } from "@/entities/member/Member.schema";
+import { UserMember } from "@/entities/user/User.schema";
+import { Row, Table } from "@tanstack/react-table";
+import { X } from "lucide-react";
 
 interface UsersTableToolbarProps {
-  table: Table<User>;
+  table: Table<UserMember>;
 }
 
 export default function UsersTableToolbar({ table }: UsersTableToolbarProps) {
@@ -34,47 +34,84 @@ export default function UsersTableToolbar({ table }: UsersTableToolbarProps) {
     return rows;
   };
 
-  // Helper function to count available options for a column
-  const getOptionsWithCounts = (
-    columnId: string,
-    filteredRows: Row<User>[]
-  ) => {
-    const valueMap = new Map<string, number>();
+  // Helper function to count available roles
+  const getRoleOptionsWithCounts = (filteredRows: Row<UserMember>[]) => {
+    const roleMap = new Map<string, number>();
 
     filteredRows.forEach((row) => {
-      const userRoles = row.getValue(columnId) as User["roles"];
-      if (userRoles) {
-        userRoles.forEach((userRole) => {
-          if (userRole.role?.domain) {
-            valueMap.set(
-              userRole.role.domain,
-              (valueMap.get(userRole.role.domain) || 0) + 1
-            );
-          }
-        });
+      const role = row.getValue("role") as UserMember["role"];
+      if (role) {
+        roleMap.set(role.name, (roleMap.get(role.name) || 0) + 1);
+      } else {
+        roleMap.set("No Role", (roleMap.get("No Role") || 0) + 1);
       }
     });
 
-    return Object.values(RoleDomain).map((domain) => ({
-      label: domain.charAt(0).toUpperCase() + domain.slice(1),
-      value: domain,
-      count: valueMap.get(domain) || 0,
-      disabled: !valueMap.has(domain),
+    return Array.from(roleMap.entries()).map(([roleName, count]) => ({
+      label: roleName,
+      value: roleName,
+      count,
+      disabled: false,
     }));
   };
 
-  // Get filtered rows for roles
-  const roleRows = getFilteredRowsExcluding("roles");
+  // Helper function to count available member types
+  const getMemberTypeOptionsWithCounts = (filteredRows: Row<UserMember>[]) => {
+    const typeMap = new Map<string, number>();
+
+    filteredRows.forEach((row) => {
+      const member = row.getValue("memberType") as UserMember["member"];
+      const memberType = member?.memberType;
+      if (memberType) {
+        typeMap.set(memberType, (typeMap.get(memberType) || 0) + 1);
+      } else {
+        typeMap.set("User Only", (typeMap.get("User Only") || 0) + 1);
+      }
+    });
+
+    // Add all possible member types
+    Object.values(MemberType).forEach((type) => {
+      if (!typeMap.has(type)) {
+        typeMap.set(type, 0);
+      }
+    });
+
+    if (!typeMap.has("User Only")) {
+      typeMap.set("User Only", 0);
+    }
+
+    return Array.from(typeMap.entries()).map(([typeName, count]) => ({
+      label: typeName === "User Only" ? "User Only" : typeName,
+      value: typeName,
+      count,
+      disabled: count === 0,
+    }));
+  };
+
+  // Get filtered rows for each filter
+  const roleRows = getFilteredRowsExcluding("role");
+  const memberTypeRows = getFilteredRowsExcluding("memberType");
 
   const filterGroups = [
     {
-      title: "Role Type",
-      options: getOptionsWithCounts("roles", roleRows),
+      title: "Role",
+      options: getRoleOptionsWithCounts(roleRows),
       selectedValues:
-        (table.getColumn("roles")?.getFilterValue() as string[]) || [],
+        (table.getColumn("role")?.getFilterValue() as string[]) || [],
       onSelectionChange: (values: string[]) => {
         table
-          .getColumn("roles")
+          .getColumn("role")
+          ?.setFilterValue(values.length ? values : undefined);
+      },
+    },
+    {
+      title: "Member Type",
+      options: getMemberTypeOptionsWithCounts(memberTypeRows),
+      selectedValues:
+        (table.getColumn("memberType")?.getFilterValue() as string[]) || [],
+      onSelectionChange: (values: string[]) => {
+        table
+          .getColumn("memberType")
           ?.setFilterValue(values.length ? values : undefined);
       },
     },

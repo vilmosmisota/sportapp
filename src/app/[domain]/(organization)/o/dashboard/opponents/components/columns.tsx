@@ -10,7 +10,7 @@ import { Tenant } from "@/entities/tenant/Tenant.schema";
 import {
   getDisplayAgeGroup,
   getDisplayGender,
-} from "@/entities/team/Team.schema";
+} from "@/entities/group/Group.schema";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
 import { PermissionDropdownMenu } from "@/components/auth/PermissionDropdownMenu";

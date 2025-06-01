@@ -1,9 +1,6 @@
 "use client";
 
-import { Fragment, ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { Permission, RoleDomain } from "@/entities/role/Role.permissions";
-import { useCurrentUser } from "@/entities/user/User.query";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,8 +8,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical } from "lucide-react";
+import { Permission } from "@/entities/role/Role.permissions";
+import { UserDomain } from "@/entities/user/User.schema";
 import { cn } from "@/libs/tailwind/utils";
+import { MoreVertical } from "lucide-react";
+import { Fragment, ReactNode } from "react";
+import { useTenantAndUserAccessContext } from "./TenantAndUserAccessContext";
 
 export interface MenuAction {
   label: string;
@@ -40,7 +41,7 @@ export function PermissionDropdownMenu({
   className,
   buttonClassName,
 }: PermissionDropdownMenuProps) {
-  const { data: user, isLoading, error } = useCurrentUser();
+  const { user, isLoading, error } = useTenantAndUserAccessContext();
 
   // If loading or error, don't show menu
   if (isLoading || error) {
@@ -52,23 +53,22 @@ export function PermissionDropdownMenu({
     return null;
   }
 
-  // Check if user has system role
-  const hasSystemRole = (user.roles ?? []).some(
-    (userRole) => userRole.role?.domain === RoleDomain.SYSTEM
-  );
+  // Check if user has system domain
+  const hasSystemDomain =
+    user.userDomains?.includes(UserDomain.SYSTEM) ?? false;
 
   // Filter actions based on permissions
   const visibleActions = actions.filter((action) => {
     // If no permission required, show the action
     if (!action.permission) return true;
 
-    // If user has system role and we allow system roles, show the action
-    if (allowSystemRole && hasSystemRole) return true;
+    // System domain users always have access
+    if (hasSystemDomain) return true;
 
-    // Check specific permission
-    return (user.roles ?? []).some((userRole) =>
-      userRole.role?.permissions.includes(action.permission as Permission)
-    );
+    // Check specific permission in user's role
+    const hasPermission =
+      user.role?.permissions.includes(action.permission) ?? false;
+    return hasPermission;
   });
 
   // If no visible actions, don't show menu

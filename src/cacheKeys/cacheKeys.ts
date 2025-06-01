@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 export const queryKeys = {
   user: {
     all: ["user"] as const,
@@ -27,27 +25,38 @@ export const queryKeys = {
       [...queryKeys.team.all, tenantId] as const,
     detail: (tenantId: string | undefined, teamId: string | undefined) =>
       ["team", "detail", tenantId, teamId] as const,
-    players: (tenantId: string | undefined, teamId: number | undefined) =>
-      [...queryKeys.team.all, "players", tenantId, teamId] as const,
+    members: (tenantId: string | undefined, teamId: number | undefined) =>
+      [...queryKeys.team.all, "members", tenantId, teamId] as const,
     byOpponent: (
       tenantId: string | undefined,
       opponentId: number | undefined
     ) => [...queryKeys.team.all, "byOpponent", tenantId, opponentId] as const,
   },
-  player: {
-    all: ["player"] as const,
-    detail: (tenantId: string | undefined, playerId: string | undefined) =>
-      ["player", "detail", tenantId, playerId] as const,
+  member: {
+    all: ["member"] as const,
+    list: (tenantId: string | undefined) =>
+      ["member", "list", tenantId] as const,
+    detail: (tenantId: string | undefined, memberId: string | undefined) =>
+      ["member", "detail", tenantId, memberId] as const,
+    byType: (tenantId: string | undefined, memberType: string | undefined) =>
+      ["member", "byType", tenantId, memberType] as const,
+    byGroup: (tenantId: string | undefined, groupId: number | undefined) =>
+      ["member", "byGroup", tenantId, groupId] as const,
+    familyConnections: (tenantId: string | undefined) =>
+      ["member", "familyConnections", tenantId] as const,
+    parentPerformers: (
+      tenantId: string | undefined,
+      parentId: number | undefined
+    ) => ["member", "parentPerformers", tenantId, parentId] as const,
+    performerParents: (
+      tenantId: string | undefined,
+      performerId: number | undefined
+    ) => ["member", "performerParents", tenantId, performerId] as const,
   },
-  playerTeam: {
-    all: ["playerTeam"] as const,
+  memberTeam: {
+    all: ["memberTeam"] as const,
     detail: (tenantId: string | undefined, connectionId: string | undefined) =>
-      [...queryKeys.playerTeam.all, tenantId, connectionId] as const,
-  },
-  playerMembership: {
-    all: ["playerMembership"] as const,
-    detail: (tenantId: string | undefined, membershipId: string | undefined) =>
-      [...queryKeys.playerMembership.all, tenantId, membershipId] as const,
+      [...queryKeys.memberTeam.all, tenantId, connectionId] as const,
   },
   seasonMembershipPrice: {
     all: ["seasonMembershipPrice"] as const,
@@ -98,21 +107,7 @@ export const queryKeys = {
         connectionId,
       ] as const,
   },
-  playerFeeCategory: {
-    all: ["playerFeeCategory"] as const,
-    detail: (
-      tenantId: string | undefined,
-      playerFeeCategoryId: string | undefined
-    ) =>
-      [
-        ...queryKeys.playerFeeCategory.all,
-        tenantId,
-        playerFeeCategoryId,
-      ] as const,
-  },
-  coach: {
-    all: "coaches",
-  },
+
   users: {
     all: "users",
   },
@@ -162,5 +157,14 @@ export const queryKeys = {
       ["gameCalendarEvents", tenantId, month, seasonId] as const,
     allCalendarEvents: (tenantId?: string) =>
       ["gameCalendarEvents", tenantId] as const,
+  },
+  customField: {
+    all: ["customField"] as const,
+    byTenantAndEntity: (
+      tenantId: string | undefined,
+      entityType: string | undefined
+    ) => ["customField", "byTenantAndEntity", tenantId, entityType] as const,
+    detail: (tenantId: string | undefined, fieldId: number | undefined) =>
+      ["customField", "detail", tenantId, fieldId] as const,
   },
 } as const;

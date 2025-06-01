@@ -1,21 +1,6 @@
 "use client";
 
-import React from "react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { cn } from "@/libs/tailwind/utils";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  UserRound,
-  Settings,
-  Bell,
-  HelpCircle,
-  X,
-  Menu as MenuIcon,
-  LogOut,
-  Globe,
-  LayoutDashboard,
-} from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import {
@@ -26,9 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useState } from "react";
-import { useCurrentUser } from "@/entities/user/User.query";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Tooltip,
   TooltipContent,
@@ -36,7 +19,23 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useLogOut } from "@/entities/user/User.actions.client";
+import { useCurrentUser } from "@/entities/user/User.query";
+import { cn } from "@/libs/tailwind/utils";
 import { useQueryClient } from "@tanstack/react-query";
+import {
+  Bell,
+  Globe,
+  HelpCircle,
+  LayoutDashboard,
+  LogOut,
+  Menu as MenuIcon,
+  Settings,
+  UserRound,
+  X,
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import React, { useState } from "react";
 
 const iconMap = {
   UserRound,
@@ -315,7 +314,7 @@ export default function AuthDashboard({ items, children }: AuthDashboardProps) {
                               >
                                 {getIcon(item.iconName)}
                                 {!isCollapsed && (
-                                  <span className="text-sm font-medium truncate">
+                                  <span className="text-sm font-medium capitalize">
                                     {item.name}
                                   </span>
                                 )}
@@ -328,7 +327,9 @@ export default function AuthDashboard({ items, children }: AuthDashboardProps) {
                           {isCollapsed && (
                             <TooltipContent side="right" sideOffset={10}>
                               <div className="flex flex-col gap-1">
-                                <span className="font-medium">{item.name}</span>
+                                <span className="font-medium capitalize">
+                                  {item.name}
+                                </span>
                                 {item.description && (
                                   <span className="text-xs text-muted-foreground">
                                     {item.description}
@@ -439,7 +440,7 @@ export default function AuthDashboard({ items, children }: AuthDashboardProps) {
                           >
                             <div className="flex items-center gap-x-3">
                               {getIcon(item.iconName)}
-                              <span>{item.name}</span>
+                              <span className="capitalize">{item.name}</span>
                             </div>
                             {pathname === item.href && (
                               <div className="h-1 w-1 rounded-full bg-primary" />

@@ -6,7 +6,7 @@ import {
   useAttendanceSessionById,
   useAttendanceRecords,
 } from "@/entities/attendance/Attendance.query";
-import { usePlayersByTeamId } from "@/entities/team/Team.query";
+import { usePlayersByTeamId } from "@/entities/group/Group.query";
 import { Loader2, Delete, ArrowLeft, Key } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,9 +21,9 @@ import { cn } from "@/libs/tailwind/utils";
 import {
   usePlayers,
   useUpdatePlayerPin,
-} from "@/entities/player/Player.actions.client";
+} from "@/entities/member/Player.actions.client";
 import { useCreateAttendanceRecord } from "@/entities/attendance/Attendance.actions.client";
-import { Player } from "@/entities/player/Player.schema";
+import { Player } from "@/entities/member/Member.schema";
 import { toast } from "sonner";
 import { calculateAttendanceStatus } from "@/entities/attendance/Attendance.services";
 

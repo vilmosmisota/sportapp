@@ -1,11 +1,11 @@
 "use client";
 
-import React from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/libs/tailwind/utils";
+import { Building2, ShieldCheck, Users2 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn } from "@/libs/tailwind/utils";
-import { Building2, Users2, ShieldCheck } from "lucide-react";
-import { PageHeader } from "@/components/ui/page-header";
+import React from "react";
 
 interface NavItem {
   name: string;
@@ -42,46 +42,50 @@ export default function SettingsLayout({
     },
   ];
 
-  // Determine the current section for the header
-  const currentSection = navItems.find(
-    (item) => pathname === item.href || pathname.startsWith(`${item.href}/`)
-  );
-
-  const pageTitle = currentSection
-    ? `${currentSection.name} Settings`
-    : "Settings";
-
-  const pageDescription = currentSection
-    ? currentSection.description
-    : "Manage your organization settings and user access";
-
   return (
-    <div className="space-y-4 md:space-y-6">
-      <PageHeader title={pageTitle} description={pageDescription} />
-
-      <div className="bg-muted/40 rounded-lg border mb-6">
-        <nav className="flex overflow-x-auto">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center px-4 py-2 text-sm font-medium border-b-2 whitespace-nowrap",
-                pathname === item.href || pathname.startsWith(`${item.href}/`)
-                  ? "border-primary text-primary"
-                  : "border-transparent hover:border-muted-foreground/25 text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <span className="flex items-center gap-2">
-                {item.icon}
-                {item.name}
-              </span>
-            </Link>
-          ))}
-        </nav>
+    <div className="flex h-[calc(100vh-6rem)] w-full overflow-hidden relative">
+      {/* Vertical Navigation Sidebar */}
+      <div className="w-64 absolute top-0 left-0 h-full overflow-y-auto">
+        <div className="py-6">
+          <nav className="space-y-1">
+            {navItems.map((item) => {
+              const isActive =
+                pathname === item.href || pathname.startsWith(`${item.href}/`);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                    isActive
+                      ? "bg-primary/10 text-primary border-l-2 border-primary"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "transition-colors duration-200",
+                      isActive
+                        ? "text-primary"
+                        : "text-muted-foreground group-hover:text-foreground"
+                    )}
+                  >
+                    {item.icon}
+                  </span>
+                  <span className="font-medium capitalize">{item.name}</span>
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
       </div>
 
-      {children}
+      {/* Main Content Area */}
+      <div className="flex-1 h-full pl-72 w-full overflow-hidden px-4">
+        <ScrollArea className="h-full w-full">
+          <div className="py-6 pr-4">{children}</div>
+        </ScrollArea>
+      </div>
     </div>
   );
 }

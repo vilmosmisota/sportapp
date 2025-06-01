@@ -1,7 +1,8 @@
+import { Permission } from "@/entities/role/Role.permissions";
+import { UserDomain } from "@/entities/user/User.schema";
 import { useRouter } from "next/navigation";
 import { ReactNode } from "react";
-import { Permission, RoleDomain } from "@/entities/role/Role.permissions";
-import { useCurrentUser } from "@/entities/user/User.query";
+import { useTenantAndUserAccessContext } from "./TenantAndUserAccessContext";
 
 interface RequirePermissionProps {
   children: ReactNode;
@@ -14,10 +15,10 @@ export function RequirePermission({
   children,
   permissions = [],
   redirectTo = "/",
-  allowSystemRole = false,
+  allowSystemRole = true,
 }: RequirePermissionProps) {
   const router = useRouter();
-  const { data: user, isLoading } = useCurrentUser();
+  const { user, isLoading } = useTenantAndUserAccessContext();
 
   if (isLoading) {
     return null; // or a loading spinner
@@ -28,23 +29,21 @@ export function RequirePermission({
     return null;
   }
 
-  // Check if user has system role
-  const hasSystemRole = (user.roles || []).some(
-    (userRole) => userRole.role?.domain === RoleDomain.SYSTEM
-  );
+  // Check if user has system domain - system users have access to everything
+  const hasSystemDomain =
+    user.userDomains?.includes(UserDomain.SYSTEM) ?? false;
 
-  if (allowSystemRole && hasSystemRole) {
+  if (allowSystemRole && hasSystemDomain) {
     return <>{children}</>;
   }
 
   // Check if user has any of the required permissions
   const hasPermission =
     permissions.length === 0 ||
-    (user.roles || []).some((userRole) =>
-      userRole.role?.permissions.some((permission) =>
-        permissions.includes(permission)
-      )
-    );
+    (user.role?.permissions.some((permission) =>
+      permissions.includes(permission as Permission)
+    ) ??
+      false);
 
   if (!hasPermission) {
     router.push(redirectTo);

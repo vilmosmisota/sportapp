@@ -1,12 +1,12 @@
 "use client";
 
-import * as React from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
+import * as React from "react";
 
 import { Button } from "@/components/ui/button";
 
 import { cn } from "@/libs/tailwind/utils";
-import { Popover, PopoverContent, PopoverTrigger } from "./popover";
+import { CommandList } from "cmdk";
 import {
   Command,
   CommandEmpty,
@@ -14,7 +14,7 @@ import {
   CommandInput,
   CommandItem,
 } from "./command";
-import { CommandList } from "cmdk";
+import { Popover, PopoverContent, PopoverTrigger } from "./popover";
 
 export type ComboboxProps = {
   label: string;
@@ -24,9 +24,18 @@ export type ComboboxProps = {
   }[];
   onSelect: (id: string) => void;
   width?: string;
+  placeholder?: string;
+  emptyMessage?: string;
 };
 
-export function Combobox({ list, onSelect, label, width }: ComboboxProps) {
+export function Combobox({
+  list,
+  onSelect,
+  label,
+  width,
+  placeholder = "Search...",
+  emptyMessage = "No items found.",
+}: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [value, setValue] = React.useState("");
 
@@ -45,19 +54,19 @@ export function Combobox({ list, onSelect, label, width }: ComboboxProps) {
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[200px] p-0">
+      <PopoverContent className={`${width ? width : "w-[200px]"} p-0`}>
         <Command>
-          {/* <CommandInput placeholder="Search framework..." /> */}
-          {/* <CommandEmpty>No framework found.</CommandEmpty> */}
-          <CommandGroup>
-            <CommandList>
+          <CommandInput placeholder={placeholder} className="h-9" />
+          <CommandList>
+            <CommandEmpty>{emptyMessage}</CommandEmpty>
+            <CommandGroup>
               {list.map((listItem) => (
                 <CommandItem
                   key={listItem.value}
                   value={listItem.value}
                   onSelect={(currentValue) => {
                     setValue(currentValue === value ? "" : currentValue);
-                    onSelect(currentValue);
+                    onSelect(currentValue === value ? "" : currentValue);
                     setOpen(false);
                   }}
                 >
@@ -70,8 +79,8 @@ export function Combobox({ list, onSelect, label, width }: ComboboxProps) {
                   {listItem.label}
                 </CommandItem>
               ))}
-            </CommandList>
-          </CommandGroup>
+            </CommandGroup>
+          </CommandList>
         </Command>
       </PopoverContent>
     </Popover>

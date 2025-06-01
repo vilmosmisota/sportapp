@@ -1,6 +1,5 @@
 import { Loader2 } from "lucide-react";
 import { Button } from "./button";
-import { cn } from "@/libs/tailwind/utils";
 
 type FormButtonsProps = {
   buttonText: string;
@@ -20,8 +19,12 @@ export default function FormButtons({
   className,
 }: FormButtonsProps) {
   return (
-    <div className={cn("flex gap-2 w-fit bg-inherit", className)}>
-      <Button type="submit" className="min-w-[100px]" disabled={isLoading}>
+    <div className="bg-white sticky h-[100px] flex gap-3 items-center justify-end bottom-0 left-0 right-0 border-t">
+      <Button
+        type="submit"
+        className="min-w-[100px]"
+        disabled={!isDirty || isLoading}
+      >
         {isLoading ? (
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         ) : (

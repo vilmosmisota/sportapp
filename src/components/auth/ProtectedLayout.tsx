@@ -31,14 +31,10 @@ export default function ProtectedLayout({
   const accessData = useTenantAndUserAccess(domain);
   const { isLoading, error, hasAccess, user, tenant } = accessData;
 
-  // Show loading state while checking access
   if (isLoading) return <>{fallback}</>;
 
-  // Show error state if there's an error
   if (error) return <>{errorComponent(error)}</>;
 
-  // Don't render children if there's no access
-  // The hook will handle redirection with the appropriate reason
   if (!hasAccess || !user || !tenant) {
     return <>{fallback}</>;
   }

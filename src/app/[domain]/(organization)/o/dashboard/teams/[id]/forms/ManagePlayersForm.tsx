@@ -7,10 +7,10 @@ import { z } from "zod";
 import { Form } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users } from "lucide-react";
-import { Team } from "@/entities/team/Team.schema";
-import { Player, PlayerGender } from "@/entities/player/Player.schema";
-import { usePlayers } from "@/entities/player/Player.actions.client";
-import { useAddPlayerToTeam } from "@/entities/player/PlayerTeam.actions.client";
+import { Team } from "@/entities/group/Group.schema";
+import { Player, PlayerGender } from "@/entities/member/Member.schema";
+import { usePlayers } from "@/entities/member/Player.actions.client";
+import { useAddPlayerToTeam } from "@/entities/member/PlayerTeam.actions.client";
 
 import { differenceInYears, parseISO } from "date-fns";
 import FormButtons from "@/components/ui/form-buttons";

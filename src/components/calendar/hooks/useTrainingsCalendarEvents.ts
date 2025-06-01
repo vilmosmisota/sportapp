@@ -7,9 +7,9 @@ import { useSupabase } from "@/libs/supabase/useSupabase";
 import {
   getDisplayAgeGroup,
   getDisplayGender,
-} from "@/entities/team/Team.schema";
+} from "@/entities/group/Group.schema";
 import { queryKeys } from "@/cacheKeys/cacheKeys";
-import { Meta } from "@/entities/common/Meta.schema";
+import { Meta } from "@/entities/shared/Meta.schema";
 
 // No need for a separate interface as Training already has meta
 // We'll use the standard Training type which already includes meta

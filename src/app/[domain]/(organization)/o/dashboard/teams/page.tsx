@@ -1,6 +1,6 @@
 "use client";
 
-import { useGetTeamsByTenantId } from "@/entities/team/Team.query";
+import { useGetTeamsByTenantId } from "@/entities/group/Group.query";
 import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 import { Plus } from "lucide-react";
 import { useState } from "react";

@@ -1,16 +1,15 @@
 "use client";
 
+import { PermissionButton } from "@/components/auth/PermissionButton";
+import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
+import { Permission } from "@/entities/role/Role.permissions";
 import { useRolesByTenant } from "@/entities/role/Role.query";
-import { RoleDomain, Permission } from "@/entities/role/Role.permissions";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RoleList } from "./components/RoleList";
 import { Plus } from "lucide-react";
 import { useState } from "react";
-import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
-import { RoleForm } from "./components/RoleForm";
-import { PermissionButton } from "@/components/auth/PermissionButton";
 import { useTenantAndUserAccessContext } from "../../../../../../../components/auth/TenantAndUserAccessContext";
+import { PageHeader } from "../../../../../../../components/ui/page-header";
+import { RoleForm } from "./components/RoleForm";
+import { RoleList } from "./components/RoleList";
 
 export default function RolesPage() {
   return <RolesPageContent />;
@@ -21,15 +20,8 @@ function RolesPageContent() {
   const { tenant } = useTenantAndUserAccessContext();
 
   const { data: roles, isLoading: isLoadingRoles } = useRolesByTenant(
-    tenant?.id
+    tenant?.id!
   );
-
-  const managementRoles =
-    roles?.filter((role) => role.domain === RoleDomain.MANAGEMENT) || [];
-  const familyRoles =
-    roles?.filter((role) => role.domain === RoleDomain.FAMILY) || [];
-  const playerRoles =
-    roles?.filter((role) => role.domain === RoleDomain.PLAYER) || [];
 
   if (isLoadingRoles) {
     return null;
@@ -40,113 +32,30 @@ function RolesPageContent() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-end mb-4">
-        <PermissionButton
-          permission={Permission.MANAGE_USERS}
-          allowSystemRole={true}
-          onClick={() => setIsOpen(true)}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Add Role
-        </PermissionButton>
+    <div className="w-full">
+      <PageHeader
+        title="Roles"
+        description="Manage roles and permissions for your organization"
+        actions={
+          <PermissionButton
+            permission={Permission.MANAGE_SETTINGS_ROLES}
+            allowSystemRole={true}
+            onClick={() => setIsOpen(true)}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add Role
+          </PermissionButton>
+        }
+      />
+      <div className="px-0">
+        <div className="mt-4 md:px-0">
+          <RoleList
+            roles={roles || []}
+            isLoading={isLoadingRoles}
+            tenantId={tenant.id}
+          />
+        </div>
       </div>
-
-      <Tabs defaultValue="management" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="management">Management Roles</TabsTrigger>
-          <TabsTrigger value="family">Family Roles</TabsTrigger>
-          <TabsTrigger value="player">Player Roles</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="management" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Management Roles</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <RoleList
-                roles={managementRoles}
-                isLoading={isLoadingRoles}
-                domain={RoleDomain.MANAGEMENT}
-                tenantId={tenant.id}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="family" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Family Roles</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="rounded-lg border border-dashed p-4 mb-6">
-                <div className="space-y-2">
-                  <h4 className="font-medium">Family Dashboard Access</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Family roles grant access to the family dashboard. These are
-                    preset roles and cannot be edited. Users with these roles
-                    can:
-                  </p>
-                  <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
-                    <li>View their children&apos;s profiles and information</li>
-                    <li>Access training schedules and attendance records</li>
-                    <li>Submit forms and manage attendance</li>
-                    <li>Receive notifications and updates</li>
-                  </ul>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    No additional permissions are needed as all features are
-                    automatically available in the family dashboard.
-                  </p>
-                </div>
-              </div>
-              <RoleList
-                roles={familyRoles}
-                isLoading={isLoadingRoles}
-                domain={RoleDomain.FAMILY}
-                tenantId={tenant.id}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="player" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Player Roles</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="rounded-lg border border-dashed p-4 mb-6">
-                <div className="space-y-2">
-                  <h4 className="font-medium">Player Dashboard Access</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Player roles grant access to the player dashboard. These are
-                    preset roles and cannot be edited. Users with these roles
-                    can:
-                  </p>
-                  <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
-                    <li>View their own profile and information</li>
-                    <li>Access training schedules and attendance records</li>
-                    <li>View team information and updates</li>
-                    <li>Receive notifications and updates</li>
-                  </ul>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    No additional permissions are needed as all features are
-                    automatically available in the player dashboard.
-                  </p>
-                </div>
-              </div>
-              <RoleList
-                roles={playerRoles}
-                isLoading={isLoadingRoles}
-                domain={RoleDomain.PLAYER}
-                tenantId={tenant.id}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
 
       <ResponsiveSheet
         isOpen={isOpen}

@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
   Table,
   TableBody,
@@ -13,13 +14,14 @@ import {
   type Table as TableType,
   flexRender,
 } from "@tanstack/react-table";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { cn } from "../../../lib/utils";
 
 interface DataTableProps<TData> {
   table: TableType<TData>;
   columns: ColumnDef<TData>[];
   data: TData[];
   rowClassName?: string;
+  containerWidth?: string;
 }
 
 export function DataTable<TData>({
@@ -27,9 +29,10 @@ export function DataTable<TData>({
   columns,
   data,
   rowClassName,
+  containerWidth = "md:w-full",
 }: DataTableProps<TData>) {
   return (
-    <div className="w-[calc(100vw-2rem)] md:w-full">
+    <div className={cn("w-[calc(100vw-2rem)]", containerWidth)}>
       <ScrollArea className="rounded-md border">
         <div className="relative">
           <Table className="bg-white">

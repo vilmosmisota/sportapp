@@ -60,15 +60,15 @@ import {
   getCompetitionColor,
   getCompetitionName,
 } from "@/entities/game/Game.schema";
-import { Team } from "@/entities/team/Team.schema";
+import { Team } from "@/entities/group/Group.schema";
 import { Season } from "@/entities/season/Season.schema";
 import { Tenant, CompetitionType } from "@/entities/tenant/Tenant.schema";
-import { LocationSchema } from "@/entities/common/Location.schema";
+import { LocationSchema } from "@/entities/shared/Location.schema";
 import { Opponent } from "@/entities/opponent/Opponent.schema";
 
 // Queries & Actions
 import { useCreateGame } from "@/entities/game/Game.actions.client";
-import { useGetTeamsByTenantId } from "@/entities/team/Team.query";
+import { useGetTeamsByTenantId } from "@/entities/group/Group.query";
 import { useOpponents } from "@/entities/opponent/Opponent.query";
 
 // Location type

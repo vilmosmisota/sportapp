@@ -3,7 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 import { useAttendanceSessionById } from "@/entities/attendance/Attendance.query";
-import { usePlayersByTeamId } from "@/entities/team/Team.query";
+import { usePlayersByTeamId } from "@/entities/group/Group.query";
 import {
   Loader2,
   ArrowLeft,
@@ -21,13 +21,13 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Player } from "@/entities/player/Player.schema";
-import { useUpdatePlayerPin } from "@/entities/player/Player.actions.client";
+import { Player } from "@/entities/member/Member.schema";
+import { useUpdatePlayerPin } from "@/entities/member/Player.actions.client";
 import { toast } from "sonner";
-import { PlayerGender } from "@/entities/player/Player.schema";
+import { PlayerGender } from "@/entities/member/Member.schema";
 import { cn } from "@/libs/tailwind/utils";
 import { useQueryClient } from "@tanstack/react-query";
-import { usePlayers } from "@/entities/player/Player.actions.client";
+import { usePlayers } from "@/entities/member/Player.actions.client";
 
 import { BackConfirmationDialog } from "../../components/BackConfirmationDialog";
 

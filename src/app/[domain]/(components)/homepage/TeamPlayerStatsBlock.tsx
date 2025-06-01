@@ -1,8 +1,8 @@
 import { Card, CardContent } from "../../../../components/ui/card";
 import { Skeleton } from "../../../../components/ui/skeleton";
 import { Users, UsersRound } from "lucide-react";
-import { useGetTeamsByTenantId } from "@/entities/team/Team.query";
-import { usePlayers } from "@/entities/player/Player.actions.client";
+import { useGetTeamsByTenantId } from "@/entities/group/Group.query";
+import { usePlayers } from "@/entities/member/Player.actions.client";
 
 interface TeamPlayerStatsBlockProps {
   tenantId: string;

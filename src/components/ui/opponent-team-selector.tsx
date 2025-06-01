@@ -16,12 +16,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Opponent } from "@/entities/opponent/Opponent.schema";
-import { Team } from "@/entities/team/Team.schema";
+import { Team } from "@/entities/group/Group.schema";
 import { Control, ControllerRenderProps, FieldValues } from "react-hook-form";
 import {
   getDisplayGender,
   getDisplayAgeGroup,
-} from "@/entities/team/Team.schema";
+} from "@/entities/group/Group.schema";
 import { Badge } from "@/components/ui/badge";
 
 interface OpponentTeamSelectorProps {

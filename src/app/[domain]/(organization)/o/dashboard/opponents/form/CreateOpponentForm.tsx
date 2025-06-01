@@ -35,7 +35,7 @@ import {
   TeamGender,
   isTenantTeam,
   Team,
-} from "@/entities/team/Team.schema";
+} from "@/entities/group/Group.schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -48,7 +48,7 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { useGetTeamsByTenantId } from "@/entities/team/Team.query";
+import { useGetTeamsByTenantId } from "@/entities/group/Group.query";
 import { useMemo } from "react";
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";

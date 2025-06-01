@@ -1,6 +1,6 @@
 "use client";
 
-import { useGetTeamsByTenantId } from "@/entities/team/Team.query";
+import { useGetTeamsByTenantId } from "@/entities/group/Group.query";
 import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   getDisplayGender,
   getDisplayAgeGroup,
-} from "@/entities/team/Team.schema";
+} from "@/entities/group/Group.schema";
 import { Separator } from "@/components/ui/separator";
 import { playerColumns, TeamPlayer } from "./columns";
 import { DataTable } from "@/components/ui/data-table/DataTable";
@@ -44,14 +44,14 @@ import { PageHeader } from "@/components/ui/page-header";
 import { useState, useMemo, useCallback, useEffect } from "react";
 import TeamTrainings from "./components/TeamTrainings";
 import { toast } from "sonner";
-import { useRemovePlayerFromTeam } from "@/entities/player/PlayerTeam.actions.client";
+import { useRemovePlayerFromTeam } from "@/entities/member/PlayerTeam.actions.client";
 import ManagePlayersForm from "./forms/ManagePlayersForm";
 import { Permission } from "@/entities/role/Role.permissions";
 import { PermissionButton } from "@/components/auth/PermissionButton";
 import { PermissionDropdownMenu } from "@/components/auth/PermissionDropdownMenu";
 import EditTeamForm from "../forms/EditTeamForm";
 import { useRouter } from "next/navigation";
-import { useDeleteTeam } from "@/entities/team/Team.actions.client";
+import { useDeleteTeam } from "@/entities/group/Group.actions.client";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
 import { useTenantAndUserAccessContext } from "../../../../../../../components/auth/TenantAndUserAccessContext";
 

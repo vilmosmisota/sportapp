@@ -1,16 +1,15 @@
 "use client";
 
+import { PermissionButton } from "@/components/auth/PermissionButton";
+import { useTenantAndUserAccessContext } from "@/components/auth/TenantAndUserAccessContext";
+import { PageHeader } from "@/components/ui/page-header";
+import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
+import { Permission } from "@/entities/role/Role.permissions";
+import { useSeasons } from "@/entities/season/Season.actions.client";
 import { Plus } from "lucide-react";
 import { useState } from "react";
-import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
-import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
-import { useSeasons } from "@/entities/season/Season.actions.client";
-import { PageHeader } from "@/components/ui/page-header";
 import { AddSeasonForm } from "./forms/AddSeasonForm";
 import { SeasonItem } from "./items/SeasonItem";
-import { PermissionButton } from "@/components/auth/PermissionButton";
-import { Permission } from "@/entities/role/Role.permissions";
-import { useTenantAndUserAccessContext } from "@/components/auth/TenantAndUserAccessContext";
 
 export default function SeasonsPage() {
   const { tenant } = useTenantAndUserAccessContext();

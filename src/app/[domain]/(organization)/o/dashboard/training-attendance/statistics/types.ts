@@ -1,5 +1,5 @@
 import { LucideIcon } from "lucide-react";
-import { Team } from "@/entities/team/Team.schema";
+import { Team } from "@/entities/group/Group.schema";
 import {
   RecentTrend,
   DayOfWeekStats,

@@ -11,10 +11,10 @@ import {
   SortingState,
   VisibilityState,
 } from "@tanstack/react-table";
-import { Team } from "@/entities/team/Team.schema";
+import { Team } from "@/entities/group/Group.schema";
 import { columns } from "./columns";
 import { DataTable } from "@/components/ui/data-table/DataTable";
-import { useDeleteTeam } from "@/entities/team/Team.actions.client";
+import { useDeleteTeam } from "@/entities/group/Group.actions.client";
 import { toast } from "sonner";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import EditTeamForm from "../forms/EditTeamForm";

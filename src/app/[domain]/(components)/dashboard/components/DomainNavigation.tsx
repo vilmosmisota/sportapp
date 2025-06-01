@@ -1,20 +1,20 @@
-import React, { useState } from "react";
+import { CheckCircle2, ChevronDown } from "lucide-react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCurrentUser } from "../../../../../entities/user/User.query";
-import { RoleDomain } from "../../../../../entities/role/Role.permissions";
+import { useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuGroup,
 } from "../../../../../components/ui/dropdown-menu";
-import { ChevronDown, CheckCircle2 } from "lucide-react";
-import Link from "next/link";
-import { cn } from "../../../../../lib/utils";
 import { Skeleton } from "../../../../../components/ui/skeleton";
+import { useCurrentUser } from "../../../../../entities/user/User.query";
+import { UserDomain } from "../../../../../entities/user/User.schema";
+import { cn } from "../../../../../lib/utils";
 
 interface DomainNavigationProps {
   currentDomain: string;
@@ -22,18 +22,18 @@ interface DomainNavigationProps {
   isLoading?: boolean;
 }
 
-const domainLabels: Record<RoleDomain, string> = {
-  [RoleDomain.MANAGEMENT]: "Management",
-  [RoleDomain.FAMILY]: "Family",
-  [RoleDomain.PLAYER]: "Player",
-  [RoleDomain.SYSTEM]: "System",
+const domainLabels: Record<UserDomain, string> = {
+  [UserDomain.MANAGEMENT]: "Management",
+  [UserDomain.PARENT]: "Parent",
+  [UserDomain.PERFORMER]: "Performer",
+  [UserDomain.SYSTEM]: "System",
 };
 
-const domainRoutes: Record<RoleDomain, string> = {
-  [RoleDomain.MANAGEMENT]: "/o/dashboard",
-  [RoleDomain.FAMILY]: "/f/dashboard",
-  [RoleDomain.PLAYER]: "/p/dashboard",
-  [RoleDomain.SYSTEM]: "/o/dashboard", // System roles default to organization dashboard
+const domainRoutes: Record<UserDomain, string> = {
+  [UserDomain.MANAGEMENT]: "/o/dashboard",
+  [UserDomain.PARENT]: "/f/dashboard",
+  [UserDomain.PERFORMER]: "/p/dashboard",
+  [UserDomain.SYSTEM]: "/o/dashboard", // System roles default to organization dashboard
 };
 
 function DomainNavSkeleton() {
@@ -63,50 +63,37 @@ export function DomainNavigation({
   if (!user) return null;
 
   // Check if user has system role
-  const hasSystemRole = user.roles?.some(
-    (role) => role.role?.domain === RoleDomain.SYSTEM
-  );
+  const hasSystemRole = user.userDomains?.includes(UserDomain.SYSTEM);
 
   // Get all available domains for the current tenant
-  const currentTenantRoles = user.roles?.filter(
-    (role) => role.tenantId === tenantId
+  const currentTenantUser = user.tenantUsers?.find(
+    (tenantUser) => tenantUser.tenantId === tenantId
   );
-
-  // Get unique domains (excluding SYSTEM as it's handled separately)
-  const availableDomains = Array.from(
-    new Set(
-      currentTenantRoles
-        ?.map((role) => role.role?.domain)
-        .filter(
-          (domain): domain is RoleDomain =>
-            !!domain && domain !== RoleDomain.SYSTEM
-        )
-    )
-  );
-
-  // Get primary role for current tenant
-  const primaryRole = currentTenantRoles?.find((role) => role.isPrimary);
-  const currentDomain_ = primaryRole?.role?.domain || RoleDomain.MANAGEMENT;
 
   // Get current route type
-  const getCurrentDomainFromPath = () => {
-    if (pathname.startsWith("/o/")) return RoleDomain.MANAGEMENT;
-    if (pathname.startsWith("/f/")) return RoleDomain.FAMILY;
-    if (pathname.startsWith("/p/")) return RoleDomain.PLAYER;
-    return currentDomain_;
+  const getCurrentDomainFromPath = (): UserDomain => {
+    if (pathname.startsWith("/o/")) return UserDomain.MANAGEMENT;
+    if (pathname.startsWith("/f/")) return UserDomain.PARENT;
+    if (pathname.startsWith("/p/")) return UserDomain.PERFORMER;
+    return UserDomain.MANAGEMENT;
   };
 
   const activeDomain = getCurrentDomainFromPath();
 
+  // Get available domains from user's domains
+  const availableDomains = user.userDomains.filter(
+    (domain) => domain !== UserDomain.SYSTEM
+  );
+
   // Determine which domains to show
   const domainOptions = hasSystemRole
-    ? Object.values(RoleDomain).filter((domain) => domain !== RoleDomain.SYSTEM)
+    ? Object.values(UserDomain).filter((domain) => domain !== UserDomain.SYSTEM)
     : availableDomains;
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center justify-between  w-full  hover:bg-accent/30 py-1.5 px-2 rounded-md transition-colors text-center">
+        <button className="flex items-center justify-between w-full hover:bg-accent/30 py-1.5 px-2 rounded-md transition-colors text-center">
           <div className="flex items-center justify-between w-full">
             <span className="text-sm font-medium">
               {domainLabels[activeDomain]}

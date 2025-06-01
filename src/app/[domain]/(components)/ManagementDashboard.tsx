@@ -1,22 +1,22 @@
 "use client";
 
-import React, { useState } from "react";
 import { Menu, PanelLeft } from "lucide-react";
 import { useParams, usePathname } from "next/navigation";
+import React, { useState } from "react";
 import { Button } from "../../../components/ui/button";
-import { Sidebar } from "./dashboard/Sidebar";
 import { MobileNavigation } from "./dashboard/MobileNavigation";
-import { getIcon } from "./dashboard/constants";
-import { useTenantConfig } from "./dashboard/hooks/useTenantConfig";
-import { useNavigation } from "./dashboard/hooks/useNavigation";
-import DashboardTopRightNav from "./dashboard/components/DashboardTopRightNav";
+import { Sidebar } from "./dashboard/Sidebar";
 import { DashboardMainFrame } from "./dashboard/components/DashboardMainFrame";
+import DashboardTopRightNav from "./dashboard/components/DashboardTopRightNav";
+import { getIcon } from "./dashboard/constants";
+import { useNavigation } from "./dashboard/hooks/useNavigation";
 
 import { cn } from "../../../lib/utils";
 
-import { PinnedNav } from "./dashboard/components/PinnedNav";
 import { useUIState } from "../../../browserStorage/localStorage/ui-storage";
+import { useTenantAndUserAccessContext } from "../../../components/auth/TenantAndUserAccessContext";
 import { useMediaQuery } from "../../../utils/hooks";
+import { PinnedNav } from "./dashboard/components/PinnedNav";
 
 /**
  * ManagementDashboard - Main layout component for the organization dashboard
@@ -26,6 +26,9 @@ export default function ManagementDashboard({
 }: {
   children: React.ReactNode;
 }) {
+  const { tenant, isLoading: isTenantLoading } =
+    useTenantAndUserAccessContext();
+
   // UI state
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useUIState({
@@ -42,33 +45,16 @@ export default function ManagementDashboard({
   const params = useParams();
   const domain = params.domain as string;
 
-  // Custom hooks
-  const {
-    tenant,
-    isTenantLoading,
-    teamManagementConfigComplete,
-    trainingLocationsConfigured,
-    gameLocationsConfigured,
-  } = useTenantConfig(domain);
+  const { navItems } = useNavigation(true, true, true, tenant || undefined);
 
-  const { navItems } = useNavigation(
-    teamManagementConfigComplete,
-    trainingLocationsConfigured,
-    gameLocationsConfigured
-  );
-
-  // Handle sidebar toggle based on screen size
   const handleToggleSidebar = () => {
-    // On mobile, we want to open the mobile navigation drawer
     if (isMobile) {
       setIsOpen(true);
     } else {
-      // On desktop, we toggle the sidebar
       setIsCollapsed(!isCollapsed);
     }
   };
 
-  // Show pinned items if on mobile or if the sidebar is collapsed on desktop
   const shouldShowPinnedNav = isMobile || isCollapsed;
 
   return (

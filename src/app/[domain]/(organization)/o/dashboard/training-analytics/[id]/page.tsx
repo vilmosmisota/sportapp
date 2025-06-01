@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 import { Calendar, Users, BarChart3, Trophy } from "lucide-react";
 
-import { useGetTeamsByTenantId } from "@/entities/team/Team.query";
+import { useGetTeamsByTenantId } from "@/entities/group/Group.query";
 import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 import { useSeasonsByTenantId } from "@/entities/season/Season.query";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
@@ -26,7 +26,7 @@ import {
   PlayerTeamConnectionSchema,
   getDisplayAgeGroup,
   getDisplayGender,
-} from "@/entities/team/Team.schema";
+} from "@/entities/group/Group.schema";
 import {
   calculateAttendanceRate,
   calculateAccuracyRate,

@@ -18,7 +18,7 @@ import Link from "next/link";
 import {
   getDisplayAgeGroup,
   getDisplayGender,
-} from "@/entities/team/Team.schema";
+} from "@/entities/group/Group.schema";
 
 interface ActiveSessionsCarouselProps {
   trainings: Training[];

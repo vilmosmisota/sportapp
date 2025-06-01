@@ -1,12 +1,12 @@
 import { usePathname } from "next/navigation";
-import { RoleDomain } from "../../role/Role.permissions";
+import { UserDomain } from "../../user/User.schema";
 
-export default function useCurrentRoleDomain() {
+export default function useCurrentUserDomain() {
   const pathname = usePathname();
 
-  if (pathname.includes("/o/")) return RoleDomain.MANAGEMENT;
-  if (pathname.includes("/f/")) return RoleDomain.FAMILY;
-  if (pathname.includes("/p/")) return RoleDomain.PLAYER;
+  if (pathname.includes("/o/")) return UserDomain.MANAGEMENT;
+  if (pathname.includes("/f/")) return UserDomain.PARENT;
+  if (pathname.includes("/p/")) return UserDomain.PERFORMER;
 
   return null;
 }

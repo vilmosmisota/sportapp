@@ -16,7 +16,7 @@ import {
 } from "./Training.services";
 import { TrainingLocation } from "@/entities/tenant/Tenant.schema";
 import { Json } from "@/db/database.types";
-import { Meta } from "../common/Meta.schema";
+import { Meta } from "../shared/Meta.schema";
 import { format } from "date-fns";
 
 /**

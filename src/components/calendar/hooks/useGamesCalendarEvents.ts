@@ -2,15 +2,15 @@ import { useQuery } from "@tanstack/react-query";
 import { format, parse } from "date-fns";
 import { Game } from "@/entities/game/Game.schema";
 import { CalendarEvent } from "../EventCalendar";
-import { Appearance } from "@/entities/common/Appearance.schema";
+import { Appearance } from "@/entities/shared/Appearance.schema";
 import {
   getDisplayAgeGroup,
   getDisplayGender,
-} from "@/entities/team/Team.schema";
+} from "@/entities/group/Group.schema";
 import { useSupabase } from "@/libs/supabase/useSupabase";
 import { getGamesWithDetailsByDateRange } from "@/entities/game/Game.services";
 import { queryKeys } from "@/cacheKeys/cacheKeys";
-import { Meta } from "@/entities/common/Meta.schema";
+import { Meta } from "@/entities/shared/Meta.schema";
 
 // Extended Game type to include the properties from our SQL view
 export interface GameWithViewDetails extends Game {

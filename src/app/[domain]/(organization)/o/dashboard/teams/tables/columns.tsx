@@ -1,7 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { Team } from "@/entities/team/Team.schema";
+import { Team } from "@/entities/group/Group.schema";
 import { Eye, SquarePen, Trash2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +13,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { getDisplayAgeGroup } from "@/entities/team/Team.schema";
+import { getDisplayAgeGroup } from "@/entities/group/Group.schema";
 import { PermissionDropdownMenu } from "@/components/auth/PermissionDropdownMenu";
 import { Permission } from "@/entities/role/Role.permissions";
 import { TeamBadge } from "@/components/ui/team-badge";

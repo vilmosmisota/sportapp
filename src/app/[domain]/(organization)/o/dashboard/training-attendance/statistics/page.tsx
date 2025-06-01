@@ -1,43 +1,13 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useParams } from "next/navigation";
-import { useGetTeamsByTenantId } from "@/entities/team/Team.query";
-import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
-import { useSeasonsByTenantId } from "@/entities/season/Season.query";
+import SeasonSelect from "@/components/calendar/SeasonSelect";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BarChart3, Users, Clock, Trophy, Calendar } from "lucide-react";
-import Link from "next/link";
-import {
-  getDisplayGender,
-  getDisplayAgeGroup,
-} from "@/entities/team/Team.schema";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChartContainer } from "@/components/ui/chart";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
-import { useTeamAttendanceAggregates } from "@/entities/attendance/Attendance.actions.client";
-import { Progress } from "@/components/ui/progress";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
-import {
-  Bar,
-  BarChart,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Area,
-  Tooltip,
-  Legend,
-} from "recharts";
-import SeasonSelect from "@/components/calendar/SeasonSelect";
-import { format } from "date-fns";
+import { PageHeader } from "@/components/ui/page-header";
 import {
   Select,
   SelectContent,
@@ -45,14 +15,36 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useState } from "react";
-import { AttendanceSessionAggregate } from "@/entities/attendance/Attendance.schema";
-import { PageHeader } from "@/components/ui/page-header";
-import { Season } from "@/entities/season/Season.schema";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useTeamAttendanceAggregates } from "@/entities/attendance/Attendance.actions.client";
 import {
-  calculateAttendanceRate,
   calculateAccuracyRate,
+  calculateAttendanceRate,
 } from "@/entities/attendance/Attendance.utils";
+import { useGetTeamsByTenantId } from "@/entities/group/Group.query";
+import {
+  getDisplayAgeGroup,
+  getDisplayGender,
+} from "@/entities/group/Group.schema";
+import { useSeasonsByTenantId } from "@/entities/season/Season.query";
+import { Season } from "@/entities/season/Season.schema";
+import { format } from "date-fns";
+import { BarChart3, Calendar, Trophy, Users } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { useTenantAndUserAccessContext } from "../../../../../../../components/auth/TenantAndUserAccessContext";
 
 function StatItem({
   icon: Icon,
@@ -580,10 +572,10 @@ export default function AttendanceStatisticsPage({
 }: {
   params: { domain: string };
 }) {
+  const { tenant, isLoading: isTenantLoading } =
+    useTenantAndUserAccessContext();
+
   const [selectedTeamId, setSelectedTeamId] = useState<string>("all");
-  const { data: tenant, isLoading: isTenantLoading } = useTenantByDomain(
-    params.domain
-  );
   const { data: teams, isLoading: isTeamsLoading } = useGetTeamsByTenantId(
     tenant?.id.toString() ?? ""
   );

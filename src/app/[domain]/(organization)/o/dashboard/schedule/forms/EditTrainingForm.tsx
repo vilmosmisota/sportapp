@@ -39,7 +39,7 @@ import { Tenant } from "@/entities/tenant/Tenant.schema";
 import { Training } from "@/entities/training/Training.schema";
 import { useUpdateTraining } from "@/entities/training/Training.actions.client";
 import { useTrainingLocations } from "@/entities/tenant/hooks/useTrainingLocations";
-import { useGetTeamsByTenantId } from "@/entities/team/Team.query";
+import { useGetTeamsByTenantId } from "@/entities/group/Group.query";
 
 // Form schema
 const trainingFormSchema = z.object({

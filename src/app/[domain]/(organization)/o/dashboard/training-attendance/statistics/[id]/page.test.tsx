@@ -9,7 +9,7 @@ import "@testing-library/jest-dom";
 import TeamAttendanceStatisticsPage from "./page";
 import { useParams } from "next/navigation";
 import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
-import { useGetTeamsByTenantId } from "@/entities/team/Team.query";
+import { useGetTeamsByTenantId } from "@/entities/group/Group.query";
 import { useSeasonsByTenantId } from "@/entities/season/Season.query";
 import { useAllTeamPlayerAttendanceAggregates } from "@/entities/attendance/Attendance.actions.client";
 import {

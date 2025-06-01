@@ -1,24 +1,18 @@
+import { queryKeys } from "@/cacheKeys/cacheKeys";
 import { getBrowserClient } from "@/libs/supabase/client";
+import { useSupabase } from "@/libs/supabase/useSupabase";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { TenantType } from "../tenant/Tenant.schema";
+import { getTenantByDomain } from "../tenant/Tenant.services";
 import {
+  UserForm,
   UserLogin,
   UserLoginSchema,
-  UserForm,
   UserUpdateForm,
 } from "./User.schema";
-import { toast } from "sonner";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { getTenantInfoFromClientCookie } from "../tenant/Tenant.helpers.client";
-import { getTenantInfoByDomain } from "../tenant/Tenant.services";
-import {
-  checkTenantUserByIds,
-  createUser,
-  deleteUser,
-  updateUser,
-} from "./User.services";
-import { TenantType } from "../tenant/Tenant.schema";
-import { queryKeys } from "@/cacheKeys/cacheKeys";
-import { useSupabase } from "@/libs/supabase/useSupabase";
+import { checkTenantUserByIds } from "./User.services";
 
 export async function logIn(formData: UserLogin, domain: string) {
   const parsedData = UserLoginSchema.safeParse(formData);
@@ -29,7 +23,6 @@ export async function logIn(formData: UserLogin, domain: string) {
 
   const supabase = getBrowserClient();
 
-  // First attempt to sign in
   const { data: authData, error: authError } =
     await supabase.auth.signInWithPassword({
       email: parsedData.data.email,
@@ -44,25 +37,13 @@ export async function logIn(formData: UserLogin, domain: string) {
     throw new Error("No user found");
   }
 
-  // Then get tenant info
-  let tenantId: string;
-  let tenantType: string;
-
-  const tenantUserInfo = getTenantInfoFromClientCookie(domain);
-
-  if (!tenantUserInfo) {
-    const tenantInfo = await getTenantInfoByDomain(domain, supabase);
-    if (!tenantInfo) {
-      throw new Error("Tenant not found");
-    }
-    tenantId = tenantInfo.tenantId.toString();
-    tenantType = tenantInfo.tenantType;
-  } else {
-    tenantId = tenantUserInfo.tenantId;
-    tenantType = tenantUserInfo.tenantType;
+  const tenant = await getTenantByDomain(domain, supabase);
+  if (!tenant) {
+    throw new Error("Tenant not found");
   }
+  const tenantId = tenant.id.toString();
+  const tenantType = tenant.type;
 
-  // Verify user has access to this tenant
   const checkedTenantUser = await checkTenantUserByIds(
     supabase,
     tenantId,
@@ -70,7 +51,6 @@ export async function logIn(formData: UserLogin, domain: string) {
   );
 
   if (!checkedTenantUser) {
-    // If user doesn't have access, sign them out
     await supabase.auth.signOut();
     throw new Error("You don't have access to this tenant");
   }
@@ -89,20 +69,48 @@ export const useAddUser = (tenantId: string) => {
         body: JSON.stringify({ userData, tenantId }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message);
+        // Enhanced error handling for detailed API responses
+        if (response.status === 409 && data.details) {
+          // User already exists - show detailed info
+          const details = data.details;
+          let errorMessage = `User ${details.email} is already a member of this tenant.`;
+
+          if (details.existingMember) {
+            errorMessage += `\n\nExisting member: ${details.existingMember.name} (${details.existingMember.type})`;
+          }
+
+          errorMessage += `\n\nUser ID: ${details.userId}`;
+
+          throw new Error(errorMessage);
+        }
+
+        // Standard error handling
+        throw new Error(data.error || "Failed to add user");
       }
 
-      return response.json();
+      return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       // Invalidate multiple related queries
       queryClient.invalidateQueries({ queryKey: [queryKeys.users.all] });
       queryClient.invalidateQueries({
         queryKey: [queryKeys.user.list, tenantId],
       });
       queryClient.invalidateQueries({ queryKey: [queryKeys.user.current] });
+
+      // Invalidate member queries since we create/update members
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.member.list(tenantId),
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.member.all });
+
+      // Show appropriate success message
+      if (data.message) {
+        toast.success(data.message);
+      }
     },
   });
 };
@@ -112,26 +120,16 @@ export const useUpdateUser = (userId: string, tenantId: string) => {
   const queryKey = [queryKeys.user.list, tenantId];
 
   return useMutation({
-    mutationFn: async ({
-      userData,
-      roleIds,
-    }: {
-      userData: {
-        email: string;
-        firstName: string;
-        lastName: string;
-      };
-      roleIds?: number[];
-    }) => {
+    mutationFn: async ({ userData }: { userData: UserUpdateForm }) => {
       const response = await fetch("/api/users", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, userData, tenantId, roleIds }),
+        body: JSON.stringify({ userId, userData, tenantId }),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message);
+        throw new Error(error.error);
       }
 
       return response.json();
@@ -140,6 +138,12 @@ export const useUpdateUser = (userId: string, tenantId: string) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.user.current });
       queryClient.invalidateQueries({ queryKey });
       queryClient.invalidateQueries({ queryKey: queryKeys.role.userRoles });
+
+      // Invalidate member queries since we update members
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.member.list(tenantId),
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.member.all });
     },
   });
 };
@@ -170,6 +174,12 @@ export const useDeleteUser = (tenantId: string) => {
         queryKey: [queryKeys.user.list, tenantId],
       });
       queryClient.invalidateQueries({ queryKey: [queryKeys.user.current] });
+
+      // Invalidate member queries since we delete members
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.member.list(tenantId),
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.member.all });
     },
   });
 };

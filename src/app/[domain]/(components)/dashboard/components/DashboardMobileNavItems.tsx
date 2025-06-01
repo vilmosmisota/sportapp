@@ -1,16 +1,16 @@
-import React, { useState } from "react";
+import { Lock, Pin, PinOff } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn } from "../../../../../lib/utils";
-import { ScrollArea } from "../../../../../components/ui/scroll-area";
+import React, { useState } from "react";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "../../../../../components/ui/accordion";
+import { ScrollArea } from "../../../../../components/ui/scroll-area";
+import { cn } from "../../../../../lib/utils";
 import { NavSection } from "../constants";
-import { Pin, PinOff, Lock } from "lucide-react";
 
 interface DashboardMobileNavItemsProps {
   navItems: NavSection[];
@@ -100,7 +100,7 @@ export default function DashboardMobileNavItems({
                     >
                       <div className="flex items-center gap-x-3">
                         {getIcon(item.iconName)}
-                        <span>{item.name}</span>
+                        <span className="capitalize">{item.name}</span>
                       </div>
                       <div className="flex items-center">
                         {pathname === item.href &&
@@ -178,7 +178,7 @@ export default function DashboardMobileNavItems({
                             >
                               <div className="flex items-center gap-x-3">
                                 {getIcon(item.iconName)}
-                                <span>{item.name}</span>
+                                <span className="capitalize">{item.name}</span>
                               </div>
                               <div className="flex items-center">
                                 {pathname === item.href &&
@@ -248,7 +248,7 @@ export default function DashboardMobileNavItems({
                       >
                         <div className="flex items-center gap-x-3">
                           {getIcon(item.iconName)}
-                          <span>{item.name}</span>
+                          <span className="capitalize">{item.name}</span>
                         </div>
                         <div className="flex items-center">
                           {pathname === item.href &&

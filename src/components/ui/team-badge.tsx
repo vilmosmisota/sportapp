@@ -1,18 +1,16 @@
-import * as React from "react";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/libs/utils";
-import { Team, TeamGender } from "@/entities/team/Team.schema";
-import { Opponent } from "@/entities/opponent/Opponent.schema";
-import {
-  getDisplayGender,
-  getDisplayAgeGroup,
-} from "@/entities/team/Team.schema";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  getDisplayAgeGroup,
+  getDisplayGender,
+  TeamGender,
+} from "@/entities/group/Group.schema";
+import { cn } from "@/libs/utils";
 
 type TeamLike = {
   age?: string | null;

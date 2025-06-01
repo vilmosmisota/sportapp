@@ -1,7 +1,14 @@
 import { z } from "zod";
+import { MemberGender, MemberType } from "../member/Member.schema";
 import { RoleSchema } from "../role/Role.schema";
 
-// Original schemas for login
+export enum UserDomain {
+  MANAGEMENT = "MANAGEMENT",
+  SYSTEM = "SYSTEM",
+  PARENT = "PARENT",
+  PERFORMER = "PERFORMER",
+}
+
 export const UserLoginSchema = z.object({
   email: z.string().trim().email({ message: "Invalid email address " }),
   password: z.string().trim().min(1, { message: "Password is required" }),
@@ -9,52 +16,80 @@ export const UserLoginSchema = z.object({
 
 export type UserLogin = z.infer<typeof UserLoginSchema>;
 
-// Schema for user roles (junction table)
-export const UserRoleSchema = z.object({
-  id: z.number(),
-  roleId: z.number(),
-  tenantId: z.number(),
-  isPrimary: z.boolean().default(false),
-  role: RoleSchema.optional(), // For populated role data
-});
-
-// Schema for tenant users (junction table)
 export const TenantUserSchema = z.object({
   id: z.number(),
   tenantId: z.number(),
-  // Make userId optional since it might not be included in some queries
-  userId: z.string().uuid().optional(),
+  userId: z.string().uuid(),
 });
 
-// Schema for users
 export const UserSchema = z.object({
   id: z.string().uuid(),
   email: z.string().email().nullable(),
-  firstName: z.string().nullable(),
-  lastName: z.string().nullable(),
-  roles: z.array(UserRoleSchema).optional(),
-  tenantUsers: z.array(TenantUserSchema).optional(),
+  roleId: z.number().nullable(),
+  userDomains: z.array(z.nativeEnum(UserDomain)).default([]),
+  role: RoleSchema.nullable().optional(),
+  tenantUsers: z.array(TenantUserSchema).default([]),
 });
 
-// Schema for creating/updating users
-export const UserFormSchema = z.object({
+export const UserMemberSchema = UserSchema.extend({
+  member: z
+    .lazy(() => {
+      const { MemberSchema } = require("../member/Member.schema");
+      return MemberSchema;
+    })
+    .nullable()
+    .optional(),
+});
+
+const UserFormBaseSchema = z.object({
+  // User fields
   email: z.string().email(),
+  roleId: z.number().optional(),
+  userDomains: z.array(z.nativeEnum(UserDomain)).optional(),
+
+  // Member fields
   firstName: z.string().min(1),
   lastName: z.string().min(1),
+  memberType: z.nativeEnum(MemberType).optional(),
+  dateOfBirth: z.string().optional(),
+  gender: z.nativeEnum(MemberGender).optional(),
+});
+
+export const UserFormSchema = UserFormBaseSchema.extend({
   password: z.string().min(8, "Password must be at least 8 characters"),
-  roleIds: z.array(z.number()).optional(),
-});
+}).refine(
+  (data) => {
+    if (data.memberType === MemberType.Performer) {
+      return !!data.dateOfBirth && !!data.gender;
+    }
+    return true;
+  },
+  {
+    message: "Date of birth and gender are required for performers",
+    path: ["memberType"],
+  }
+);
 
-// Add a separate schema for updates
-export const UserUpdateFormSchema = z.object({
-  email: z.string().email(),
-  firstName: z.string().min(1),
-  lastName: z.string().min(1),
-  roleIds: z.array(z.number()).optional(),
-});
+export const UserUpdateFormSchema = UserFormBaseSchema.extend({
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .optional(),
+}).refine(
+  (data) => {
+    if (data.memberType === MemberType.Performer) {
+      return !!data.dateOfBirth && !!data.gender;
+    }
+    return true;
+  },
+  {
+    message: "Date of birth and gender are required for performers",
+    path: ["memberType"],
+  }
+);
 
 // Types
 export type User = z.infer<typeof UserSchema>;
 export type UserForm = z.infer<typeof UserFormSchema>;
-export type UserRole = z.infer<typeof UserRoleSchema>;
+export type UserMember = z.infer<typeof UserMemberSchema>;
 export type UserUpdateForm = z.infer<typeof UserUpdateFormSchema>;

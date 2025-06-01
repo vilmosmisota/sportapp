@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { TeamSchema, type Team } from "../team/Team.schema";
+import { TeamSchema, type Team } from "../group/Group.schema";
 import { SeasonSchema, type Season } from "../season/Season.schema";
-import { LocationSchema, type Location } from "../common/Location.schema";
-import { MetaSchema, type Meta } from "../common/Meta.schema";
+import { LocationSchema, type Location } from "../shared/Location.schema";
+import { MetaSchema, type Meta } from "../shared/Meta.schema";
 
 // Game status enumeration
 export enum GameStatus {

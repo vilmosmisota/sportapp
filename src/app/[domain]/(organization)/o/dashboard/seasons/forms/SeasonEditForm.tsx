@@ -1,7 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Form,
   FormControl,
@@ -13,22 +11,18 @@ import {
 } from "@/components/ui/form";
 import FormButtons from "@/components/ui/form-buttons";
 
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DateRange } from "@/components/ui/date-range";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { useUpdateSeason } from "@/entities/season/Season.actions.client";
 import { Season, SeasonForm } from "@/entities/season/Season.schema";
-import { cn } from "@/libs/tailwind/utils";
-import { format, addMonths, addDays } from "date-fns";
-import { CalendarIcon, Calendar as CalendarDays, Clock } from "lucide-react";
-import { useState, useEffect } from "react";
+import { addDays } from "date-fns";
+import { Calendar as CalendarDays, Clock } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { Switch } from "@/components/ui/switch";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { DateRange } from "@/components/ui/date-range";
-import { parseISO } from "date-fns";
 import BreaksEditor from "./BreaksEditor";
-
-import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 
 type SeasonEditFormProps = {
   season: Season;

@@ -6,7 +6,7 @@ import {
   useAttendanceSessionById,
   useAttendanceRecords,
 } from "@/entities/attendance/Attendance.query";
-import { usePlayersByTeamId } from "@/entities/team/Team.query";
+import { usePlayersByTeamId } from "@/entities/group/Group.query";
 import {
   Check,
   Clock,

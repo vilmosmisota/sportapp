@@ -1,15 +1,15 @@
-import { useState, useEffect, useRef } from "react";
+import { Loader2, Lock, Pin, PinOff } from "lucide-react";
+import Link from "next/link";
+import { usePathname as useNextPathname, useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "../../../../../components/ui/tooltip";
-import Link from "next/link";
-import { useRouter, usePathname as useNextPathname } from "next/navigation";
 import { cn } from "../../../../../lib/utils";
-import { NavItem, ICON_MAP } from "../constants";
-import { Pin, PinOff, Lock, Loader2 } from "lucide-react";
+import { ICON_MAP, NavItem } from "../constants";
 
 interface NavItemProps {
   item: NavItem;
@@ -130,7 +130,7 @@ export default function DashboardNavItem({
               >
                 {Icon && <Icon className="h-4 w-4" />}
                 {!isCollapsed && (
-                  <span className="text-sm font-medium truncate">
+                  <span className="text-sm font-medium truncate capitalize">
                     {item.name}
                   </span>
                 )}
@@ -140,7 +140,7 @@ export default function DashboardNavItem({
           {isCollapsed && (
             <TooltipContent side="right" sideOffset={10}>
               <div className="flex flex-col gap-1">
-                <span className="font-medium">{item.name}</span>
+                <span className="font-medium capitalize">{item.name}</span>
                 {item.disabled && item.disabledReason ? (
                   <div className="text-xs text-amber-500 max-w-64">
                     <span className="font-medium">Required:</span>{" "}
@@ -205,7 +205,7 @@ export default function DashboardNavItem({
                   Icon && <Icon className="h-4 w-4" />
                 )}
                 {!isCollapsed && (
-                  <span className="text-sm font-medium truncate">
+                  <span className="text-sm font-medium truncate capitalize">
                     {item.name}
                   </span>
                 )}
@@ -243,7 +243,7 @@ export default function DashboardNavItem({
         {isCollapsed && (
           <TooltipContent side="right" sideOffset={10}>
             <div className="flex flex-col gap-1">
-              <span className="font-medium">{item.name}</span>
+              <span className="font-medium capitalize">{item.name}</span>
               {item.description && (
                 <span className="text-xs text-muted-foreground">
                   {item.description}

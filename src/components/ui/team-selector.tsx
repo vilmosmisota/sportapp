@@ -17,7 +17,7 @@ import {
   getDisplayGender,
   getDisplayAgeGroup,
   Team,
-} from "@/entities/team/Team.schema";
+} from "@/entities/group/Group.schema";
 import { Control, ControllerRenderProps, FieldValues } from "react-hook-form";
 
 interface TeamSelectorProps {

@@ -44,7 +44,7 @@ import {
 } from "lucide-react";
 
 // Entity Types & Schemas
-import { Team } from "@/entities/team/Team.schema";
+import { Team } from "@/entities/group/Group.schema";
 import { Season } from "@/entities/season/Season.schema";
 import { Tenant } from "@/entities/tenant/Tenant.schema";
 import {
@@ -52,7 +52,7 @@ import {
   useAddTrainingBatch,
 } from "@/entities/training/Training.actions.client";
 import { useTrainingLocations } from "@/entities/tenant/hooks/useTrainingLocations";
-import { useGetTeamsByTenantId } from "@/entities/team/Team.query";
+import { useGetTeamsByTenantId } from "@/entities/group/Group.query";
 
 const daysOfWeek = [
   { id: 1, name: "Monday" },

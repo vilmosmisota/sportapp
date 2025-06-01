@@ -1,19 +1,21 @@
 "use client";
 
-import { Separator } from "@/components/ui/separator";
-import { useCurrentUser } from "@/entities/user/User.query";
-import { useUserRolesByTenant } from "@/entities/role/hooks/useUserRoles";
-import { useToggleUserRolePrimary } from "@/entities/role/hooks/useUserRoles";
-import { getTenantInfoFromClientCookie } from "@/entities/tenant/Tenant.helpers.client";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, Star, AlertCircle } from "lucide-react";
-import { useParams } from "next/navigation";
+import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  useToggleUserRolePrimary,
+  useUserRolesByTenant,
+} from "@/entities/role/hooks/useUserRoles";
+
+import { useCurrentUser } from "@/entities/user/User.query";
+import { AlertCircle, Shield, Star } from "lucide-react";
+import { useParams } from "next/navigation";
 import { toast } from "sonner";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
+import { useTenantAndUserAccessContext } from "../../../../../components/auth/TenantAndUserAccessContext";
 
 export default function RolesSettingsPage() {
   const params = useParams();
@@ -21,26 +23,18 @@ export default function RolesSettingsPage() {
     ? params.domain[0]
     : params.domain;
 
-  // Try to get tenant info from cookie first
-  const tenantInfo = getTenantInfoFromClientCookie(domain);
-
-  // If not in cookie, fetch from API
-  const { data: tenantData, isLoading: isLoadingTenant } =
-    useTenantByDomain(domain);
-
-  const tenantId = tenantInfo?.tenantId
-    ? parseInt(tenantInfo.tenantId)
-    : tenantData?.id;
+  const { tenant, isLoading: isLoadingTenant } =
+    useTenantAndUserAccessContext();
 
   const { data: currentUser, isLoading: isLoadingUser } = useCurrentUser();
   const { data: userRoles = [], isLoading: isLoadingRoles } =
-    useUserRolesByTenant(currentUser?.id ?? "", tenantId ?? 0, {
-      enabled: !!currentUser?.id && !!tenantId,
+    useUserRolesByTenant(currentUser?.id ?? "", tenant?.id ?? 0, {
+      enabled: !!currentUser?.id && !!tenant?.id,
     });
 
   const togglePrimary = useToggleUserRolePrimary(
     currentUser?.id ?? "",
-    tenantId ?? 0
+    tenant?.id ?? 0
   );
 
   const handleTogglePrimary = async (roleId: number) => {
@@ -53,7 +47,7 @@ export default function RolesSettingsPage() {
     }
   };
 
-  if (isLoadingUser || isLoadingRoles || isLoadingTenant) {
+  if (isLoadingUser || isLoadingRoles || isLoadingTenant || isLoadingUser) {
     return (
       <div className="space-y-6">
         <div>
@@ -72,7 +66,7 @@ export default function RolesSettingsPage() {
   }
 
   // Error state if we can't get tenant info
-  if (!tenantId) {
+  if (!tenant?.id) {
     return (
       <div className="space-y-6">
         <div>

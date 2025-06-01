@@ -1,14 +1,19 @@
-import { TypedClient } from "@/libs/supabase/type";
-import { User, UserForm, UserSchema, UserUpdateForm } from "./User.schema";
 import { getAdminClient } from "@/libs/supabase/admin";
+import { TypedClient } from "@/libs/supabase/type";
+import {
+  UserForm,
+  UserMember,
+  UserMemberSchema,
+  UserSchema,
+  UserUpdateForm,
+} from "./User.schema";
 
-// Get current authenticated user with roles
 export const getCurrentUser = async (client: TypedClient) => {
   const {
     data: { user },
   } = await client.auth.getUser();
 
-  if (!user) return null;
+  if (!user) throw new Error("User not authenticated");
 
   const { data, error } = await client
     .from("users")
@@ -16,18 +21,11 @@ export const getCurrentUser = async (client: TypedClient) => {
       `
       *,
       tenantUsers(id, tenantId, userId),
-      roles:userRoles(
+      role:roles(
         id,
-        roleId,
-        tenantId,
-        isPrimary,
-        role:roles(
-          id,
-          name,
-          domain,
-          permissions,
-          tenantId
-        )
+        name,
+        permissions,
+        tenantId
       )
     `
     )
@@ -36,69 +34,50 @@ export const getCurrentUser = async (client: TypedClient) => {
 
   if (error || !data) throw new Error(error?.message ?? "Failed to fetch user");
 
-  console.log("user data", data);
-
-  return UserSchema.parse({
-    ...data,
-    roles: data.roles || [],
-    tenantUsers: data.tenantUsers || [],
-  });
+  return UserSchema.parse(data);
 };
 
-// Keep the original function for middleware
-export const getUserOnClient = async (typedClient: TypedClient) => {
-  const {
-    data: { user },
-  } = await typedClient.auth.getUser();
-
-  if (!user) {
-    return;
-  }
-
-  return user;
-};
-
-// Get all users for a tenant with their roles
 export const getUsersByTenantId = async (
   client: TypedClient,
   tenantId: string
-): Promise<User[]> => {
+): Promise<UserMember[]> => {
   const { data, error } = await client
     .from("users")
     .select(
       `
       *,
       tenantUsers!inner(id, tenantId, userId),
-      roles:userRoles!inner(
+      role:roles(
         id,
-        roleId,
-        tenantId,
-        isPrimary,
-        role:roles(
-          id,
-          name,
-          domain,
-          permissions,
-          tenantId
-        )
+        name,
+        permissions,
+        tenantId
+      ),
+      member:members(
+        id,
+        createdAt,
+        firstName,
+        lastName,
+        dateOfBirth,
+        gender,
+        memberType,
+        userId,
+        tenantId
       )
     `
     )
-    .eq("tenantUsers.tenantId", Number(tenantId))
-    .eq("roles.tenantId", Number(tenantId));
+    .eq("tenantUsers.tenantId", Number(tenantId));
 
   if (error) throw new Error(error.message);
 
   return data.map((user) =>
-    UserSchema.parse({
+    UserMemberSchema.parse({
       ...user,
-      roles: user.roles || [],
-      tenantUsers: user.tenantUsers || [],
+      member: user.member?.[0] || null,
     })
   );
 };
 
-// Create a new user with their roles
 export const createUser = async (
   client: TypedClient,
   userData: UserForm,
@@ -106,7 +85,6 @@ export const createUser = async (
 ) => {
   const adminClient = getAdminClient();
 
-  // Use admin client to create user
   const { data: authData, error: authError } =
     await adminClient.auth.admin.createUser({
       email: userData.email,
@@ -116,17 +94,15 @@ export const createUser = async (
 
   if (authError) throw new Error(authError.message);
 
-  // Create user profile using regular client
   const { error: userError } = await client.from("users").insert({
     id: authData.user.id,
     email: userData.email,
-    firstName: userData.firstName,
-    lastName: userData.lastName,
+    roleId: userData.roleId,
+    userDomains: userData.userDomains || [],
   });
 
   if (userError) throw new Error(userError.message);
 
-  // Add user to tenant
   const { error: tenantUserError } = await client.from("tenantUsers").insert({
     userId: authData.user.id,
     tenantId: Number(tenantId),
@@ -134,57 +110,23 @@ export const createUser = async (
 
   if (tenantUserError) throw new Error(tenantUserError.message);
 
-  // Create user roles
-  if (userData.roleIds?.length) {
-    // Make the first role primary by default
-    const userRoles = userData.roleIds.map((roleId, index) => ({
+  if (userData.memberType) {
+    const { error: memberError } = await client.from("members").insert({
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      dateOfBirth: userData.dateOfBirth,
+      gender: userData.gender,
+      memberType: userData.memberType,
       userId: authData.user.id,
-      roleId,
       tenantId: Number(tenantId),
-      isPrimary: index === 0, // First role is primary
-    }));
+    });
 
-    const { error: rolesError } = await client
-      .from("userRoles")
-      .insert(userRoles);
-
-    if (rolesError) throw new Error(rolesError.message);
+    if (memberError) throw new Error(memberError.message);
   }
 
-  // Fetch the created user with roles
-  const { data: user, error: fetchError } = await client
-    .from("users")
-    .select(
-      `
-      *,
-      roles:userRoles(
-        id,
-        roleId,
-        tenantId,
-        isPrimary,
-        role:roles(
-          id,
-          name,
-          domain,
-          permissions,
-          tenantId
-        )
-      )
-    `
-    )
-    .eq("id", authData.user.id)
-    .single();
-
-  if (fetchError || !user)
-    throw new Error(fetchError?.message ?? "Failed to fetch created user");
-
-  return UserSchema.parse({
-    ...user,
-    roles: user.roles || [],
-  });
+  return { id: authData.user.id };
 };
 
-// Update user and their roles
 export const updateUser = async (
   client: TypedClient,
   userId: string,
@@ -193,7 +135,6 @@ export const updateUser = async (
 ) => {
   const adminClient = getAdminClient();
 
-  // Update auth email if changed using admin client
   if (userData.email) {
     const { error: authError } = await adminClient.auth.admin.updateUserById(
       userId,
@@ -202,96 +143,58 @@ export const updateUser = async (
     if (authError) throw new Error(authError.message);
   }
 
-  // Update user profile
   const { error: userError } = await client
     .from("users")
     .update({
-      firstName: userData.firstName,
-      lastName: userData.lastName,
       email: userData.email,
+      roleId: userData.roleId,
+      userDomains: userData.userDomains || [],
     })
     .eq("id", userId);
 
   if (userError) throw new Error(userError.message);
 
-  // Update user roles if provided
-  if (userData.roleIds) {
-    // First get existing roles to preserve primary status
-    const { data: existingRoles } = await client
-      .from("userRoles")
-      .select("roleId, isPrimary")
+  // Handle member data
+  if (userData.firstName && userData.lastName) {
+    // First check if member record exists
+    const { data: existingMember, error: memberCheckError } = await client
+      .from("members")
+      .select("id")
       .eq("userId", userId)
-      .eq("tenantId", Number(tenantId));
+      .eq("tenantId", Number(tenantId))
+      .single();
 
-    // Delete existing roles for this tenant
-    const { error: deleteError } = await client
-      .from("userRoles")
-      .delete()
-      .eq("userId", userId)
-      .eq("tenantId", Number(tenantId));
+    const memberData = {
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      dateOfBirth: userData.dateOfBirth,
+      gender: userData.gender,
+      memberType: userData.memberType,
+      userId: userId,
+      tenantId: Number(tenantId),
+    };
 
-    if (deleteError) throw new Error(deleteError.message);
+    if (existingMember) {
+      // Update existing member
+      const { error: memberError } = await client
+        .from("members")
+        .update(memberData)
+        .eq("id", existingMember.id);
 
-    // Then insert new roles if any
-    if (userData.roleIds.length > 0) {
-      const userRoles = userData.roleIds.map((roleId) => {
-        // Check if this role was primary before
-        const existingRole = existingRoles?.find((r) => r.roleId === roleId);
-        return {
-          userId,
-          roleId,
-          tenantId: Number(tenantId),
-          isPrimary: existingRole?.isPrimary ?? false,
-        };
-      });
+      if (memberError) throw new Error(memberError.message);
+    } else {
+      // Insert new member
+      const { error: memberError } = await client
+        .from("members")
+        .insert(memberData);
 
-      // Ensure at least one role is primary
-      if (!userRoles.some((role) => role.isPrimary)) {
-        userRoles[0].isPrimary = true;
-      }
-
-      const { error: rolesError } = await client
-        .from("userRoles")
-        .insert(userRoles);
-
-      if (rolesError) throw new Error(rolesError.message);
+      if (memberError) throw new Error(memberError.message);
     }
   }
 
-  // Fetch the updated user with roles
-  const { data: user, error: fetchError } = await client
-    .from("users")
-    .select(
-      `
-      *,
-      roles:userRoles(
-        id,
-        roleId,
-        tenantId,
-        isPrimary,
-        role:roles(
-          id,
-          name,
-          domain,
-          permissions,
-          tenantId
-        )
-      )
-    `
-    )
-    .eq("id", userId)
-    .single();
-
-  if (fetchError || !user)
-    throw new Error(fetchError?.message ?? "Failed to fetch updated user");
-
-  return UserSchema.parse({
-    ...user,
-    roles: user.roles || [],
-  });
+  return { id: userId };
 };
 
-// Check if user has access to tenant
 export const checkTenantUserByIds = async (
   client: TypedClient,
   tenantId: string,
@@ -312,13 +215,17 @@ export const checkTenantUserByIds = async (
   return !!data;
 };
 
-// Delete user (this will cascade delete their entities)
 export const deleteUser = async (
   client: TypedClient,
   userId: string,
   tenantId: string
 ) => {
-  // First remove user from tenant
+  await client
+    .from("members")
+    .delete()
+    .eq("userId", userId)
+    .eq("tenantId", Number(tenantId));
+
   const { error: tenantUserError } = await client
     .from("tenantUsers")
     .delete()
@@ -327,16 +234,6 @@ export const deleteUser = async (
 
   if (tenantUserError) throw new Error(tenantUserError.message);
 
-  // Then delete user roles for this tenant
-  const { error: rolesError } = await client
-    .from("userRoles")
-    .delete()
-    .eq("userId", userId)
-    .eq("tenantId", Number(tenantId));
-
-  if (rolesError) throw new Error(rolesError.message);
-
-  // Check if user exists in any other tenants
   const { data: otherTenants, error: tenantsError } = await client
     .from("tenantUsers")
     .select("id")
@@ -344,7 +241,6 @@ export const deleteUser = async (
 
   if (tenantsError) throw new Error(tenantsError.message);
 
-  // Only delete the user completely if they don't belong to any other tenants
   if (!otherTenants?.length) {
     const adminClient = getAdminClient();
     const { error } = await adminClient.auth.admin.deleteUser(userId);
@@ -352,18 +248,4 @@ export const deleteUser = async (
   }
 
   return true;
-};
-
-export const getUsersByEmail = async (client: TypedClient, email: string) => {
-  const { data, error } = await client
-    .from("users")
-    .select("*")
-    .eq("email", email)
-    .single();
-
-  if (error || !data) {
-    throw new Error(error?.message ?? "User not found");
-  }
-
-  return UserSchema.parse(data);
 };

@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { LocationSchema } from "../common/Location.schema";
-import { TeamSchema } from "../team/Team.schema";
-import { AppearanceSchema } from "../common/Appearance.schema";
+import { LocationSchema } from "../shared/Location.schema";
+import { TeamSchema } from "../group/Group.schema";
+import { AppearanceSchema } from "../shared/Appearance.schema";
 
 // Base opponent schema
 export const OpponentSchema = z.object({

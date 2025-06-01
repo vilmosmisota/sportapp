@@ -1,45 +1,34 @@
 import { TypedClient } from "@/libs/supabase/type";
-import { TenantForm, TenantInfoSchema, TenantSchema } from "./Tenant.schema";
+import { Tenant, TenantForm, TenantSchema } from "./Tenant.schema";
 
 export const getTenantByDomain = async (
   domain: string,
   typedClient: TypedClient
-) => {
+): Promise<Tenant> => {
   const { data, error } = await typedClient
     .from("tenants")
-    .select("*")
+    .select(
+      `
+      *,
+      tenantConfigs (
+        id,
+        createdAt,
+        updatedAt,
+        general,
+        performers,
+        groups,
+        development
+      )
+    `
+    )
     .eq("domain", `${domain}`)
     .single();
 
   if (error) {
     throw new Error(error.message);
   }
-  const validatedData = TenantSchema.parse(data);
 
-  return validatedData;
-};
-
-export const getTenantInfoByDomain = async (
-  domain: string,
-  typedClient: TypedClient
-) => {
-  const { data, error } = await typedClient
-    .from("tenants")
-    .select("type, id, isPublicSitePublished")
-    .eq("domain", `${domain}`)
-    .single();
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  const validatedData = TenantInfoSchema.parse(data);
-
-  return {
-    tenantType: validatedData.type,
-    tenantId: validatedData.id,
-    isPublicSitePublished: validatedData.isPublicSitePublished,
-  };
+  return TenantSchema.parse(data);
 };
 
 export const updateTenant = async (
@@ -47,15 +36,127 @@ export const updateTenant = async (
   data: TenantForm,
   id: string
 ) => {
-  const { data: tenant, error } = await client
-    .from("tenants")
-    .update(data)
-    .eq("id", id)
-    .select();
+  const { tenantConfig, ...tenantData } = data;
 
-  if (error) {
-    throw new Error(error.message);
+  // Update the tenant record
+  const { data: tenant, error: tenantError } = await client
+    .from("tenants")
+    .update(tenantData)
+    .eq("id", id)
+    .select(
+      `
+      *,
+      tenantConfigs (
+        id,
+        createdAt,
+        updatedAt,
+        general,
+        performers,
+        groups,
+        development
+      )
+    `
+    )
+    .single();
+
+  console.log("tenant", tenant);
+
+  if (tenantError) {
+    throw new Error(tenantError.message);
   }
 
-  return tenant;
+  if (tenantConfig && (tenant as any).tenantConfigId) {
+    const { error: configError } = await client
+      .from("tenantConfigs")
+      .update({
+        general: tenantConfig.general,
+        performers: tenantConfig.performers,
+        groups: tenantConfig.groups,
+        development: tenantConfig.development,
+      })
+      .eq("id", (tenant as any).tenantConfigId);
+
+    if (configError) {
+      throw new Error(configError.message);
+    }
+
+    // Fetch the updated tenant with config
+    const { data: updatedTenant, error: fetchError } = await client
+      .from("tenants")
+      .select(
+        `
+        *,
+        tenantConfigs (
+          id,
+          createdAt,
+          updatedAt,
+          general,
+          performers,
+          groups,
+          development
+        )
+      `
+      )
+      .eq("id", id)
+      .single();
+
+    if (fetchError) {
+      throw new Error(fetchError.message);
+    }
+
+    return TenantSchema.parse(updatedTenant);
+  }
+
+  return TenantSchema.parse(tenant);
+};
+
+export const createTenant = async (
+  client: TypedClient,
+  data: TenantForm
+): Promise<Tenant> => {
+  const { tenantConfig, ...tenantData } = data;
+
+  // First create the tenant config
+  const { data: config, error: configError } = await client
+    .from("tenantConfigs")
+    .insert({
+      general: tenantConfig?.general,
+      performers: tenantConfig?.performers,
+      groups: tenantConfig?.groups,
+      development: tenantConfig?.development,
+    })
+    .select()
+    .single();
+
+  if (configError) {
+    throw new Error(configError.message);
+  }
+
+  const { data: tenant, error: tenantError } = await client
+    .from("tenants")
+    .insert({
+      ...tenantData,
+      tenantConfigId: config.id,
+    })
+    .select(
+      `
+      *,
+      tenantConfigs (
+        id,
+        createdAt,
+        updatedAt,
+        general,
+        performers,
+        groups,
+        development
+      )
+    `
+    )
+    .single();
+
+  if (tenantError) {
+    throw new Error(tenantError.message);
+  }
+
+  return TenantSchema.parse(tenant);
 };

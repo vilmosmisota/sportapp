@@ -1,5 +1,7 @@
 "use client";
 
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DateRange } from "@/components/ui/date-range";
 import {
   Form,
   FormControl,
@@ -10,17 +12,15 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import FormButtons from "@/components/ui/form-buttons";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { useAddSeason } from "@/entities/season/Season.actions.client";
 import { SeasonForm } from "@/entities/season/Season.schema";
-import { format, addDays, addMonths } from "date-fns";
+import { addDays } from "date-fns";
 import { CalendarDays, Clock } from "lucide-react";
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { Switch } from "@/components/ui/switch";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { DateRange } from "@/components/ui/date-range";
 import BreaksEditor from "./BreaksEditor";
 
 type Break = { id: number; from: Date; to: Date };
@@ -230,14 +230,12 @@ export function AddSeasonForm({
           </Card>
         </div>
 
-        <div className="bg-background sticky h-[100px] flex items-center justify-end bottom-0 left-0 right-0 border-t">
-          <FormButtons
-            buttonText="Save"
-            isLoading={isLoading}
-            isDirty={isDirty}
-            onCancel={onCancel}
-          />
-        </div>
+        <FormButtons
+          buttonText="Save"
+          isLoading={isLoading}
+          isDirty={isDirty}
+          onCancel={onCancel}
+        />
       </form>
     </Form>
   );

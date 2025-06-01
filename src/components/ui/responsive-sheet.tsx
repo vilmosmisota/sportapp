@@ -3,17 +3,17 @@
 import * as React from "react";
 
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import {
   Drawer,
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { useMediaQuery } from "@/utils/hooks";
 
 export function ResponsiveSheet({
@@ -34,7 +34,7 @@ export function ResponsiveSheet({
   if (isDesktop) {
     return (
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        <SheetContent className="w-full  overflow-y-auto">
+        <SheetContent className="w-full">
           <div className="h-full flex flex-col">
             <SheetHeader className="flex-shrink-0 pb-4">
               <SheetTitle>{title}</SheetTitle>

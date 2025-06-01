@@ -1,8 +1,7 @@
 import { z } from "zod";
-import { TeamSchema } from "../team/Team.schema";
-import { SeasonSchema } from "../season/Season.schema";
-import { LocationSchema } from "../common/Location.schema";
-import { MetaSchema } from "../common/Meta.schema";
+
+import { LocationSchema } from "../shared/Location.schema";
+import { MetaSchema } from "../shared/Meta.schema";
 
 export const TrainingSchema = z.object({
   id: z.number(),
@@ -15,18 +14,18 @@ export const TrainingSchema = z.object({
   seasonId: z.number(),
   meta: MetaSchema,
   isAggregated: z.boolean().default(false),
-  team: TeamSchema.omit({
-    tenantId: true,
-    playerTeamConnections: true,
-    coach: true,
-    coachId: true,
-    playerCount: true,
-  }).nullable(),
-  season: SeasonSchema.omit({
-    tenantId: true,
-  })
-    .nullable()
-    .optional(),
+  // team: TeamSchema.omit({
+  //   tenantId: true,
+  //   playerTeamConnections: true,
+  //   coach: true,
+  //   coachId: true,
+  //   playerCount: true,
+  // }).nullable(),
+  // season: SeasonSchema.omit({
+  //   tenantId: true,
+  // })
+  //   .nullable()
+  //   .optional(),
 });
 
 export type Training = z.infer<typeof TrainingSchema>;

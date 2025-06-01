@@ -1,7 +1,6 @@
 "use client";
 
 import { useOpponents } from "@/entities/opponent/Opponent.query";
-import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";

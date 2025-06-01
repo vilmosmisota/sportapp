@@ -1,28 +1,28 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
+import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
+import { useDeleteUser } from "@/entities/user/User.actions.client";
+import { UserMember } from "@/entities/user/User.schema";
 import {
+  ColumnFiltersState,
   getCoreRowModel,
-  useReactTable,
+  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  getFilteredRowModel,
-  ColumnFiltersState,
   SortingState,
+  useReactTable,
   VisibilityState,
 } from "@tanstack/react-table";
-import { User } from "@/entities/user/User.schema";
-import { columns } from "./columns";
-import { DataTable } from "@/components/ui/data-table/DataTable";
-import { useDeleteUser } from "@/entities/user/User.actions.client";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
+import { DataTable } from "../../../../../../../../components/ui/data-table/DataTable";
 import EditUserForm from "../forms/EditUserForm";
+import { columns } from "./columns";
 import UsersTableToolbar from "./UsersTableToolbar";
-import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
 
 interface UsersTableProps {
-  users?: User[];
+  users?: UserMember[];
   tenantId: string;
 }
 
@@ -32,12 +32,11 @@ export default function UsersTable({ users = [], tenantId }: UsersTableProps) {
   ]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserMember | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [selectedUserToDelete, setSelectedUserToDelete] = useState<User | null>(
-    null
-  );
+  const [selectedUserToDelete, setSelectedUserToDelete] =
+    useState<UserMember | null>(null);
 
   const deleteUser = useDeleteUser(tenantId);
 
@@ -58,7 +57,7 @@ export default function UsersTable({ users = [], tenantId }: UsersTableProps) {
     }
   }, [deleteUser, selectedUserToDelete]);
 
-  const handleEditUser = useCallback((user: User) => {
+  const handleEditUser = useCallback((user: UserMember) => {
     setSelectedUser(user);
     setIsEditOpen(true);
   }, []);
@@ -97,14 +96,30 @@ export default function UsersTable({ users = [], tenantId }: UsersTableProps) {
       columnVisibility,
     },
     enableGlobalFilter: true,
+    enableColumnPinning: true,
+    initialState: {
+      columnPinning: {
+        left: ["actions"],
+      },
+    },
+    meta: {
+      rowClassName: "group/row",
+    },
   });
 
   return (
-    <div className="space-y-4">
+    <div className="w-full space-y-4">
       <UsersTableToolbar table={table} />
 
-      <DataTable columns={memoizedColumns} data={users} table={table} />
+      <DataTable
+        columns={memoizedColumns}
+        data={users}
+        table={table}
+        rowClassName="group/row hover:bg-muted/50"
+        containerWidth="md:w-[880px]"
+      />
 
+      {/* Edit User Form */}
       {selectedUser && (
         <ResponsiveSheet
           isOpen={isEditOpen}

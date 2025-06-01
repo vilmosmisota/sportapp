@@ -1,12 +1,7 @@
 "use client";
 
-import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 import { useSeasonsByTenantId } from "@/entities/season/Season.query";
-import { TenantHeader } from "@/components/ui/tenant-header";
 
-import { ActiveSeasonBlock } from "../../../(components)/homepage/ActiveSeasonBlock";
-import { TeamPlayerStatsBlock } from "../../../(components)/homepage/TeamPlayerStatsBlock";
-import { UpcomingEventsBlock } from "@/components/calendar";
 import { useTenantAndUserAccessContext } from "@/components/auth/TenantAndUserAccessContext";
 
 export default function OrgDashboardPage({
@@ -25,7 +20,7 @@ export default function OrgDashboardPage({
 
   return (
     <div className="space-y-6">
-      <TenantHeader
+      {/* <TenantHeader
         tenant={tenant}
         title="Dashboard"
         description="Your organization's dashboard."
@@ -47,7 +42,7 @@ export default function OrgDashboardPage({
         tenantName={tenant?.name || "Our Team"}
         isLoading={isLoading}
         domain={params.domain}
-      />
+      /> */}
     </div>
   );
 }

@@ -1,13 +1,16 @@
 "use client";
 
-import * as React from "react";
-import { useState, useEffect, useMemo } from "react";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { format, set } from "date-fns";
+import * as React from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { set, format } from "date-fns";
 
 // UI Components
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DateTimeRange } from "@/components/ui/date-time-range";
 import {
   Form,
   FormControl,
@@ -16,6 +19,9 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import FormButtons from "@/components/ui/form-buttons";
+import { OpponentTeamSelector } from "@/components/ui/opponent-team-selector";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
   SelectContent,
@@ -23,24 +29,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import FormButtons from "@/components/ui/form-buttons";
-import { Textarea } from "@/components/ui/textarea";
-import { DatePicker } from "@/components/ui/date-picker/DatePicker";
 import { TeamSelector } from "@/components/ui/team-selector";
-import { OpponentTeamSelector } from "@/components/ui/opponent-team-selector";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { DateTimeRange } from "@/components/ui/date-time-range";
+import { Textarea } from "@/components/ui/textarea";
 
 // Icons
 import {
   Calendar,
-  MapPin,
+  ExternalLink,
   FileText,
   Home,
-  ExternalLink,
+  MapPin,
   Trophy,
 } from "lucide-react";
 
@@ -49,25 +47,17 @@ import {
   GameForm,
   GameFormSchema,
   GameStatus,
-  Game,
-  getCompetitionColor,
-  getCompetitionName,
 } from "@/entities/game/Game.schema";
-import { Team } from "@/entities/team/Team.schema";
 import { Season } from "@/entities/season/Season.schema";
-import { Tenant, CompetitionType } from "@/entities/tenant/Tenant.schema";
-import {
-  LocationSchema,
-  Location as BaseLocation,
-} from "@/entities/common/Location.schema";
-import { Opponent } from "@/entities/opponent/Opponent.schema";
+import { Location as BaseLocation } from "@/entities/shared/Location.schema";
+import { CompetitionType, Tenant } from "@/entities/tenant/Tenant.schema";
 
 // Queries & Actions
-import { useUpdateGame } from "@/entities/game/Game.actions.client";
-import { useGetTeamsByTenantId } from "@/entities/team/Team.query";
-import { useOpponents } from "@/entities/opponent/Opponent.query";
 import { GameWithViewDetails } from "@/components/calendar/hooks/useGamesCalendarEvents";
 import { GameData } from "@/components/calendar/types";
+import { useUpdateGame } from "@/entities/game/Game.actions.client";
+import { useGetTeamsByTenantId } from "@/entities/group/Group.query";
+import { useOpponents } from "@/entities/opponent/Opponent.query";
 
 // Location type
 enum GameLocationType {

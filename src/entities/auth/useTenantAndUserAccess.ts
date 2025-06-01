@@ -1,19 +1,19 @@
-import { useEffect, startTransition, useMemo } from "react";
+import { startTransition, useEffect, useMemo } from "react";
 
-import useCurrentRoleDomain from "../tenant/hooks/useCurrentRoleDomain";
+import { useRouter } from "next/navigation";
+import useCurrentUserDomain from "../tenant/hooks/useCurrentRoleDomain";
 import { useTenantByDomain } from "../tenant/Tenant.query";
 import { useCurrentUser } from "../user/User.query";
-import { RoleDomain } from "../role/Role.permissions";
-import { useRouter } from "next/navigation";
+import { UserDomain } from "../user/User.schema";
 
 export type AccessDenialReason =
   | "NO_USER"
   | "NO_TENANT_ACCESS"
-  | "NO_DOMAIN_ROLE_ACCESS";
+  | "NO_DOMAIN_ACCESS";
 
 export default function useTenantAndUserAccess(tenantDomain: string) {
   const router = useRouter();
-  const currentRoleDomain = useCurrentRoleDomain();
+  const currentUserDomain = useCurrentUserDomain();
 
   const {
     data: tenant,
@@ -33,30 +33,31 @@ export default function useTenantAndUserAccess(tenantDomain: string) {
     tenant && user?.tenantUsers?.some((tu) => tu.tenantId === tenant.id)
   );
 
-  const hasAccessToDomainRole = Boolean(
-    tenant &&
-      user?.roles?.some((r) => {
-        // Role MUST be assigned to current tenant
-        const hasTenantAccess = r.tenantId === tenant.id;
+  const hasAccessToUserDomain = useMemo(() => {
+    if (!tenant || !user || !currentUserDomain) return false;
 
-        // Check domain access (either matching domain or system role)
-        const hasDomainAccess =
-          r.role?.domain === currentRoleDomain ||
-          r.role?.domain === RoleDomain.SYSTEM;
+    // System users have access to everything
+    if (user.userDomains?.includes(UserDomain.SYSTEM)) return true;
 
-        return hasTenantAccess && hasDomainAccess;
-      })
-  );
+    // Check if user has the required domain access
+    if (user.userDomains?.includes(currentUserDomain)) return true;
 
-  const hasAccess = hasAccessToTenant && hasAccessToDomainRole;
+    // If user has a role, check if it's for the current tenant
+    if (user.role) {
+      return user.role.tenantId === tenant.id;
+    }
 
-  // Determine the specific reason for access denial
+    return false;
+  }, [tenant, user, currentUserDomain]);
+
+  const hasAccess = hasAccessToTenant && hasAccessToUserDomain;
+
   const accessDenialReason = useMemo((): AccessDenialReason | null => {
     if (!user) return "NO_USER";
     if (!hasAccessToTenant) return "NO_TENANT_ACCESS";
-    if (!hasAccessToDomainRole) return "NO_DOMAIN_ROLE_ACCESS";
+    if (!hasAccessToUserDomain) return "NO_DOMAIN_ACCESS";
     return null;
-  }, [user, hasAccessToTenant, hasAccessToDomainRole]);
+  }, [user, hasAccessToTenant, hasAccessToUserDomain]);
 
   useEffect(() => {
     if (isLoading) return;
@@ -85,7 +86,7 @@ export default function useTenantAndUserAccess(tenantDomain: string) {
       error,
       hasAccess,
       hasAccessToTenant,
-      hasAccessToDomainRole,
+      hasAccessToUserDomain,
       accessDenialReason,
     }),
     [
@@ -95,7 +96,7 @@ export default function useTenantAndUserAccess(tenantDomain: string) {
       error,
       hasAccess,
       hasAccessToTenant,
-      hasAccessToDomainRole,
+      hasAccessToUserDomain,
       accessDenialReason,
     ]
   );

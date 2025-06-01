@@ -1,6 +1,9 @@
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -8,50 +11,81 @@ import {
 } from "@/components/ui/form";
 import FormButtons from "@/components/ui/form-buttons";
 import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { MemberGender, MemberType } from "@/entities/member/Member.schema";
+import { useRolesByTenant } from "@/entities/role/Role.query";
 import { useUpdateUser } from "@/entities/user/User.actions.client";
 import {
-  User,
+  UserDomain,
+  UserMember,
   UserUpdateFormSchema,
-  UserRole,
 } from "@/entities/user/User.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Crown, Heart, Info, Star, User, Users } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Badge } from "@/components/ui/badge";
-import { Role } from "@/entities/role/Role.schema";
-import { RoleDomain } from "@/entities/role/Role.permissions";
-import { useRolesByTenant } from "@/entities/role/Role.query";
-import { Button } from "@/components/ui/button";
-import { X, Users, Mail, Shield } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState } from "react";
-
-const FORM_DOMAINS = [RoleDomain.MANAGEMENT, RoleDomain.FAMILY] as const;
-type FormDomain = (typeof FORM_DOMAINS)[number];
-
-const DOMAIN_LABELS: Record<FormDomain, string> = {
-  [RoleDomain.MANAGEMENT]: "Management",
-  [RoleDomain.FAMILY]: "Family",
-};
-
-const DOMAIN_ROLE_LIMITS: Record<FormDomain, number> = {
-  [RoleDomain.MANAGEMENT]: 1,
-  [RoleDomain.FAMILY]: 1,
-};
 
 type EditUserFormProps = {
-  user: User;
+  user: UserMember;
   tenantId: string;
   setIsParentModalOpen?: (value: boolean) => void;
 };
 
-// Extended schema to include roleIds
-const ExtendedUserUpdateFormSchema = UserUpdateFormSchema.extend({
-  roleIds: z.array(z.number()).optional(),
-});
+// Helper function to calculate age
+const calculateAge = (dateOfBirth: string): number => {
+  const today = new Date();
+  const birthDate = new Date(dateOfBirth);
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && today.getDate() < birthDate.getDate())
+  ) {
+    age--;
+  }
+  return age;
+};
+
+// Map member types to user domains
+const getMemberTypeUserDomain = (memberType: MemberType): UserDomain => {
+  switch (memberType) {
+    case MemberType.Manager:
+      return UserDomain.MANAGEMENT;
+    case MemberType.Parent:
+      return UserDomain.PARENT;
+    case MemberType.Performer:
+      return UserDomain.PERFORMER;
+    default:
+      return UserDomain.MANAGEMENT;
+  }
+};
+
+// Enhanced form schema with age validation
+const EditUserFormSchema = UserUpdateFormSchema.refine(
+  (data) => {
+    if (data.memberType === MemberType.Performer && data.dateOfBirth) {
+      const age = calculateAge(data.dateOfBirth);
+      return age >= 13;
+    }
+    return true;
+  },
+  {
+    message:
+      "Performers must be at least 13 years old to have an account. For younger performers, please use a parent account to manage their information.",
+    path: ["dateOfBirth"],
+  }
+);
+
+type EditUserForm = z.infer<typeof EditUserFormSchema>;
 
 export default function EditUserForm({
   user,
@@ -59,44 +93,66 @@ export default function EditUserForm({
   setIsParentModalOpen,
 }: EditUserFormProps) {
   const updateUser = useUpdateUser(user.id, tenantId);
-  const { data: roles = [], isLoading } = useRolesByTenant(Number(tenantId));
-  const [selectedRoleIds, setSelectedRoleIds] = useState<number[]>(
-    user.roles?.map((r) => r.roleId) ?? []
-  );
-  const initialRoleIds = user.roles?.map((r) => r.roleId) ?? [];
+  const { data: roles } = useRolesByTenant(Number(tenantId));
 
-  // Track if roles have changed
-  const hasRolesChanged =
-    JSON.stringify(selectedRoleIds.sort()) !==
-    JSON.stringify(initialRoleIds.sort());
-
-  const form = useForm<z.infer<typeof ExtendedUserUpdateFormSchema>>({
-    resolver: zodResolver(ExtendedUserUpdateFormSchema),
+  const form = useForm<EditUserForm>({
+    resolver: zodResolver(EditUserFormSchema),
     defaultValues: {
       email: user.email ?? "",
-      firstName: user.firstName ?? "",
-      lastName: user.lastName ?? "",
-      roleIds: selectedRoleIds,
+      firstName: user.member?.firstName ?? "",
+      lastName: user.member?.lastName ?? "",
+      roleId: user.roleId ?? undefined,
+      userDomains: user.userDomains ?? [UserDomain.MANAGEMENT],
+      memberType: user.member?.memberType ?? undefined,
+      dateOfBirth: user.member?.dateOfBirth ?? undefined,
+      gender: user.member?.gender ?? undefined,
     },
   });
 
-  // Form is dirty if either regular fields or roles have changed
-  const isFormDirty = form.formState.isDirty || hasRolesChanged;
+  const { handleSubmit, watch } = form;
+  const { isDirty, isLoading } = form.formState;
+  const memberType = watch("memberType");
+  const dateOfBirth = watch("dateOfBirth");
 
-  const onSubmit = (data: z.infer<typeof ExtendedUserUpdateFormSchema>) => {
-    const { roleIds, ...userData } = data;
+  // Calculate age for display
+  const currentAge = dateOfBirth ? calculateAge(dateOfBirth) : null;
+
+  // Handle member type change and automatically set user domain
+  const handleMemberTypeChange = (selectedMemberType: MemberType) => {
+    form.setValue("memberType", selectedMemberType, { shouldDirty: true });
+
+    // Automatically set the corresponding user domain
+    const userDomain = getMemberTypeUserDomain(selectedMemberType);
+    form.setValue("userDomains", [userDomain], { shouldDirty: true });
+  };
+
+  const onSubmit = (data: EditUserForm) => {
     updateUser.mutate(
-      {
-        userData,
-        roleIds: selectedRoleIds,
-      },
+      { userData: data },
       {
         onSuccess: () => {
           toast.success("User updated successfully");
           setIsParentModalOpen?.(false);
         },
-        onError: () => {
-          toast.error("Failed to update user");
+        onError: (error: Error) => {
+          // Enhanced error display for multi-line messages
+          const errorMessage = error.message;
+
+          // Check if it's a detailed error with line breaks
+          if (errorMessage.includes("\n")) {
+            // For detailed errors, show them in a more structured way
+            const lines = errorMessage.split("\n");
+            const mainMessage = lines[0];
+            const details = lines.slice(1).join("\n");
+
+            toast.error(mainMessage, {
+              description: details,
+              duration: 8000, // Longer duration for detailed errors
+            });
+          } else {
+            // Standard error display
+            toast.error(errorMessage);
+          }
         },
       }
     );
@@ -104,204 +160,328 @@ export default function EditUserForm({
 
   const onCancel = () => {
     form.reset();
-    setSelectedRoleIds(user.roles?.map((r) => r.roleId) ?? []);
     setIsParentModalOpen?.(false);
-  };
-
-  const handleAssignRole = (roleId: number, domain: FormDomain) => {
-    const currentDomainRoles = selectedRoleIds.filter((id) => {
-      const role = roles.find((r) => r.id === id);
-      return role?.domain === domain;
-    });
-
-    if (currentDomainRoles.length >= DOMAIN_ROLE_LIMITS[domain]) {
-      toast.error(
-        `Users can only have ${DOMAIN_ROLE_LIMITS[domain]} ${DOMAIN_LABELS[domain]} role`
-      );
-      return;
-    }
-
-    setSelectedRoleIds((prev) => [...prev, roleId]);
-  };
-
-  const handleRemoveRole = (roleId: number) => {
-    setSelectedRoleIds((prev) => prev.filter((id) => id !== roleId));
-  };
-
-  const availableRoles: Record<FormDomain, Role[]> = {
-    [RoleDomain.MANAGEMENT]: roles.filter(
-      (r) => r.domain === RoleDomain.MANAGEMENT
-    ),
-    [RoleDomain.FAMILY]: roles.filter((r) => r.domain === RoleDomain.FAMILY),
-  };
-
-  const renderRoleSection = (domain: FormDomain) => {
-    const domainRoles = availableRoles[domain];
-    const selectedDomainRoleIds = selectedRoleIds.filter((id) => {
-      const role = roles.find((r) => r.id === id);
-      return role?.domain === domain;
-    });
-
-    return (
-      <Card key={domain}>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-medium flex items-center gap-2">
-            <Shield className="h-4 w-4" />
-            {DOMAIN_LABELS[domain]} Roles
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Current Roles */}
-          <div className="space-y-2">
-            <FormLabel>Current Roles</FormLabel>
-            <div className="flex flex-wrap gap-2">
-              {selectedDomainRoleIds.length > 0 ? (
-                selectedDomainRoleIds.map((roleId) => {
-                  const role = roles.find((r) => r.id === roleId);
-                  return role ? (
-                    <Badge
-                      key={role.id}
-                      variant="secondary"
-                      className="pl-2 pr-1 py-1 flex items-center gap-1"
-                    >
-                      {role.name}
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-4 w-4 rounded-full hover:bg-destructive"
-                        onClick={() => handleRemoveRole(role.id)}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </Badge>
-                  ) : null;
-                })
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  No roles assigned
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Available Roles */}
-          <div className="space-y-2">
-            <FormLabel>Available Roles</FormLabel>
-            {isLoading ? (
-              <div className="flex gap-2">
-                <Skeleton className="h-6 w-20" />
-                <Skeleton className="h-6 w-20" />
-              </div>
-            ) : domainRoles.length ? (
-              <div className="flex flex-wrap gap-2">
-                {domainRoles
-                  .filter((role) => !selectedRoleIds.includes(role.id))
-                  .map((role) => (
-                    <Button
-                      key={role.id}
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleAssignRole(role.id, domain)}
-                      disabled={
-                        selectedDomainRoleIds.length >=
-                        DOMAIN_ROLE_LIMITS[domain]
-                      }
-                    >
-                      {role.name}
-                    </Button>
-                  ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                No roles available
-              </p>
-            )}
-            {selectedDomainRoleIds.length >= DOMAIN_ROLE_LIMITS[domain] && (
-              <p className="text-xs text-muted-foreground mt-2">
-                Maximum {DOMAIN_ROLE_LIMITS[domain]} {DOMAIN_LABELS[domain]}{" "}
-                role allowed
-              </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    );
   };
 
   return (
     <Form {...form}>
       <form
-        className="flex flex-col gap-6 relative"
-        onSubmit={form.handleSubmit(onSubmit)}
+        className="flex flex-col gap-6 relative h-[calc(100vh-8rem)] md:h-auto"
+        onSubmit={handleSubmit(onSubmit)}
       >
-        <div className="space-y-6">
-          <Tabs defaultValue="details" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="details" className="text-sm">
-                <Mail className="h-4 w-4 mr-2" />
-                Details
-              </TabsTrigger>
-              <TabsTrigger value="roles" className="text-sm">
-                <Users className="h-4 w-4 mr-2" />
-                Roles
-              </TabsTrigger>
-            </TabsList>
+        {/* Member Type Selection */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-medium flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Member Type
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <FormField
+              control={form.control}
+              name="memberType"
+              render={({ field }) => (
+                <FormItem className="space-y-4">
+                  <FormLabel>What type of member is this user?</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={(value) =>
+                        handleMemberTypeChange(value as MemberType)
+                      }
+                      value={field.value}
+                      className="grid grid-cols-1 gap-4"
+                    >
+                      <div>
+                        <RadioGroupItem
+                          value={MemberType.Manager}
+                          id="manager"
+                          className="peer sr-only"
+                        />
+                        <label
+                          htmlFor="manager"
+                          className="flex flex-col items-start justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                        >
+                          <div className="flex items-center gap-3 mb-2">
+                            <Crown className="h-5 w-5 text-amber-600" />
+                            <p className="text-sm font-medium">Manager</p>
+                          </div>
+                          <p className="text-xs text-muted-foreground text-left">
+                            Organization staff member with administrative access
+                            and management responsibilities
+                          </p>
+                        </label>
+                      </div>
 
-            <TabsContent value="details" className="space-y-4 mt-4">
+                      <div>
+                        <RadioGroupItem
+                          value={MemberType.Parent}
+                          id="parent"
+                          className="peer sr-only"
+                        />
+                        <label
+                          htmlFor="parent"
+                          className="flex flex-col items-start justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                        >
+                          <div className="flex items-center gap-3 mb-2">
+                            <Heart className="h-5 w-5 text-pink-600" />
+                            <p className="text-sm font-medium">Parent</p>
+                          </div>
+                          <p className="text-xs text-muted-foreground text-left">
+                            Guardian of a performer who can manage their
+                            child&apos;s information and activities
+                          </p>
+                        </label>
+                      </div>
+
+                      <div>
+                        <RadioGroupItem
+                          value={MemberType.Performer}
+                          id="performer"
+                          className="peer sr-only"
+                        />
+                        <label
+                          htmlFor="performer"
+                          className="flex flex-col items-start justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                        >
+                          <div className="flex items-center gap-3 mb-2">
+                            <Star className="h-5 w-5 text-blue-600" />
+                            <p className="text-sm font-medium">Performer</p>
+                          </div>
+                          <p className="text-xs text-muted-foreground text-left">
+                            Team participant who actively takes part in
+                            activities (must be 13+ years old)
+                          </p>
+                        </label>
+                      </div>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Age limit info for performers */}
+            {memberType === MemberType.Performer && (
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  Performers must be at least 13 years old to have their own
+                  account. For younger children, please create a parent account
+                  instead.
+                </AlertDescription>
+              </Alert>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Basic Information - shown after type is selected */}
+        {memberType && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-medium flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Basic Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="firstName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>First Name</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="lastName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Last Name</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
               <FormField
                 control={form.control}
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>Email Address</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} type="email" />
                     </FormControl>
+                    <FormDescription>
+                      Changes to email will be reflected in the user&apos;s
+                      login
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="firstName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>First Name</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="lastName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Last Name</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </TabsContent>
 
-            <TabsContent value="roles" className="space-y-4 mt-4">
-              {FORM_DOMAINS.map((domain) => renderRoleSection(domain))}
-            </TabsContent>
-          </Tabs>
-        </div>
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>New Password (Optional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="password"
+                        placeholder="Leave blank to keep current password"
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Only enter a new password if you want to change it
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Role Assignment for Management Types */}
+        {memberType === MemberType.Manager && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-medium flex items-center gap-2">
+                <Crown className="h-4 w-4" />
+                Role Assignment
+                <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full ml-2">
+                  Recommended
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <FormField
+                control={form.control}
+                name="roleId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Role</FormLabel>
+                    <Select
+                      onValueChange={(value) => field.onChange(parseInt(value))}
+                      value={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a role" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {roles?.map((role) => (
+                          <SelectItem key={role.id} value={role.id.toString()}>
+                            <div className="flex items-center gap-2">
+                              {role.isInstructor && (
+                                <div className="h-2 w-2 bg-purple-500 rounded-full" />
+                              )}
+                              {role.name}
+                              {role.isInstructor && (
+                                <span className="text-xs text-purple-600">
+                                  (Instructor)
+                                </span>
+                              )}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      It&apos;s recommended to assign a role to management
+                      members to define their permissions
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Additional Information for Performers */}
+        {memberType === MemberType.Performer && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-medium flex items-center gap-2">
+                <Star className="h-4 w-4" />
+                Performer Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <FormField
+                control={form.control}
+                name="dateOfBirth"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Date of Birth</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="date" />
+                    </FormControl>
+                    {currentAge !== null && (
+                      <FormDescription>
+                        Current age: {currentAge} years old
+                        {currentAge < 13 && (
+                          <span className="text-red-600 font-medium">
+                            {" "}
+                            - Too young for account
+                          </span>
+                        )}
+                      </FormDescription>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="gender"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Gender</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select gender" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value={MemberGender.Male}>Male</SelectItem>
+                        <SelectItem value={MemberGender.Female}>
+                          Female
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+        )}
 
         <FormButtons
           buttonText="Save Changes"
+          isLoading={isLoading}
+          isDirty={isDirty}
           onCancel={onCancel}
-          isLoading={updateUser.isPending}
-          isDirty={isFormDirty}
         />
       </form>
     </Form>

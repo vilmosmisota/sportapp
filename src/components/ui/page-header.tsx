@@ -1,7 +1,7 @@
-import { ReactNode } from "react";
-import { Button } from "./button";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
+import { ReactNode } from "react";
+import { Button } from "./button";
 
 interface PageHeaderProps {
   title: string;
@@ -37,7 +37,7 @@ export function PageHeader({
             </Link>
           </Button>
         )}
-        <h1 className="text-xl sm:text-2xl font-semibold tracking-tight line-clamp-2">
+        <h1 className="text-xl sm:text-2xl font-semibold tracking-tight line-clamp-2 capitalize">
           {title}
         </h1>
         {description && (
