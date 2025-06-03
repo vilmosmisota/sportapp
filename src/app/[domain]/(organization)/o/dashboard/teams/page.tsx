@@ -1,16 +1,15 @@
 "use client";
 
+import { PageHeader } from "@/components/ui/page-header";
+import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
+import { PermissionButton } from "@/composites/auth/PermissionButton";
 import { useGetTeamsByTenantId } from "@/entities/group/Group.query";
-import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
+import { Permission } from "@/entities/role/Role.permissions";
 import { Plus } from "lucide-react";
 import { useState } from "react";
-import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
-import { PageHeader } from "@/components/ui/page-header";
-import TeamsTable from "./tables/TeamsTable";
+import { useTenantAndUserAccessContext } from "../../../../../../composites/auth/TenantAndUserAccessContext";
 import AddTeamForm from "./forms/AddTeamForm";
-import { PermissionButton } from "@/components/auth/PermissionButton";
-import { Permission } from "@/entities/role/Role.permissions";
-import { useTenantAndUserAccessContext } from "../../../../../../components/auth/TenantAndUserAccessContext";
+import TeamsTable from "./tables/TeamsTable";
 
 export default function TeamsPage({ params }: { params: { domain: string } }) {
   const { tenant } = useTenantAndUserAccessContext();

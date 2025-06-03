@@ -1,22 +1,21 @@
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
-import { Team } from "@/entities/group/Group.schema";
-import { Eye, SquarePen, Trash2, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import DataTableColumnHeader from "@/components/ui/data-table/DataTableColumnHeader";
-import Link from "next/link";
+import { TeamBadge } from "@/components/ui/team-badge";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { getDisplayAgeGroup } from "@/entities/group/Group.schema";
-import { PermissionDropdownMenu } from "@/components/auth/PermissionDropdownMenu";
+import { PermissionDropdownMenu } from "@/composites/auth/PermissionDropdownMenu";
+import { getDisplayAgeGroup, Team } from "@/entities/group/Group.schema";
 import { Permission } from "@/entities/role/Role.permissions";
-import { TeamBadge } from "@/components/ui/team-badge";
+import { ColumnDef } from "@tanstack/react-table";
+import { Eye, SquarePen, Trash2, Users } from "lucide-react";
+import Link from "next/link";
 
 interface TeamsTableActionsProps {
   team: Team;

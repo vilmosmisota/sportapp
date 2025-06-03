@@ -1,19 +1,12 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
+import DataTableColumnHeader from "@/components/ui/data-table/DataTableColumnHeader";
+import { PermissionDropdownMenu } from "@/composites/auth/PermissionDropdownMenu";
+import { Permission } from "@/entities/role/Role.permissions";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { MoreVertical, UserMinus } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import DataTableColumnHeader from "@/components/ui/data-table/DataTableColumnHeader";
-import { Permission } from "@/entities/role/Role.permissions";
-import { PermissionDropdownMenu } from "@/components/auth/PermissionDropdownMenu";
+import { UserMinus } from "lucide-react";
 
 export interface TeamPlayer {
   id: number;

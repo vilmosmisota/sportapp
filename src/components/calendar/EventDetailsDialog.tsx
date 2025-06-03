@@ -1,42 +1,35 @@
 "use client";
 
-import * as React from "react";
-import { format } from "date-fns";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
+import { format } from "date-fns";
 import { CalendarEvent } from "./EventCalendar";
 
 import { defaultEventColors } from "./utils";
 
-import {
-  MapPin,
-  Calendar,
-  Users,
-  ClipboardList,
-  Clock,
-  Trophy,
-  Edit,
-  Trash2,
-} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TeamBadge } from "@/components/ui/team-badge";
-import { Badge } from "@/components/ui/badge";
-import { PermissionButton } from "@/components/auth/PermissionButton";
+import { PermissionButton } from "@/composites/auth/PermissionButton";
 import { Permission } from "@/entities/role/Role.permissions";
 import {
-  GameData,
-  TrainingData,
-  isGameEvent,
-  isTrainingEvent,
-  Team,
-} from "./types";
+  Calendar,
+  ClipboardList,
+  Clock,
+  Edit,
+  MapPin,
+  Trash2,
+  Trophy,
+  Users,
+} from "lucide-react";
+import { GameData, isGameEvent, isTrainingEvent, TrainingData } from "./types";
 
 // Add missing permission if not defined in the Role.permissions enum
 // This is a temporary fix - in a real app, you would add this to the actual enum

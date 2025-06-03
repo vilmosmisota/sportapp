@@ -1,10 +1,10 @@
 "use client";
 
-import { PermissionDropdownMenu } from "@/components/auth/PermissionDropdownMenu";
 import { MarsIcon, VenusIcon } from "@/components/icons/icons";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
 import DataTableColumnHeader from "@/components/ui/data-table/DataTableColumnHeader";
+import { PermissionDropdownMenu } from "@/composites/auth/PermissionDropdownMenu";
 import { Group, Performer } from "@/entities/member/Performer.schema";
 import { Permission } from "@/entities/role/Role.permissions";
 import { ColumnDef } from "@tanstack/react-table";
@@ -102,7 +102,7 @@ export const columns = ({
 }: MembersTableColumnsProps): ColumnDef<Performer>[] => [
   {
     id: "actions",
-    header: "Actions",
+
     cell: ({ row }) => (
       <MembersTableActions
         member={row.original}
@@ -203,6 +203,24 @@ export const columns = ({
       const gender = row.original.gender || "";
       return gender.toLowerCase().includes(filterValue.toLowerCase());
     },
+  },
+  {
+    accessorKey: "pin",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="PIN" />
+    ),
+    cell: ({ row }) => {
+      const pin = row.original.pin;
+      if (!pin) return <span className="text-muted-foreground">-</span>;
+
+      return (
+        <span className="font-mono text-sm font-medium">
+          {pin.toString().padStart(4, "0")}
+        </span>
+      );
+    },
+    enableSorting: true,
+    size: 80,
   },
   {
     accessorKey: "groups",

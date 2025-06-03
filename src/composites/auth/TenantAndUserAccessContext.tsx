@@ -1,7 +1,7 @@
 "use client";
 
-import { createContext, useContext } from "react";
 import useTenantAndUserAccess from "@/entities/auth/useTenantAndUserAccess";
+import { createContext, useContext } from "react";
 
 type TenantAndUserAccessContextType = ReturnType<typeof useTenantAndUserAccess>;
 

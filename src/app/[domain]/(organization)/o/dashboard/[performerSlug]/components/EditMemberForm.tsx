@@ -1,7 +1,7 @@
 "use client";
 
 import { Performer } from "@/entities/member/Performer.schema";
-import { useTenantAndUserAccessContext } from "../../../../../../../components/auth/TenantAndUserAccessContext";
+import { useTenantAndUserAccessContext } from "../../../../../../../composites/auth/TenantAndUserAccessContext";
 import EditPerformerForm from "./forms/edit/EditPerformerForm";
 
 interface EditMemberFormProps {

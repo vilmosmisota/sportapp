@@ -14,7 +14,7 @@ import { useNavigation } from "./dashboard/hooks/useNavigation";
 import { cn } from "../../../lib/utils";
 
 import { useUIState } from "../../../browserStorage/localStorage/ui-storage";
-import { useTenantAndUserAccessContext } from "../../../components/auth/TenantAndUserAccessContext";
+import { useTenantAndUserAccessContext } from "../../../composites/auth/TenantAndUserAccessContext";
 import { useMediaQuery } from "../../../utils/hooks";
 import { PinnedNav } from "./dashboard/components/PinnedNav";
 

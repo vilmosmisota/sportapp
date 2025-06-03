@@ -44,7 +44,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useTenantAndUserAccessContext } from "../../../../../../../components/auth/TenantAndUserAccessContext";
+import { useTenantAndUserAccessContext } from "../../../../../../../composites/auth/TenantAndUserAccessContext";
 
 function StatItem({
   icon: Icon,

@@ -38,7 +38,7 @@ export function DataTable<TData>({
           <Table className="bg-white">
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id} className="bg-secondary/50">
+                <TableRow key={headerGroup.id} className="bg-sidebar">
                   {headerGroup.headers.map((header) => (
                     <TableHead
                       key={header.id}
@@ -48,7 +48,7 @@ export function DataTable<TData>({
                               header.column.getIsPinned() === "left"
                                 ? "left-0"
                                 : "right-0"
-                            } z-20 bg-secondary/50`
+                            } z-20 bg-sidebar/50`
                           : ""
                       }`}
                       style={{

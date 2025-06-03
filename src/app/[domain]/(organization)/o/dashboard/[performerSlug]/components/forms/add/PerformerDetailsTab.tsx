@@ -122,6 +122,37 @@ export default function PerformerDetailsTab({
             )}
           />
         </div>
+
+        <div className="grid grid-cols-1 gap-4">
+          <FormField
+            control={control}
+            name="pin"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>PIN</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    type="number"
+                    placeholder="Enter 4-digit PIN"
+                    min={1000}
+                    max={9999}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      field.onChange(value ? parseInt(value, 10) : undefined);
+                    }}
+                    value={field.value || ""}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Enter a unique 4-digit PIN for this{" "}
+                  {singularDisplayName.toLowerCase()}
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
       </CardContent>
     </Card>
   );

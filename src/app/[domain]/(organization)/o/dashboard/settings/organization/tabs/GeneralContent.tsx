@@ -1,6 +1,6 @@
-import { PermissionButton } from "@/components/auth/PermissionButton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/composites/auth/PermissionButton";
 import { Permission } from "@/entities/role/Role.permissions";
 import { Tenant } from "@/entities/tenant/Tenant.schema";
 import {

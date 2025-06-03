@@ -1,42 +1,34 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 // Components
-import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { Card, CardContent } from "@/components/ui/card";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { PageHeader } from "@/components/ui/page-header";
-import { UpcomingAttendanceCarousel } from "./components/UpcomingAttendanceCarousel";
 import { ActiveSessionsCarousel } from "./components/ActiveSessionsCarousel";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { ConfirmCloseDialog } from "./components/ConfirmCloseDialog";
+import { UpcomingAttendanceCarousel } from "./components/UpcomingAttendanceCarousel";
 
 // Data fetching
-import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
-import { useTrainingsByDayRange } from "@/entities/training/Training.query";
-import { useActiveAttendanceSessions } from "@/entities/attendance/Attendance.query";
-import { useAttendanceRecords } from "@/entities/attendance/Attendance.query";
+import {
+  useActiveAttendanceSessions,
+  useAttendanceRecords,
+} from "@/entities/attendance/Attendance.query";
 import { usePlayersByTeamId } from "@/entities/group/Group.query";
+import { useTrainingsByDayRange } from "@/entities/training/Training.query";
 
 // Actions
 import {
-  useCreateAttendanceSession,
   useCloseAttendanceSession,
+  useCreateAttendanceSession,
 } from "@/entities/attendance/Attendance.actions.client";
 
 // Types
 import { Training } from "@/entities/training/Training.schema";
-import { useTenantAndUserAccessContext } from "../../../../../../components/auth/TenantAndUserAccessContext";
+import { useTenantAndUserAccessContext } from "../../../../../../composites/auth/TenantAndUserAccessContext";
 
 export default function AttendancePage() {
   const { tenant } = useTenantAndUserAccessContext();

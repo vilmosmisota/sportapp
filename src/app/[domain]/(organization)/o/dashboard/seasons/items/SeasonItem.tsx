@@ -1,20 +1,20 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
+import { Season } from "@/entities/season/Season.schema";
+import { cn } from "@/libs/tailwind/utils";
 import { format } from "date-fns";
 import { MoreVertical, SquarePen, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { Season } from "@/entities/season/Season.schema";
-import { cn } from "@/libs/tailwind/utils";
-import { Badge } from "@/components/ui/badge";
 
-import { PermissionDropdownMenu } from "@/components/auth/PermissionDropdownMenu";
+import { PermissionDropdownMenu } from "@/composites/auth/PermissionDropdownMenu";
 import { Permission } from "@/entities/role/Role.permissions";
 
-import { useDeleteSeason } from "@/entities/season/Season.actions.client";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
+import { useDeleteSeason } from "@/entities/season/Season.actions.client";
 import { toast } from "sonner";
 import { SeasonEditForm } from "../forms/SeasonEditForm";
 
@@ -99,7 +99,7 @@ export function SeasonItem({ season, tenantId }: SeasonItemProps) {
       />
 
       <Card key={season.id} className="overflow-hidden">
-        <CardHeader className="bg-secondary/50 rounded-t-lg px-4 py-3 md:px-6 md:py-4">
+        <CardHeader className="bg-sidebar rounded-t-lg px-4 py-3 md:px-6 md:py-4">
           <div className="flex justify-between items-start md:items-center gap-4">
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2">

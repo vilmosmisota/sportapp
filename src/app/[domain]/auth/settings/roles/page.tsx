@@ -15,7 +15,7 @@ import { useCurrentUser } from "@/entities/user/User.query";
 import { AlertCircle, Shield, Star } from "lucide-react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
-import { useTenantAndUserAccessContext } from "../../../../../components/auth/TenantAndUserAccessContext";
+import { useTenantAndUserAccessContext } from "../../../../../composites/auth/TenantAndUserAccessContext";
 
 export default function RolesSettingsPage() {
   const params = useParams();

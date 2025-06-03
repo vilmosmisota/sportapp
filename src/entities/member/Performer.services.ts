@@ -61,7 +61,18 @@ export const addPerformer = async (
       .select()
       .single();
 
-    if (insertError) throw insertError;
+    if (insertError) {
+      // Handle unique constraint violation for pin
+      if (
+        insertError.code === "23505" &&
+        insertError.message.includes("members_tenantid_pin_unique")
+      ) {
+        throw new Error(
+          "A performer with this PIN already exists in your organization"
+        );
+      }
+      throw insertError;
+    }
 
     // 2. Create group connections if provided
     if (groupConnections?.length) {
@@ -115,7 +126,18 @@ export const updatePerformer = async (
         .eq("tenantId", Number(tenantId))
         .eq("memberType", "performer");
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        // Handle unique constraint violation for pin
+        if (
+          updateError.code === "23505" &&
+          updateError.message.includes("members_tenantid_pin_unique")
+        ) {
+          throw new Error(
+            "A performer with this PIN already exists in your organization"
+          );
+        }
+        throw updateError;
+      }
     }
 
     // 2. Update group connections if provided
@@ -176,7 +198,6 @@ export const updatePerformer = async (
 
 /**
  * Delete a performer and all their related data
- * Handles cleanup of group connections
  */
 export const deletePerformer = async (
   client: TypedClient,
@@ -184,31 +205,68 @@ export const deletePerformer = async (
   tenantId: string
 ): Promise<boolean> => {
   try {
-    // 1. Delete group connections
-    const { error: groupError } = await client
+    // Delete in order: connections first, then member
+    await client
       .from("memberGroupConnections")
       .delete()
       .eq("memberId", performerId);
 
-    if (groupError) throw groupError;
-
-    // 2. Finally, delete the performer record
-    const { error: memberError } = await client
+    const { error } = await client
       .from("members")
       .delete()
       .eq("id", performerId)
       .eq("tenantId", Number(tenantId))
       .eq("memberType", "performer");
 
-    if (memberError) throw memberError;
-
-    console.log(
-      `Successfully deleted performer ${performerId} and all associated data`
-    );
+    if (error) throw error;
 
     return true;
   } catch (error) {
     console.error("Error in deletePerformer:", error);
+    throw error;
+  }
+};
+
+/**
+ * Get members by type (e.g., parents, performers, managers)
+ */
+export const getMembersByType = async (
+  client: TypedClient,
+  tenantId: string,
+  memberType: string
+): Promise<any[]> => {
+  const { data, error } = await client
+    .from("members")
+    .select("*")
+    .eq("tenantId", Number(tenantId))
+    .eq("memberType", memberType);
+
+  if (error) throw error;
+
+  return data || [];
+};
+
+/**
+ * Update the userId for a member (link/unlink user account)
+ */
+export const updateMemberUserId = async (
+  client: TypedClient,
+  memberId: number,
+  tenantId: string,
+  userId: string | null
+): Promise<boolean> => {
+  try {
+    const { error } = await client
+      .from("members")
+      .update({ userId })
+      .eq("id", memberId)
+      .eq("tenantId", Number(tenantId));
+
+    if (error) throw error;
+
+    return true;
+  } catch (error) {
+    console.error("Error in updateMemberUserId:", error);
     throw error;
   }
 };

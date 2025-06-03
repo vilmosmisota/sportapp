@@ -1,13 +1,13 @@
 "use client";
 
-import { PermissionButton } from "@/components/auth/PermissionButton";
+import { PermissionButton } from "@/composites/auth/PermissionButton";
 import { Permission } from "@/entities/role/Role.permissions";
 import { useUsers } from "@/entities/user/User.query";
 import { Plus } from "lucide-react";
 import { useState } from "react";
-import { useTenantAndUserAccessContext } from "../../../../../../../components/auth/TenantAndUserAccessContext";
 import { PageHeader } from "../../../../../../../components/ui/page-header";
 import { ResponsiveSheet } from "../../../../../../../components/ui/responsive-sheet";
+import { useTenantAndUserAccessContext } from "../../../../../../../composites/auth/TenantAndUserAccessContext";
 import AddUserForm from "./forms/AddUserForm";
 import UsersTable from "./tables/UsersTable";
 

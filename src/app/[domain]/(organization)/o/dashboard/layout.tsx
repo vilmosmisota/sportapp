@@ -1,5 +1,5 @@
 import ManagementDashboard from "@/app/[domain]/(components)/ManagementDashboard";
-import ProtectedLayout from "@/components/auth/ProtectedLayout";
+import ProtectedLayout from "@/composites/auth/ProtectedLayout";
 
 export default function OrgDashboardLayout({
   children,

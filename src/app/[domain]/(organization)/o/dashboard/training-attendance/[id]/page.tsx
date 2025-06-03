@@ -1,27 +1,43 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
-import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
-import {
-  useAttendanceSessionById,
-  useAttendanceRecords,
-} from "@/entities/attendance/Attendance.query";
-import { usePlayersByTeamId } from "@/entities/group/Group.query";
-import {
-  Check,
-  Clock,
-  Info,
-  Loader2,
-  UserCheck,
-  Key,
-  RefreshCw,
-  MoreVertical,
-  Trash2,
-  Archive,
-  ClipboardEdit,
-} from "lucide-react";
+import { queryKeys } from "@/cacheKeys/cacheKeys";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
 import { DataTable } from "@/components/ui/data-table/DataTable";
-import { DataTablePagination } from "@/components/ui/data-table/DataTablePagination";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { PageHeader } from "@/components/ui/page-header";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  useCloseAttendanceSession,
+  useDeleteAttendanceSession,
+  useUpdateAttendanceStatuses,
+} from "@/entities/attendance/Attendance.actions.client";
+import {
+  useAttendanceRecords,
+  useAttendanceSessionById,
+} from "@/entities/attendance/Attendance.query";
+import { AttendanceStatus } from "@/entities/attendance/Attendance.schema";
+import { usePlayersByTeamId } from "@/entities/group/Group.query";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -33,43 +49,23 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/cacheKeys/cacheKeys";
-import { useState, useMemo } from "react";
 import { format } from "date-fns";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { AttendanceStatus } from "@/entities/attendance/Attendance.schema";
-import {
-  useCloseAttendanceSession,
-  useDeleteAttendanceSession,
-  useUpdateAttendanceStatuses,
-} from "@/entities/attendance/Attendance.actions.client";
+  Archive,
+  ClipboardEdit,
+  Info,
+  Key,
+  Loader2,
+  MoreVertical,
+  RefreshCw,
+  Trash2,
+  UserCheck,
+} from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { PageHeader } from "@/components/ui/page-header";
-import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useTenantAndUserAccessContext } from "../../../../../../../composites/auth/TenantAndUserAccessContext";
 import { ConfirmCloseDialog } from "../components/ConfirmCloseDialog";
-import { useTenantAndUserAccessContext } from "../../../../../../../components/auth/TenantAndUserAccessContext";
 type PlayerAttendanceRow = {
   id: number;
   attendanceSessionId: number | null;

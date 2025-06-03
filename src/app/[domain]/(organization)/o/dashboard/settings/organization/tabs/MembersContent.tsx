@@ -1,6 +1,6 @@
-import { PermissionButton } from "@/components/auth/PermissionButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
+import { PermissionButton } from "@/composites/auth/PermissionButton";
 import { Permission } from "@/entities/role/Role.permissions";
 import { Tenant } from "@/entities/tenant/Tenant.schema";
 import { SquarePen, Users } from "lucide-react";

@@ -27,6 +27,7 @@ export const PerformerSchema = z.object({
   memberType: z.literal(MemberType.Performer),
   userId: z.string().uuid().nullable(),
   tenantId: z.number().nullable(),
+  pin: z.number().nullable(),
 
   // Relations from query
   groupConnections: z.array(MemberGroupConnectionSchema).optional(),
@@ -47,50 +48,13 @@ export const PerformerFormSchema = z.object({
   memberType: z.literal(MemberType.Performer),
   userId: z.string().uuid().nullable().optional(),
   tenantId: z.number().nullable().optional(),
+  pin: z
+    .number()
+    .min(1000, "PIN must be exactly 4 digits")
+    .max(9999, "PIN must be exactly 4 digits")
+    .optional(),
   groupConnections: z.array(MemberGroupConnectionSchema).optional(),
 });
-
-// Class for handling performer data transformation
-export class PerformerData {
-  public readonly firstName: string;
-  public readonly lastName: string;
-  public readonly dateOfBirth: string;
-  public readonly gender: MemberGender;
-  public readonly memberType: MemberType.Performer;
-  public readonly userId: string | null;
-  public readonly tenantId: number | null;
-  public readonly groupConnections: MemberGroupConnection[];
-
-  constructor(formData: PerformerForm) {
-    this.firstName = formData.firstName;
-    this.lastName = formData.lastName;
-    this.dateOfBirth = formData.dateOfBirth;
-    this.gender = formData.gender;
-    this.memberType = formData.memberType;
-    this.userId = formData.userId || null;
-    this.tenantId = null; // Will be set by the service
-    this.groupConnections = formData.groupConnections || [];
-  }
-
-  // Convert to the format expected by the service
-  toServiceData(): Omit<Performer, "id" | "createdAt"> {
-    return {
-      firstName: this.firstName,
-      lastName: this.lastName,
-      dateOfBirth: this.dateOfBirth,
-      gender: this.gender,
-      memberType: this.memberType,
-      userId: this.userId,
-      tenantId: this.tenantId,
-      groupConnections: this.groupConnections,
-    };
-  }
-
-  // Static factory method for creating from form data
-  static fromFormData(formData: PerformerForm): PerformerData {
-    return new PerformerData(formData);
-  }
-}
 
 // Type exports
 export type Group = z.infer<typeof GroupSchema>;

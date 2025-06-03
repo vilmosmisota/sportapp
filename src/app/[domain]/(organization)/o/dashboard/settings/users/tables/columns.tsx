@@ -1,6 +1,6 @@
-import { PermissionDropdownMenu } from "@/components/auth/PermissionDropdownMenu";
 import { Badge } from "@/components/ui/badge";
 import DataTableColumnHeader from "@/components/ui/data-table/DataTableColumnHeader";
+import { PermissionDropdownMenu } from "@/composites/auth/PermissionDropdownMenu";
 import { Permission } from "@/entities/role/Role.permissions";
 import { UserMember } from "@/entities/user/User.schema";
 import { ColumnDef } from "@tanstack/react-table";

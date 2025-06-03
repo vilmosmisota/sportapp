@@ -1,38 +1,34 @@
 "use client";
 
+import { BarChart3, Calendar, Trophy, Users } from "lucide-react";
 import { useParams } from "next/navigation";
-import { Calendar, Users, BarChart3, Trophy } from "lucide-react";
 
-import { useGetTeamsByTenantId } from "@/entities/group/Group.query";
-import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
-import { useSeasonsByTenantId } from "@/entities/season/Season.query";
-import { ErrorBoundary } from "@/components/ui/error-boundary";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { format } from "date-fns";
-import { useAllTeamPlayerAttendanceAggregates } from "@/entities/attendance/Attendance.actions.client";
-import { AttendanceCharts } from "./components/AttendanceCharts";
-import { PerformanceOverview } from "./components/PerformanceOverview";
-import { AttendanceTable } from "./components/AttendanceTable";
-import SeasonSelect from "@/components/calendar/SeasonSelect";
+import { Card, CardContent } from "@/components/ui/card";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { PageHeader } from "@/components/ui/page-header";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
-  AttendanceRecordAggregate,
-  AttendanceStatus,
-} from "@/entities/attendance/Attendance.schema";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+  useAllTeamPlayerAttendanceAggregates,
+  useTeamAttendanceAggregates,
+} from "@/entities/attendance/Attendance.actions.client";
 import {
-  Team,
+  calculateAccuracyRate,
+  calculateAttendanceRate,
+} from "@/entities/attendance/Attendance.utils";
+import { useGetTeamsByTenantId } from "@/entities/group/Group.query";
+import {
   PlayerTeamConnectionSchema,
+  Team,
   getDisplayAgeGroup,
   getDisplayGender,
 } from "@/entities/group/Group.schema";
-import {
-  calculateAttendanceRate,
-  calculateAccuracyRate,
-} from "@/entities/attendance/Attendance.utils";
-import { useTeamAttendanceAggregates } from "@/entities/attendance/Attendance.actions.client";
-import { useTenantAndUserAccessContext } from "../../../../../../../components/auth/TenantAndUserAccessContext";
+import { useSeasonsByTenantId } from "@/entities/season/Season.query";
+import { format } from "date-fns";
+import { useTenantAndUserAccessContext } from "../../../../../../../composites/auth/TenantAndUserAccessContext";
+import { AttendanceCharts } from "./components/AttendanceCharts";
+import { AttendanceTable } from "./components/AttendanceTable";
+import { PerformanceOverview } from "./components/PerformanceOverview";
 
 function formatTeamName(team: {
   name?: string | null | undefined;

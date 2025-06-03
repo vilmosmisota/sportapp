@@ -12,8 +12,8 @@ import { usePerformers } from "@/entities/member/Performer.query";
 import { Performer } from "@/entities/member/Performer.schema";
 import { Plus } from "lucide-react";
 import { useState } from "react";
-import { useTenantAndUserAccessContext } from "../../../../../../components/auth/TenantAndUserAccessContext";
 import { ResponsiveSheet } from "../../../../../../components/ui/responsive-sheet";
+import { useTenantAndUserAccessContext } from "../../../../../../composites/auth/TenantAndUserAccessContext";
 import AddPerformerForm from "./components/forms/add/AddPerformerForm";
 import MembersTable from "./components/MembersTable";
 import PerformerPageLoader from "./components/PerformerPageLoader";
@@ -60,7 +60,6 @@ export default function DynamicMembersPage({
     );
   }
 
-  // Use the performers directly as they already have the correct structure
   const performers = (members || []) as Performer[];
 
   return (

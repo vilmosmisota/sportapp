@@ -1,16 +1,16 @@
 "use client";
 
+import { PageHeader } from "@/components/ui/page-header";
+import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
+import { PermissionButton } from "@/composites/auth/PermissionButton";
 import { useOpponents } from "@/entities/opponent/Opponent.query";
+import { Permission } from "@/entities/role/Role.permissions";
 import { Plus } from "lucide-react";
 import { useState } from "react";
-import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
-import { PageHeader } from "@/components/ui/page-header";
-import { PermissionButton } from "@/components/auth/PermissionButton";
-import { Permission } from "@/entities/role/Role.permissions";
 
-import { CreateOpponentForm } from "./form";
+import { useTenantAndUserAccessContext } from "../../../../../../composites/auth/TenantAndUserAccessContext";
 import OpponentsDataTable from "./components/OpponentsDataTable";
-import { useTenantAndUserAccessContext } from "../../../../../../components/auth/TenantAndUserAccessContext";
+import { CreateOpponentForm } from "./form";
 
 export default function OpponentsPage() {
   const { tenant } = useTenantAndUserAccessContext();

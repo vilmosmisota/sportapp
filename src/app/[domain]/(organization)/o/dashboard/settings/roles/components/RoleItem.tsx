@@ -1,10 +1,10 @@
 "use client";
 
-import { PermissionDropdownMenu } from "@/components/auth/PermissionDropdownMenu";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
+import { PermissionDropdownMenu } from "@/composites/auth/PermissionDropdownMenu";
 import { Permission } from "@/entities/role/Role.permissions";
 import { Role } from "@/entities/role/Role.schema";
 import { formatPermissionName } from "@/entities/role/Role.utils";

@@ -5,16 +5,11 @@ import {
   getTenantPerformerSlug,
 } from "@/entities/member/Member.utils";
 import { cn } from "@/libs/tailwind/utils";
-import {
-  CheckCircle,
-  Link as LinkIcon,
-  ShieldCheck,
-  Users,
-} from "lucide-react";
+import { Link as LinkIcon, ShieldCheck, Users } from "lucide-react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import React from "react";
-import { useTenantAndUserAccessContext } from "../../../../../../components/auth/TenantAndUserAccessContext";
+import { useTenantAndUserAccessContext } from "../../../../../../composites/auth/TenantAndUserAccessContext";
 
 interface NavItem {
   name: string;
@@ -55,12 +50,6 @@ export default function PerformerSlugLayout({
       href: baseHref,
       icon: <Users className="h-4 w-4" />,
       description: `Manage ${displayName.toLowerCase()}`,
-    },
-    {
-      name: "Verifications",
-      href: `${baseHref}/verifications`,
-      icon: <CheckCircle className="h-4 w-4" />,
-      description: "Manage verification status and documents",
     },
     {
       name: "Connections",

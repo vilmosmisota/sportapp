@@ -1,59 +1,41 @@
 "use client";
 
 import { useGetTeamsByTenantId } from "@/entities/group/Group.query";
-import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
-import { Button } from "@/components/ui/button";
-import {
-  Edit,
-  Trash2,
-  Users,
-  Calendar,
-  MapPin,
-  Loader2,
-  MoreVertical,
-} from "lucide-react";
+import { Edit, Loader2, Trash2, Users } from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  getDisplayGender,
-  getDisplayAgeGroup,
-} from "@/entities/group/Group.schema";
-import { Separator } from "@/components/ui/separator";
-import { playerColumns, TeamPlayer } from "./columns";
 import { DataTable } from "@/components/ui/data-table/DataTable";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
+import { PageHeader } from "@/components/ui/page-header";
+import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import {
+  getDisplayAgeGroup,
+  getDisplayGender,
+} from "@/entities/group/Group.schema";
 import {
   getCoreRowModel,
-  useReactTable,
   getPaginationRowModel,
   getSortedRowModel,
-  VisibilityState,
+  useReactTable,
 } from "@tanstack/react-table";
-import { Badge } from "@/components/ui/badge";
-import { ErrorBoundary } from "@/components/ui/error-boundary";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
-import { PageHeader } from "@/components/ui/page-header";
+import { playerColumns, TeamPlayer } from "./columns";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
-import TeamTrainings from "./components/TeamTrainings";
-import { toast } from "sonner";
-import { useRemovePlayerFromTeam } from "@/entities/member/PlayerTeam.actions.client";
-import ManagePlayersForm from "./forms/ManagePlayersForm";
-import { Permission } from "@/entities/role/Role.permissions";
-import { PermissionButton } from "@/components/auth/PermissionButton";
-import { PermissionDropdownMenu } from "@/components/auth/PermissionDropdownMenu";
-import EditTeamForm from "../forms/EditTeamForm";
-import { useRouter } from "next/navigation";
-import { useDeleteTeam } from "@/entities/group/Group.actions.client";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
-import { useTenantAndUserAccessContext } from "../../../../../../../components/auth/TenantAndUserAccessContext";
+import { PermissionButton } from "@/composites/auth/PermissionButton";
+import { PermissionDropdownMenu } from "@/composites/auth/PermissionDropdownMenu";
+import { useDeleteTeam } from "@/entities/group/Group.actions.client";
+import { useRemovePlayerFromTeam } from "@/entities/member/PlayerTeam.actions.client";
+import { Permission } from "@/entities/role/Role.permissions";
+import { useRouter } from "next/navigation";
+import { useCallback, useMemo, useState } from "react";
+import { toast } from "sonner";
+import { useTenantAndUserAccessContext } from "../../../../../../../composites/auth/TenantAndUserAccessContext";
+import EditTeamForm from "../forms/EditTeamForm";
+import TeamTrainings from "./components/TeamTrainings";
+import ManagePlayersForm from "./forms/ManagePlayersForm";
 
 export default function TeamPage({
   params,

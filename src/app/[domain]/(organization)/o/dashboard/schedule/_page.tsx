@@ -48,7 +48,7 @@ import EditGameForm from "./forms/EditGameForm";
 import EditTrainingForm from "./forms/EditTrainingForm";
 
 import { useGameById } from "@/entities/game/Game.query";
-import { useTenantAndUserAccessContext } from "../../../../../../components/auth/TenantAndUserAccessContext";
+import { useTenantAndUserAccessContext } from "../../../../../../composites/auth/TenantAndUserAccessContext";
 
 enum EventType {
   Game = "game",

@@ -48,3 +48,8 @@ export function getAgeFromDateOfBirth(dateOfBirth: string): number {
   const birthDate = new Date(dateOfBirth);
   return differenceInYears(today, birthDate);
 }
+
+export function isEligibleForUserAccount(dateOfBirth: string): boolean {
+  const age = getAgeFromDateOfBirth(dateOfBirth);
+  return age >= 13;
+}

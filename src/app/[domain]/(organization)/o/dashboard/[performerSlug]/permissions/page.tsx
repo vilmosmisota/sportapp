@@ -5,7 +5,7 @@ import {
   getTenantPerformerName,
   getTenantPerformerSingularName,
 } from "@/entities/member/Member.utils";
-import { useTenantAndUserAccessContext } from "../../../../../../../components/auth/TenantAndUserAccessContext";
+import { useTenantAndUserAccessContext } from "../../../../../../../composites/auth/TenantAndUserAccessContext";
 
 export default function PermissionsPage() {
   const { tenant } = useTenantAndUserAccessContext();

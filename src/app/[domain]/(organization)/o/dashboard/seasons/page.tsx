@@ -1,9 +1,9 @@
 "use client";
 
-import { PermissionButton } from "@/components/auth/PermissionButton";
-import { useTenantAndUserAccessContext } from "@/components/auth/TenantAndUserAccessContext";
 import { PageHeader } from "@/components/ui/page-header";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
+import { PermissionButton } from "@/composites/auth/PermissionButton";
+import { useTenantAndUserAccessContext } from "@/composites/auth/TenantAndUserAccessContext";
 import { Permission } from "@/entities/role/Role.permissions";
 import { useSeasons } from "@/entities/season/Season.actions.client";
 import { Plus } from "lucide-react";

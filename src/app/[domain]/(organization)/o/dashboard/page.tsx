@@ -2,7 +2,7 @@
 
 import { useSeasonsByTenantId } from "@/entities/season/Season.query";
 
-import { useTenantAndUserAccessContext } from "@/components/auth/TenantAndUserAccessContext";
+import { useTenantAndUserAccessContext } from "@/composites/auth/TenantAndUserAccessContext";
 
 export default function OrgDashboardPage({
   params,

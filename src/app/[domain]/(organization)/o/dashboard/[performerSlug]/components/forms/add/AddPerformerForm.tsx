@@ -5,10 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 import FormButtons from "@/components/ui/form-buttons";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MemberType } from "@/entities/member/Member.schema";
 import { useAddPerformer } from "@/entities/member/Performer.actions.client";
+import { PerformerData } from "@/entities/member/Performer.data";
 import {
-  PerformerData,
   PerformerForm,
   PerformerFormSchema,
 } from "@/entities/member/Performer.schema";
@@ -40,16 +39,7 @@ export default function AddPerformerForm({
 
   const form = useForm<PerformerForm>({
     resolver: zodResolver(PerformerFormSchema),
-    defaultValues: {
-      firstName: "",
-      lastName: "",
-      dateOfBirth: "",
-      gender: undefined,
-      memberType: MemberType.Performer,
-      userId: undefined,
-      tenantId: undefined,
-      groupConnections: [],
-    },
+    defaultValues: PerformerData.createDefaultFormValues(Number(tenantId)),
   });
 
   const { handleSubmit, watch } = form;
@@ -58,56 +48,39 @@ export default function AddPerformerForm({
   const dateOfBirth = watch("dateOfBirth");
 
   const resetFormCompletely = () => {
-    form.reset({
-      firstName: "",
-      lastName: "",
-      dateOfBirth: "",
-      gender: undefined,
-      memberType: MemberType.Performer,
-      userId: undefined,
-      tenantId: undefined,
-      groupConnections: [],
-    });
+    form.reset(PerformerData.createDefaultFormValues(Number(tenantId)));
     setFormKey((prev) => prev + 1);
   };
 
   const onSubmit = async (data: PerformerForm) => {
     const performerData = PerformerData.fromFormData(data);
 
-    await addPerformer.mutateAsync(
-      {
+    try {
+      await addPerformer.mutateAsync({
         memberData: performerData.toServiceData(),
-      },
-      {
-        onSuccess: () => {
-          resetFormCompletely();
-          setIsParentModalOpen?.(false);
-          toast.success(`${singularDisplayName} added successfully`);
-        },
-        onError: (error) => {
-          toast.error(`Error adding ${singularDisplayName}: ${error.message}`);
-        },
-      }
-    );
+      });
+
+      resetFormCompletely();
+      setIsParentModalOpen?.(false);
+      toast.success(`${singularDisplayName} added successfully`);
+    } catch (error: any) {
+      toast.error(`Error adding ${singularDisplayName}: ${error.message}`);
+    }
   };
 
   const onSubmitAndAddAnother = async (data: PerformerForm) => {
     const performerData = PerformerData.fromFormData(data);
 
-    await addPerformer.mutateAsync(
-      {
+    try {
+      await addPerformer.mutateAsync({
         memberData: performerData.toServiceData(),
-      },
-      {
-        onSuccess: () => {
-          resetFormCompletely();
-          toast.success(`${singularDisplayName} added successfully`);
-        },
-        onError: (error) => {
-          toast.error(`Error adding ${singularDisplayName}: ${error.message}`);
-        },
-      }
-    );
+      });
+
+      resetFormCompletely();
+      toast.success(`${singularDisplayName} added successfully`);
+    } catch (error: any) {
+      toast.error(`Error adding ${singularDisplayName}: ${error.message}`);
+    }
   };
 
   const onCancel = () => {

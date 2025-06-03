@@ -44,33 +44,6 @@ export const queryKeys = {
       ["member", "byGroup", tenantId, groupId] as const,
     familyConnections: (tenantId: string | undefined) =>
       ["member", "familyConnections", tenantId] as const,
-    parentPerformers: (
-      tenantId: string | undefined,
-      parentId: number | undefined
-    ) => ["member", "parentPerformers", tenantId, parentId] as const,
-    performerParents: (
-      tenantId: string | undefined,
-      performerId: number | undefined
-    ) => ["member", "performerParents", tenantId, performerId] as const,
-  },
-  memberTeam: {
-    all: ["memberTeam"] as const,
-    detail: (tenantId: string | undefined, connectionId: string | undefined) =>
-      [...queryKeys.memberTeam.all, tenantId, connectionId] as const,
-  },
-  seasonMembershipPrice: {
-    all: ["seasonMembershipPrice"] as const,
-    detail: (
-      tenantId: string | undefined,
-      seasonId: string | undefined,
-      membershipCategoryId: string | undefined
-    ) =>
-      [
-        ...queryKeys.seasonMembershipPrice.all,
-        tenantId,
-        seasonId,
-        membershipCategoryId,
-      ] as const,
   },
   training: {
     all: ["training"] as const,

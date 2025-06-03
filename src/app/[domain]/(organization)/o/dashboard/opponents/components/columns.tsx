@@ -1,26 +1,26 @@
-import { ColumnDef } from "@tanstack/react-table";
-import { SquarePen, Trash2, Mail, Phone } from "lucide-react";
-import DataTableColumnHeader from "@/components/ui/data-table/DataTableColumnHeader";
-import { Opponent } from "@/entities/opponent/Opponent.schema";
-import { useState } from "react";
-import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
-import { useDeleteOpponent } from "@/entities/opponent/Opponent.actions";
-import { toast } from "sonner";
-import { Tenant } from "@/entities/tenant/Tenant.schema";
-import {
-  getDisplayAgeGroup,
-  getDisplayGender,
-} from "@/entities/group/Group.schema";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
-import { PermissionDropdownMenu } from "@/components/auth/PermissionDropdownMenu";
-import { Permission } from "@/entities/role/Role.permissions";
+import DataTableColumnHeader from "@/components/ui/data-table/DataTableColumnHeader";
+import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { PermissionDropdownMenu } from "@/composites/auth/PermissionDropdownMenu";
+import {
+  getDisplayAgeGroup,
+  getDisplayGender,
+} from "@/entities/group/Group.schema";
+import { useDeleteOpponent } from "@/entities/opponent/Opponent.actions";
+import { Opponent } from "@/entities/opponent/Opponent.schema";
+import { Permission } from "@/entities/role/Role.permissions";
+import { Tenant } from "@/entities/tenant/Tenant.schema";
+import { ColumnDef } from "@tanstack/react-table";
+import { Mail, Phone, SquarePen, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 import { EditOpponentForm } from "../form";
 
 interface OpponentTableActionsProps {

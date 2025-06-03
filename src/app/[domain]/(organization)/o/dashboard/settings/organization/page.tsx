@@ -2,8 +2,8 @@
 
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useTenantAndUserAccessContext } from "../../../../../../../components/auth/TenantAndUserAccessContext";
 import { PageHeader } from "../../../../../../../components/ui/page-header";
+import { useTenantAndUserAccessContext } from "../../../../../../../composites/auth/TenantAndUserAccessContext";
 import GeneralContent from "./tabs/GeneralContent";
 import MembersContent from "./tabs/MembersContent";
 import TrainingDevelopmentContent from "./tabs/TrainingDevelopmentContent";
