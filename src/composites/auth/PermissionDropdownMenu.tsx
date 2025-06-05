@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Permission } from "@/entities/role/Role.permissions";
-import { UserDomain } from "@/entities/user/User.schema";
+import { Access } from "@/entities/role/Role.schema";
 import { cn } from "@/libs/tailwind/utils";
 import { MoreVertical } from "lucide-react";
 import { Fragment, ReactNode } from "react";
@@ -26,7 +26,6 @@ export interface MenuAction {
 
 interface PermissionDropdownMenuProps {
   actions: MenuAction[];
-  allowSystemRole?: boolean;
   trigger?: ReactNode;
   align?: "start" | "end" | "center";
   className?: string;
@@ -35,43 +34,34 @@ interface PermissionDropdownMenuProps {
 
 export function PermissionDropdownMenu({
   actions,
-  allowSystemRole = true,
   trigger,
   align = "end",
   className,
   buttonClassName,
 }: PermissionDropdownMenuProps) {
-  const { user, isLoading, error } = useTenantAndUserAccessContext();
+  const { tenantUser, isLoading, error } = useTenantAndUserAccessContext();
 
-  // If loading or error, don't show menu
   if (isLoading || error) {
     return null;
   }
 
-  // If no user data, don't show menu
-  if (!user) {
+  if (!tenantUser?.user) {
     return null;
   }
 
-  // Check if user has system domain
-  const hasSystemDomain =
-    user.userDomains?.includes(UserDomain.SYSTEM) ?? false;
+  const userAccess = tenantUser.role?.access || [];
+  const hasSystemAccess = userAccess.includes(Access.SYSTEM);
 
-  // Filter actions based on permissions
   const visibleActions = actions.filter((action) => {
-    // If no permission required, show the action
     if (!action.permission) return true;
 
-    // System domain users always have access
-    if (hasSystemDomain) return true;
+    if (hasSystemAccess) return true;
 
-    // Check specific permission in user's role
     const hasPermission =
-      user.role?.permissions.includes(action.permission) ?? false;
+      tenantUser.role?.permissions.includes(action.permission) ?? false;
     return hasPermission;
   });
 
-  // If no visible actions, don't show menu
   if (!visibleActions.length) {
     return null;
   }

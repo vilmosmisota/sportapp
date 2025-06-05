@@ -1,44 +1,42 @@
 import { Button } from "@/components/ui/button";
 import { Permission } from "@/entities/role/Role.permissions";
-import { UserDomain } from "@/entities/user/User.schema";
+import { Access } from "@/entities/role/Role.schema";
 import { ComponentProps } from "react";
 import { useTenantAndUserAccessContext } from "./TenantAndUserAccessContext";
 
 interface PermissionButtonProps extends ComponentProps<typeof Button> {
   permission?: Permission;
   fallback?: React.ReactNode; // Optional fallback content when permission is denied
-  allowSystemRole?: boolean;
 }
 
 export function PermissionButton({
   permission,
   fallback = null,
-  allowSystemRole = true,
   ...props
 }: PermissionButtonProps) {
-  const { user, isLoading, error } = useTenantAndUserAccessContext();
-
-  if (!permission) {
-    return <Button {...props} />;
-  }
+  const { tenantUser, isLoading, error } = useTenantAndUserAccessContext();
 
   if (isLoading || error) {
     return fallback;
   }
 
-  if (!user) {
+  if (!tenantUser?.user) {
     return fallback;
   }
 
-  const hasSystemDomain =
-    user.userDomains?.includes(UserDomain.SYSTEM) ?? false;
-
-  // System domain users always have access, regardless of allowSystemRole setting
-  if (hasSystemDomain) {
+  if (!permission) {
     return <Button {...props} />;
   }
 
-  const hasPermission = user.role?.permissions.includes(permission) ?? false;
+  const userAccess = tenantUser.role?.access || [];
+  const hasSystemAccess = userAccess.includes(Access.SYSTEM);
+
+  if (hasSystemAccess) {
+    return <Button {...props} />;
+  }
+
+  const hasPermission =
+    tenantUser.role?.permissions.includes(permission) ?? false;
 
   if (!hasPermission) {
     return fallback;

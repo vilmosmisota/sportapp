@@ -1,9 +1,9 @@
 "use client";
 
-import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AccessDenialReason } from "@/entities/auth/useTenantAndUserAccess";
+import { AlertCircle } from "lucide-react";
 
 interface NoAccessMessages {
   title: string;
@@ -23,13 +23,6 @@ const messages: Record<AccessDenialReason, NoAccessMessages> = {
       "You're trying to access a protected organization page that you don't have access to.",
     additionalInfo:
       "If you believe this is a mistake, please contact the organization administrator to request access.",
-  },
-  NO_DOMAIN_ROLE_ACCESS: {
-    title: "Insufficient Permissions",
-    description:
-      "You're trying to access a protected page that requires specific role permissions.",
-    additionalInfo:
-      "Since you're a member of this organization but don't have the required role, please contact your organization's management team or administrators to request the necessary permissions.",
   },
 };
 

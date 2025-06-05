@@ -4,15 +4,13 @@ import { useSupabase } from "@/libs/supabase/useSupabase";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { TenantType } from "../tenant/Tenant.schema";
 import { getTenantByDomain } from "../tenant/Tenant.services";
 import {
-  UserForm,
+  CreateUser,
+  UpdateUser,
   UserLogin,
   UserLoginSchema,
-  UserUpdateForm,
 } from "./User.schema";
-import { checkTenantUserByIds } from "./User.services";
 
 export async function logIn(formData: UserLogin, domain: string) {
   const parsedData = UserLoginSchema.safeParse(formData);
@@ -44,13 +42,14 @@ export async function logIn(formData: UserLogin, domain: string) {
   const tenantId = tenant.id.toString();
   const tenantType = tenant.type;
 
-  const checkedTenantUser = await checkTenantUserByIds(
-    supabase,
-    tenantId,
-    authData.user.id
-  );
+  const { data: tenantUser, error: tenantUserError } = await supabase
+    .from("tenantUsers")
+    .select("id")
+    .eq("userId", authData.user.id)
+    .eq("tenantId", tenantId)
+    .maybeSingle();
 
-  if (!checkedTenantUser) {
+  if (tenantUserError || !tenantUser) {
     await supabase.auth.signOut();
     throw new Error("You don't have access to this tenant");
   }
@@ -62,7 +61,7 @@ export const useAddUser = (tenantId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ userData }: { userData: UserForm }) => {
+    mutationFn: async ({ userData }: { userData: CreateUser }) => {
       const response = await fetch("/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -120,7 +119,7 @@ export const useUpdateUser = (userId: string, tenantId: string) => {
   const queryKey = [queryKeys.user.list, tenantId];
 
   return useMutation({
-    mutationFn: async ({ userData }: { userData: UserUpdateForm }) => {
+    mutationFn: async ({ userData }: { userData: UpdateUser }) => {
       const response = await fetch("/api/users", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -168,14 +167,12 @@ export const useDeleteUser = (tenantId: string) => {
       return data;
     },
     onSuccess: () => {
-      // Invalidate multiple related queries
       queryClient.invalidateQueries({ queryKey: [queryKeys.users.all] });
       queryClient.invalidateQueries({
         queryKey: [queryKeys.user.list, tenantId],
       });
       queryClient.invalidateQueries({ queryKey: [queryKeys.user.current] });
 
-      // Invalidate member queries since we delete members
       queryClient.invalidateQueries({
         queryKey: queryKeys.member.list(tenantId),
       });
@@ -202,13 +199,8 @@ export const useLogIn = (domain: string) => {
 
   return useMutation({
     mutationFn: (formData: UserLogin) => logIn(formData, domain),
-    onSuccess: ({ tenantType }) => {
-      // Redirect based on tenant type with domain
-      if (tenantType === TenantType.ORGANIZATION) {
-        router.push(`/o/dashboard`);
-      } else if (tenantType === TenantType.LEAGUE) {
-        router.push(`/l/dashboard`);
-      }
+    onSuccess: () => {
+      router.push(`/app/`);
       queryClient.invalidateQueries({ queryKey: queryKeys.user.current });
       router.refresh();
       toast.success("Successfully signed in!");

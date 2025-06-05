@@ -1,10 +1,12 @@
+import { useMemo } from "react";
 import { useUsers } from "../User.query";
 
 export const useAvailableUsers = (tenantId: string) => {
   const { data: users = [], ...rest } = useUsers(tenantId);
 
-  // Filter users that don't have an existing member profile
-  const availableUsers = users.filter((user) => !user.member);
+  const availableUsers = useMemo(() => {
+    return users.filter((user) => !user.member);
+  }, [users]);
 
   return { ...rest, data: availableUsers };
 };

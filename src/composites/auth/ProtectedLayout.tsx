@@ -1,9 +1,9 @@
 "use client";
 
-import { ReactNode } from "react";
 import useTenantAndUserAccess from "@/entities/auth/useTenantAndUserAccess";
-import { TenantAndUserAccessContext } from "./TenantAndUserAccessContext";
+import { ReactNode } from "react";
 import AccessLoadingFallback from "./AccessLoadingFallback";
+import { TenantAndUserAccessContext } from "./TenantAndUserAccessContext";
 
 /**
  * ProtectedLayout component for wrapping layouts/pages that require authentication and tenant access
@@ -20,24 +20,20 @@ import AccessLoadingFallback from "./AccessLoadingFallback";
 export default function ProtectedLayout({
   domain,
   children,
-  fallback = <AccessLoadingFallback />,
+  loadingComponent = <AccessLoadingFallback />,
   errorComponent = (error: Error) => <div>Error: {error.message}</div>,
 }: {
   domain: string;
   children: ReactNode;
-  fallback?: ReactNode;
+  loadingComponent?: ReactNode;
   errorComponent?: (error: Error) => ReactNode;
 }) {
   const accessData = useTenantAndUserAccess(domain);
-  const { isLoading, error, hasAccess, user, tenant } = accessData;
+  const { isLoading, error } = accessData;
 
-  if (isLoading) return <>{fallback}</>;
+  if (isLoading) return <>{loadingComponent}</>;
 
   if (error) return <>{errorComponent(error)}</>;
-
-  if (!hasAccess || !user || !tenant) {
-    return <>{fallback}</>;
-  }
 
   return (
     <TenantAndUserAccessContext.Provider value={accessData}>

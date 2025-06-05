@@ -179,10 +179,10 @@ export default function AuthDashboard({ items, children }: AuthDashboardProps) {
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
                           <Link
-                            href="/o/dashboard"
+                            href=/app/management"
                             className={cn(
                               "flex items-center",
-                              pathname.includes("/o/dashboard") && "bg-accent"
+                              pathname.includes(/app/management") && "bg-accent"
                             )}
                           >
                             <LayoutDashboard className="mr-2 h-4 w-4" />
@@ -230,10 +230,10 @@ export default function AuthDashboard({ items, children }: AuthDashboardProps) {
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link
-                        href="/o/dashboard"
+                        href=/app/management"
                         className={cn(
                           "flex items-center",
-                          pathname.includes("/o/dashboard") && "bg-accent"
+                          pathname.includes(/app/management") && "bg-accent"
                         )}
                       >
                         <LayoutDashboard className="mr-2 h-4 w-4" />

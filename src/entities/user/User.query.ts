@@ -1,15 +1,15 @@
 import { queryKeys } from "@/cacheKeys/cacheKeys";
 import { useSupabase } from "@/libs/supabase/useSupabase";
 import { useQuery } from "@tanstack/react-query";
-import { getCurrentUser, getUsersByTenantId } from "./User.services";
+import { getCurrentUserByTenantId, getUsersByTenantId } from "./User.services";
 
-export const useCurrentUser = () => {
+export const useCurrentUser = (tenantId: string) => {
   const client = useSupabase();
   const queryKey = queryKeys.user.current;
 
   return useQuery({
     queryKey,
-    queryFn: () => getCurrentUser(client),
+    queryFn: () => getCurrentUserByTenantId(client, tenantId),
   });
 };
 

@@ -1,7 +1,6 @@
 import { TypedClient } from "@/libs/supabase/type";
 import { Role, RoleForm, RoleSchema } from "./Role.schema";
 
-// Get all roles for a tenant (including global roles)
 export const getRolesByTenant = async (
   client: TypedClient,
   tenantId: number
@@ -15,7 +14,6 @@ export const getRolesByTenant = async (
   return data.map((role) => RoleSchema.parse(role));
 };
 
-// Create a new role
 export const createRole = async (
   client: TypedClient,
   roleData: RoleForm
@@ -30,7 +28,6 @@ export const createRole = async (
   return RoleSchema.parse(data);
 };
 
-// Update an existing role
 export const updateRole = async (
   client: TypedClient,
   roleId: number,
@@ -47,7 +44,6 @@ export const updateRole = async (
   return RoleSchema.parse(data);
 };
 
-// Delete a role
 export const deleteRole = async (
   client: TypedClient,
   roleId: number
