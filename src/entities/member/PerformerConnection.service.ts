@@ -9,17 +9,24 @@ const PERFORMER_WITH_CONNECTION_QUERY = `
   firstName,
   lastName,
   dateOfBirth,
-  userId,
-  user:users(
-    id,
-    email
+  tenantUserId,
+  tenantUser:tenantUsers(
+    user:users(
+      id,
+      email
+    )
   ),
   parentConnections:familyMemberConnections!performerId(
+    id,
+    createdAt,
+    parentId,
+    performerId,
+    relationship,
     parentMember:members!parentId(
       id,
       firstName,
       lastName,
-      userId
+      tenantUserId
     )
   )
 `;

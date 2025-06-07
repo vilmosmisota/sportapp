@@ -1,12 +1,15 @@
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { startTransition, useEffect, useMemo } from "react";
 import { useTenantByDomain } from "../tenant/Tenant.query";
 import { useCurrentUser } from "../user/User.query";
 
 export type AccessDenialReason = "NO_USER" | "NO_TENANT_ACCESS";
 
+const EXCEPTION_ROUTES = ["/auth"];
+
 export default function useTenantAndUserAccess(tenantDomain: string) {
   const router = useRouter();
+  const pathname = usePathname();
 
   const {
     data: tenant,
@@ -33,12 +36,18 @@ export default function useTenantAndUserAccess(tenantDomain: string) {
     return null;
   }, [tenantUser, hasAccessToTenant]);
 
+  const isExceptionRoute = useMemo(() => {
+    return EXCEPTION_ROUTES.some((route) => pathname.startsWith(route));
+  }, [pathname]);
+
   useEffect(() => {
+    if (isExceptionRoute) return;
+
     if (isLoading || !tenant) return;
 
     if (!tenantUser) {
       startTransition(() => {
-        router.push("/login");
+        router.push("/auth/login");
       });
       return;
     }
@@ -46,11 +55,12 @@ export default function useTenantAndUserAccess(tenantDomain: string) {
     if (!hasAccessToTenant && accessDenialReason) {
       startTransition(() => {
         router.push(
-          `/no-access?reason=${accessDenialReason}&domain=${tenantDomain}`
+          `/auth/no-access?reason=${accessDenialReason}&domain=${tenantDomain}`
         );
       });
     }
   }, [
+    isExceptionRoute,
     isLoading,
     tenant,
     tenantUser,

@@ -18,6 +18,7 @@ export const getCurrentUserByTenantId = async (
       id,
       tenantId,
       userId,
+      roleId,
       role:roles(
         id,
         name,
@@ -52,6 +53,7 @@ export const getUsersByTenantId = async (
       id,
       tenantId,
       userId,
+      roleId,
       role:roles(
         id,
         name,
@@ -63,7 +65,7 @@ export const getUsersByTenantId = async (
         id,
         email
       ),
-      member:members!left(
+      member:members!tenantUserId(
         id,
         createdAt,
         firstName,
@@ -71,7 +73,8 @@ export const getUsersByTenantId = async (
         dateOfBirth,
         gender,
         memberType,
-        pin
+        pin,
+        tenantUserId
       )
     `
     )

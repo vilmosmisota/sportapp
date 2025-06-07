@@ -25,7 +25,7 @@ export const PerformerSchema = z.object({
   dateOfBirth: z.string().nullable(),
   gender: z.enum([MemberGender.Male, MemberGender.Female]).nullable(),
   memberType: z.literal(MemberType.Performer),
-  userId: z.string().uuid().nullable(),
+  tenantUserId: z.number().nullable(),
   tenantId: z.number().nullable(),
   pin: z.number().nullable(),
 
@@ -46,7 +46,7 @@ export const PerformerFormSchema = z.object({
   dateOfBirth: z.string().min(1, "Date of birth is required"),
   gender: z.enum([MemberGender.Male, MemberGender.Female]),
   memberType: z.literal(MemberType.Performer),
-  userId: z.string().uuid().nullable().optional(),
+  tenantUserId: z.number().nullable().optional(),
   tenantId: z.number().nullable().optional(),
   pin: z
     .number()

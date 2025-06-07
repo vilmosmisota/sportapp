@@ -6,7 +6,7 @@ export enum MemberGender {
 }
 
 export enum MemberType {
-  Parent = "parent",
+  Guardian = "guardian",
   Performer = "performer",
   Manager = "manager",
 }
@@ -14,7 +14,7 @@ export enum MemberType {
 export const MemberSchema = z.object({
   id: z.number(),
   gender: z.nativeEnum(MemberGender).nullable(),
-  userId: z.string().uuid().nullable(),
+  tenantUserId: z.number().nullable(),
   lastName: z.string().nullable(),
   tenantId: z.number(),
   createdAt: z.string(),

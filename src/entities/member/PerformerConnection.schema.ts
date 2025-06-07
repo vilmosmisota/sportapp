@@ -6,16 +6,26 @@ export const UserSchema = z.object({
   email: z.string().nullable(),
 });
 
+// Schema for tenant user data from the join
+export const TenantUserSchema = z.object({
+  user: UserSchema.nullable(),
+});
+
 // Schema for parent member data from the join (simplified - no user object)
 export const ParentMemberSchema = z.object({
   id: z.number(),
   firstName: z.string().nullable(),
   lastName: z.string().nullable(),
-  userId: z.string().uuid().nullable(),
+  tenantUserId: z.number().nullable(),
 });
 
 // Schema for parent connection data from the join
 export const ParentConnectionSchema = z.object({
+  id: z.number(),
+  createdAt: z.string(),
+  parentId: z.number(),
+  performerId: z.number(),
+  relationship: z.string().nullable(),
   parentMember: ParentMemberSchema.nullable(),
 });
 
@@ -25,8 +35,8 @@ export const PerformerWithConnectionSchema = z.object({
   firstName: z.string().nullable(),
   lastName: z.string().nullable(),
   dateOfBirth: z.string().nullable(),
-  userId: z.string().uuid().nullable(),
-  user: UserSchema.nullable(), // Only performers have full user details
+  tenantUserId: z.number().nullable(),
+  tenantUser: TenantUserSchema.nullable(), // Updated to match new query structure
   parentConnections: z.array(ParentConnectionSchema),
 });
 
@@ -36,6 +46,7 @@ export const PerformersWithConnectionSchema = z.array(
 
 // Type exports
 export type User = z.infer<typeof UserSchema>;
+export type TenantUser = z.infer<typeof TenantUserSchema>;
 export type ParentMember = z.infer<typeof ParentMemberSchema>;
 export type ParentConnection = z.infer<typeof ParentConnectionSchema>;
 export type PerformerWithConnection = z.infer<

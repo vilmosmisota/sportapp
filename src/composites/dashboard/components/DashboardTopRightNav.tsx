@@ -60,7 +60,7 @@ function DashboardTopRightNav({
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
                 <Link
-                  href="/app/management/settings/organization"
+                  href="/management/settings/organization"
                   className="flex items-center"
                 >
                   <Building2 className="mr-2 h-4 w-4" />
@@ -69,7 +69,7 @@ function DashboardTopRightNav({
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link
-                  href="/app/management/settings/users"
+                  href="/management/settings/users"
                   className="flex items-center"
                 >
                   <Users className="mr-2 h-4 w-4" />
@@ -78,7 +78,7 @@ function DashboardTopRightNav({
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link
-                  href="/app/management/settings/roles"
+                  href="/management/settings/roles"
                   className="flex items-center"
                 >
                   <ShieldCheck className="mr-2 h-4 w-4" />

@@ -19,7 +19,7 @@ export function useManagementNavigation(tenant?: Tenant) {
         {
           id: 1,
           name: "Home",
-          href: "/app/management",
+          href: "/management",
           iconName: "Home",
           description: "Organization overview and quick insights",
           permissions: [Permission.VIEW_DASHBOARD],
@@ -28,48 +28,23 @@ export function useManagementNavigation(tenant?: Tenant) {
         {
           id: 2,
           name: "Schedule",
-          href: "/app/management/schedule",
+          href: "/management/schedule",
           iconName: "CalendarDays",
           description: "Manage all events and schedules",
           permissions: [Permission.VIEW_DASHBOARD],
           pinnable: true,
         },
-        // {
-        //   id: 3,
-        //   name: "News",
-        //   href: /app/management/news",
-        //   iconName: "Newspaper",
-        //   description: "View news and announcements",
-        //   permissions: [],
-        //   disabled: true,
-        //   disabledReason: "Coming soon",
-        //   pinnable: false,
-        // },
       ],
     },
     {
-      section: "Management",
+      section: "Members",
       items: [
-        {
-          id: 4,
-          name: "Seasons",
-          href: "/app/management/seasons",
-          iconName: "SunSnow",
-          description: "Manage seasons and programs",
-          permissions: [Permission.VIEW_SEASONS, Permission.MANAGE_SEASONS],
-          disabled: false,
-          disabledReason:
-            "Configure age groups, skill levels, and player positions in Organization settings first",
-          pinnable: true,
-        },
         ...(tenant
           ? [
               {
-                id: 5,
+                id: 4,
                 name: getTenantPerformerName(tenant),
-                href: `/app/management/members/${getTenantPerformerSlug(
-                  tenant
-                )}`,
+                href: `/management/members/${getTenantPerformerSlug(tenant)}`,
                 iconName: "Users",
                 description: `Manage your organization's ${getTenantPerformerName(
                   tenant
@@ -82,15 +57,74 @@ export function useManagementNavigation(tenant?: Tenant) {
               },
             ]
           : []),
+        {
+          id: 3,
+          name: "Guardians",
+          href: "/management/members/guardians",
+          iconName: "Shield",
+          description: "Manage guardians and parent contacts",
+          permissions: [Permission.VIEW_MEMBERS, Permission.MANAGE_MEMBERS],
+          pinnable: true,
+        },
+        {
+          id: 10,
+          name: "Organization's Team",
+          href: "/management/members/organization",
+          iconName: "UserRound",
+          description:
+            "Manage coaches, staff, managers, and administrative personnel",
+          permissions: [Permission.VIEW_MEMBERS, Permission.MANAGE_MEMBERS],
+          pinnable: true,
+        },
       ],
     },
     {
-      section: "Training & Development",
+      section: "Management",
       items: [
         {
-          id: 7,
+          id: 12,
+          name: "Seasons",
+          href: "/management/seasons",
+          iconName: "SunSnow",
+          description: "Manage seasons and programs",
+          permissions: [Permission.VIEW_SEASONS, Permission.MANAGE_SEASONS],
+          disabled: false,
+          disabledReason:
+            "Configure age groups, skill levels, and player positions in Organization settings first",
+          pinnable: true,
+        },
+        {
+          id: 13,
+          name: "Groups",
+          href: "/management/groups",
+          iconName: "Users2",
+          description: "Organize and manage team groups",
+          permissions: [Permission.VIEW_GROUP, Permission.MANAGE_GROUP],
+          pinnable: true,
+        },
+      ],
+    },
+    {
+      section: "Events",
+      items: [
+        {
+          id: 14,
+          name: "Sessions",
+          href: "/management/sessions",
+          iconName: "DumbbellIcon",
+          description: "Schedule and manage training sessions",
+          permissions: [Permission.VIEW_TRAINING, Permission.MANAGE_TRAINING],
+          pinnable: true,
+        },
+      ],
+    },
+    {
+      section: "Development",
+      items: [
+        {
+          id: 15,
           name: "Attendance Manager",
-          href: "/app/management/training-attendance",
+          href: "/management/training-attendance",
           iconName: "ClipboardList",
           description: "Monitor live attendance and session participation",
           permissions: [
@@ -100,9 +134,9 @@ export function useManagementNavigation(tenant?: Tenant) {
           pinnable: true,
         },
         {
-          id: 8,
+          id: 16,
           name: "Attendance Analytics",
-          href: "/app/management/training-analytics",
+          href: "/management/training-analytics",
           iconName: "Activity",
           description:
             "View attendance trends, participation rates, and training effectiveness",
@@ -114,73 +148,6 @@ export function useManagementNavigation(tenant?: Tenant) {
         },
       ],
     },
-    // {
-    //   section: "Games & Competition",
-    //   items: [
-    //     {
-    //       id: 9,
-    //       name: "Opponent Directory",
-    //       href: /app/management/opponents",
-    //       iconName: "Swords",
-    //       description: "Manage competing teams",
-    //       permissions: [Permission.VIEW_GROUP],
-    //       disabled: !gameLocationsConfigured,
-    //       disabledReason:
-    //         "Add at least one game location in Organization settings first",
-    //       pinnable: true,
-    //     },
-    //     {
-    //       id: 10,
-    //       name: "Game Recorder",
-    //       href: /app/management/game-tracker",
-    //       iconName: "ClipboardPen",
-    //       description: "Record and analyze game performances",
-    //       permissions: [],
-    //       disabled: true,
-    //       disabledReason: "Coming soon",
-    //       pinnable: false,
-    //     },
-    //     {
-    //       id: 11,
-    //       name: "Game Analytics",
-    //       href: /app/management/analytics/game",
-    //       iconName: "Signal",
-    //       description:
-    //         "Analyze game results, player performance, and team metrics",
-    //       permissions: [],
-    //       disabled: true,
-    //       disabledReason: "Coming soon",
-    //       pinnable: false,
-    //     },
-    //   ],
-    // },
-    // {
-    //   section: "Archives & History",
-    //   items: [
-    //     {
-    //       id: 12,
-    //       name: "Season Archives",
-    //       href: /app/management/archives/seasons",
-    //       iconName: "Archive",
-    //       description: "Access historical season data and archives",
-    //       permissions: [Permission.VIEW_SEASONS],
-    //       disabled: true,
-    //       disabledReason: "Coming soon",
-    //       pinnable: false,
-    //     },
-    //     {
-    //       id: 13,
-    //       name: "Performance History",
-    //       href: /app/management/archives/performance",
-    //       iconName: "LibraryBig",
-    //       description: "Historical training and game performance data",
-    //       permissions: [Permission.VIEW_TRAINING, Permission.VIEW_ATTENDANCE],
-    //       disabled: true,
-    //       disabledReason: "Coming in Q3 2024",
-    //       pinnable: false,
-    //     },
-    //   ],
-    // },
   ];
 
   return { navSections };

@@ -13,6 +13,7 @@ import {
   ClipboardPen,
   Cog,
   Dumbbell,
+  DumbbellIcon,
   Globe,
   GraduationCap,
   Hammer,
@@ -22,6 +23,8 @@ import {
   LibraryBig,
   LineChart,
   Newspaper,
+  PlayCircle,
+  Shield,
   ShieldCheck,
   Signal,
   SunSnow,
@@ -42,6 +45,8 @@ export const ICON_MAP = {
   Users2,
   UserRound,
   ShieldCheck,
+  Shield,
+  PlayCircle,
   Dumbbell,
   ClipboardCheck,
   BarChart3,
@@ -65,6 +70,7 @@ export const ICON_MAP = {
   Signal,
   Archive,
   LibraryBig,
+  DumbbellIcon,
 };
 
 export const getIcon = (iconName: string): React.ReactNode => {

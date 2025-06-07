@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   addPerformer,
   deletePerformer,
-  updateMemberUserId,
+  updateMemberTenantUserId,
   updatePerformer,
   UpdatePerformerOptions,
 } from "./Performer.services";
@@ -76,18 +76,18 @@ export const useDeletePerformer = (tenantId: string) => {
   });
 };
 
-export const useUpdateMemberUserId = (tenantId: string) => {
+export const useUpdateMemberTenantUserId = (tenantId: string) => {
   const client = useSupabase();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({
       memberId,
-      userId,
+      tenantUserId,
     }: {
       memberId: number;
-      userId: string | null;
-    }) => updateMemberUserId(client, memberId, tenantId, userId),
+      tenantUserId: number | null;
+    }) => updateMemberTenantUserId(client, memberId, tenantId, tenantUserId),
     onSuccess: () => {
       // Invalidate all member-related queries
       queryClient.invalidateQueries({

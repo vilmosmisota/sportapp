@@ -45,11 +45,11 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Link
-                        href="/app/management/settings"
+                        href="/management/settings"
                         className={cn(
                           "flex items-center justify-center h-9 w-9 rounded-md transition-all",
-                          pathname === "/app/management/settings" ||
-                            pathname.startsWith("/app/management/settings/")
+                          pathname === "/management/settings" ||
+                            pathname.startsWith("/management/settings/")
                             ? "bg-primary/10 text-primary"
                             : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
                         )}

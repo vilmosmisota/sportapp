@@ -200,7 +200,7 @@ export const useLogIn = (domain: string) => {
   return useMutation({
     mutationFn: (formData: UserLogin) => logIn(formData, domain),
     onSuccess: () => {
-      router.push(`/app/`);
+      router.push(`/`);
       queryClient.invalidateQueries({ queryKey: queryKeys.user.current });
       router.refresh();
       toast.success("Successfully signed in!");

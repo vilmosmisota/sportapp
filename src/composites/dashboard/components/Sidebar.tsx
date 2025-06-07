@@ -9,8 +9,8 @@ import { cn } from "@/lib/utils";
 import React from "react";
 import { NavSection } from "../hooks/useManagementNavigation";
 import { usePinnedItems } from "../hooks/usePinnedItems";
+import { AccessPortalsDropdown } from "./AccessPortalsDropdown";
 import NavItems from "./DashboardNavItems";
-
 import { TenantBranding } from "./TenantBranding";
 
 interface SidebarProps {
@@ -69,18 +69,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       )}
     >
       <div className="flex flex-col h-full relative pt-4">
-        {/* Domain navigation at the top */}
-        <div className="px-4 pl-12 mb-4">
-          {/* <DomainNavigation
-            currentDomain={domain}
-            isLoading={isTenantLoading}
-            tenantId={tenantId}
-          /> */}
+        {/* Access portals dropdown at the top */}
+        <div className="px-4 pb-4 border-b border-border/50">
+          <AccessPortalsDropdown />
         </div>
 
         {/* Pinned nav items - stored in localStorage */}
         {pinnedItems.length > 0 && (
-          <div className={cn("py-2", isCollapsed ? "px-2" : "px-4")}>
+          <div className={cn("pt-4 pb-2", isCollapsed ? "px-2" : "px-4")}>
             <div className="space-y-1">
               {!isCollapsed && (
                 <div className="text-xs font-medium text-muted-foreground/70 py-1">

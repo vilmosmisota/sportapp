@@ -11,7 +11,7 @@ export class PerformerData {
   public readonly dateOfBirth: string;
   public readonly gender: MemberGender;
   public readonly memberType: MemberType.Performer;
-  public readonly userId: string | null;
+  public readonly tenantUserId: number | null;
   public readonly tenantId: number | null;
   public readonly pin: number | undefined;
   public readonly groupConnections: MemberGroupConnection[];
@@ -22,7 +22,7 @@ export class PerformerData {
     this.dateOfBirth = formData.dateOfBirth;
     this.gender = formData.gender;
     this.memberType = formData.memberType;
-    this.userId = formData.userId || null;
+    this.tenantUserId = formData.tenantUserId || null;
     this.tenantId = formData.tenantId || null;
     this.pin = formData.pin;
     this.groupConnections = formData.groupConnections || [];
@@ -35,7 +35,7 @@ export class PerformerData {
       dateOfBirth: this.dateOfBirth,
       gender: this.gender,
       memberType: this.memberType,
-      userId: this.userId,
+      tenantUserId: this.tenantUserId,
       tenantId: this.tenantId,
       pin: this.pin || null,
       groupConnections: this.groupConnections,
@@ -53,7 +53,7 @@ export class PerformerData {
       dateOfBirth: "",
       gender: undefined,
       memberType: MemberType.Performer,
-      userId: undefined,
+      tenantUserId: undefined,
       tenantId: tenantId,
       pin: undefined,
       groupConnections: [],
@@ -70,7 +70,7 @@ export class PerformerData {
       dateOfBirth: performer.dateOfBirth || "",
       gender: performer.gender || MemberGender.Male,
       memberType: MemberType.Performer,
-      userId: performer.userId || undefined,
+      tenantUserId: performer.tenantUserId || undefined,
       tenantId: performer.tenantId || tenantId || undefined,
       pin: performer.pin || undefined,
       groupConnections: performer.groupConnections || [],

@@ -52,7 +52,7 @@ export default function DashboardNavItem({
   const currentPathname = useNextPathname();
   const Icon = ICON_MAP[item.iconName as keyof typeof ICON_MAP];
 
-  const isHome = item.href === "/app/management";
+  const isHome = item.href === "/management";
   const isActive = isHome
     ? pathname === item.href
     : pathname === item.href ||
