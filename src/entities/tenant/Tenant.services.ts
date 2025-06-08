@@ -1,5 +1,13 @@
 import { TypedClient } from "@/libs/supabase/type";
-import { Tenant, TenantForm, TenantSchema } from "./Tenant.schema";
+import {
+  Tenant,
+  TenantDevelopmentConfig,
+  TenantForm,
+  TenantGeneralConfig,
+  TenantGroupsConfig,
+  TenantPerformersConfig,
+  TenantSchema,
+} from "./Tenant.schema";
 
 export const getTenantByDomain = async (
   domain: string,
@@ -10,13 +18,15 @@ export const getTenantByDomain = async (
     .select(
       `
       *,
-      tenantConfigs (
+      tenantConfigs!tenants_tenantConfigId_fkey (
         id,
         createdAt,
         updatedAt,
         general,
         performers,
-        development
+        development,
+        groups,
+        competition
       )
     `
     )
@@ -33,124 +43,162 @@ export const getTenantByDomain = async (
 export const updateTenant = async (
   client: TypedClient,
   data: TenantForm,
-  id: string
+  id: string,
+  configId?: number
 ) => {
   const { tenantConfig, ...tenantData } = data;
 
-  // Update the tenant record
-  const { data: tenant, error: tenantError } = await client
+  const { error: tenantError } = await client
     .from("tenants")
     .update(tenantData)
     .eq("id", id)
     .select(
       `
-      *,
-      tenantConfigs (
-        id,
-        createdAt,
-        updatedAt,
-        general,
-        performers,
-        development
-      )
+      id,
     `
     )
     .single();
-
-  console.log("tenant", tenant);
 
   if (tenantError) {
     throw new Error(tenantError.message);
   }
 
-  if (tenantConfig && (tenant as any).tenantConfigId) {
-    const { error: configError } = await client
-      .from("tenantConfigs")
-      .update({
-        general: tenantConfig.general,
-        performers: tenantConfig.performers,
-        development: tenantConfig.development,
-      })
-      .eq("id", (tenant as any).tenantConfigId);
+  if (tenantConfig) {
+    if (configId) {
+      const { error: configError } = await client
+        .from("tenantConfigs")
+        .update({
+          general: tenantConfig.general,
+          performers: tenantConfig.performers,
+          development: tenantConfig.development,
+          groups: tenantConfig.groups,
+        })
+        .eq("id", configId);
 
-    if (configError) {
-      throw new Error(configError.message);
+      if (configError) {
+        throw new Error(configError.message);
+      }
+    } else {
+      const { data: newConfig, error: configError } = await client
+        .from("tenantConfigs")
+        .insert({
+          general: tenantConfig.general,
+          performers: tenantConfig.performers,
+          development: tenantConfig.development,
+          groups: tenantConfig.groups,
+        })
+        .select("id")
+        .single();
+
+      if (configError) {
+        throw new Error(configError.message);
+      }
+
+      const { error: linkError } = await client
+        .from("tenants")
+        .update({ tenantConfigId: newConfig.id } as any)
+        .eq("id", id);
+
+      if (linkError) {
+        throw new Error(linkError.message);
+      }
     }
-
-    // Fetch the updated tenant with config
-    const { data: updatedTenant, error: fetchError } = await client
-      .from("tenants")
-      .select(
-        `
-        *,
-        tenantConfigs (
-          id,
-          createdAt,
-          updatedAt,
-          general,
-          performers,
-          development
-        )
-      `
-      )
-      .eq("id", id)
-      .single();
-
-    if (fetchError) {
-      throw new Error(fetchError.message);
-    }
-
-    return TenantSchema.parse(updatedTenant);
   }
 
-  return TenantSchema.parse(tenant);
+  return true;
 };
 
 export const createTenant = async (
   client: TypedClient,
   data: TenantForm
-): Promise<Tenant> => {
+): Promise<boolean> => {
   const { tenantConfig, ...tenantData } = data;
 
-  // First create the tenant config
-  const { data: config, error: configError } = await client
+  const { data: newConfig, error: configError } = await client
     .from("tenantConfigs")
     .insert({
       general: tenantConfig?.general,
       performers: tenantConfig?.performers,
       development: tenantConfig?.development,
+      groups: tenantConfig?.groups,
     })
-    .select()
+    .select("id")
     .single();
 
   if (configError) {
     throw new Error(configError.message);
   }
 
-  const { data: tenant, error: tenantError } = await client
+  const { data: newTenant, error: newTenantError } = await client
     .from("tenants")
     .insert({
       ...tenantData,
-      tenantConfigId: config.id,
+      tenantConfigId: newConfig.id,
     })
-    .select(
-      `
-      *,
-      tenantConfigs (
-        id,
-        createdAt,
-        updatedAt,
-        general,
-        performers,
-        development
-      )
-    `
-    )
+    .select("id")
     .single();
 
-  if (tenantError) {
-    throw new Error(tenantError.message);
+  if (newTenantError) {
+    throw new Error(newTenantError.message);
   }
 
-  return TenantSchema.parse(tenant);
+  return true;
+};
+
+export const updateTenantConfig = async (
+  client: TypedClient,
+  tenantId: string,
+  configUpdates: Partial<{
+    general: TenantGeneralConfig;
+    performers: TenantPerformersConfig;
+    development: TenantDevelopmentConfig;
+    groups: TenantGroupsConfig;
+  }>,
+  configId?: number
+): Promise<boolean> => {
+  if (configId) {
+    const { error: configError } = await client
+      .from("tenantConfigs")
+      .update(configUpdates)
+      .eq("id", configId);
+
+    if (configError) {
+      throw new Error(configError.message);
+    }
+  } else {
+    const { data: newConfig, error: configError } = await client
+      .from("tenantConfigs")
+      .insert(configUpdates)
+      .select("id")
+      .single();
+
+    if (configError) {
+      throw new Error(configError.message);
+    }
+
+    const { error: tenantError } = await client
+      .from("tenants")
+      .update({ tenantConfigId: newConfig.id } as any)
+      .eq("id", tenantId);
+
+    if (tenantError) {
+      throw new Error(tenantError.message);
+    }
+  }
+
+  return true;
+};
+
+export const updateTenantGroupsConfig = async (
+  client: TypedClient,
+  tenantId: string,
+  groupsConfig: TenantGroupsConfig,
+  configId?: number
+): Promise<boolean> => {
+  return updateTenantConfig(
+    client,
+    tenantId,
+    { groups: groupsConfig },
+    configId
+  );
 };

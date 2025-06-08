@@ -65,6 +65,27 @@ export default function ConnectionsPage({
           description={`Manage relationships and connections between ${displayName.toLowerCase()}.`}
         />
 
+        {/* TODO Section */}
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <div className="flex items-start space-x-3">
+            <div className="flex-shrink-0">
+              <div className="h-5 w-5 rounded-full bg-amber-400 flex items-center justify-center">
+                <span className="text-xs font-medium text-amber-800">!</span>
+              </div>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-medium text-amber-800 mb-1">
+                TODO: User Invitation System
+              </h3>
+              <p className="text-sm text-amber-700">
+                Need to handle tenantUser status and work out a way to send out
+                invitations for users to set up user - tenantUser table and
+                connect with members.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {error && (
           <div className="rounded-lg bg-destructive/10 p-4 text-sm text-destructive">
             {error.message}

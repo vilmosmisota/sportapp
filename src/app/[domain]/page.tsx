@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useTenantAndUserAccessContext } from "@/composites/auth/TenantAndUserAccessContext";
 import { useLogOut } from "@/entities/user/User.actions.client";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, LogOut, Trophy } from "lucide-react";
+import { ArrowRight, LogOut, Shield, Trophy } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -99,8 +99,18 @@ export default function PlatformPage({ params }: PlatformPageProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Logout Button - Top Right */}
-      <div className="absolute top-6 right-6 z-10">
+      {/* Top Navigation - Right Side */}
+      <div className="absolute top-6 right-6 z-10 flex items-center gap-3">
+        <Link href={`/privacy`}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2 bg-card/80 backdrop-blur-sm hover:bg-card border-border/50"
+          >
+            <Shield className="w-4 h-4" />
+            Privacy
+          </Button>
+        </Link>
         <Button
           variant="outline"
           size="sm"

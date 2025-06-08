@@ -43,6 +43,27 @@ export const TenantPerformersConfigSchema = z
     slug: data.slug ?? "performers",
   }));
 
+export const TenantEmailConfigSchema = z.object({
+  senderEmail: z.string().email().optional(),
+  senderName: z.string().optional(),
+  replyToEmail: z.string().email().optional(),
+  enableTransactional: z.boolean().default(true),
+  enableMarketing: z.boolean().default(false),
+  customDomain: z.string().optional(),
+});
+
+export const TenantGroupsConfigSchema = z.object({
+  defaultColor: z.string().optional(),
+  useCustomName: z.boolean().default(false),
+  defaultDisplayFields: z
+    .array(z.string())
+    .min(1, "At least one display field is required")
+    .max(3, "Maximum 3 display fields allowed")
+    .default(["ageRange"]),
+  displaySeparator: z.string().min(1, "Separator is required").default("•"),
+  levelOptions: z.array(z.string()).default([]),
+});
+
 export enum TenantType {
   ORGANIZATION = "organization",
   LEAGUE = "league",
@@ -59,6 +80,8 @@ export const TenantConfigSchema = z.object({
   general: TenantGeneralConfigSchema.nullable().optional(),
   development: TenantDevelopmentConfigSchema.nullable().optional(),
   performers: TenantPerformersConfigSchema.nullable().optional(),
+  groups: TenantGroupsConfigSchema.nullable().optional(),
+  competition: z.any().nullable().optional(), // Adding competition field from DB
 });
 
 export const TenantSchema = z.object({
@@ -69,7 +92,7 @@ export const TenantSchema = z.object({
   name: z.string(),
   type: z.nativeEnum(TenantType),
   domain: z.string(),
-  tenantConfigId: z.number(),
+  tenantConfigId: z.number().nullable(),
   tenantConfigs: TenantConfigSchema.optional(),
 });
 
@@ -83,6 +106,8 @@ export const TenantFormSchema = z.object({
       general: TenantGeneralConfigSchema.optional(),
       development: TenantDevelopmentConfigSchema.optional(),
       performers: TenantPerformersConfigSchema.optional(),
+      groups: TenantGroupsConfigSchema.optional(),
+      competition: z.any().optional(),
     })
     .optional(),
 });
@@ -98,3 +123,5 @@ export type TenantDevelopmentConfig = z.infer<
 export type TenantPerformersConfig = z.infer<
   typeof TenantPerformersConfigSchema
 >;
+export type TenantEmailConfig = z.infer<typeof TenantEmailConfigSchema>;
+export type TenantGroupsConfig = z.infer<typeof TenantGroupsConfigSchema>;

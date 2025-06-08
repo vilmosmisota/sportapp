@@ -2,6 +2,13 @@ import { z } from "zod";
 import { MemberGender, MemberType } from "../member/Member.schema";
 import { RoleSchema } from "../role/Role.schema";
 
+export enum TenantUserStatus {
+  PENDING = "pending",
+  ACTIVE = "active",
+  INACTIVE = "inactive",
+  SUSPENDED = "suspended",
+}
+
 export const UserLoginSchema = z.object({
   email: z.string().trim().email({ message: "Invalid email address " }),
   password: z.string().trim().min(1, { message: "Password is required" }),
@@ -70,6 +77,7 @@ export const UserSchema = z.object({
   tenantId: z.number(),
   userId: z.string().uuid(),
   roleId: z.number().nullable(),
+  status: z.nativeEnum(TenantUserStatus).default(TenantUserStatus.PENDING),
   role: RoleSchema.nullable().optional(),
   user: z
     .object({
@@ -85,6 +93,7 @@ export const UserMemberSchema = z.object({
   tenantId: z.number(),
   userId: z.string().uuid(),
   roleId: z.number().nullable(),
+  status: z.nativeEnum(TenantUserStatus).default(TenantUserStatus.PENDING),
   role: RoleSchema.nullable().optional(),
   user: z
     .object({

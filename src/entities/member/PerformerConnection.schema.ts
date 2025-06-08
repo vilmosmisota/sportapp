@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TenantUserStatus } from "../user/User.schema";
 
 // Schema for the user data from the join (for performers only)
 export const UserSchema = z.object({
@@ -8,6 +9,7 @@ export const UserSchema = z.object({
 
 // Schema for tenant user data from the join
 export const TenantUserSchema = z.object({
+  status: z.nativeEnum(TenantUserStatus).default(TenantUserStatus.PENDING),
   user: UserSchema.nullable(),
 });
 

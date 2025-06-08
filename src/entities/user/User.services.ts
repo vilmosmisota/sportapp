@@ -19,6 +19,7 @@ export const getCurrentUserByTenantId = async (
       tenantId,
       userId,
       roleId,
+      status,
       role:roles(
         id,
         name,
@@ -54,6 +55,7 @@ export const getUsersByTenantId = async (
       tenantId,
       userId,
       roleId,
+      status,
       role:roles(
         id,
         name,

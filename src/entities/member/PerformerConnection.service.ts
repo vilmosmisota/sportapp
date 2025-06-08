@@ -11,6 +11,7 @@ const PERFORMER_WITH_CONNECTION_QUERY = `
   dateOfBirth,
   tenantUserId,
   tenantUser:tenantUsers(
+    status,
     user:users(
       id,
       email

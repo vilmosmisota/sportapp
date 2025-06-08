@@ -19,19 +19,6 @@ export const queryKeys = {
     detail: (tenantId: string | undefined, seasonId: string | undefined) =>
       ["season", "detail", tenantId, seasonId] as const,
   },
-  team: {
-    all: ["team"] as const,
-    coaches: (tenantId: string | undefined) =>
-      [...queryKeys.team.all, tenantId] as const,
-    detail: (tenantId: string | undefined, teamId: string | undefined) =>
-      ["team", "detail", tenantId, teamId] as const,
-    members: (tenantId: string | undefined, teamId: number | undefined) =>
-      [...queryKeys.team.all, "members", tenantId, teamId] as const,
-    byOpponent: (
-      tenantId: string | undefined,
-      opponentId: number | undefined
-    ) => [...queryKeys.team.all, "byOpponent", tenantId, opponentId] as const,
-  },
   member: {
     all: ["member"] as const,
     list: (tenantId: string | undefined) =>
@@ -97,11 +84,6 @@ export const queryKeys = {
       ["attendance", "teamStats", tenantId, teamId] as const,
     aggregates: ["attendance", "aggregates"] as const,
   },
-  opponent: {
-    all: ["opponent"] as const,
-    detail: (tenantId: string | undefined, opponentId: string | undefined) =>
-      [...queryKeys.opponent.all, tenantId, opponentId] as const,
-  },
   role: {
     all: ["role"] as const,
     list: ["role", "list"] as const,
@@ -109,35 +91,11 @@ export const queryKeys = {
     detail: (tenantId: string | undefined, roleId: string | undefined) =>
       ["role", "detail", tenantId, roleId] as const,
   },
-  game: {
-    all: ["game"] as const,
-    byTenant: (tenantId: string | undefined) =>
-      ["game", "byTenant", tenantId] as const,
-    bySeason: (tenantId: string | undefined, seasonId: number | undefined) =>
-      ["game", "bySeason", tenantId, seasonId] as const,
-    byTeam: (tenantId: string | undefined, teamId: number | undefined) =>
-      ["game", "byTeam", tenantId, teamId] as const,
-    detail: (tenantId: string | undefined, gameId: number | undefined) =>
-      ["game", "detail", tenantId, gameId] as const,
-    byDateRange: (
-      tenantId: string | undefined,
-      startDate: string | undefined,
-      endDate: string | undefined,
-      seasonId?: number | undefined
-    ) =>
-      ["game", "byDateRange", tenantId, startDate, endDate, seasonId] as const,
-    calendarEvents: (tenantId?: string, month?: string, seasonId?: number) =>
-      ["gameCalendarEvents", tenantId, month, seasonId] as const,
-    allCalendarEvents: (tenantId?: string) =>
-      ["gameCalendarEvents", tenantId] as const,
-  },
-  customField: {
-    all: ["customField"] as const,
-    byTenantAndEntity: (
-      tenantId: string | undefined,
-      entityType: string | undefined
-    ) => ["customField", "byTenantAndEntity", tenantId, entityType] as const,
-    detail: (tenantId: string | undefined, fieldId: number | undefined) =>
-      ["customField", "detail", tenantId, fieldId] as const,
+  group: {
+    all: ["group"] as const,
+    list: (tenantId: string | undefined) =>
+      ["group", "list", tenantId] as const,
+    detail: (tenantId: string | undefined, groupId: string | undefined) =>
+      ["group", "detail", tenantId, groupId] as const,
   },
 } as const;

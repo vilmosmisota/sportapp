@@ -1,9 +1,12 @@
+import { getTenantByDomain } from "@/entities/tenant/Tenant.services";
 import {
   CreateUser,
   CreateUserSchema,
   UpdateUser,
   UpdateUserSchema,
 } from "@/entities/user/User.schema";
+import { emailService } from "@/libs/email/emailService";
+import { welcomeEmailTemplate } from "@/libs/email/emailTemplates";
 import { getAdminClient } from "@/libs/supabase/admin";
 import { NextResponse } from "next/server";
 
@@ -13,7 +16,7 @@ export async function POST(request: Request) {
   let createdTenantUserId: number | null = null;
 
   try {
-    const { userData, tenantId } = await request.json();
+    const { userData, tenantId, tenantDomain } = await request.json();
 
     const validationResult = CreateUserSchema.safeParse(userData);
     if (!validationResult.success) {
@@ -99,6 +102,30 @@ export async function POST(request: Request) {
         throw new Error(
           `Failed to create member profile: ${memberError.message}`
         );
+      }
+    }
+
+    // Send welcome email if tenant domain is provided
+    if (tenantDomain) {
+      try {
+        const tenant = await getTenantByDomain(tenantDomain, adminClient);
+        if (tenant) {
+          const template = welcomeEmailTemplate(
+            tenant,
+            validatedData.firstName || "User",
+            `https://${tenantDomain}/auth/login`
+          );
+
+          await emailService.sendEmail(tenant, {
+            to: validatedData.email,
+            subject: template.subject,
+            htmlContent: template.htmlContent,
+            textContent: template.textContent,
+          });
+        }
+      } catch (emailError) {
+        // Log email error but don't fail user creation
+        console.error("Failed to send welcome email:", emailError);
       }
     }
 

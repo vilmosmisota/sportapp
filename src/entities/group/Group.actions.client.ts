@@ -1,46 +1,49 @@
 import { queryKeys } from "@/cacheKeys/cacheKeys";
 import { useSupabase } from "@/libs/supabase/useSupabase";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Group } from "./Group.schema";
+import { createGroup, deleteGroup, updateGroup } from "./Group.services";
 
-import { createTeam, deleteTeam, updateTeam } from "./Group.services";
-import { GroupForm } from "./Group.schema";
-import { isOpponentGroup } from "./Group.utils";
-
-export const useAddTeamToTenant = (
-  tenantId: string,
-  opponentId: number | null = null
-) => {
+export const useCreateGroup = (tenantId: string) => {
   const client = useSupabase();
   const queryClient = useQueryClient();
-  const queryKey = [queryKeys.team.all];
 
   return useMutation({
-    mutationFn: (data: GroupForm) =>
-      createGroup(client, data, tenantId, opponentId),
+    mutationFn: (groupData: Omit<Group, "id" | "tenantId">) =>
+      createGroup(client, tenantId, groupData),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey });
-      // Also invalidate opponents queries if this is an opponent team
-      if (opponentId) {
-        queryClient.invalidateQueries({ queryKey: queryKeys.opponent.all });
-      }
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.group.list(tenantId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.group.all,
+      });
     },
   });
 };
 
-export const useUpdateTeam = (teamId: number, tenantId: string) => {
+export const useUpdateGroup = (tenantId: string) => {
   const client = useSupabase();
   const queryClient = useQueryClient();
-  const queryKey = [queryKeys.team.all];
 
   return useMutation({
-    mutationFn: (data: GroupForm) =>
-      updateGroup(client, data, teamId, tenantId),
-    onSuccess: (updatedTeam) => {
-      queryClient.invalidateQueries({ queryKey });
-      // Also invalidate opponents queries if this is an opponent team
-      if (isOpponentGroup(updatedGroup)) {
-        queryClient.invalidateQueries({ queryKey: queryKeys.opponent.all });
-      }
+    mutationFn: ({
+      groupId,
+      groupData,
+    }: {
+      groupId: number;
+      groupData: Partial<Omit<Group, "id" | "tenantId">>;
+    }) => updateGroup(client, groupId, tenantId, groupData),
+    onSuccess: (_, { groupId }) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.group.list(tenantId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.group.detail(tenantId, groupId.toString()),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.group.all,
+      });
     },
   });
 };
@@ -48,14 +51,23 @@ export const useUpdateTeam = (teamId: number, tenantId: string) => {
 export const useDeleteGroup = (tenantId: string) => {
   const client = useSupabase();
   const queryClient = useQueryClient();
-  const queryKey = [queryKeys.group.all];
 
   return useMutation({
     mutationFn: (groupId: number) => deleteGroup(client, groupId, tenantId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey });
-      // Also invalidate opponents queries since we might have deleted an opponent team
-      queryClient.invalidateQueries({ queryKey: queryKeys.opponent.all });
+    onSuccess: (_, groupId) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.group.list(tenantId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.group.detail(tenantId, groupId.toString()),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.group.all,
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.member.byGroup(tenantId, groupId),
+      });
     },
   });
 };

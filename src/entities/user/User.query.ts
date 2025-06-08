@@ -10,6 +10,7 @@ export const useCurrentUser = (tenantId: string) => {
   return useQuery({
     queryKey,
     queryFn: () => getCurrentUserByTenantId(client, tenantId),
+    enabled: !!tenantId,
   });
 };
 

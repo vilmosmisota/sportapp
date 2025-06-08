@@ -5,7 +5,7 @@ import { useCurrentUser } from "../user/User.query";
 
 export type AccessDenialReason = "NO_USER" | "NO_TENANT_ACCESS";
 
-const EXCEPTION_ROUTES = ["/auth"];
+const EXCEPTION_ROUTES = ["/auth", "/privacy"];
 
 export default function useTenantAndUserAccess(tenantDomain: string) {
   const router = useRouter();
