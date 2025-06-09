@@ -68,8 +68,8 @@ export function useManagementNavigation(tenant?: Tenant) {
         },
         {
           id: 10,
-          name: "Organization's Team",
-          href: "/management/members/organization",
+          name: "Staff",
+          href: "/management/members/staff",
           iconName: "UserRound",
           description:
             "Manage coaches, staff, managers, and administrative personnel",

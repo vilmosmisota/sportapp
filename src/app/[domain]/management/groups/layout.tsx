@@ -3,7 +3,7 @@
 import { cn } from "@/libs/tailwind/utils";
 import { Settings, Users } from "lucide-react";
 import Link from "next/link";
-import { useParams, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import React from "react";
 
 interface NavItem {
@@ -19,8 +19,6 @@ export default function GroupsLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const params = useParams();
-  const domain = params.domain as string;
 
   const baseHref = `/management/groups`;
 

@@ -8,10 +8,16 @@ type GroupSettingsContentProps = {
 };
 
 // Default settings fallback
-const DEFAULT_GROUP_SETTINGS = {
-  defaultColor: "#BFDBFE",
+const DEFAULT_GROUP_SETTINGS: {
+  color: string;
+  useCustomName: boolean;
+  displayFields: string[];
+  displaySeparator: string;
+  levelOptions: string[];
+} = {
+  color: "#FB923C", // Orange-400 (matches schema default)
   useCustomName: false,
-  defaultDisplayFields: ["ageRange"],
+  displayFields: ["ageRange"],
   displaySeparator: "•",
   levelOptions: [],
 };
@@ -25,15 +31,12 @@ export default function GroupSettingsContent({
 
   // Use actual tenant config or fallback to defaults
   const groupsConfig = {
-    defaultColor:
-      tenant.tenantConfigs?.groups?.defaultColor ||
-      DEFAULT_GROUP_SETTINGS.defaultColor,
     useCustomName:
       tenant.tenantConfigs?.groups?.useCustomName ??
       DEFAULT_GROUP_SETTINGS.useCustomName,
-    defaultDisplayFields:
-      tenant.tenantConfigs?.groups?.defaultDisplayFields ||
-      DEFAULT_GROUP_SETTINGS.defaultDisplayFields,
+    displayFields:
+      tenant.tenantConfigs?.groups?.displayFields ||
+      DEFAULT_GROUP_SETTINGS.displayFields,
     displaySeparator:
       tenant.tenantConfigs?.groups?.displaySeparator ||
       DEFAULT_GROUP_SETTINGS.displaySeparator,
@@ -58,22 +61,6 @@ export default function GroupSettingsContent({
           <div className="space-y-3">
             <div className="flex justify-between items-center py-2 border-b border-border/50">
               <span className="text-sm font-medium text-muted-foreground">
-                Default Color
-              </span>
-              <div className="flex items-center gap-2">
-                {groupsConfig.defaultColor && (
-                  <div
-                    className="w-4 h-4 rounded-full border border-gray-200"
-                    style={{ backgroundColor: groupsConfig.defaultColor }}
-                  />
-                )}
-                <span className="text-sm font-mono text-foreground bg-muted px-2 py-1 rounded">
-                  {groupsConfig.defaultColor || "No color set"}
-                </span>
-              </div>
-            </div>
-            <div className="flex justify-between items-center py-2 border-b border-border/50">
-              <span className="text-sm font-medium text-muted-foreground">
                 Display Mode
               </span>
               <span className="text-sm text-foreground">
@@ -88,18 +75,20 @@ export default function GroupSettingsContent({
               </span>
               <div className="flex items-center gap-2">
                 <div className="flex gap-1">
-                  {groupsConfig.defaultDisplayFields.map((field, index) => (
-                    <div key={field} className="flex items-center gap-1">
-                      <Badge variant="secondary" className="text-xs">
-                        {field.replace(/([A-Z])/g, " $1")}
-                      </Badge>
-                      {index < groupsConfig.defaultDisplayFields.length - 1 && (
-                        <span className="text-xs text-muted-foreground">
-                          {groupsConfig.displaySeparator}
-                        </span>
-                      )}
-                    </div>
-                  ))}
+                  {groupsConfig.displayFields.map(
+                    (field: string, index: number) => (
+                      <div key={field} className="flex items-center gap-1">
+                        <Badge variant="secondary" className="text-xs">
+                          {field.replace(/([A-Z])/g, " $1")}
+                        </Badge>
+                        {index < groupsConfig.displayFields.length - 1 && (
+                          <span className="text-xs text-muted-foreground">
+                            {groupsConfig.displaySeparator}
+                          </span>
+                        )}
+                      </div>
+                    )
+                  )}
                 </div>
               </div>
             </div>

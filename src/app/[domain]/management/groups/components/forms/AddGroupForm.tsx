@@ -28,11 +28,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { useTenantAndUserAccessContext } from "@/composites/auth/TenantAndUserAccessContext";
 import { useCreateGroup } from "@/entities/group/Group.actions.client";
-import { Group } from "@/entities/group/Group.schema";
+import { DEFAULT_GROUP_COLOR, Group } from "@/entities/group/Group.schema";
+import { formatAgeRange, formatGender } from "@/entities/group/Group.utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Calendar, Plus, Trophy, UserCheck } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Calendar, Trophy, UserCheck } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -42,6 +44,7 @@ const addGroupSchema = z.object({
   level: z.string().optional(),
   gender: z.string().min(1, "Gender is required"),
   color: z.string().optional(),
+  customName: z.string().optional(),
 });
 
 type AddGroupFormData = z.infer<typeof addGroupSchema>;
@@ -57,7 +60,47 @@ export default function AddGroupForm({
   domain,
   setIsParentModalOpen,
 }: AddGroupFormProps) {
+  const { tenant } = useTenantAndUserAccessContext();
   const createGroup = useCreateGroup(tenantId);
+
+  // Check if custom names are enabled in tenant config
+  const useCustomName = tenant?.tenantConfigs?.groups?.useCustomName ?? false;
+
+  // Get display configuration from tenant
+  const displayFields = tenant?.tenantConfigs?.groups?.displayFields || [
+    "ageRange",
+  ];
+  const displaySeparator =
+    tenant?.tenantConfigs?.groups?.displaySeparator || "•";
+
+  // Helper function to generate display text based on tenant config
+  const generateDisplayText = () => {
+    if (useCustomName && form.watch("customName")) {
+      return form.watch("customName");
+    }
+
+    const formattedFields = displayFields
+      .map((fieldName) => {
+        const fieldValue = form.watch(fieldName as keyof AddGroupFormData);
+        if (!fieldValue) return null;
+
+        switch (fieldName) {
+          case "ageRange":
+            return formatAgeRange(fieldValue as string);
+          case "level":
+            return fieldValue as string;
+          case "gender":
+            return formatGender(fieldValue as string, form.watch("ageRange"));
+          default:
+            return fieldValue as string;
+        }
+      })
+      .filter(Boolean);
+
+    return formattedFields.length > 0
+      ? formattedFields.join(` ${displaySeparator} `)
+      : "New Group Preview";
+  };
 
   const form = useForm<AddGroupFormData>({
     resolver: zodResolver(addGroupSchema),
@@ -65,7 +108,8 @@ export default function AddGroupForm({
       ageRange: "",
       level: "",
       gender: "",
-      color: "",
+      color: DEFAULT_GROUP_COLOR,
+      customName: "",
     },
   });
 
@@ -75,6 +119,7 @@ export default function AddGroupForm({
         ageRange: data.ageRange,
         level: data.level || null,
         gender: data.gender,
+        customName: data.customName?.trim() || null,
         appearance: data.color?.trim()
           ? {
               color: data.color.trim(),
@@ -91,33 +136,26 @@ export default function AddGroupForm({
     }
   };
 
-  const formatAgeRange = (ageRange: string) => {
-    const parts = ageRange.split("-");
-    if (parts.length === 2) {
-      const min = parseInt(parts[0]);
-      const max = parseInt(parts[1]);
-      if (!isNaN(min) && !isNaN(max)) {
-        if (max <= 18) return `U${max}`;
-        if (min >= 65) return "Senior";
-        return "Adult";
-      }
-    }
-    return ageRange;
-  };
-
   return (
     <div className="max-h-[80vh] overflow-y-auto">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* Header Section */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Plus className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-semibold">Create New Group</h2>
+          {/* Header Section - Live Preview */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div
+                className="w-4 h-4 rounded-full border border-gray-200 flex-shrink-0"
+                style={{ backgroundColor: form.watch("color") }}
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-lg font-semibold truncate">
+                  {generateDisplayText()}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Live preview of how this group will appear
+                </p>
+              </div>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Set up a new group with custom identity and properties
-            </p>
           </div>
 
           <Separator />
@@ -139,12 +177,7 @@ export default function AddGroupForm({
                 name="color"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center gap-2">
-                      Group Color
-                      <Badge variant="secondary" className="text-xs">
-                        Optional
-                      </Badge>
-                    </FormLabel>
+                    <FormLabel>Group Color</FormLabel>
                     <FormControl>
                       <div className="flex items-center gap-3">
                         <ColorPicker
@@ -163,24 +196,6 @@ export default function AddGroupForm({
                   </FormItem>
                 )}
               />
-
-              {/* Preview */}
-              {(form.watch("ageRange") || form.watch("gender")) && (
-                <div className="p-3 bg-muted/50 rounded-lg border">
-                  <p className="text-xs font-medium text-muted-foreground mb-1">
-                    Preview:
-                  </p>
-                  <p className="text-sm font-medium">
-                    {`${
-                      form.watch("ageRange")
-                        ? formatAgeRange(form.watch("ageRange"))
-                        : "Age Range"
-                    } • ${form.watch("level") || "No Level"} • ${
-                      form.watch("gender") || "Gender"
-                    }`}
-                  </p>
-                </div>
-              )}
             </CardContent>
           </Card>
 
@@ -219,32 +234,84 @@ export default function AddGroupForm({
                 )}
               />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {useCustomName && (
                 <FormField
                   control={form.control}
-                  name="level"
+                  name="customName"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="flex items-center gap-2">
-                        <Trophy className="h-3 w-3" />
-                        Skill Level
+                        Custom Name
                         <Badge variant="secondary" className="text-xs">
                           Optional
                         </Badge>
                       </FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="e.g., Beginner, Intermediate, Advanced"
+                          placeholder="e.g., Elite Squad, Beginners Team"
                           {...field}
                           className="text-base"
                         />
                       </FormControl>
                       <FormDescription>
-                        Specify the skill or experience level
+                        Override the default display with a custom name
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
+                />
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="level"
+                  render={({ field }) => {
+                    // Get configured level options from tenant
+                    const levelOptions =
+                      tenant?.tenantConfigs?.groups?.levelOptions || [];
+
+                    return (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          <Trophy className="h-3 w-3" />
+                          Skill Level
+                          <Badge variant="secondary" className="text-xs">
+                            Optional
+                          </Badge>
+                        </FormLabel>
+                        <FormControl>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select skill level" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {levelOptions.length > 0 ? (
+                                levelOptions.map((option) => (
+                                  <SelectItem key={option} value={option}>
+                                    {option}
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <SelectItem value="" disabled>
+                                  No level options configured
+                                </SelectItem>
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormDescription>
+                          {levelOptions.length > 0
+                            ? "Choose from configured skill levels"
+                            : "Configure level options in group settings first"}
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
 
                 <FormField
@@ -260,7 +327,7 @@ export default function AddGroupForm({
                         defaultValue={field.value}
                       >
                         <FormControl>
-                          <SelectTrigger className="text-base">
+                          <SelectTrigger>
                             <SelectValue placeholder="Select gender" />
                           </SelectTrigger>
                         </FormControl>
@@ -314,7 +381,7 @@ function AgeRangeInput({ value, onChange, placeholder }: AgeRangeInputProps) {
     }
   };
 
-  const handleRangeChange = () => {
+  const handleRangeChange = useCallback(() => {
     const min = parseInt(minAge);
     const max = parseInt(maxAge);
 
@@ -325,9 +392,8 @@ function AgeRangeInput({ value, onChange, placeholder }: AgeRangeInputProps) {
       // Clear the value if invalid
       onChange("");
     }
-  };
+  }, [minAge, maxAge, onChange]);
 
-  // Update the form value whenever min or max age changes
   useEffect(() => {
     handleRangeChange();
   }, [minAge, maxAge]);

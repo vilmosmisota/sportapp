@@ -7,7 +7,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ColorPicker } from "@/components/ui/color-picker";
 import {
   Form,
   FormControl,
@@ -23,7 +22,11 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { useUpdateTenantGroupsConfig } from "@/entities/tenant/Tenant.actions.client";
-import { Tenant, TenantGroupsConfig } from "@/entities/tenant/Tenant.schema";
+import {
+  Tenant,
+  TenantGroupsConfig,
+  TenantGroupsConfigSchema,
+} from "@/entities/tenant/Tenant.schema";
 import {
   closestCenter,
   DndContext,
@@ -48,26 +51,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
-const settingsSchema = z.object({
-  defaultColor: z.string().optional(),
-  useCustomName: z.boolean().default(false),
-  defaultDisplayFields: z
-    .array(z.string())
-    .min(1, "At least one display field is required")
-    .max(3, "Maximum 3 display fields allowed"),
-  displaySeparator: z.string().min(1, "Separator is required"),
-  levelOptions: z.array(z.string()),
-});
-
-type SettingsFormData = z.infer<typeof settingsSchema>;
-
-const DEFAULT_SETTINGS: SettingsFormData = {
-  defaultColor: "#BFDBFE", // Blue-200
-  useCustomName: false,
-  defaultDisplayFields: ["ageRange"],
-  displaySeparator: "•",
-  levelOptions: [],
-};
+type SettingsFormData = z.infer<typeof TenantGroupsConfigSchema>;
 
 type EditGroupSettingsFormProps = {
   tenant: Tenant;
@@ -147,37 +131,24 @@ export default function EditGroupSettingsForm({
     tenant.tenantConfigId ?? undefined
   );
 
-  // Load current settings from tenant config or use defaults
+  // Load current settings from tenant config or use schema defaults
   const currentSettings: SettingsFormData = {
-    defaultColor:
-      tenant.tenantConfigs?.groups?.defaultColor ||
-      DEFAULT_SETTINGS.defaultColor,
-    useCustomName:
-      tenant.tenantConfigs?.groups?.useCustomName ??
-      DEFAULT_SETTINGS.useCustomName,
-    defaultDisplayFields:
-      tenant.tenantConfigs?.groups?.defaultDisplayFields ||
-      DEFAULT_SETTINGS.defaultDisplayFields,
-    displaySeparator:
-      tenant.tenantConfigs?.groups?.displaySeparator ||
-      DEFAULT_SETTINGS.displaySeparator,
-    levelOptions:
-      tenant.tenantConfigs?.groups?.levelOptions ||
-      DEFAULT_SETTINGS.levelOptions,
+    useCustomName: tenant.tenantConfigs?.groups?.useCustomName ?? false,
+    displayFields: tenant.tenantConfigs?.groups?.displayFields || ["ageRange"],
+    displaySeparator: tenant.tenantConfigs?.groups?.displaySeparator || "•",
+    levelOptions: tenant.tenantConfigs?.groups?.levelOptions || [],
   };
 
   const form = useForm<SettingsFormData>({
-    resolver: zodResolver(settingsSchema),
+    resolver: zodResolver(TenantGroupsConfigSchema),
     defaultValues: currentSettings,
   });
 
   const onSubmit = async (data: SettingsFormData) => {
     try {
-      // Convert form data to TenantGroupsConfig
       const groupsConfig: TenantGroupsConfig = {
-        defaultColor: data.defaultColor,
         useCustomName: data.useCustomName,
-        defaultDisplayFields: data.defaultDisplayFields,
+        displayFields: data.displayFields,
         displaySeparator: data.displaySeparator,
         levelOptions: data.levelOptions,
       };
@@ -192,11 +163,23 @@ export default function EditGroupSettingsForm({
     }
   };
 
+  // Helper function to capitalize each word
+  const capitalizeWords = (str: string) => {
+    return str
+      .trim()
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
+  };
+
   const addLevelOption = (value: string) => {
     if (!value.trim()) return;
+    const capitalizedValue = capitalizeWords(value);
     const currentValues = form.getValues("levelOptions") || [];
-    if (!currentValues.includes(value.trim())) {
-      form.setValue("levelOptions", [...currentValues, value.trim()]);
+    if (!currentValues.includes(capitalizedValue)) {
+      form.setValue("levelOptions", [...currentValues, capitalizedValue], {
+        shouldDirty: true,
+      });
     }
   };
 
@@ -204,22 +187,28 @@ export default function EditGroupSettingsForm({
     const currentValues = form.getValues("levelOptions") || [];
     form.setValue(
       "levelOptions",
-      currentValues.filter((_, i) => i !== index)
+      currentValues.filter((_, i) => i !== index),
+      {
+        shouldDirty: true,
+      }
     );
   };
 
   const toggleDisplayField = (field: string) => {
-    const currentFields = form.getValues("defaultDisplayFields");
+    const currentFields = form.getValues("displayFields");
     if (currentFields.includes(field)) {
       if (currentFields.length > 1) {
         form.setValue(
-          "defaultDisplayFields",
-          currentFields.filter((f) => f !== field)
+          "displayFields",
+          currentFields.filter((f) => f !== field),
+          { shouldDirty: true }
         );
       }
     } else {
       if (currentFields.length < 3) {
-        form.setValue("defaultDisplayFields", [...currentFields, field]);
+        form.setValue("displayFields", [...currentFields, field], {
+          shouldDirty: true,
+        });
       }
     }
   };
@@ -235,21 +224,26 @@ export default function EditGroupSettingsForm({
     const { active, over } = event;
 
     if (active.id !== over?.id) {
-      const currentFields = form.getValues("defaultDisplayFields");
+      const currentFields = form.getValues("displayFields");
       const oldIndex = currentFields.indexOf(active.id as string);
       const newIndex = currentFields.indexOf(over?.id as string);
 
       const newFields = arrayMove(currentFields, oldIndex, newIndex);
-      form.setValue("defaultDisplayFields", newFields);
+      form.setValue("displayFields", newFields, {
+        shouldDirty: true,
+      });
     }
   };
 
   const removeDisplayField = (field: string) => {
-    const currentFields = form.getValues("defaultDisplayFields");
+    const currentFields = form.getValues("displayFields");
     if (currentFields.length > 1) {
       form.setValue(
-        "defaultDisplayFields",
-        currentFields.filter((f) => f !== field)
+        "displayFields",
+        currentFields.filter((f) => f !== field),
+        {
+          shouldDirty: true,
+        }
       );
     }
   };
@@ -279,35 +273,10 @@ export default function EditGroupSettingsForm({
                 <CardTitle className="text-base">Appearance Settings</CardTitle>
               </div>
               <CardDescription>
-                Set default colors and display preferences for new groups
+                Set display preferences for new groups
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <FormField
-                control={form.control}
-                name="defaultColor"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Default Color</FormLabel>
-                    <FormControl>
-                      <div className="flex items-center gap-3">
-                        <ColorPicker
-                          value={field.value}
-                          onChange={field.onChange}
-                        />
-                        <span className="text-sm text-muted-foreground">
-                          {field.value || "No color selected"}
-                        </span>
-                      </div>
-                    </FormControl>
-                    <FormDescription>
-                      This color will be used as the default for new groups.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               <FormField
                 control={form.control}
                 name="useCustomName"
@@ -363,30 +332,26 @@ export default function EditGroupSettingsForm({
                   onDragEnd={handleDragEnd}
                 >
                   <SortableContext
-                    items={form.watch("defaultDisplayFields")}
+                    items={form.watch("displayFields")}
                     strategy={verticalListSortingStrategy}
                   >
                     <div className="space-y-2">
-                      {form
-                        .watch("defaultDisplayFields")
-                        .map((field, index) => (
-                          <SortableDisplayField
-                            key={field}
-                            id={field}
-                            field={field}
-                            index={index}
-                            onRemove={removeDisplayField}
-                            canRemove={
-                              form.watch("defaultDisplayFields").length > 1
-                            }
-                          />
-                        ))}
+                      {form.watch("displayFields").map((field, index) => (
+                        <SortableDisplayField
+                          key={field}
+                          id={field}
+                          field={field}
+                          index={index}
+                          onRemove={removeDisplayField}
+                          canRemove={form.watch("displayFields").length > 1}
+                        />
+                      ))}
                     </div>
                   </SortableContext>
                 </DndContext>
 
                 {/* Available Fields to Add */}
-                {form.watch("defaultDisplayFields").length < 3 && (
+                {form.watch("displayFields").length < 3 && (
                   <div className="space-y-2">
                     <Label className="text-xs text-muted-foreground">
                       Add Field:
@@ -395,7 +360,7 @@ export default function EditGroupSettingsForm({
                       {["ageRange", "level", "gender"]
                         .filter(
                           (field) =>
-                            !form.watch("defaultDisplayFields").includes(field)
+                            !form.watch("displayFields").includes(field)
                         )
                         .map((field) => (
                           <Button
@@ -437,7 +402,7 @@ export default function EditGroupSettingsForm({
                         <div className="flex items-center gap-1 text-sm text-muted-foreground">
                           Preview:
                           {form
-                            .watch("defaultDisplayFields")
+                            .watch("displayFields")
                             .map((fieldName, index) => (
                               <span
                                 key={fieldName}
@@ -447,8 +412,7 @@ export default function EditGroupSettingsForm({
                                   {fieldName.replace(/([A-Z])/g, " $1")}
                                 </span>
                                 {index <
-                                  form.watch("defaultDisplayFields").length -
-                                    1 && (
+                                  form.watch("displayFields").length - 1 && (
                                   <span className="font-mono">
                                     {field.value || "•"}
                                   </span>
@@ -523,6 +487,15 @@ function OptionManager({
 }: OptionManagerProps) {
   const [newValue, setNewValue] = useState("");
 
+  // Helper function to capitalize each word
+  const capitalizeWords = (str: string) => {
+    return str
+      .trim()
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
+  };
+
   const handleAdd = () => {
     onAdd(newValue);
     setNewValue("");
@@ -532,6 +505,18 @@ function OptionManager({
     if (e.key === "Enter") {
       e.preventDefault();
       handleAdd();
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Only capitalize if the user has finished typing a word (after space or on blur)
+    setNewValue(value);
+  };
+
+  const handleInputBlur = () => {
+    if (newValue.trim()) {
+      setNewValue(capitalizeWords(newValue));
     }
   };
 
@@ -545,7 +530,8 @@ function OptionManager({
       <div className="flex gap-2">
         <Input
           value={newValue}
-          onChange={(e) => setNewValue(e.target.value)}
+          onChange={handleInputChange}
+          onBlur={handleInputBlur}
           onKeyPress={handleKeyPress}
           placeholder={placeholder}
           className="flex-1"

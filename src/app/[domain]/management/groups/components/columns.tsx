@@ -1,8 +1,10 @@
 "use client";
 
+import { MarsIcon, VenusIcon } from "@/components/icons/icons";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
 import DataTableColumnHeader from "@/components/ui/data-table/DataTableColumnHeader";
+import { GroupBadge } from "@/components/ui/group-badge";
 import { PermissionDropdownMenu } from "@/composites/auth/PermissionDropdownMenu";
 import { Group } from "@/entities/group/Group.schema";
 import { Permission } from "@/entities/role/Role.permissions";
@@ -10,7 +12,10 @@ import { TenantGroupsConfig } from "@/entities/tenant/Tenant.schema";
 import { ColumnDef } from "@tanstack/react-table";
 import { SquarePen, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { formatAgeRange } from "../../../../../entities/group/Group.utils";
+import {
+  formatAgeRange,
+  formatGender,
+} from "../../../../../entities/group/Group.utils";
 
 interface GroupsTableColumnsProps {
   onEdit: (group: Group) => void;
@@ -65,55 +70,6 @@ const GroupsTableActions = ({
   );
 };
 
-const DisplayCell = ({
-  group,
-  tenantGroupsConfig,
-}: {
-  group: Group;
-  tenantGroupsConfig?: TenantGroupsConfig;
-}) => {
-  const color = group.appearance?.color;
-
-  // Use global tenant config for display logic
-  const useCustomName = tenantGroupsConfig?.useCustomName ?? false;
-  const displayFields = tenantGroupsConfig?.defaultDisplayFields || [
-    "ageRange",
-  ];
-  const displaySeparator = tenantGroupsConfig?.displaySeparator || "•";
-
-  // Build display text from configured fields
-  const displayParts = displayFields
-    .map((field) => {
-      switch (field) {
-        case "ageRange":
-          return formatAgeRange(group.ageRange);
-        case "level":
-          return group.level;
-        case "gender":
-          return group.gender;
-        default:
-          return null;
-      }
-    })
-    .filter(Boolean);
-
-  const displayText =
-    displayParts.join(` ${displaySeparator} `) ||
-    formatAgeRange(group.ageRange);
-
-  return (
-    <div className="flex items-center space-x-2">
-      {color && (
-        <div
-          className="w-3 h-3 rounded-full border border-gray-200"
-          style={{ backgroundColor: color }}
-        />
-      )}
-      <span className="font-medium">{displayText}</span>
-    </div>
-  );
-};
-
 export const columns = ({
   onEdit,
   onDelete,
@@ -140,9 +96,11 @@ export const columns = ({
       <DataTableColumnHeader column={column} title="Display" />
     ),
     cell: ({ row }) => (
-      <DisplayCell
+      <GroupBadge
         group={row.original}
         tenantGroupsConfig={tenantGroupsConfig}
+        showTooltip={true}
+        size="sm"
       />
     ),
     enableSorting: false,
@@ -194,30 +152,33 @@ export const columns = ({
     ),
     cell: ({ row }) => {
       const gender = row.original.gender;
+      const ageRange = row.original.ageRange;
       if (!gender) return <span className="text-muted-foreground">-</span>;
 
-      const getGenderColor = (gender: string) => {
-        switch (gender.toLowerCase()) {
-          case "male":
-            return "bg-blue-100 text-blue-800 border-blue-200";
-          case "female":
-            return "bg-pink-100 text-pink-800 border-pink-200";
-          case "mixed":
-            return "bg-purple-100 text-purple-800 border-purple-200";
-          default:
-            return "bg-gray-100 text-gray-800 border-gray-200";
-        }
-      };
+      const formattedGender = formatGender(gender, ageRange);
 
       return (
-        <Badge
-          variant="outline"
-          className={`text-xs capitalize ${getGenderColor(gender)}`}
-        >
-          {gender}
-        </Badge>
+        <div className="flex items-center gap-2">
+          {gender.toLowerCase() === "male" ? (
+            <MarsIcon className="h-4 w-4 text-blue-500" />
+          ) : gender.toLowerCase() === "female" ? (
+            <VenusIcon className="h-4 w-4 text-pink-500" />
+          ) : gender.toLowerCase() === "mixed" ? (
+            <div className="flex items-center gap-1">
+              <MarsIcon className="h-4 w-4 text-blue-500" />
+              <VenusIcon className="h-4 w-4 text-pink-500" />
+            </div>
+          ) : null}
+          <span>{formattedGender}</span>
+        </div>
       );
     },
     enableSorting: true,
+    filterFn: (row, id, filterValue) => {
+      const gender = row.original.gender || "";
+      const ageRange = row.original.ageRange;
+      const formattedGender = formatGender(gender, ageRange);
+      return formattedGender.toLowerCase().includes(filterValue.toLowerCase());
+    },
   },
 ];

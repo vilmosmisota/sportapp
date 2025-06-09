@@ -52,17 +52,23 @@ export const TenantEmailConfigSchema = z.object({
   customDomain: z.string().optional(),
 });
 
-export const TenantGroupsConfigSchema = z.object({
-  defaultColor: z.string().optional(),
-  useCustomName: z.boolean().default(false),
-  defaultDisplayFields: z
-    .array(z.string())
-    .min(1, "At least one display field is required")
-    .max(3, "Maximum 3 display fields allowed")
-    .default(["ageRange"]),
-  displaySeparator: z.string().min(1, "Separator is required").default("•"),
-  levelOptions: z.array(z.string()).default([]),
-});
+export const TenantGroupsConfigSchema = z
+  .object({
+    useCustomName: z.boolean().default(false),
+    displayFields: z
+      .array(z.string())
+      .min(1, "At least one display field is required")
+      .max(3, "Maximum 3 display fields allowed")
+      .default(["ageRange"]),
+    displaySeparator: z.string().min(1, "Separator is required").default("•"),
+    levelOptions: z.array(z.string()).default([]),
+  })
+  .default({
+    useCustomName: false,
+    displayFields: ["ageRange"],
+    displaySeparator: "•",
+    levelOptions: [],
+  });
 
 export enum TenantType {
   ORGANIZATION = "organization",
