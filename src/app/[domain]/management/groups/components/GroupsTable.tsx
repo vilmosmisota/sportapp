@@ -17,6 +17,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { columns } from "./columns";
@@ -43,6 +44,7 @@ export default function GroupsTable({
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const deleteGroup = useDeleteGroup(tenantId);
+  const router = useRouter();
 
   const handleEdit = useCallback((group: Group) => {
     setSelectedGroup(group);
@@ -61,15 +63,23 @@ export default function GroupsTable({
     [deleteGroup]
   );
 
+  const handleView = useCallback(
+    (groupId: number) => {
+      router.push(`/management/group/${groupId}`);
+    },
+    [router]
+  );
+
   const tableColumns = useMemo(
     () =>
       columns({
         onEdit: handleEdit,
         onDelete: handleDelete,
+        onView: handleView,
         domain,
         tenantGroupsConfig,
       }),
-    [domain, handleDelete, handleEdit, tenantGroupsConfig]
+    [domain, handleDelete, handleEdit, handleView, tenantGroupsConfig]
   );
 
   const table = useReactTable({

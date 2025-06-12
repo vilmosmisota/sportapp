@@ -10,7 +10,7 @@ import { Group } from "@/entities/group/Group.schema";
 import { Permission } from "@/entities/role/Role.permissions";
 import { TenantGroupsConfig } from "@/entities/tenant/Tenant.schema";
 import { ColumnDef } from "@tanstack/react-table";
-import { SquarePen, Trash2 } from "lucide-react";
+import { Eye, SquarePen, Trash2 } from "lucide-react";
 import { useState } from "react";
 import {
   formatAgeRange,
@@ -20,6 +20,7 @@ import {
 interface GroupsTableColumnsProps {
   onEdit: (group: Group) => void;
   onDelete: (groupId: number) => void;
+  onView: (groupId: number) => void;
   domain: string;
   tenantGroupsConfig?: TenantGroupsConfig;
 }
@@ -28,6 +29,7 @@ interface GroupsTableActionsProps {
   group: Group;
   onEdit: (group: Group) => void;
   onDelete: (groupId: number) => void;
+  onView: (groupId: number) => void;
   domain: string;
 }
 
@@ -35,14 +37,25 @@ const GroupsTableActions = ({
   group,
   onEdit,
   onDelete,
+  onView,
   domain,
 }: GroupsTableActionsProps) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  const handleView = () => {
+    onView(group.id);
+  };
 
   return (
     <div className="flex items-center justify-center gap-2">
       <PermissionDropdownMenu
         actions={[
+          {
+            label: "View",
+            onClick: handleView,
+            icon: <Eye className="h-4 w-4" />,
+            permission: Permission.MANAGE_MEMBERS, // Using existing permission
+          },
           {
             label: "Edit",
             onClick: () => onEdit(group),
@@ -73,6 +86,7 @@ const GroupsTableActions = ({
 export const columns = ({
   onEdit,
   onDelete,
+  onView,
   domain,
   tenantGroupsConfig,
 }: GroupsTableColumnsProps): ColumnDef<Group>[] => [
@@ -83,6 +97,7 @@ export const columns = ({
         group={row.original}
         onEdit={onEdit}
         onDelete={onDelete}
+        onView={onView}
         domain={domain}
       />
     ),
@@ -95,14 +110,25 @@ export const columns = ({
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Display" />
     ),
-    cell: ({ row }) => (
-      <GroupBadge
-        group={row.original}
-        tenantGroupsConfig={tenantGroupsConfig}
-        showTooltip={true}
-        size="sm"
-      />
-    ),
+    cell: ({ row }) => {
+      const handleClick = () => {
+        onView(row.original.id);
+      };
+
+      return (
+        <div
+          onClick={handleClick}
+          className="cursor-pointer hover:opacity-80 transition-opacity"
+        >
+          <GroupBadge
+            group={row.original}
+            tenantGroupsConfig={tenantGroupsConfig}
+            showTooltip={true}
+            size="sm"
+          />
+        </div>
+      );
+    },
     enableSorting: false,
     enableHiding: false,
     minSize: 150,

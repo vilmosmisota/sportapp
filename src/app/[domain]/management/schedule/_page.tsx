@@ -29,13 +29,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { PageHeader } from "@/components/ui/page-header";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SeasonSelector } from "@/components/ui/season-selector";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDeleteGame } from "@/entities/game/Game.actions.client";
 import { useDeleteTraining } from "@/entities/training/Training.actions.client";
@@ -402,25 +396,14 @@ export default function CalendarPage() {
               )}
 
             {/* Season selector with loading state */}
-            {isLoadingTenantData ? (
-              <Skeleton className="h-10 w-[180px]" />
-            ) : seasons && seasons.length > 0 ? (
-              <Select
-                value={selectedSeason?.id.toString()}
-                onValueChange={handleSeasonChange}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select season" />
-                </SelectTrigger>
-                <SelectContent>
-                  {seasons.map((season) => (
-                    <SelectItem key={season.id} value={season.id.toString()}>
-                      {season.customName || `Season ${season.id}`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ) : null}
+            <SeasonSelector
+              seasons={seasons}
+              selectedSeason={selectedSeason}
+              onSeasonChange={handleSeasonChange}
+              isLoading={isLoadingTenantData}
+              placeholder="Select season"
+              width="w-[180px]"
+            />
 
             {/* Add Event button with loading state */}
             {isLoadingTenantData ? (

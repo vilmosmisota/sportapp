@@ -97,5 +97,25 @@ export const queryKeys = {
       ["group", "list", tenantId] as const,
     detail: (tenantId: string | undefined, groupId: string | undefined) =>
       ["group", "detail", tenantId, groupId] as const,
+    connections: (tenantId: string | undefined, groupId: string | undefined) =>
+      ["group", "connections", tenantId, groupId] as const,
+  },
+  session: {
+    all: ["session"] as const,
+    list: (tenantId: string | undefined) =>
+      ["session", "list", tenantId] as const,
+    detail: (tenantId: string | undefined, sessionId: string | undefined) =>
+      ["session", "detail", tenantId, sessionId] as const,
+    byGroup: (tenantId: string | undefined, groupId: number | undefined) =>
+      ["session", "byGroup", tenantId, groupId] as const,
+    bySeason: (tenantId: string | undefined, seasonId: number | undefined) =>
+      ["session", "bySeason", tenantId, seasonId] as const,
+    withGroup: (
+      tenantId: string | undefined,
+      groupId: number | undefined,
+      seasonId: number | undefined,
+      dateRange: { from: string; to: string } | undefined
+    ) =>
+      ["session", "withGroup", tenantId, groupId, seasonId, dateRange] as const,
   },
 } as const;

@@ -4,7 +4,7 @@ import { ReactNode } from "react";
 import { Button } from "./button";
 
 interface PageHeaderProps {
-  title: string;
+  title: string | ReactNode;
   description?: string;
   actions?: ReactNode;
   backButton?: {
