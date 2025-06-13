@@ -1,11 +1,8 @@
 import {
-  differenceInMinutes,
   endOfDay,
   endOfMonth,
   endOfWeek,
   format,
-  isValid,
-  parseISO,
   startOfDay,
   startOfMonth,
   startOfWeek,
@@ -49,23 +46,18 @@ export function getDayDateRange(date: Date): DateRange {
 /**
  * Calculate duration between two dates in minutes
  */
-export function calculateDuration(startDate: Date, endDate: Date): number {
-  return differenceInMinutes(endDate, startDate);
+export function calculateDuration(start: Date, end: Date): number {
+  return Math.round((end.getTime() - start.getTime()) / (1000 * 60));
 }
 
 /**
  * Parse date and time strings into a Date object
  */
-export function parseDateTime(dateString: string, timeString: string): Date {
-  // Combine date and time strings
-  const dateTimeString = `${dateString}T${timeString}`;
-  const parsed = parseISO(dateTimeString);
-
-  if (!isValid(parsed)) {
-    throw new Error(`Invalid date/time: ${dateTimeString}`);
-  }
-
-  return parsed;
+export function parseDateTime(date: string, time: string): Date {
+  const [hours, minutes] = time.split(":").map(Number);
+  const result = new Date(date);
+  result.setHours(hours, minutes);
+  return result;
 }
 
 /**
@@ -78,8 +70,8 @@ export function formatTime(date: Date): string {
 /**
  * Format date for display
  */
-export function formatDate(date: Date, formatString: string = "PPP"): string {
-  return format(date, formatString);
+export function formatDate(date: Date): string {
+  return format(date, "yyyy-MM-dd");
 }
 
 /**

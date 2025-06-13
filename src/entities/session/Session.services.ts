@@ -23,14 +23,12 @@ export const getSessionsWithGroup = async (
     .eq("groupId", params.groupId)
     .eq("seasonId", params.seasonId);
 
-  // Add optional date range filter
   if (params.dateRange) {
     query = query
       .gte("date", params.dateRange.from)
       .lte("date", params.dateRange.to);
   }
 
-  // Order by date and start time
   query = query
     .order("date", { ascending: true })
     .order("startTime", { ascending: true });
@@ -39,7 +37,6 @@ export const getSessionsWithGroup = async (
 
   if (error) throw error;
 
-  // Validate data before returning
   if (!data) return [];
 
   try {

@@ -1,5 +1,7 @@
 import { Group } from "@/entities/group/Group.schema";
+import { createGroupDisplay } from "@/entities/group/Group.utils";
 import { SessionWithGroup } from "@/entities/session/Session.schema";
+import { TenantGroupsConfig } from "../../../entities/tenant/Tenant.schema";
 import { DateRange } from "../types/calendar.types";
 import { SessionEvent } from "../types/event.types";
 import { calculateDuration, parseDateTime } from "../utils/date.utils";
@@ -11,7 +13,10 @@ export class SessionEventAdapter {
   /**
    * Transform a Session into a SessionEvent
    */
-  transform(session: SessionWithGroup): SessionEvent {
+  transform(
+    session: SessionWithGroup,
+    tenantGroupsConfig?: TenantGroupsConfig
+  ): SessionEvent {
     const startDate = parseDateTime(session.date, session.startTime);
     const endDate = parseDateTime(session.date, session.endTime);
     const duration = calculateDuration(startDate, endDate);
@@ -26,7 +31,7 @@ export class SessionEventAdapter {
       endDate,
       allDay: false,
       data: session,
-      groupName: this.getGroupName(session.group),
+      groupName: this.getGroupName(session.group, tenantGroupsConfig),
       locationName: session.location?.name,
       duration,
       metadata: {
@@ -52,15 +57,30 @@ export class SessionEventAdapter {
   }
 
   /**
+   * Get the display name for a group using the utility function
+   */
+  private getGroupName(
+    group: Group,
+    groupsConfig?: TenantGroupsConfig
+  ): string {
+    return createGroupDisplay(group, groupsConfig);
+  }
+
+  /**
    * Get display information for the session
    */
-  getDisplayInfo(session: SessionWithGroup): {
+  private getDisplayInfo(
+    session: SessionWithGroup,
+    groupsConfig?: TenantGroupsConfig
+  ): {
     title: string;
     color?: string;
     description?: string;
   } {
-    // Create a descriptive title
-    const title = this.getGroupName(session.group);
+    // Create a descriptive title using the group display name
+    const title = this.getGroupName(session.group, groupsConfig);
+
+    console.log("title", title);
 
     // Use group color if available, otherwise default
     const color = session.group.appearance?.color || "#3b82f6"; // Default blue
@@ -76,28 +96,5 @@ export class SessionEventAdapter {
       color,
       description,
     };
-  }
-
-  /**
-   * Generate a display name for the group
-   */
-  private getGroupName(group: Group): string {
-    // Use custom name if available
-    if (group.customName) {
-      return group.customName;
-    }
-
-    // Otherwise, construct from age range, level, and gender
-    const parts = [group.ageRange];
-
-    if (group.level) {
-      parts.push(group.level);
-    }
-
-    if (group.gender && group.gender !== "mixed") {
-      parts.push(group.gender);
-    }
-
-    return parts.join(" ");
   }
 }

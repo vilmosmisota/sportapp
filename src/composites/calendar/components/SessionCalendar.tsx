@@ -1,5 +1,6 @@
 "use client";
 
+import { Tenant } from "@/entities/tenant/Tenant.schema";
 import { cn } from "@/libs/tailwind/utils";
 import { useCalendarNavigation } from "../hooks/useCalendarNavigation";
 import { useSessionCalendarData } from "../providers/SessionDataProvider";
@@ -8,7 +9,7 @@ import { CalendarEventHandlers, SessionEvent } from "../types/event.types";
 import { Calendar } from "./Calendar";
 
 interface SessionCalendarProps extends CalendarEventHandlers<SessionEvent> {
-  tenantId: number;
+  tenant: Tenant;
   groupId: number;
   seasonId: number;
   season?: CalendarSeason;
@@ -18,7 +19,7 @@ interface SessionCalendarProps extends CalendarEventHandlers<SessionEvent> {
 }
 
 export function SessionCalendar({
-  tenantId,
+  tenant,
   groupId,
   seasonId,
   season,
@@ -44,9 +45,8 @@ export function SessionCalendar({
     onViewChange,
   });
 
-  // Fetch session events for the current date range
   const { events, isLoading, isError, error, refetch } = useSessionCalendarData(
-    tenantId,
+    tenant,
     groupId,
     seasonId,
     navigation.dateRange,

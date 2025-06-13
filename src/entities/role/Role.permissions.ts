@@ -25,8 +25,8 @@ export enum Permission {
   MANAGE_ATTENDANCE = "manage_attendance",
 
   // Training management
-  VIEW_TRAINING = "view_training",
-  MANAGE_TRAINING = "manage_training",
+  VIEW_EVENTS = "view_events",
+  MANAGE_EVENTS = "manage_events",
 
   // Dashboard access
   VIEW_DASHBOARD = "view_dashboard",
@@ -62,8 +62,8 @@ export const PermissionDescriptions: Record<Permission, string> = {
   [Permission.MANAGE_SEASONS]: "Create and manage seasons",
   [Permission.VIEW_ATTENDANCE]: "View attendance records",
   [Permission.MANAGE_ATTENDANCE]: "Manage attendance records",
-  [Permission.VIEW_TRAINING]: "View training schedules",
-  [Permission.MANAGE_TRAINING]: "Create and manage trainings",
+  [Permission.VIEW_EVENTS]: "View training schedules",
+  [Permission.MANAGE_EVENTS]: "Create and manage trainings",
   [Permission.VIEW_DASHBOARD]: "Access dashboard",
   [Permission.VIEW_SETTINGS_USERS]: "View users in organization settings",
   [Permission.MANAGE_SETTINGS_USERS]: "Manage users in organization settings",
@@ -170,16 +170,16 @@ export const RolePermissions = {
         requiredPermissions: [Permission.VIEW_ATTENDANCE],
       }),
   },
-  Training: {
+  Events: {
     manage: (permissions?: string[] | null) =>
       checkPermissions({
         permissions,
-        requiredPermissions: [Permission.MANAGE_TRAINING],
+        requiredPermissions: [Permission.MANAGE_EVENTS],
       }),
     view: (permissions?: string[] | null) =>
       checkPermissions({
         permissions,
-        requiredPermissions: [Permission.VIEW_TRAINING],
+        requiredPermissions: [Permission.VIEW_EVENTS],
       }),
   },
   Settings: {

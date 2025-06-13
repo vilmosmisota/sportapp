@@ -12,12 +12,13 @@ import {
   SessionEvent,
   seasonToCalendarSeason,
 } from "@/composites/calendar";
-import { createGroupDisplay } from "@/entities/group/Group.utils";
 import { useGroupConnections } from "@/entities/group/GroupConnection.query";
 import { Permission } from "@/entities/role/Role.permissions";
 import { useSeasonsByTenantId } from "@/entities/season/Season.query";
 import { Calendar, Plus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { ResponsiveSheet } from "../../../../../../components/ui/responsive-sheet";
+import AddSessionForm from "./components/forms/AddSessionForm";
 
 interface GroupEventsPageProps {
   params: {
@@ -31,6 +32,8 @@ export default function GroupEventsPage({ params }: GroupEventsPageProps) {
   const tenantId = tenant?.id || 0;
   const groupId = parseInt(params.id);
   const [selectedSeasonId, setSelectedSeasonId] = useState<string>("");
+  const [isAddSessionSheetOpen, setIsAddSessionSheetOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   const {
     data: groupData,
@@ -46,28 +49,23 @@ export default function GroupEventsPage({ params }: GroupEventsPageProps) {
     tenantId.toString()
   );
 
-  // Find the active season and preselect it
   const activeSeason = seasons?.find((season) => season.isActive);
 
-  // Preselect the active season when seasons are loaded
   useEffect(() => {
     if (activeSeason && !selectedSeasonId) {
       setSelectedSeasonId(activeSeason.id.toString());
     }
   }, [activeSeason, selectedSeasonId]);
 
-  // Find the selected season object
   const selectedSeason = seasons?.find(
     (season) => season.id.toString() === selectedSeasonId
   );
 
-  // Convert season to calendar format
   const calendarSeason = useMemo(() => {
     if (!selectedSeason) return undefined;
     return seasonToCalendarSeason(selectedSeason);
   }, [selectedSeason]);
 
-  // Calendar configuration
   const calendarConfig: CalendarConfig<SessionEvent> = useMemo(
     () => ({
       defaultView: "month",
@@ -86,20 +84,12 @@ export default function GroupEventsPage({ params }: GroupEventsPageProps) {
     []
   );
 
-  // Event handlers
   const handleEventClick = (event: SessionEvent) => {
     console.log("Session clicked:", event);
-    // TODO: Open session details dialog or navigate to session page
   };
 
   const handleDateClick = (date: Date) => {
-    console.log("Date clicked:", date);
-    // TODO: Handle date click (maybe create new session)
-  };
-
-  const handleAddSession = () => {
-    console.log("Add session clicked");
-    // TODO: Open add session dialog or navigate to add session page
+    setSelectedDate(date);
   };
 
   if (isLoading) {
@@ -122,7 +112,7 @@ export default function GroupEventsPage({ params }: GroupEventsPageProps) {
     );
   }
 
-  if (error || !groupData) {
+  if (error || !groupData || !tenant || !selectedSeason) {
     return (
       <ErrorBoundary>
         <div className="w-full space-y-6">
@@ -135,13 +125,6 @@ export default function GroupEventsPage({ params }: GroupEventsPageProps) {
     );
   }
 
-  const { group } = groupData;
-  const groupDisplayName = createGroupDisplay(
-    group,
-    tenant?.tenantConfigs?.groups || undefined
-  );
-
-  // Create description with season info
   const getDescription = () => {
     if (selectedSeason) {
       const seasonName =
@@ -171,8 +154,8 @@ export default function GroupEventsPage({ params }: GroupEventsPageProps) {
                 className="min-w-[200px]"
               />
               <PermissionButton
-                onClick={handleAddSession}
-                permission={Permission.MANAGE_TRAINING}
+                onClick={() => setIsAddSessionSheetOpen(true)}
+                permission={Permission.MANAGE_EVENTS}
                 disabled={!selectedSeasonId}
                 className="gap-2"
               >
@@ -186,7 +169,7 @@ export default function GroupEventsPage({ params }: GroupEventsPageProps) {
         {canShowCalendar ? (
           <div className="border rounded-lg overflow-hidden">
             <SessionCalendar
-              tenantId={tenantId}
+              tenant={tenant}
               groupId={groupId}
               seasonId={parseInt(selectedSeasonId)}
               season={calendarSeason}
@@ -208,6 +191,23 @@ export default function GroupEventsPage({ params }: GroupEventsPageProps) {
           </div>
         )}
       </div>
+
+      <ResponsiveSheet
+        isOpen={isAddSessionSheetOpen}
+        setIsOpen={setIsAddSessionSheetOpen}
+        title="Add Session"
+      >
+        <AddSessionForm
+          selectedSeason={selectedSeason}
+          tenant={tenant}
+          groupId={groupId}
+          setIsOpen={setIsAddSessionSheetOpen}
+          initialDate={selectedDate}
+          locations={
+            tenant?.tenantConfigs?.development?.trainingLocations || []
+          }
+        />
+      </ResponsiveSheet>
     </ErrorBoundary>
   );
 }

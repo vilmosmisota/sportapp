@@ -3,6 +3,10 @@ import {
   SessionQueryParams,
   SessionWithGroup,
 } from "@/entities/session/Session.schema";
+import {
+  Tenant,
+  TenantGroupsConfig,
+} from "../../../entities/tenant/Tenant.schema";
 import { SessionEventAdapter } from "../adapters/SessionEventAdapter";
 import { DateRange } from "../types/calendar.types";
 import { SessionEvent } from "../types/event.types";
@@ -12,17 +16,15 @@ import { formatDate } from "../utils/date.utils";
  * Hook for fetching session data for a specific group and converting to SessionEvents
  */
 export function useSessionCalendarData(
-  tenantId: number,
+  tenant: Tenant,
   groupId: number,
   seasonId: number,
   dateRange: DateRange,
   enabled: boolean = true
 ) {
-  const adapter = new SessionEventAdapter();
-
-  // Create query parameters
+  // Create query parameters with properly formatted dates
   const queryParams: SessionQueryParams = {
-    tenantId,
+    tenantId: tenant.id,
     groupId,
     seasonId,
     dateRange: {
@@ -40,9 +42,10 @@ export function useSessionCalendarData(
     refetch,
   } = useSessionsWithGroup(queryParams);
 
-  // Transform sessions to SessionEvents
+  const adapter = new SessionEventAdapter();
+
   const events: SessionEvent[] = sessions.map((session) =>
-    adapter.transform(session)
+    adapter.transform(session, tenant?.tenantConfigs?.groups || undefined)
   );
 
   return {
@@ -62,7 +65,8 @@ export function useAllGroupsSessionCalendarData(
   tenantId: number,
   seasonId: number,
   dateRange: DateRange,
-  enabled: boolean = true
+  enabled: boolean = true,
+  tenantGroupsConfig?: TenantGroupsConfig
 ) {
   const adapter = new SessionEventAdapter();
 
@@ -94,7 +98,7 @@ export function useAllGroupsSessionCalendarData(
 
   // Transform sessions to SessionEvents
   const events: SessionEvent[] = sessions.map((session) =>
-    adapter.transform(session)
+    adapter.transform(session, tenantGroupsConfig)
   );
 
   return {

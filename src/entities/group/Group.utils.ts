@@ -76,6 +76,9 @@ export const createGroupDisplay = (
     return group.customName;
   }
 
+  console.log("group", group);
+  console.log("tenantGroupsConfig", tenantGroupsConfig);
+
   const displayFields = tenantGroupsConfig?.displayFields || ["ageRange"];
   const separator = tenantGroupsConfig?.displaySeparator || "•";
 
@@ -85,7 +88,12 @@ export const createGroupDisplay = (
       if (!fieldValue) return null;
       return formatGroupField(fieldName, fieldValue, group);
     })
-    .filter(Boolean); // Remove null/undefined values
+    .filter(Boolean);
+
+  console.log("formattedFields", formattedFields);
+
+  const returnValue = formattedFields.join(` ${separator} `);
+  console.log("returnValue", returnValue);
 
   return formattedFields.join(` ${separator} `);
 };
