@@ -2,10 +2,15 @@
 
 import { Tenant } from "@/entities/tenant/Tenant.schema";
 import { cn } from "@/libs/tailwind/utils";
-import { useCalendarNavigation } from "../hooks/useCalendarNavigation";
+import { useState } from "react";
 import { useSessionCalendarData } from "../providers/SessionDataProvider";
-import { CalendarConfig, CalendarSeason } from "../types/calendar.types";
+import {
+  CalendarConfig,
+  CalendarSeason,
+  DateRange,
+} from "../types/calendar.types";
 import { CalendarEventHandlers, SessionEvent } from "../types/event.types";
+import { getMonthDateRange } from "../utils/date.utils";
 import { Calendar } from "./Calendar";
 
 interface SessionCalendarProps extends CalendarEventHandlers<SessionEvent> {
@@ -32,24 +37,15 @@ export function SessionCalendar({
   onDateRangeChange,
   onViewChange,
 }: SessionCalendarProps) {
-  const {
-    navigation,
-    goToDate,
-    goToToday,
-    changeView,
-    goToPrevious,
-    goToNext,
-  } = useCalendarNavigation({
-    defaultView: config.defaultView,
-    onDateRangeChange,
-    onViewChange,
-  });
+  const [currentDateRange, setCurrentDateRange] = useState<DateRange>(
+    getMonthDateRange(new Date())
+  );
 
   const { events, isLoading, isError, error, refetch } = useSessionCalendarData(
     tenant,
     groupId,
     seasonId,
-    navigation.dateRange,
+    currentDateRange,
     enabled
   );
 
@@ -92,7 +88,10 @@ export function SessionCalendar({
       onEventClick={onEventClick}
       onEventDoubleClick={onEventDoubleClick}
       onDateClick={onDateClick}
-      onDateRangeChange={onDateRangeChange}
+      onDateRangeChange={(dateRange) => {
+        setCurrentDateRange(dateRange);
+        onDateRangeChange?.(dateRange);
+      }}
       onViewChange={onViewChange}
     />
   );

@@ -114,8 +114,15 @@ export const queryKeys = {
       tenantId: string | undefined,
       groupId: number | undefined,
       seasonId: number | undefined,
-      monthKey: string | undefined
+      dateRangeKey: string | undefined
     ) =>
-      ["session", "withGroup", tenantId, groupId, seasonId, monthKey] as const,
+      [
+        "session",
+        "withGroup",
+        tenantId,
+        groupId,
+        seasonId,
+        dateRangeKey,
+      ] as const,
   },
 } as const;

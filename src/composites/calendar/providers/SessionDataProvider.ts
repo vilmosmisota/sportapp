@@ -22,7 +22,6 @@ export function useSessionCalendarData(
   dateRange: DateRange,
   enabled: boolean = true
 ) {
-  // Create query parameters with properly formatted dates
   const queryParams: SessionQueryParams = {
     tenantId: tenant.id,
     groupId,
@@ -33,7 +32,6 @@ export function useSessionCalendarData(
     },
   };
 
-  // Use the existing query hook
   const {
     data: sessions = [],
     isLoading,
