@@ -225,6 +225,11 @@ export default function AddSessionForm({
           return;
         }
 
+        if (values.selectedDays.length === 0) {
+          toast.error("Please select at least one day for repeating sessions");
+          return;
+        }
+
         const result = generateRecurringSessionsFromStartDate(
           values.date,
           selectedSeason,
@@ -234,7 +239,8 @@ export default function AddSessionForm({
             location,
             groupId,
             seasonId: selectedSeason.id,
-          }
+          },
+          values.selectedDays
         );
 
         if (!result.isStartDateValid) {
@@ -441,15 +447,17 @@ export default function AddSessionForm({
                       const referenceDate =
                         form.getValues("date") || initialDate;
                       if (referenceDate) {
-                        const dayName = daysOfWeek.find(
-                          (day) => day.id === referenceDate.getDay()
-                        )?.name;
-                        if (dayName) {
-                          description += `, starting on ${format(
-                            referenceDate,
-                            "dd/MM/yyyy"
-                          )} (${dayName})`;
-                        }
+                        const weekStart = new Date(referenceDate);
+                        weekStart.setDate(
+                          referenceDate.getDate() - referenceDate.getDay()
+                        );
+                        const weekEnd = new Date(weekStart);
+                        weekEnd.setDate(weekStart.getDate() + 6);
+
+                        description += `, starting from week of ${format(
+                          weekStart,
+                          "dd/MM/yyyy"
+                        )}`;
                       }
 
                       return description;
@@ -457,15 +465,17 @@ export default function AddSessionForm({
                   </p>
                 </div>
 
-                {/* Start Date Selection for Repeating Sessions */}
+                {/* Start Week Selection for Repeating Sessions */}
                 <FormField
                   control={form.control}
                   name="date"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Start Date</FormLabel>
+                      <FormLabel>Start Week</FormLabel>
                       <FormDescription>
-                        Select the first date of the recurring sessions
+                        Select any date in the week you want the sessions to
+                        start from. Sessions will be created from the beginning
+                        of that week.
                       </FormDescription>
                       <FormControl>
                         <input
@@ -503,8 +513,7 @@ export default function AddSessionForm({
                     <FormItem className="mt-4">
                       <FormLabel>Select Days</FormLabel>
                       <FormDescription>
-                        Sessions will be created on these days throughout the
-                        season
+                        Choose which days of the week the sessions will occur on
                       </FormDescription>
                       <div className="flex flex-wrap gap-2 mt-2">
                         {daysOfWeek.map((day) => (

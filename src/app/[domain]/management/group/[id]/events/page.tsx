@@ -29,7 +29,6 @@ interface GroupEventsPageProps {
 
 export default function GroupEventsPage({ params }: GroupEventsPageProps) {
   const { tenant } = useTenantAndUserAccessContext();
-  const tenantId = tenant?.id || 0;
   const groupId = parseInt(params.id);
   const [selectedSeasonId, setSelectedSeasonId] = useState<string>("");
   const [isAddSessionSheetOpen, setIsAddSessionSheetOpen] = useState(false);
@@ -40,13 +39,13 @@ export default function GroupEventsPage({ params }: GroupEventsPageProps) {
     error,
     isLoading,
   } = useGroupConnections(
-    tenantId.toString(),
+    tenant?.id.toString() || "",
     groupId,
-    !!tenantId && !!groupId
+    !!tenant?.id && !!groupId
   );
 
   const { data: seasons, isLoading: seasonsLoading } = useSeasonsByTenantId(
-    tenantId.toString()
+    tenant?.id.toString() || ""
   );
 
   const activeSeason = seasons?.find((season) => season.isActive);
@@ -135,7 +134,7 @@ export default function GroupEventsPage({ params }: GroupEventsPageProps) {
   };
 
   // Check if we have all required data for the calendar
-  const canShowCalendar = tenantId && groupId && selectedSeasonId;
+  const canShowCalendar = tenant?.id && groupId && selectedSeasonId;
 
   return (
     <ErrorBoundary>

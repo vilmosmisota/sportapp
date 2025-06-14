@@ -21,17 +21,18 @@ export class SessionEventAdapter {
     const endDate = parseDateTime(session.date, session.endTime);
     const duration = calculateDuration(startDate, endDate);
 
-    const displayInfo = this.getDisplayInfo(session);
+    const groupName = this.getGroupName(session.group, tenantGroupsConfig);
+    const displayInfo = this.getDisplayInfo(session, tenantGroupsConfig);
 
     return {
       id: session.id,
       type: "session",
-      title: displayInfo.title,
+      title: groupName,
       startDate,
       endDate,
       allDay: false,
       data: session,
-      groupName: this.getGroupName(session.group, tenantGroupsConfig),
+      groupName,
       locationName: session.location?.name,
       duration,
       metadata: {
@@ -73,26 +74,17 @@ export class SessionEventAdapter {
     session: SessionWithGroup,
     groupsConfig?: TenantGroupsConfig
   ): {
-    title: string;
+    title?: string;
     color?: string;
     description?: string;
   } {
-    // Create a descriptive title using the group display name
-    const title = this.getGroupName(session.group, groupsConfig);
-
-    console.log("title", title);
-
     // Use group color if available, otherwise default
     const color = session.group.appearance?.color || "#3b82f6"; // Default blue
 
-    // Create description with location and time info
-    let description = `${session.startTime} - ${session.endTime}`;
-    if (session.location?.name) {
-      description += ` at ${session.location.name}`;
-    }
+    // Create description with location info
+    let description = session.location?.name || undefined;
 
     return {
-      title,
       color,
       description,
     };

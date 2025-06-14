@@ -184,15 +184,20 @@ export const generateRecurringSessionsFromStartDate = (
     location?: any;
     groupId: number;
     seasonId: number;
-  }
+  },
+  selectedDays: number[]
 ): {
   sessions: Omit<Session, "id" | "tenantId">[];
   isStartDateValid: boolean;
   validationMessage?: string;
 } => {
-  const startTime = startDate.getTime();
-  const seasonStart = season.startDate.getTime();
-  const seasonEnd = season.endDate.getTime();
+  // Get the start of the week for the given date
+  const weekStart = new Date(startDate);
+  weekStart.setDate(startDate.getDate() - startDate.getDay()); // Set to Sunday
+
+  const startTime = weekStart.getTime();
+  const seasonStart = new Date(season.startDate).getTime();
+  const seasonEnd = new Date(season.endDate).getTime();
 
   if (startTime < seasonStart || startTime > seasonEnd) {
     return {
@@ -202,34 +207,19 @@ export const generateRecurringSessionsFromStartDate = (
     };
   }
 
-  const isStartDateInBreak = season.breaks.some((breakPeriod) => {
-    const breakStart = breakPeriod.from.getTime();
-    const breakEnd = breakPeriod.to.getTime();
-    return startTime >= breakStart && startTime <= breakEnd;
-  });
-
-  if (isStartDateInBreak) {
-    return {
-      sessions: [],
-      isStartDateValid: false,
-      validationMessage: "Start date falls during a season break",
-    };
-  }
-
   const sessions: Omit<Session, "id" | "tenantId">[] = [];
-  const targetDayOfWeek = startDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
-  const currentDate = new Date(startDate);
+  const currentDate = new Date(weekStart);
 
   while (currentDate <= season.endDate) {
-    if (currentDate.getDay() === targetDayOfWeek) {
+    if (selectedDays.includes(currentDate.getDay())) {
       const currentTime = currentDate.getTime();
       const isInBreak = season.breaks.some((breakPeriod) => {
-        const breakStart = breakPeriod.from.getTime();
-        const breakEnd = breakPeriod.to.getTime();
+        const breakStart = new Date(breakPeriod.from).getTime();
+        const breakEnd = new Date(breakPeriod.to).getTime();
         return currentTime >= breakStart && currentTime <= breakEnd;
       });
 
-      if (!isInBreak) {
+      if (!isInBreak && currentTime >= seasonStart) {
         sessions.push({
           date: currentDate.toISOString().split("T")[0], // YYYY-MM-DD format
           startTime: sessionTemplate.startTime,
@@ -245,12 +235,19 @@ export const generateRecurringSessionsFromStartDate = (
     currentDate.setDate(currentDate.getDate() + 1);
   }
 
+  if (sessions.length === 0) {
+    return {
+      sessions: [],
+      isStartDateValid: false,
+      validationMessage:
+        "No valid sessions could be generated within the season",
+    };
+  }
+
   return {
     sessions,
     isStartDateValid: true,
-    validationMessage: `Generated ${sessions.length} sessions for ${getDayName(
-      targetDayOfWeek
-    )}s`,
+    validationMessage: `Generated ${sessions.length} sessions`,
   };
 };
 
