@@ -1,15 +1,18 @@
 "use client";
 
 import { cn } from "@/libs/tailwind/utils";
+import { useState } from "react";
 import { useCalendarNavigation } from "../hooks/useCalendarNavigation";
 import { CalendarLoader } from "../loader";
 import {
   CalendarConfig,
   CalendarEvent,
   CalendarSeason,
+  CalendarView,
 } from "../types/calendar.types";
 import { CalendarEventHandlers } from "../types/event.types";
 import { CalendarHeader } from "./CalendarHeader";
+import { DayView } from "./views/DayView";
 import { MonthView } from "./views/MonthView";
 
 interface CalendarProps<TEvent extends CalendarEvent>
@@ -34,6 +37,9 @@ export function Calendar<TEvent extends CalendarEvent>({
   onViewChange,
   onAddSession,
 }: CalendarProps<TEvent>) {
+  // Track selected date across view changes
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
   const {
     navigation,
     goToDate,
@@ -41,14 +47,27 @@ export function Calendar<TEvent extends CalendarEvent>({
     changeView,
     goToPrevious,
     goToNext,
+    goToDateAndView,
   } = useCalendarNavigation({
     defaultView: config.defaultView,
     onDateRangeChange,
     onViewChange,
   });
 
-  const handleViewChange = (newView: "month" | "week" | "day") => {
+  const handleViewChange = (newView: CalendarView) => {
     changeView(newView);
+  };
+
+  // Handler for navigating to a specific date in day view
+  const handleGoToDateInDayView = (date: Date) => {
+    setSelectedDate(date); // Set selected date
+    goToDateAndView(date, "day");
+  };
+
+  // Handle date click with maintaining selected state
+  const handleDateClick = (date: Date) => {
+    setSelectedDate(date);
+    onDateClick?.(date);
   };
 
   const renderCurrentView = () => {
@@ -65,27 +84,32 @@ export function Calendar<TEvent extends CalendarEvent>({
             season={season}
             onEventClick={onEventClick}
             onEventDoubleClick={onEventDoubleClick}
-            onDateClick={onDateClick}
+            onDateClick={handleDateClick}
             onAddSession={onAddSession}
+            onDayNumberClick={handleGoToDateInDayView}
+            selectedDate={selectedDate}
             className="flex-1"
           />
         );
-      case "week":
-        // TODO: Implement WeekView
-        return (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-muted-foreground">
-              Week view coming soon...
-            </div>
-          </div>
-        );
       case "day":
-        // TODO: Implement DayView
         return (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-muted-foreground">Day view coming soon...</div>
-          </div>
+          <DayView
+            currentDate={navigation.currentDate}
+            events={events}
+            season={season}
+            onEventClick={onEventClick}
+            onEventDoubleClick={onEventDoubleClick}
+            onDateClick={handleDateClick}
+            onAddSession={onAddSession}
+            onDateChange={(date) => {
+              setSelectedDate(date);
+              goToDate(date);
+            }}
+            selectedDate={selectedDate}
+            className="flex-1"
+          />
         );
+      // Week view will be implemented later
       default:
         return (
           <MonthView
@@ -94,8 +118,10 @@ export function Calendar<TEvent extends CalendarEvent>({
             season={season}
             onEventClick={onEventClick}
             onEventDoubleClick={onEventDoubleClick}
-            onDateClick={onDateClick}
+            onDateClick={handleDateClick}
             onAddSession={onAddSession}
+            onDayNumberClick={handleGoToDateInDayView}
+            selectedDate={selectedDate}
             className="flex-1"
           />
         );

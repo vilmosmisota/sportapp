@@ -9,6 +9,7 @@ export * from "./components/CalendarContextMenu";
 export * from "./components/CalendarHeader";
 export * from "./components/EventRenderer";
 export * from "./components/SessionCalendar";
+export * from "./components/views/DayView";
 export * from "./components/views/MonthView";
 
 // Loader

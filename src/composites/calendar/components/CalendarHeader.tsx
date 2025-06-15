@@ -40,7 +40,7 @@ export function CalendarHeader({
 
   const views: { value: CalendarView; label: string }[] = [
     { value: "month", label: "Month" },
-    { value: "week", label: "Week" },
+    // { value: "week", label: "Week" }, // Temporarily hidden
     { value: "day", label: "Day" },
   ];
 

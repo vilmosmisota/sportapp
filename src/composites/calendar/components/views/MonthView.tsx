@@ -13,7 +13,7 @@ import {
   startOfWeek,
 } from "date-fns";
 import { Calendar as CalendarIcon, Pause } from "lucide-react";
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { useCalendarInteraction } from "../../hooks/useCalendarInteraction";
 import { CalendarEvent, CalendarSeason } from "../../types/calendar.types";
 import {
@@ -34,6 +34,8 @@ interface MonthViewProps<TEvent extends CalendarEvent> {
   onEventDoubleClick?: (event: TEvent) => void;
   onDateClick?: (date: Date) => void;
   onAddSession?: (date: Date) => void;
+  onDayNumberClick?: (date: Date) => void;
+  selectedDate?: Date | null;
   className?: string;
 }
 
@@ -57,11 +59,18 @@ export function MonthView<TEvent extends CalendarEvent>({
   onEventDoubleClick,
   onDateClick,
   onAddSession,
+  onDayNumberClick,
+  selectedDate,
   className,
 }: MonthViewProps<TEvent>) {
   const { handleDoubleClick, handleTouchStart, handleTouchEnd } =
     useCalendarInteraction();
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
+  const openContextMenu = (element: HTMLDivElement) => {
+    if (element && (element as any).__openContextMenu) {
+      (element as any).__openContextMenu();
+    }
+  };
 
   const days = useMemo((): DayCell<TEvent>[] => {
     const monthStart = startOfMonth(currentDate);
@@ -106,10 +115,13 @@ export function MonthView<TEvent extends CalendarEvent>({
 
   const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-  // Handle date click with local state update
   const handleDateClick = (date: Date) => {
-    setSelectedDate(date);
     onDateClick?.(date);
+  };
+
+  const handleDayNumberClick = (date: Date, e: React.MouseEvent) => {
+    e.stopPropagation();
+    onDayNumberClick?.(date);
   };
 
   return (
@@ -152,21 +164,15 @@ export function MonthView<TEvent extends CalendarEvent>({
                   index % 7 === 6 && "border-r-0" // Remove right border on last column
                 )}
                 onClick={() => handleDateClick(day.date)}
-                onDoubleClick={handleDoubleClick((e: React.MouseEvent) => {
-                  // Access the openContextMenu function from the DOM element
+                onDoubleClick={handleDoubleClick((e) => {
                   const element = e.currentTarget as HTMLDivElement;
-                  if (element && (element as any).__openContextMenu) {
-                    (element as any).__openContextMenu();
-                  }
+                  openContextMenu(element);
                 })}
-                onTouchStart={handleTouchStart((e: React.TouchEvent) => {
-                  // For touch events, we need to use the target
-                  const element = e.currentTarget as HTMLDivElement;
-                  if (element && (element as any).__openContextMenu) {
-                    (element as any).__openContextMenu();
-                  }
+                onTouchStart={handleTouchStart(() => {
+                  const element = document.activeElement as HTMLDivElement;
+                  openContextMenu(element);
                 })}
-                onTouchEnd={handleTouchEnd}
+                onTouchEnd={handleTouchEnd()}
               >
                 <div className="flex justify-between items-center mb-1">
                   {/* Status indicators - Moved to top left */}
@@ -183,15 +189,19 @@ export function MonthView<TEvent extends CalendarEvent>({
                     )}
                   </div>
 
-                  {/* Day number - Top right */}
+                  {/* Day number - Top right - Now clickable */}
                   <span
                     className={cn(
-                      "text-sm font-medium",
+                      "text-sm font-medium cursor-pointer hover:bg-primary/20 rounded-full",
                       day.isToday &&
                         "bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs",
                       day.isInBreak && "text-amber-700",
-                      day.isOutsideSeason && "text-muted-foreground"
+                      day.isOutsideSeason && "text-muted-foreground",
+                      !day.isToday &&
+                        "w-6 h-6 flex items-center justify-center text-xs"
                     )}
+                    onClick={(e) => handleDayNumberClick(day.date, e)}
+                    title="Click to view day details"
                   >
                     {format(day.date, "d")}
                   </span>

@@ -92,6 +92,29 @@ export function useCalendarNavigation({
     [currentDate, onDateRangeChange, onViewChange]
   );
 
+  // Combined function to change both date and view simultaneously
+  const goToDateAndView = useCallback(
+    (date: Date, newView: CalendarView) => {
+      setCurrentDate(date);
+      setView(newView);
+
+      if (onViewChange) {
+        onViewChange(newView);
+      }
+
+      if (onDateRangeChange) {
+        const newDateRange =
+          newView === "month"
+            ? getMonthDateRange(date)
+            : newView === "week"
+            ? getWeekDateRange(date)
+            : getDayDateRange(date);
+        onDateRangeChange(newDateRange);
+      }
+    },
+    [onDateRangeChange, onViewChange]
+  );
+
   const goToPrevious = useCallback(() => {
     const newDate = new Date(currentDate);
     switch (view) {
@@ -131,5 +154,6 @@ export function useCalendarNavigation({
     changeView,
     goToPrevious,
     goToNext,
+    goToDateAndView,
   };
 }
