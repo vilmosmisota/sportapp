@@ -1,33 +1,27 @@
 "use client";
 
-import { Tenant } from "@/entities/tenant/Tenant.schema";
 import { cn } from "@/libs/tailwind/utils";
-import { useState } from "react";
-import { useSessionCalendarData } from "../providers/SessionDataProvider";
-import {
-  CalendarConfig,
-  CalendarSeason,
-  DateRange,
-} from "../types/calendar.types";
-import { CalendarEventHandlers, SessionEvent } from "../types/event.types";
-import { getMonthDateRange } from "../utils/date.utils";
+import { useCalendarNavigation } from "../hooks/useCalendarNavigation";
+import { useAllGroupsEventCalendarData } from "../providers/EventDataProvider";
+import { CalendarConfig, CalendarEvent } from "../types/calendar.types";
+import { CalendarEventHandlers } from "../types/event.types";
 import { Calendar } from "./Calendar";
 
-interface SessionCalendarProps extends CalendarEventHandlers<SessionEvent> {
-  tenant: Tenant;
-  groupId: number;
+interface AllGroupsEventCalendarProps<
+  TEvent extends CalendarEvent = CalendarEvent
+> extends CalendarEventHandlers<TEvent> {
+  tenantId: number;
   seasonId: number;
-  season?: CalendarSeason;
-  config: CalendarConfig<SessionEvent>;
+  config: CalendarConfig<TEvent>;
   className?: string;
   enabled?: boolean;
 }
 
-export function SessionCalendar({
-  tenant,
-  groupId,
+export function AllGroupsEventCalendar<
+  TEvent extends CalendarEvent = CalendarEvent
+>({
+  tenantId,
   seasonId,
-  season,
   config,
   className,
   enabled = true,
@@ -36,19 +30,28 @@ export function SessionCalendar({
   onDateClick,
   onDateRangeChange,
   onViewChange,
-  onAddSession,
-}: SessionCalendarProps) {
-  const [currentDateRange, setCurrentDateRange] = useState<DateRange>(
-    getMonthDateRange(new Date())
-  );
+}: AllGroupsEventCalendarProps<TEvent>) {
+  const {
+    navigation,
+    goToDate,
+    goToToday,
+    changeView,
+    goToPrevious,
+    goToNext,
+  } = useCalendarNavigation({
+    defaultView: config.defaultView,
+    onDateRangeChange,
+    onViewChange,
+  });
 
-  const { events, isLoading, isError, error, refetch } = useSessionCalendarData(
-    tenant,
-    groupId,
-    seasonId,
-    currentDateRange,
-    enabled
-  );
+  // Fetch events for all groups in the current date range
+  const { events, isLoading, isError, error, refetch } =
+    useAllGroupsEventCalendarData(
+      tenantId,
+      seasonId,
+      navigation.dateRange,
+      enabled
+    );
 
   // Handle errors
   if (isError && error) {
@@ -62,10 +65,11 @@ export function SessionCalendar({
         <div className="flex-1 flex items-center justify-center p-8">
           <div className="text-center">
             <div className="text-destructive font-medium mb-2">
-              Failed to load sessions
+              Failed to load events
             </div>
             <div className="text-muted-foreground text-sm mb-4">
-              {error.message || "An error occurred while loading sessions"}
+              {(error as Error)?.message ||
+                "An error occurred while loading events"}
             </div>
             <button
               onClick={() => refetch()}
@@ -81,20 +85,15 @@ export function SessionCalendar({
 
   return (
     <Calendar
-      events={events}
+      events={events as TEvent[]}
       config={config}
-      season={season}
       isLoading={isLoading}
       className={className}
       onEventClick={onEventClick}
       onEventDoubleClick={onEventDoubleClick}
       onDateClick={onDateClick}
-      onDateRangeChange={(dateRange) => {
-        setCurrentDateRange(dateRange);
-        onDateRangeChange?.(dateRange);
-      }}
+      onDateRangeChange={onDateRangeChange}
       onViewChange={onViewChange}
-      onAddSession={onAddSession}
     />
   );
 }

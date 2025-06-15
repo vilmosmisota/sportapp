@@ -8,14 +8,14 @@ import {
   TenantGroupsConfig,
 } from "../../../entities/tenant/Tenant.schema";
 import { SessionEventAdapter } from "../adapters/SessionEventAdapter";
-import { DateRange } from "../types/calendar.types";
-import { SessionEvent } from "../types/event.types";
+import { CalendarEvent, DateRange } from "../types/calendar.types";
 import { formatDate } from "../utils/date.utils";
 
 /**
- * Hook for fetching session data for a specific group and converting to SessionEvents
+ * Hook for fetching event data for a specific group and converting to CalendarEvents
+ * Currently uses sessions as the default event type, but can be extended for other event types
  */
-export function useSessionCalendarData(
+export function useEventCalendarData(
   tenant: Tenant,
   groupId: number,
   seasonId: number,
@@ -42,7 +42,7 @@ export function useSessionCalendarData(
 
   const adapter = new SessionEventAdapter();
 
-  const events: SessionEvent[] = sessions.map((session) =>
+  const events: CalendarEvent[] = sessions.map((session) =>
     adapter.transform(session, tenant?.tenantConfigs?.groups || undefined)
   );
 
@@ -56,10 +56,10 @@ export function useSessionCalendarData(
 }
 
 /**
- * Hook for fetching sessions across all groups for a tenant and season
- * This would require a different query that fetches sessions for all groups
+ * Hook for fetching events across all groups for a tenant and season
+ * This would require a different query that fetches events for all groups
  */
-export function useAllGroupsSessionCalendarData(
+export function useAllGroupsEventCalendarData(
   tenantId: number,
   seasonId: number,
   dateRange: DateRange,
@@ -94,8 +94,8 @@ export function useAllGroupsSessionCalendarData(
   const error = null;
   const refetch = () => {};
 
-  // Transform sessions to SessionEvents
-  const events: SessionEvent[] = sessions.map((session) =>
+  // Transform sessions to CalendarEvents
+  const events: CalendarEvent[] = sessions.map((session) =>
     adapter.transform(session, tenantGroupsConfig)
   );
 

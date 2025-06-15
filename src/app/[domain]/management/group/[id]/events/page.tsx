@@ -8,13 +8,14 @@ import { useTenantAndUserAccessContext } from "@/composites/auth/TenantAndUserAc
 import {
   CalendarConfig,
   CalendarLoader,
-  SessionCalendar,
+  EventCalendar,
   SessionEvent,
   seasonToCalendarSeason,
 } from "@/composites/calendar";
 import { useGroupConnections } from "@/entities/group/GroupConnection.query";
 import { Permission } from "@/entities/role/Role.permissions";
 import { useSeasonsByTenantId } from "@/entities/season/Season.query";
+import { Session } from "@/entities/session/Session.schema";
 import { Calendar, Plus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { ResponsiveSheet } from "../../../../../../components/ui/responsive-sheet";
@@ -96,6 +97,26 @@ export default function GroupEventsPage({ params }: GroupEventsPageProps) {
     setIsAddSessionSheetOpen(true);
   };
 
+  const handleEditEvent = (event: SessionEvent) => {
+    // Extract the session data from the event
+    if (event.type === "session" && event.data) {
+      const session = event.data as Session;
+      console.log("Edit session:", session);
+      setSelectedDate(new Date(session.date));
+      setIsAddSessionSheetOpen(true);
+      // In a real implementation, you would populate the form with session data
+    }
+  };
+
+  const handleDeleteEvent = (event: SessionEvent) => {
+    // Extract the session data from the event
+    if (event.type === "session" && event.data) {
+      const session = event.data as Session;
+      console.log("Delete session:", session);
+      // In a real implementation, you would show a confirmation dialog and delete the session
+    }
+  };
+
   if (isLoading) {
     return (
       <ErrorBoundary>
@@ -175,7 +196,7 @@ export default function GroupEventsPage({ params }: GroupEventsPageProps) {
 
         {canShowCalendar ? (
           <div className="border rounded-lg overflow-hidden">
-            <SessionCalendar
+            <EventCalendar
               tenant={tenant}
               groupId={groupId}
               seasonId={parseInt(selectedSeasonId)}
@@ -184,16 +205,18 @@ export default function GroupEventsPage({ params }: GroupEventsPageProps) {
               onEventClick={handleEventClick}
               onDateClick={handleDateClick}
               onAddSession={handleAddSession}
+              onEditEvent={handleEditEvent}
+              onDeleteEvent={handleDeleteEvent}
               className="h-full border-0 rounded-none"
             />
           </div>
         ) : (
           <div className="text-center py-16 text-muted-foreground">
             <Calendar className="h-16 w-16 mx-auto mb-4 opacity-50" />
-            <h3 className="text-lg font-medium mb-2">Session Calendar</h3>
+            <h3 className="text-lg font-medium mb-2">Event Calendar</h3>
             <p className="text-sm">
               {!selectedSeason
-                ? "Please select a season to view sessions"
+                ? "Please select a season to view events"
                 : "Loading calendar..."}
             </p>
           </div>

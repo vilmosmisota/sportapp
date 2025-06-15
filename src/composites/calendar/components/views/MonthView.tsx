@@ -14,6 +14,7 @@ import {
 } from "date-fns";
 import { Calendar as CalendarIcon, Pause } from "lucide-react";
 import React, { useMemo } from "react";
+import { DialogEventRenderer } from "../../components/DialogEventRenderer";
 import { useCalendarInteraction } from "../../hooks/useCalendarInteraction";
 import { CalendarEvent, CalendarSeason } from "../../types/calendar.types";
 import {
@@ -226,15 +227,30 @@ export function MonthView<TEvent extends CalendarEvent>({
 
                 {/* Events */}
                 <div className="space-y-1 mt-2">
-                  {day.events.slice(0, 3).map((event) => (
-                    <EventRenderer
-                      key={`${event.id}-${day.date.toISOString()}`}
-                      event={event}
-                      variant="minimal"
-                      onClick={onEventClick}
-                      onDoubleClick={onEventDoubleClick}
-                    />
-                  ))}
+                  {day.events.slice(0, 3).map((event) => {
+                    // Check if this is a session event
+                    if (event.type === "session") {
+                      return (
+                        <DialogEventRenderer
+                          key={event.id.toString()}
+                          event={event}
+                          variant="minimal"
+                          onDoubleClick={() => onEventDoubleClick?.(event)}
+                        />
+                      );
+                    }
+
+                    // For other event types, use the regular EventRenderer
+                    return (
+                      <EventRenderer
+                        key={event.id.toString()}
+                        event={event}
+                        variant="minimal"
+                        onClick={(e) => onEventClick?.(e)}
+                        onDoubleClick={(e) => onEventDoubleClick?.(e)}
+                      />
+                    );
+                  })}
                 </div>
               </div>
             </CalendarContextMenu>

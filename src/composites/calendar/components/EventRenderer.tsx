@@ -10,6 +10,7 @@ interface EventRendererProps<TEvent extends CalendarEvent> {
   onClick?: (event: TEvent) => void;
   onDoubleClick?: (event: TEvent) => void;
   className?: string;
+  useDialogProvider?: boolean;
 }
 
 export function EventRenderer<TEvent extends CalendarEvent>({
@@ -18,6 +19,7 @@ export function EventRenderer<TEvent extends CalendarEvent>({
   onClick,
   onDoubleClick,
   className,
+  useDialogProvider = false,
 }: EventRendererProps<TEvent>) {
   const handleClick = () => {
     if (onClick) {

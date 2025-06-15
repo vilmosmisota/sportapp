@@ -19,6 +19,7 @@ import {
   Pause,
 } from "lucide-react";
 import { useMemo } from "react";
+import { DialogEventRenderer } from "../../components/DialogEventRenderer";
 import { useCalendarInteraction } from "../../hooks/useCalendarInteraction";
 import { CalendarEvent, CalendarSeason } from "../../types/calendar.types";
 import { isDateInBreak, isDateOutsideSeason } from "../../utils/date.utils";
@@ -306,6 +307,20 @@ export function DayView<TEvent extends CalendarEvent>({
               const position = getEventPosition(event);
               if (!position) return null;
 
+              // Check if this is a session event
+              if (event.type === "session") {
+                return (
+                  <DialogEventRenderer
+                    key={event.id.toString()}
+                    event={event}
+                    variant="full"
+                    onDoubleClick={() => onEventDoubleClick?.(event)}
+                    className="mb-2"
+                  />
+                );
+              }
+
+              // For other event types, use the regular EventRenderer
               return (
                 <div
                   key={event.id}
@@ -316,9 +331,9 @@ export function DayView<TEvent extends CalendarEvent>({
                   <div className="h-full flex items-center overflow-hidden shadow-sm p-1 text-xs">
                     <EventRenderer
                       event={event}
-                      variant="minimal"
-                      onClick={onEventClick}
-                      onDoubleClick={onEventDoubleClick}
+                      variant="full"
+                      onClick={(e) => onEventClick?.(e)}
+                      onDoubleClick={(e) => onEventDoubleClick?.(e)}
                     />
                   </div>
                 </div>
