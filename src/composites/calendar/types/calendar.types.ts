@@ -28,6 +28,8 @@ export interface CalendarSeason {
   customName?: string;
 }
 
+import { TenantGroupsConfig } from "@/entities/tenant/Tenant.schema";
+
 /**
  * Generic calendar event interface that can wrap any data type
  */
@@ -40,6 +42,7 @@ export interface CalendarEvent<TData = any> {
   allDay?: boolean;
   data: TData; // Original source data
   metadata?: CalendarEventMetadata;
+  tenantGroupsConfig?: TenantGroupsConfig;
 }
 
 export interface CalendarEventMetadata {

@@ -288,7 +288,8 @@ export function DayView<TEvent extends CalendarEvent>({
                 key={slot.time}
                 className={cn(
                   "grid grid-cols-[70px_1fr] border-b absolute w-full",
-                  index % 2 === 0 ? "border-t border-border/50" : ""
+                  index % 2 === 0 ? "border-t border-border/50" : "",
+                  "hover:bg-accent/10 transition-colors"
                 )}
                 style={{
                   top: `${index * hourHeight}px`,
@@ -324,7 +325,7 @@ export function DayView<TEvent extends CalendarEvent>({
               return (
                 <div
                   key={event.id}
-                  className="absolute z-20 left-[70px] right-2 px-1 rounded border border-primary/20 bg-primary/10"
+                  className="absolute z-20 left-[70px] right-2 px-1 rounded border border-primary/20 bg-primary/10 hover:bg-primary/20 transition-colors hover:shadow-sm"
                   style={position}
                   onClick={() => onEventClick?.(event)}
                 >
@@ -354,7 +355,7 @@ export function DayView<TEvent extends CalendarEvent>({
                 {dayEvents.map((event) => (
                   <div
                     key={event.id}
-                    className="border rounded-md p-3 shadow-sm hover:shadow-md transition-shadow"
+                    className="border rounded-md p-3 shadow-sm hover:shadow-md hover:translate-y-[-1px] transition-all duration-150 cursor-pointer"
                     onClick={() => onEventClick?.(event)}
                   >
                     <div className="flex items-center justify-between mb-2">

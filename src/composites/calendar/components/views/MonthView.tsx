@@ -157,6 +157,7 @@ export function MonthView<TEvent extends CalendarEvent>({
                 className={cn(
                   "border-r border-b border-border p-2 min-h-[120px] cursor-pointer bg-card relative",
                   "hover:bg-accent/50 transition-colors",
+                  "hover:shadow-sm transition-all duration-200",
                   !day.isCurrentMonth && "text-muted-foreground",
                   day.isToday && "bg-primary/10 border-primary/30",
                   day.isInBreak && "bg-amber-50/70",

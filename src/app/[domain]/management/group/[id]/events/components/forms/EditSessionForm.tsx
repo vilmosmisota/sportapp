@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { useState } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -86,13 +86,24 @@ export default function EditSessionForm({
   const endDateTime = new Date(sessionDate);
   endDateTime.setHours(endHours || 0, endMinutes || 0, 0, 0);
 
+  // Simplified function to get location ID
+  const getLocationId = () => {
+    // If session has a location with an ID, use it
+    if (session.location?.id) {
+      return session.location.id;
+    }
+
+    // Default to the first location if available
+    return locations.length > 0 ? locations[0].id || `loc-0` : "";
+  };
+
   const form = useForm<FormValues>({
     resolver: zodResolver(sessionFormSchema),
     defaultValues: {
       date: sessionDate,
       startTime: session.startTime,
       endTime: session.endTime,
-      locationId: session.location?.id || "",
+      locationId: getLocationId(),
     },
     mode: "onSubmit",
   });
@@ -107,7 +118,7 @@ export default function EditSessionForm({
     const startDate = new Date();
     startDate.setHours(hours, minutes, 0, 0);
     const endDate = new Date(startDate);
-    endDate.setHours(endDate.getHours() + 1);
+    endDate.setHours(startDate.getHours() + 1);
     const endTimeString = format(endDate, "HH:mm");
 
     form.setValue("endTime", endTimeString, {
@@ -355,7 +366,7 @@ export default function EditSessionForm({
                           <SelectValue placeholder="Select a location" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent position="popper">
                         {locations.map((location, index) => (
                           <SelectItem
                             key={location.id || `loc-${index}`}

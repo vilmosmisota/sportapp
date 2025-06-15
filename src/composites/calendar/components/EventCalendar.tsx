@@ -55,8 +55,7 @@ export function EventCalendar<TEvent extends CalendarEvent = CalendarEvent>({
     tenant,
     groupId,
     seasonId,
-    currentDateRange,
-    enabled
+    currentDateRange
   );
 
   // Default handlers for event actions if not provided

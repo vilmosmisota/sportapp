@@ -41,6 +41,7 @@ export class SessionEventAdapter {
         category: "session",
         priority: 1,
       },
+      tenantGroupsConfig: tenantGroupsConfig,
     };
   }
 

@@ -19,8 +19,7 @@ export function useEventCalendarData(
   tenant: Tenant,
   groupId: number,
   seasonId: number,
-  dateRange: DateRange,
-  enabled: boolean = true
+  dateRange: DateRange
 ) {
   const queryParams: SessionQueryParams = {
     tenantId: tenant.id,

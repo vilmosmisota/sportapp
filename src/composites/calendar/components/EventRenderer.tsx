@@ -57,6 +57,7 @@ export function EventRenderer<TEvent extends CalendarEvent>({
   const baseClasses = cn(
     "cursor-pointer rounded-md border-l-4 transition-colors",
     "hover:bg-opacity-20 active:bg-opacity-30",
+    "hover:shadow-md hover:translate-y-[-1px] transition-all duration-150",
     className
   );
 

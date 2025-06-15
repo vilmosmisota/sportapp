@@ -7,6 +7,7 @@ import { Session } from "./Session.schema";
 import {
   createMultipleSessions,
   createSession,
+  deleteSession,
   updateSession,
 } from "./Session.services";
 
@@ -178,6 +179,84 @@ export function useUpdateSession() {
     },
     onError: (error: Error) => {
       console.error("Failed to update session:", error);
+    },
+  });
+}
+
+/**
+ * Hook for deleting a session
+ */
+export function useDeleteSession() {
+  const queryClient = useQueryClient();
+  const supabase = useSupabase();
+
+  return useMutation({
+    mutationFn: async ({
+      sessionId,
+      tenantId,
+      groupId,
+      seasonId,
+    }: {
+      sessionId: number;
+      tenantId: string;
+      groupId?: number;
+      seasonId?: number;
+    }) => {
+      return deleteSession(supabase, sessionId, tenantId);
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate all session queries
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.session.all,
+      });
+
+      // Invalidate tenant-specific queries
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.session.list(variables.tenantId),
+      });
+
+      // Invalidate session detail query
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.session.detail(
+          variables.tenantId,
+          variables.sessionId.toString()
+        ),
+      });
+
+      // Invalidate group-specific queries if groupId is provided
+      if (variables.groupId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.session.byGroup(
+            variables.tenantId,
+            variables.groupId
+          ),
+        });
+      }
+
+      // Invalidate season-specific queries if seasonId is provided
+      if (variables.seasonId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.session.bySeason(
+            variables.tenantId,
+            variables.seasonId
+          ),
+        });
+      }
+
+      // Invalidate group-season specific queries if both are provided
+      if (variables.groupId && variables.seasonId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.session.withGroup(
+            variables.tenantId,
+            variables.groupId,
+            variables.seasonId,
+            undefined
+          ),
+        });
+      }
+    },
+    onError: (error: Error) => {
+      console.error("Failed to delete session:", error);
     },
   });
 }

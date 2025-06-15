@@ -20,6 +20,7 @@ import { Calendar, Plus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { ResponsiveSheet } from "../../../../../../components/ui/responsive-sheet";
 import AddSessionForm from "./components/forms/AddSessionForm";
+import EditSessionForm from "./components/forms/EditSessionForm";
 
 interface GroupEventsPageProps {
   params: {
@@ -33,7 +34,9 @@ export default function GroupEventsPage({ params }: GroupEventsPageProps) {
   const groupId = parseInt(params.id);
   const [selectedSeasonId, setSelectedSeasonId] = useState<string>("");
   const [isAddSessionSheetOpen, setIsAddSessionSheetOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedSession, setSelectedSession] = useState<Session | null>(null);
 
   const {
     data: groupData,
@@ -93,6 +96,8 @@ export default function GroupEventsPage({ params }: GroupEventsPageProps) {
   };
 
   const handleAddSession = (date: Date) => {
+    setIsEditMode(false);
+    setSelectedSession(null);
     setSelectedDate(date);
     setIsAddSessionSheetOpen(true);
   };
@@ -102,18 +107,16 @@ export default function GroupEventsPage({ params }: GroupEventsPageProps) {
     if (event.type === "session" && event.data) {
       const session = event.data as Session;
       console.log("Edit session:", session);
-      setSelectedDate(new Date(session.date));
+      setIsEditMode(true);
+      setSelectedSession(session);
       setIsAddSessionSheetOpen(true);
-      // In a real implementation, you would populate the form with session data
     }
   };
 
   const handleDeleteEvent = (event: SessionEvent) => {
-    // Extract the session data from the event
     if (event.type === "session" && event.data) {
       const session = event.data as Session;
       console.log("Delete session:", session);
-      // In a real implementation, you would show a confirmation dialog and delete the session
     }
   };
 
@@ -180,6 +183,8 @@ export default function GroupEventsPage({ params }: GroupEventsPageProps) {
               />
               <PermissionButton
                 onClick={() => {
+                  setIsEditMode(false);
+                  setSelectedSession(null);
                   setSelectedDate(new Date());
                   setIsAddSessionSheetOpen(true);
                 }}
@@ -226,18 +231,30 @@ export default function GroupEventsPage({ params }: GroupEventsPageProps) {
       <ResponsiveSheet
         isOpen={isAddSessionSheetOpen}
         setIsOpen={setIsAddSessionSheetOpen}
-        title="Add Session"
+        title={isEditMode ? "Edit Session" : "Add Session"}
       >
-        <AddSessionForm
-          selectedSeason={selectedSeason}
-          tenant={tenant}
-          groupId={groupId}
-          setIsOpen={setIsAddSessionSheetOpen}
-          initialDate={selectedDate}
-          locations={
-            tenant?.tenantConfigs?.development?.trainingLocations || []
-          }
-        />
+        {isEditMode && selectedSession && selectedSeason ? (
+          <EditSessionForm
+            session={selectedSession}
+            selectedSeason={selectedSeason}
+            tenant={tenant}
+            setIsOpen={setIsAddSessionSheetOpen}
+            locations={
+              tenant?.tenantConfigs?.development?.trainingLocations || []
+            }
+          />
+        ) : (
+          <AddSessionForm
+            selectedSeason={selectedSeason}
+            tenant={tenant}
+            groupId={groupId}
+            setIsOpen={setIsAddSessionSheetOpen}
+            initialDate={selectedDate}
+            locations={
+              tenant?.tenantConfigs?.development?.trainingLocations || []
+            }
+          />
+        )}
       </ResponsiveSheet>
     </ErrorBoundary>
   );
