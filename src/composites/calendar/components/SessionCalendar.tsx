@@ -36,6 +36,7 @@ export function SessionCalendar({
   onDateClick,
   onDateRangeChange,
   onViewChange,
+  onAddSession,
 }: SessionCalendarProps) {
   const [currentDateRange, setCurrentDateRange] = useState<DateRange>(
     getMonthDateRange(new Date())
@@ -93,6 +94,7 @@ export function SessionCalendar({
         onDateRangeChange?.(dateRange);
       }}
       onViewChange={onViewChange}
+      onAddSession={onAddSession}
     />
   );
 }

@@ -20,4 +20,5 @@ export interface CalendarEventHandlers<TEvent extends CalendarEvent> {
   onDateClick?: (date: Date) => void;
   onDateRangeChange?: (dateRange: DateRange) => void;
   onViewChange?: (view: string) => void;
+  onAddSession?: (date: Date) => void;
 }

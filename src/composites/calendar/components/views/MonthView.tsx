@@ -13,7 +13,8 @@ import {
   startOfWeek,
 } from "date-fns";
 import { Calendar as CalendarIcon, Pause } from "lucide-react";
-import { useMemo } from "react";
+import React, { useMemo, useState } from "react";
+import { useCalendarInteraction } from "../../hooks/useCalendarInteraction";
 import { CalendarEvent, CalendarSeason } from "../../types/calendar.types";
 import {
   getBreakForDate,
@@ -22,6 +23,7 @@ import {
   isDateInBreak,
   isDateOutsideSeason,
 } from "../../utils/date.utils";
+import { CalendarContextMenu } from "../CalendarContextMenu";
 import { EventRenderer } from "../EventRenderer";
 
 interface MonthViewProps<TEvent extends CalendarEvent> {
@@ -31,6 +33,7 @@ interface MonthViewProps<TEvent extends CalendarEvent> {
   onEventClick?: (event: TEvent) => void;
   onEventDoubleClick?: (event: TEvent) => void;
   onDateClick?: (date: Date) => void;
+  onAddSession?: (date: Date) => void;
   className?: string;
 }
 
@@ -53,9 +56,13 @@ export function MonthView<TEvent extends CalendarEvent>({
   onEventClick,
   onEventDoubleClick,
   onDateClick,
+  onAddSession,
   className,
 }: MonthViewProps<TEvent>) {
-  // Generate calendar grid
+  const { handleDoubleClick, handleTouchStart, handleTouchEnd } =
+    useCalendarInteraction();
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
   const days = useMemo((): DayCell<TEvent>[] => {
     const monthStart = startOfMonth(currentDate);
     const monthEnd = endOfMonth(monthStart);
@@ -99,6 +106,12 @@ export function MonthView<TEvent extends CalendarEvent>({
 
   const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
+  // Handle date click with local state update
+  const handleDateClick = (date: Date) => {
+    setSelectedDate(date);
+    onDateClick?.(date);
+  };
+
   return (
     <div className={cn("flex flex-col h-full bg-card", className)}>
       {/* Weekday headers */}
@@ -115,78 +128,108 @@ export function MonthView<TEvent extends CalendarEvent>({
 
       {/* Calendar grid */}
       <div className="grid grid-cols-7 flex-1 bg-card">
-        {days.map((day, index) => (
-          <div
-            key={day.date.toISOString()}
-            className={cn(
-              "border-r border-b border-border p-2 min-h-[120px] cursor-pointer bg-card relative",
-              "hover:bg-accent/50 transition-colors",
-              !day.isCurrentMonth && "text-muted-foreground",
-              day.isToday && "bg-primary/10 border-primary/30",
-              day.isInBreak && "bg-amber-50/70",
-              day.isOutsideSeason && "bg-muted/30",
-              index % 7 === 6 && "border-r-0" // Remove right border on last column
-            )}
-            onClick={() => onDateClick?.(day.date)}
-          >
-            {/* Break indicators */}
-            {day.isInBreak && (
-              <div className="absolute top-1 right-1" title="Season Break">
-                <Pause className="h-3 w-3 text-amber-600" />
-              </div>
-            )}
+        {days.map((day, index) => {
+          const dayKey = day.date.toISOString();
+          const isSelected = selectedDate
+            ? isSameDay(day.date, selectedDate)
+            : false;
 
-            {/* Outside season indicator */}
-            {day.isOutsideSeason && (
-              <div className="absolute top-1 right-1" title="Outside Season">
-                <CalendarIcon className="h-3 w-3 text-muted-foreground" />
-              </div>
-            )}
-
-            {/* Day number */}
-            <div className="flex items-center justify-between mb-1">
-              <span
+          return (
+            <CalendarContextMenu
+              key={dayKey}
+              date={day.date}
+              onAddSession={onAddSession || (() => {})}
+            >
+              <div
                 className={cn(
-                  "text-sm font-medium",
-                  day.isToday &&
-                    "bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs",
-                  day.isInBreak && "text-amber-700",
-                  day.isOutsideSeason && "text-muted-foreground"
+                  "border-r border-b border-border p-2 min-h-[120px] cursor-pointer bg-card relative",
+                  "hover:bg-accent/50 transition-colors",
+                  !day.isCurrentMonth && "text-muted-foreground",
+                  day.isToday && "bg-primary/10 border-primary/30",
+                  day.isInBreak && "bg-amber-50/70",
+                  day.isOutsideSeason && "bg-muted/30",
+                  isSelected && "ring-2 ring-primary ring-inset bg-primary/5",
+                  index % 7 === 6 && "border-r-0" // Remove right border on last column
                 )}
+                onClick={() => handleDateClick(day.date)}
+                onDoubleClick={handleDoubleClick((e: React.MouseEvent) => {
+                  // Access the openContextMenu function from the DOM element
+                  const element = e.currentTarget as HTMLDivElement;
+                  if (element && (element as any).__openContextMenu) {
+                    (element as any).__openContextMenu();
+                  }
+                })}
+                onTouchStart={handleTouchStart((e: React.TouchEvent) => {
+                  // For touch events, we need to use the target
+                  const element = e.currentTarget as HTMLDivElement;
+                  if (element && (element as any).__openContextMenu) {
+                    (element as any).__openContextMenu();
+                  }
+                })}
+                onTouchEnd={handleTouchEnd}
               >
-                {format(day.date, "d")}
-              </span>
-              {day.events.length > 3 && (
-                <span className="text-xs text-muted-foreground">
-                  +{day.events.length - 3}
-                </span>
-              )}
-            </div>
+                <div className="flex justify-between items-center mb-1">
+                  {/* Status indicators - Moved to top left */}
+                  <div className="flex items-center">
+                    {day.isInBreak && (
+                      <div className="mr-1" title="Season Break">
+                        <Pause className="h-3 w-3 text-amber-600" />
+                      </div>
+                    )}
+                    {day.isOutsideSeason && (
+                      <div className="mr-1" title="Outside Season">
+                        <CalendarIcon className="h-3 w-3 text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
 
-            {/* Break period label */}
-            {day.isBreakStart && day.breakPeriod && (
-              <div className="absolute bottom-1 left-1 right-1">
-                <div className="text-xs bg-amber-100 text-amber-700 px-1 py-0.5 rounded text-center truncate">
-                  Break: {format(day.breakPeriod.from, "MMM d")} -{" "}
-                  {format(day.breakPeriod.to, "MMM d")}
+                  {/* Day number - Top right */}
+                  <span
+                    className={cn(
+                      "text-sm font-medium",
+                      day.isToday &&
+                        "bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs",
+                      day.isInBreak && "text-amber-700",
+                      day.isOutsideSeason && "text-muted-foreground"
+                    )}
+                  >
+                    {format(day.date, "d")}
+                  </span>
+                </div>
+
+                {/* Event count indicator */}
+                {day.events.length > 3 && (
+                  <div className="text-xs text-muted-foreground mt-1">
+                    +{day.events.length - 3} more
+                  </div>
+                )}
+
+                {/* Break period label */}
+                {day.isBreakStart && day.breakPeriod && (
+                  <div className="absolute bottom-1 left-1 right-1">
+                    <div className="text-xs bg-amber-100 text-amber-700 px-1 py-0.5 rounded text-center truncate">
+                      Break: {format(day.breakPeriod.from, "MMM d")} -{" "}
+                      {format(day.breakPeriod.to, "MMM d")}
+                    </div>
+                  </div>
+                )}
+
+                {/* Events */}
+                <div className="space-y-1 mt-2">
+                  {day.events.slice(0, 3).map((event) => (
+                    <EventRenderer
+                      key={`${event.id}-${day.date.toISOString()}`}
+                      event={event}
+                      variant="minimal"
+                      onClick={onEventClick}
+                      onDoubleClick={onEventDoubleClick}
+                    />
+                  ))}
                 </div>
               </div>
-            )}
-
-            {/* Events */}
-            <div className="space-y-1">
-              {day.events.slice(0, 3).map((event) => (
-                <EventRenderer
-                  key={`${event.id}-${day.date.toISOString()}`}
-                  event={event}
-                  variant="minimal"
-                  onClick={onEventClick}
-                  onDoubleClick={onEventDoubleClick}
-                />
-              ))}
-            </div>
-          </div>
-        ))}
+            </CalendarContextMenu>
+          );
+        })}
       </div>
     </div>
   );

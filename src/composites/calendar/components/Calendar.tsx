@@ -32,6 +32,7 @@ export function Calendar<TEvent extends CalendarEvent>({
   onDateClick,
   onDateRangeChange,
   onViewChange,
+  onAddSession,
 }: CalendarProps<TEvent>) {
   const {
     navigation,
@@ -65,6 +66,7 @@ export function Calendar<TEvent extends CalendarEvent>({
             onEventClick={onEventClick}
             onEventDoubleClick={onEventDoubleClick}
             onDateClick={onDateClick}
+            onAddSession={onAddSession}
             className="flex-1"
           />
         );
@@ -93,6 +95,7 @@ export function Calendar<TEvent extends CalendarEvent>({
             onEventClick={onEventClick}
             onEventDoubleClick={onEventDoubleClick}
             onDateClick={onDateClick}
+            onAddSession={onAddSession}
             className="flex-1"
           />
         );

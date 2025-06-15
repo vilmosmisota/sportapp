@@ -91,6 +91,11 @@ export default function GroupEventsPage({ params }: GroupEventsPageProps) {
     setSelectedDate(date);
   };
 
+  const handleAddSession = (date: Date) => {
+    setSelectedDate(date);
+    setIsAddSessionSheetOpen(true);
+  };
+
   if (isLoading) {
     return (
       <ErrorBoundary>
@@ -153,7 +158,10 @@ export default function GroupEventsPage({ params }: GroupEventsPageProps) {
                 className="min-w-[200px]"
               />
               <PermissionButton
-                onClick={() => setIsAddSessionSheetOpen(true)}
+                onClick={() => {
+                  setSelectedDate(new Date());
+                  setIsAddSessionSheetOpen(true);
+                }}
                 permission={Permission.MANAGE_EVENTS}
                 disabled={!selectedSeasonId}
                 className="gap-2"
@@ -175,6 +183,7 @@ export default function GroupEventsPage({ params }: GroupEventsPageProps) {
               config={calendarConfig}
               onEventClick={handleEventClick}
               onDateClick={handleDateClick}
+              onAddSession={handleAddSession}
               className="h-full border-0 rounded-none"
             />
           </div>
