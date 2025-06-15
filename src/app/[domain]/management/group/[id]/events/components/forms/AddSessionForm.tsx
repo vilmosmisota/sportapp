@@ -28,14 +28,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
 import { Toggle } from "@/components/ui/toggle";
 
 // Icons
 import {
   Calendar,
   Calendar as CalendarIcon,
-  Clock,
   MapPin,
   Repeat,
 } from "lucide-react";
@@ -180,11 +178,6 @@ export default function AddSessionForm({
 
     try {
       setIsLoading(true);
-
-      console.log("Debug location values:", {
-        selectedLocationId: values.locationId,
-        availableLocations: locations.map((l) => ({ id: l.id, name: l.name })),
-      });
 
       const location = locations.find(
         (l) =>
@@ -638,36 +631,6 @@ export default function AddSessionForm({
                       ))}
                     </SelectContent>
                   </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Additional Details */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-medium flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              Additional Details
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <FormField
-              control={form.control}
-              name="note"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes (Optional)</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Add any additional notes about this session..."
-                      className="resize-none min-h-[100px]"
-                      {...field}
-                      value={field.value || ""}
-                    />
-                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

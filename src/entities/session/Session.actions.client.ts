@@ -4,7 +4,11 @@ import { queryKeys } from "@/cacheKeys/cacheKeys";
 import { useSupabase } from "@/libs/supabase/useSupabase";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Session } from "./Session.schema";
-import { createMultipleSessions, createSession } from "./Session.services";
+import {
+  createMultipleSessions,
+  createSession,
+  updateSession,
+} from "./Session.services";
 
 /**
  * Hook for creating a single session
@@ -108,6 +112,72 @@ export function useCreateMultipleSessions() {
     },
     onError: (error: Error) => {
       console.error("Failed to create sessions:", error);
+    },
+  });
+}
+
+/**
+ * Hook for updating a session
+ */
+export function useUpdateSession() {
+  const queryClient = useQueryClient();
+  const supabase = useSupabase();
+
+  return useMutation({
+    mutationFn: async ({
+      sessionId,
+      tenantId,
+      sessionData,
+    }: {
+      sessionId: number;
+      tenantId: string;
+      sessionData: Partial<Omit<Session, "id" | "tenantId">>;
+    }) => {
+      return updateSession(supabase, sessionId, tenantId, sessionData);
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.session.all,
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.session.list(variables.tenantId),
+      });
+
+      if (data.groupId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.session.byGroup(variables.tenantId, data.groupId),
+        });
+      }
+
+      if (data.seasonId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.session.bySeason(
+            variables.tenantId,
+            data.seasonId
+          ),
+        });
+      }
+
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.session.detail(
+          variables.tenantId,
+          variables.sessionId.toString()
+        ),
+      });
+
+      if (data.groupId && data.seasonId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.session.withGroup(
+            variables.tenantId,
+            data.groupId,
+            data.seasonId,
+            undefined
+          ),
+        });
+      }
+    },
+    onError: (error: Error) => {
+      console.error("Failed to update session:", error);
     },
   });
 }
