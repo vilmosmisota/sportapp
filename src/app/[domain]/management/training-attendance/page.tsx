@@ -16,27 +16,26 @@ import { UpcomingAttendanceCarousel } from "./components/UpcomingAttendanceCarou
 import {
   useActiveAttendanceSessions,
   useAttendanceRecords,
-} from "@/entities/attendance/Attendance.query";
-import { usePlayersByTeamId } from "@/entities/group/Group.query";
-import { useTrainingsByDayRange } from "@/entities/training/Training.query";
+} from "@/entities/old-attendance/Attendance.query";
 
 // Actions
 import {
   useCloseAttendanceSession,
   useCreateAttendanceSession,
-} from "@/entities/attendance/Attendance.actions.client";
+} from "@/entities/old-attendance/Attendance.actions.client";
 
 // Types
-import { Training } from "@/entities/training/Training.schema";
-import { useTenantAndUserAccessContext } from "../../../../../../composites/auth/TenantAndUserAccessContext";
+import { useTenantAndUserAccessContext } from "@/composites/auth/TenantAndUserAccessContext";
+import { useSessionsByTenantForDays } from "@/entities/session/Session.query";
+import { SessionWithGroup } from "@/entities/session/Session.schema";
 
 export default function AttendancePage() {
   const { tenant } = useTenantAndUserAccessContext();
 
-  const { data: trainings, isLoading: isTrainingsLoading } =
-    useTrainingsByDayRange(
+  const { data: sessions, isLoading: isSessionsLoading } =
+    useSessionsByTenantForDays(
       tenant?.id?.toString() ?? "",
-      7 // Fetch trainings for the next 7 days
+      7 // Fetch sessions for the next 7 days
     );
   const { data: activeSessions } = useActiveAttendanceSessions(
     tenant?.id?.toString() ?? ""
@@ -45,71 +44,67 @@ export default function AttendancePage() {
   const createSession = useCreateAttendanceSession();
   const closeSession = useCloseAttendanceSession();
 
-  // We'll need to track which team we're working with for the close session function
-  const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
+  // Track which session is being closed
   const [selectedSessionId, setSelectedSessionId] = useState<number | null>(
     null
   );
 
-  // Move these hooks to the component level with conditional fetching
-  const { data: players } = usePlayersByTeamId(
-    selectedTeamId ?? 0,
-    tenant?.id?.toString() ?? ""
-  );
-
+  // Get records for the selected session
   const { data: records } = useAttendanceRecords(
     selectedSessionId ?? 0,
     tenant?.id?.toString() ?? ""
   );
 
-  const isLoading = isTrainingsLoading;
+  const isLoading = isSessionsLoading;
 
-  // Get all upcoming trainings sorted by date
-  const upcomingTrainings =
-    trainings
-      ?.filter((training) => {
+  // Get all upcoming sessions sorted by date
+  const upcomingSessions =
+    sessions
+      ?.filter((session) => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        const trainingDate = new Date(training.date);
-        trainingDate.setHours(0, 0, 0, 0);
+        const sessionDate = new Date(session.date);
+        sessionDate.setHours(0, 0, 0, 0);
 
-        return trainingDate >= today && !training.isAggregated;
+        return sessionDate >= today && !session.isAggregated;
       })
       .sort(
         (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
       ) ?? [];
 
-  // Get upcoming trainings with active sessions
-  const upcomingTrainingsWithActiveSessions = upcomingTrainings.filter(
-    (training) =>
-      activeSessions?.some((session) => session.trainingId === training.id) &&
-      !training.isAggregated
+  // Get upcoming sessions with active sessions
+  const upcomingSessionsWithActiveSessions = upcomingSessions.filter(
+    (session) =>
+      activeSessions?.some(
+        (activeSession) => activeSession.trainingId === session.id
+      ) && !session.isAggregated
   );
 
-  // Get upcoming trainings without active sessions
-  const upcomingTrainingsWithoutActiveSessions = upcomingTrainings.filter(
-    (training) =>
-      !activeSessions?.some((session) => session.trainingId === training.id) &&
-      !training.isAggregated
+  // Get upcoming sessions without active sessions
+  const upcomingSessionsWithoutActiveSessions = upcomingSessions.filter(
+    (session) =>
+      !activeSessions?.some(
+        (activeSession) => activeSession.trainingId === session.id
+      ) && !session.isAggregated
   );
 
-  // Get past trainings with active sessions
-  const pastTrainingsWithActiveSessions =
-    trainings
-      ?.filter((training) => {
+  // Get past sessions with active sessions
+  const pastSessionsWithActiveSessions =
+    sessions
+      ?.filter((session) => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        const trainingDate = new Date(training.date);
-        trainingDate.setHours(0, 0, 0, 0);
+        const sessionDate = new Date(session.date);
+        sessionDate.setHours(0, 0, 0, 0);
 
         return (
-          trainingDate < today &&
+          sessionDate < today &&
           activeSessions?.some(
-            (session) => session.trainingId === training.id
+            (activeSession) => activeSession.trainingId === session.id
           ) &&
-          !training.isAggregated
+          !session.isAggregated
         );
       })
       .sort(
@@ -117,31 +112,32 @@ export default function AttendancePage() {
       ) ?? [];
 
   // Combine all active sessions (both upcoming and past)
-  const allActiveSessionTrainings = [
-    ...upcomingTrainingsWithActiveSessions,
-    ...pastTrainingsWithActiveSessions,
+  const allActiveSessionSessions = [
+    ...upcomingSessionsWithActiveSessions,
+    ...pastSessionsWithActiveSessions,
   ];
 
-  const getActiveSessionId = (trainingId: number) => {
-    return activeSessions?.find((session) => session.trainingId === trainingId)
-      ?.id;
+  const getActiveSessionId = (sessionId: number) => {
+    return activeSessions?.find(
+      (activeSession) => activeSession.trainingId === sessionId
+    )?.id;
   };
 
-  const isPastTraining = (training: Training) => {
-    const trainingDate = new Date(training.date);
-    trainingDate.setHours(0, 0, 0, 0);
+  const isPastSession = (session: SessionWithGroup) => {
+    const sessionDate = new Date(session.date);
+    sessionDate.setHours(0, 0, 0, 0);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return trainingDate < today;
+    return sessionDate < today;
   };
 
-  const handleStartSessionFromCarousel = async (training: Training) => {
+  const handleStartSessionFromCarousel = async (session: SessionWithGroup) => {
     try {
       await createSession.mutateAsync({
-        trainingId: training.id,
+        trainingId: session.id,
         tenantId: tenant?.id.toString() ?? "",
-        endTime: training.endTime,
-        seasonId: training.seasonId,
+        endTime: session.endTime,
+        seasonId: session.seasonId,
       });
       toast.success("Attendance session created successfully");
     } catch (error) {
@@ -153,40 +149,26 @@ export default function AttendancePage() {
   const [isCloseDialogOpen, setIsCloseDialogOpen] = useState(false);
   const [pendingClose, setPendingClose] = useState(false);
 
-  // Refactor handleCloseSessionFromCarousel to open dialog
-  const handleCloseSessionFromCarousel = async (
-    sessionId: number,
-    teamId?: number
-  ) => {
-    if (!teamId || !tenant) return;
-    setSelectedTeamId(teamId);
+  // Simplified handler for closing session
+  const handleCloseSessionFromCarousel = async (sessionId: number) => {
+    if (!tenant) return;
     setSelectedSessionId(sessionId);
     setIsCloseDialogOpen(true);
   };
 
-  // Add the close session handler
+  // Simplified close session handler
   const handleConfirmCloseSession = async () => {
-    if (
-      !selectedTeamId ||
-      !selectedSessionId ||
-      !tenant ||
-      !players ||
-      !records
-    )
-      return;
+    if (!selectedSessionId || !tenant) return;
+
     setPendingClose(true);
     try {
-      const notCheckedInPlayerIds = players
-        .filter((p) => !records.some((r) => r.playerId === p.player.id))
-        .map((p) => p.player.id);
       await closeSession.mutateAsync({
         sessionId: selectedSessionId,
         tenantId: tenant.id.toString(),
-        notCheckedInPlayerIds,
+        notCheckedInPlayerIds: [], // Skip player check-in for now
       });
       toast.success("Session closed successfully");
       setIsCloseDialogOpen(false);
-      setSelectedTeamId(null);
       setSelectedSessionId(null);
     } catch (error) {
       console.error("Error closing session:", error);
@@ -242,11 +224,11 @@ export default function AttendancePage() {
               ))}
             </div>
           </div>
-        ) : allActiveSessionTrainings.length > 0 ? (
+        ) : allActiveSessionSessions.length > 0 ? (
           <ActiveSessionsCarousel
-            trainings={allActiveSessionTrainings}
+            sessions={allActiveSessionSessions}
             getActiveSessionId={getActiveSessionId}
-            isPastTraining={isPastTraining}
+            isPastSession={isPastSession}
             onCloseSession={handleCloseSessionFromCarousel}
             isClosingSession={closeSession.isPending}
             tenantId={tenant?.id.toString() ?? ""}
@@ -265,7 +247,7 @@ export default function AttendancePage() {
           </Card>
         )}
 
-        {/* Upcoming trainings without active sessions */}
+        {/* Upcoming sessions without active sessions */}
         {isLoading ? (
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
@@ -284,9 +266,9 @@ export default function AttendancePage() {
               ))}
             </div>
           </div>
-        ) : upcomingTrainingsWithoutActiveSessions.length > 0 ? (
+        ) : upcomingSessionsWithoutActiveSessions.length > 0 ? (
           <UpcomingAttendanceCarousel
-            trainings={upcomingTrainingsWithoutActiveSessions}
+            sessions={upcomingSessionsWithoutActiveSessions}
             onStartSession={handleStartSessionFromCarousel}
             isStartingSession={createSession.isPending}
             tenantId={tenant?.id.toString() ?? ""}
@@ -296,11 +278,11 @@ export default function AttendancePage() {
             <CardContent className="py-6">
               <div className="flex flex-col items-center justify-center h-40 text-center">
                 <h3 className="text-lg font-medium mb-2">
-                  No Upcoming Trainings
+                  No Upcoming Sessions
                 </h3>
                 <p className="text-sm text-muted-foreground max-w-md">
-                  There are no trainings scheduled for the next 7 days. Once
-                  trainings are scheduled, they will appear here.
+                  There are no sessions scheduled for the next 7 days. Once
+                  sessions are scheduled, they will appear here.
                 </p>
               </div>
             </CardContent>

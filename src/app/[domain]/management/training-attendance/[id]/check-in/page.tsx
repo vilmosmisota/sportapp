@@ -1,31 +1,27 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
-import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
-import {
-  useAttendanceSessionById,
-  useAttendanceRecords,
-} from "@/entities/attendance/Attendance.query";
-import { usePlayersByTeamId } from "@/entities/group/Group.query";
-import { Loader2, Delete, ArrowLeft, Key } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import { useState } from "react";
-import { cn } from "@/libs/tailwind/utils";
-import {
-  usePlayers,
-  useUpdatePlayerPin,
-} from "@/entities/member/Player.actions.client";
-import { useCreateAttendanceRecord } from "@/entities/attendance/Attendance.actions.client";
+import { usePlayersByTeamId } from "@/entities/group/Group.query";
 import { Player } from "@/entities/member/Member.schema";
+import { usePlayers } from "@/entities/member/Player.actions.client";
+import { useCreateAttendanceRecord } from "@/entities/old-attendance/Attendance.actions.client";
+import {
+  useAttendanceRecords,
+  useAttendanceSessionById,
+} from "@/entities/old-attendance/Attendance.query";
+import { calculateAttendanceStatus } from "@/entities/old-attendance/Attendance.services";
+import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
+import { cn } from "@/libs/tailwind/utils";
+import { ArrowLeft, Delete, Key, Loader2 } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
-import { calculateAttendanceStatus } from "@/entities/attendance/Attendance.services";
 
 import { BackConfirmationDialog } from "../../components/BackConfirmationDialog";
 

@@ -7,11 +7,11 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { TeamBadge } from "@/components/ui/team-badge";
+import { GroupBadge } from "@/components/ui/group-badge";
 import { SessionWithGroup } from "@/entities/session/Session.schema";
+import { TenantGroupsConfig } from "@/entities/tenant/Tenant.schema";
 import { cn } from "@/libs/tailwind/utils";
 import { format } from "date-fns";
-import Autoplay from "embla-carousel-autoplay";
 import { Calendar, Clock, Loader2, MapPin } from "lucide-react";
 import { useState } from "react";
 
@@ -20,6 +20,7 @@ interface UpcomingAttendanceCarouselProps {
   onStartSession: (session: SessionWithGroup) => Promise<void>;
   isStartingSession: boolean;
   tenantId: string;
+  tenantGroupsConfig?: TenantGroupsConfig;
 }
 
 export function UpcomingAttendanceCarousel({
@@ -27,6 +28,7 @@ export function UpcomingAttendanceCarousel({
   onStartSession,
   isStartingSession,
   tenantId,
+  tenantGroupsConfig,
 }: UpcomingAttendanceCarouselProps) {
   const [api, setApi] = useState<any>();
 
@@ -91,12 +93,6 @@ export function UpcomingAttendanceCarousel({
         <Carousel
           setApi={setApi}
           className="w-full relative"
-          plugins={[
-            Autoplay({
-              delay: 5000,
-              stopOnInteraction: true,
-            }),
-          ]}
           opts={{
             align: "start",
             loop: true,
@@ -118,7 +114,11 @@ export function UpcomingAttendanceCarousel({
                     <div className="flex flex-col h-full">
                       {session.group && (
                         <div className="mb-3">
-                          <TeamBadge team={session.group} size="sm" />
+                          <GroupBadge
+                            group={session.group}
+                            size="sm"
+                            tenantGroupsConfig={tenantGroupsConfig}
+                          />
                         </div>
                       )}
 

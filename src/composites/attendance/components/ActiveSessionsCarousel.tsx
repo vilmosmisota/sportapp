@@ -7,27 +7,35 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { TeamBadge } from "@/components/ui/team-badge";
+import { GroupBadge } from "@/components/ui/group-badge";
 import { SessionWithGroup } from "@/entities/session/Session.schema";
+import { TenantGroupsConfig } from "@/entities/tenant/Tenant.schema";
 import { cn } from "@/libs/tailwind/utils";
 import { format } from "date-fns";
 import Autoplay from "embla-carousel-autoplay";
-import { Calendar, Clock, Loader2, MapPin } from "lucide-react";
+import { AlertTriangle, Calendar, Clock, Loader2, MapPin } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
-interface UpcomingAttendanceCarouselProps {
+interface ActiveSessionsCarouselProps {
   sessions: SessionWithGroup[];
-  onStartSession: (session: SessionWithGroup) => Promise<void>;
-  isStartingSession: boolean;
+  getActiveSessionId: (sessionId: number) => number | undefined;
+  isPastSession: (session: SessionWithGroup) => boolean;
+  onCloseSession: (sessionId: number) => Promise<void>;
+  isClosingSession: boolean;
   tenantId: string;
+  tenantGroupsConfig?: TenantGroupsConfig;
 }
 
-export function UpcomingAttendanceCarousel({
+export function ActiveSessionsCarousel({
   sessions,
-  onStartSession,
-  isStartingSession,
+  getActiveSessionId,
+  isPastSession,
+  onCloseSession,
+  isClosingSession,
   tenantId,
-}: UpcomingAttendanceCarouselProps) {
+  tenantGroupsConfig,
+}: ActiveSessionsCarouselProps) {
   const [api, setApi] = useState<any>();
 
   // Sort sessions by date and time
@@ -65,7 +73,7 @@ export function UpcomingAttendanceCarousel({
       <Card className="mb-6 bg-muted/40">
         <CardContent className="p-6 text-center text-muted-foreground">
           <Calendar className="h-12 w-12 mx-auto mb-2 opacity-50" />
-          <p>No upcoming sessions scheduled</p>
+          <p>No active sessions</p>
         </CardContent>
       </Card>
     );
@@ -76,18 +84,18 @@ export function UpcomingAttendanceCarousel({
       <div className="flex items-center justify-between mb-3">
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="text-lg font-medium">Upcoming Sessions</h3>
-            <div className="px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full font-medium">
-              Next 7 Days
+            <h3 className="text-lg font-medium">Active Sessions</h3>
+            <div className="px-2 py-0.5 bg-green-500/10 text-green-600 text-xs rounded-full font-medium">
+              {sessions.length} Active
             </div>
           </div>
           <p className="text-sm text-muted-foreground">
-            Start attendance sessions for upcoming training sessions
+            Manage attendance for active training sessions
           </p>
         </div>
       </div>
 
-      <div className="relative px-8 py-3 -mx-4 sm:-mx-0 rounded-lg border border-primary/10 bg-primary/5 group/container hover:bg-primary/10 transition-colors">
+      <div className="relative px-8 py-3 -mx-4 sm:-mx-0 rounded-lg border border-green-500/20 bg-green-500/5 group/container hover:bg-green-500/10 transition-colors">
         <Carousel
           setApi={setApi}
           className="w-full relative"
@@ -104,6 +112,9 @@ export function UpcomingAttendanceCarousel({
         >
           <CarouselContent className="-ml-2 md:-ml-4">
             {sortedSessions.map((session) => {
+              const activeSessionId = getActiveSessionId(session.id);
+              const isPast = isPastSession(session);
+
               return (
                 <CarouselItem
                   key={session.id}
@@ -112,13 +123,24 @@ export function UpcomingAttendanceCarousel({
                   <Card
                     className={cn(
                       "h-full rounded-md border bg-card p-4 shadow-sm transition-all",
-                      "hover:shadow-md hover:scale-[1.02] group/card"
+                      "hover:shadow-md hover:scale-[1.02] group/card",
+                      isPast && "border-red-200"
                     )}
                   >
                     <div className="flex flex-col h-full">
                       {session.group && (
-                        <div className="mb-3">
-                          <TeamBadge team={session.group} size="sm" />
+                        <div className="mb-3 flex justify-between items-start">
+                          <GroupBadge
+                            group={session.group}
+                            size="sm"
+                            tenantGroupsConfig={tenantGroupsConfig}
+                          />
+                          {isPast && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                              <AlertTriangle className="h-3 w-3 mr-1" />
+                              Past
+                            </span>
+                          )}
                         </div>
                       )}
 
@@ -144,21 +166,53 @@ export function UpcomingAttendanceCarousel({
                         </div>
                       )}
 
-                      <div className="mt-auto">
+                      <div className="mt-auto space-y-2">
+                        <div className="flex gap-2">
+                          <Link
+                            href={`/o/dashboard/training-attendance/${activeSessionId}`}
+                            className="flex-1"
+                          >
+                            <Button
+                              variant="secondary"
+                              className="w-full text-xs"
+                              size="sm"
+                            >
+                              View Session
+                            </Button>
+                          </Link>
+                          <Link
+                            href={`/o/dashboard/training-attendance/${activeSessionId}/check-in`}
+                            className="flex-1"
+                          >
+                            <Button
+                              variant="outline"
+                              className="w-full text-xs"
+                              size="sm"
+                            >
+                              Check In
+                            </Button>
+                          </Link>
+                        </div>
                         <Button
-                          variant="outline"
+                          variant={isPast ? "destructive" : "outline"}
                           className="w-full text-xs"
                           size="sm"
-                          onClick={() => onStartSession(session)}
-                          disabled={isStartingSession}
+                          onClick={() => {
+                            // Get the active session ID and ensure it's a number
+                            const sessionId = getActiveSessionId(session.id);
+                            if (typeof sessionId === "number") {
+                              onCloseSession(sessionId);
+                            }
+                          }}
+                          disabled={isClosingSession}
                         >
-                          {isStartingSession ? (
+                          {isClosingSession ? (
                             <>
                               <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                              Starting...
+                              Closing...
                             </>
                           ) : (
-                            "Start Session"
+                            "Close Session"
                           )}
                         </Button>
                       </div>

@@ -30,12 +30,12 @@ import {
   useCloseAttendanceSession,
   useDeleteAttendanceSession,
   useUpdateAttendanceStatuses,
-} from "@/entities/attendance/Attendance.actions.client";
+} from "@/entities/old-attendance/Attendance.actions.client";
 import {
   useAttendanceRecords,
   useAttendanceSessionById,
-} from "@/entities/attendance/Attendance.query";
-import { AttendanceStatus } from "@/entities/attendance/Attendance.schema";
+} from "@/entities/old-attendance/Attendance.query";
+import { AttendanceStatus } from "@/entities/old-attendance/Attendance.schema";
 import { usePlayersByTeamId } from "@/entities/group/Group.query";
 import { useQueryClient } from "@tanstack/react-query";
 import {

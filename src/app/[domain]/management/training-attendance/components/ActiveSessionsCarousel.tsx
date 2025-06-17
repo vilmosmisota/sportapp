@@ -1,6 +1,5 @@
-import { useState } from "react";
-import { format } from "date-fns";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Carousel,
   CarouselContent,
@@ -8,39 +7,36 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { Training } from "@/entities/training/Training.schema";
-import { cn } from "@/libs/tailwind/utils";
-import { MapPin, Clock, Calendar, Loader2, AlertTriangle } from "lucide-react";
 import { TeamBadge } from "@/components/ui/team-badge";
+import { SessionWithGroup } from "@/entities/session/Session.schema";
+import { cn } from "@/libs/tailwind/utils";
+import { format } from "date-fns";
 import Autoplay from "embla-carousel-autoplay";
-import { Button } from "@/components/ui/button";
+import { AlertTriangle, Calendar, Clock, Loader2, MapPin } from "lucide-react";
 import Link from "next/link";
-import {
-  getDisplayAgeGroup,
-  getDisplayGender,
-} from "@/entities/group/Group.schema";
+import { useState } from "react";
 
 interface ActiveSessionsCarouselProps {
-  trainings: Training[];
-  getActiveSessionId: (trainingId: number) => number | undefined;
-  isPastTraining: (training: Training) => boolean;
-  onCloseSession: (sessionId: number, teamId?: number) => Promise<void>;
+  sessions: SessionWithGroup[];
+  getActiveSessionId: (sessionId: number) => number | undefined;
+  isPastSession: (session: SessionWithGroup) => boolean;
+  onCloseSession: (sessionId: number) => Promise<void>;
   isClosingSession: boolean;
   tenantId: string;
 }
 
 export function ActiveSessionsCarousel({
-  trainings,
+  sessions,
   getActiveSessionId,
-  isPastTraining,
+  isPastSession,
   onCloseSession,
   isClosingSession,
   tenantId,
 }: ActiveSessionsCarouselProps) {
   const [api, setApi] = useState<any>();
 
-  // Sort trainings by date and time
-  const sortedTrainings = [...trainings].sort((a, b) => {
+  // Sort sessions by date and time
+  const sortedSessions = [...sessions].sort((a, b) => {
     // First sort by date
     const dateComparison =
       new Date(a.date).getTime() - new Date(b.date).getTime();
@@ -69,7 +65,7 @@ export function ActiveSessionsCarousel({
     }
   }
 
-  if (trainings.length === 0) {
+  if (sessions.length === 0) {
     return (
       <Card className="mb-6 bg-muted/40">
         <CardContent className="p-6 text-center text-muted-foreground">
@@ -87,7 +83,7 @@ export function ActiveSessionsCarousel({
           <div className="flex items-center gap-2">
             <h3 className="text-lg font-medium">Active Sessions</h3>
             <div className="px-2 py-0.5 bg-green-500/10 text-green-600 text-xs rounded-full font-medium">
-              {trainings.length} Active
+              {sessions.length} Active
             </div>
           </div>
           <p className="text-sm text-muted-foreground">
@@ -112,13 +108,13 @@ export function ActiveSessionsCarousel({
           }}
         >
           <CarouselContent className="-ml-2 md:-ml-4">
-            {sortedTrainings.map((training) => {
-              const activeSessionId = getActiveSessionId(training.id);
-              const isPast = isPastTraining(training);
+            {sortedSessions.map((session) => {
+              const activeSessionId = getActiveSessionId(session.id);
+              const isPast = isPastSession(session);
 
               return (
                 <CarouselItem
-                  key={training.id}
+                  key={session.id}
                   className="pl-2 md:pl-4 basis-full xs:basis-1/2 sm:basis-1/2 md:basis-1/3 lg:basis-1/4"
                 >
                   <Card
@@ -129,9 +125,9 @@ export function ActiveSessionsCarousel({
                     )}
                   >
                     <div className="flex flex-col h-full">
-                      {training.team && (
+                      {session.group && (
                         <div className="mb-3 flex justify-between items-start">
-                          <TeamBadge team={training.team} size="sm" />
+                          <TeamBadge team={session.group} size="sm" />
                           {isPast && (
                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
                               <AlertTriangle className="h-3 w-3 mr-1" />
@@ -143,22 +139,22 @@ export function ActiveSessionsCarousel({
 
                       <div className="mb-3">
                         <div className="text-sm font-medium text-primary mb-1">
-                          {format(new Date(training.date), "EEEE, MMMM d")}
+                          {format(new Date(session.date), "EEEE, MMMM d")}
                         </div>
                         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                           <Clock className="h-3.5 w-3.5 flex-shrink-0" />
                           <span>
-                            {formatTimeString(training.startTime)} -{" "}
-                            {formatTimeString(training.endTime)}
+                            {formatTimeString(session.startTime)} -{" "}
+                            {formatTimeString(session.endTime)}
                           </span>
                         </div>
                       </div>
 
-                      {training.location && (
+                      {session.location && (
                         <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-4">
                           <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
                           <span className="truncate">
-                            {training.location.name}, {training.location.city}
+                            {session.location.name}, {session.location.city}
                           </span>
                         </div>
                       )}
@@ -196,14 +192,9 @@ export function ActiveSessionsCarousel({
                           size="sm"
                           onClick={() => {
                             // Get the active session ID and ensure it's a number
-                            const sessionId = getActiveSessionId(training.id);
+                            const sessionId = getActiveSessionId(session.id);
                             if (typeof sessionId === "number") {
-                              // Convert null to undefined for teamId if needed
-                              const teamId =
-                                training.teamId === null
-                                  ? undefined
-                                  : training.teamId;
-                              onCloseSession(sessionId, teamId);
+                              onCloseSession(sessionId);
                             }
                           }}
                           disabled={isClosingSession}

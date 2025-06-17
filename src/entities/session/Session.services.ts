@@ -229,3 +229,44 @@ export const deleteSession = async (
 
   return true;
 };
+
+export const getSessionsByTenantForDays = async (
+  client: TypedClient,
+  tenantId: string,
+  days: number
+): Promise<SessionWithGroup[]> => {
+  const today = new Date();
+  const futureDate = new Date();
+  futureDate.setDate(today.getDate() + days);
+
+  const fromDate = today.toISOString().split("T")[0];
+  const toDate = futureDate.toISOString().split("T")[0];
+
+  const { data, error } = await client
+    .from("sessions")
+    .select(
+      `
+      *,
+      group:groups(*)
+    `
+    )
+    .eq("tenantId", Number(tenantId))
+    .gte("date", fromDate)
+    .lte("date", toDate)
+    .order("date", { ascending: true })
+    .order("startTime", { ascending: true });
+
+  if (error) throw error;
+
+  if (!data) return [];
+
+  try {
+    const validatedData = data.map((item) =>
+      SessionWithGroupSchema.parse(item)
+    );
+    return validatedData;
+  } catch (validationError) {
+    console.error("Session data validation failed:", validationError);
+    throw new Error("Invalid session data received from database");
+  }
+};

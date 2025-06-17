@@ -1,20 +1,13 @@
-import {
-  render,
-  screen,
-  within,
-  fireEvent,
-  waitFor,
-  cleanup,
-} from "@testing-library/react";
-import "@testing-library/jest-dom";
-import AttendanceStatisticsPage from "./page";
-import { useParams } from "next/navigation";
-import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 import { useGetTeamsByTenantId } from "@/entities/group/Group.query";
+import { useTeamAttendanceAggregates } from "@/entities/old-attendance/Attendance.actions.client";
 import { useSeasonsByTenantId } from "@/entities/season/Season.query";
-import { useTeamAttendanceAggregates } from "@/entities/attendance/Attendance.actions.client";
+import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import "@testing-library/jest-dom";
+import { cleanup, render, screen } from "@testing-library/react";
+import { useParams } from "next/navigation";
 import React from "react";
+import AttendanceStatisticsPage from "./page";
 
 // Mock Supabase
 jest.mock("@supabase/supabase-js", () => ({

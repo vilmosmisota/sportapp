@@ -1,10 +1,10 @@
-import { LucideIcon } from "lucide-react";
 import { Team } from "@/entities/group/Group.schema";
 import {
-  RecentTrend,
   DayOfWeekStats,
+  RecentTrend,
   TeamAttendanceStats,
-} from "@/entities/attendance/Attendance.schema";
+} from "@/entities/old-attendance/Attendance.schema";
+import { LucideIcon } from "lucide-react";
 
 export interface TeamCardProps {
   team: Team;
@@ -33,4 +33,4 @@ export interface SessionData {
   absentCount?: number;
 }
 
-export type { RecentTrend as TrendData, DayOfWeekStats, TeamAttendanceStats };
+export type { DayOfWeekStats, TeamAttendanceStats, RecentTrend as TrendData };

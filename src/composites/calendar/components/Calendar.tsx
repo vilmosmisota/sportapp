@@ -37,7 +37,6 @@ export function Calendar<TEvent extends CalendarEvent>({
   onViewChange,
   onAddSession,
 }: CalendarProps<TEvent>) {
-  // Track selected date across view changes
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   const {

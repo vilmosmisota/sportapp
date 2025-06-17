@@ -6,6 +6,7 @@ import {
   getSessionById,
   getSessionsByGroup,
   getSessionsByTenant,
+  getSessionsByTenantForDays,
   getSessionsWithGroup,
 } from "./Session.services";
 
@@ -66,5 +67,15 @@ export const useSession = (tenantId: string, sessionId: number) => {
     queryKey: queryKeys.session.detail(tenantId, sessionId.toString()),
     queryFn: () => getSessionById(client, tenantId, sessionId),
     enabled: !!tenantId && !!sessionId,
+  });
+};
+
+export const useSessionsByTenantForDays = (tenantId: string, days: number) => {
+  const client = useSupabase();
+
+  return useQuery({
+    queryKey: queryKeys.session.byTenantForDays(tenantId, days),
+    queryFn: () => getSessionsByTenantForDays(client, tenantId, days),
+    enabled: !!tenantId && days > 0,
   });
 };

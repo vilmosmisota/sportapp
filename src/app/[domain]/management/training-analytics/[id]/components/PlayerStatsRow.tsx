@@ -1,6 +1,6 @@
-import { TableCell, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
-import { usePlayerAttendanceAggregates } from "@/entities/attendance/Attendance.actions.client";
+import { TableCell, TableRow } from "@/components/ui/table";
+import { usePlayerAttendanceAggregates } from "@/entities/old-attendance/Attendance.actions.client";
 
 interface PlayerStatsRowProps {
   player: {

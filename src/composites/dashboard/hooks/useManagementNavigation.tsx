@@ -113,18 +113,18 @@ export function useManagementNavigation(tenant?: Tenant) {
           href: "/management/sessions",
           iconName: "DumbbellIcon",
           description: "Schedule and manage training sessions",
-          permissions: [Permission.VIEW_TRAINING, Permission.MANAGE_TRAINING],
+          permissions: [Permission.VIEW_EVENTS, Permission.MANAGE_EVENTS],
           pinnable: true,
         },
       ],
     },
     {
-      section: "Development",
+      section: "Attendance",
       items: [
         {
           id: 15,
           name: "Attendance Manager",
-          href: "/management/training-attendance",
+          href: "/management/attendance",
           iconName: "ClipboardList",
           description: "Monitor live attendance and session participation",
           permissions: [
@@ -136,11 +136,14 @@ export function useManagementNavigation(tenant?: Tenant) {
         {
           id: 16,
           name: "Attendance Analytics",
-          href: "/management/training-analytics",
+          href: "/management/attendance/analytics",
           iconName: "Activity",
           description:
             "View attendance trends, participation rates, and training effectiveness",
-          permissions: [Permission.VIEW_TRAINING, Permission.MANAGE_TRAINING],
+          permissions: [
+            Permission.VIEW_ATTENDANCE,
+            Permission.MANAGE_ATTENDANCE,
+          ],
           disabled: false,
           disabledReason:
             "Add at least one training location in Organization settings first",

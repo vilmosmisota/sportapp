@@ -103,7 +103,7 @@ export function EventDetailsDialog({
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <Dialog open={isOpen} onOpenChange={onOpenChange} modal={true}>
         <DialogContent className="sm:max-w-md p-0 overflow-hidden">
           {/* Colored header with title */}
           <div className="p-6 bg-primary/10">

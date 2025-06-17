@@ -1,4 +1,3 @@
-import { Button } from "./button";
 import { Trash2 } from "lucide-react";
 import {
   AlertDialog,
@@ -7,6 +6,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "./alert-dialog";
+import { Button } from "./button";
 
 type ConfirmAlertProps = {
   categoryId: string | number;

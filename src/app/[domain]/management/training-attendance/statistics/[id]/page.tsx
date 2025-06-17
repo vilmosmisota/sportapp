@@ -10,7 +10,7 @@ import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { format } from "date-fns";
-import { useAllTeamPlayerAttendanceAggregates } from "@/entities/attendance/Attendance.actions.client";
+import { useAllTeamPlayerAttendanceAggregates } from "@/entities/old-attendance/Attendance.actions.client";
 import { AttendanceCharts } from "./components/AttendanceCharts";
 import { PerformanceOverview } from "./components/PerformanceOverview";
 import { AttendanceTable } from "./components/AttendanceTable";
@@ -19,7 +19,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import {
   AttendanceRecordAggregate,
   AttendanceStatus,
-} from "@/entities/attendance/Attendance.schema";
+} from "@/entities/old-attendance/Attendance.schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Team,
@@ -30,8 +30,8 @@ import {
 import {
   calculateAttendanceRate,
   calculateAccuracyRate,
-} from "@/entities/attendance/Attendance.utils";
-import { useTeamAttendanceAggregates } from "@/entities/attendance/Attendance.actions.client";
+} from "@/entities/old-attendance/Attendance.utils";
+import { useTeamAttendanceAggregates } from "@/entities/old-attendance/Attendance.actions.client";
 
 function formatTeamName(team: {
   name?: string | null | undefined;

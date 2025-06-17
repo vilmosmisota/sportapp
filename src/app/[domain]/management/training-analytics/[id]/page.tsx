@@ -11,11 +11,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   useAllTeamPlayerAttendanceAggregates,
   useTeamAttendanceAggregates,
-} from "@/entities/attendance/Attendance.actions.client";
+} from "@/entities/old-attendance/Attendance.actions.client";
 import {
   calculateAccuracyRate,
   calculateAttendanceRate,
-} from "@/entities/attendance/Attendance.utils";
+} from "@/entities/old-attendance/Attendance.utils";
 import { useGetTeamsByTenantId } from "@/entities/group/Group.query";
 import {
   PlayerTeamConnectionSchema,

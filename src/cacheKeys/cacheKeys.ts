@@ -73,16 +73,8 @@ export const queryKeys = {
   },
   attendance: {
     all: ["attendance"] as const,
-    sessions: ["attendance", "sessions"] as const,
-    activeSessions: ["attendance", "activeSessions"] as const,
-    records: ["attendance", "records"] as const,
-    detail: (tenantId?: string, sessionId?: string) =>
-      ["attendance", "detail", tenantId, sessionId] as const,
-    stats: (tenantId?: string, teamId?: number) =>
-      ["attendance", "stats", tenantId, teamId] as const,
-    teamStats: (tenantId?: string, teamId?: number) =>
-      ["attendance", "teamStats", tenantId, teamId] as const,
-    aggregates: ["attendance", "aggregates"] as const,
+    activeSessions: (tenantId: string | undefined) =>
+      ["attendance", "activeSessions", tenantId] as const,
   },
   role: {
     all: ["role"] as const,
@@ -124,5 +116,7 @@ export const queryKeys = {
         seasonId,
         dateRangeKey,
       ] as const,
+    byTenantForDays: (tenantId: string | undefined, days: number | undefined) =>
+      ["session", "byTenantForDays", tenantId, days] as const,
   },
 } as const;

@@ -1,24 +1,18 @@
-import {
-  render,
-  screen,
-  within,
-  fireEvent,
-  waitFor,
-} from "@testing-library/react";
-import "@testing-library/jest-dom";
-import TeamAttendanceStatisticsPage from "./page";
-import { useParams } from "next/navigation";
-import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 import { useGetTeamsByTenantId } from "@/entities/group/Group.query";
-import { useSeasonsByTenantId } from "@/entities/season/Season.query";
-import { useAllTeamPlayerAttendanceAggregates } from "@/entities/attendance/Attendance.actions.client";
+import { useAllTeamPlayerAttendanceAggregates } from "@/entities/old-attendance/Attendance.actions.client";
+import { AttendanceStatus } from "@/entities/old-attendance/Attendance.schema";
 import {
-  calculateAttendanceRate,
   calculateAccuracyRate,
-} from "@/entities/attendance/Attendance.utils";
+  calculateAttendanceRate,
+} from "@/entities/old-attendance/Attendance.utils";
+import { useSeasonsByTenantId } from "@/entities/season/Season.query";
+import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import "@testing-library/jest-dom";
+import { render, screen, within } from "@testing-library/react";
+import { useParams } from "next/navigation";
 import React from "react";
-import { AttendanceStatus } from "@/entities/attendance/Attendance.schema";
+import TeamAttendanceStatisticsPage from "./page";
 
 // Mock Supabase
 jest.mock("@supabase/supabase-js", () => ({

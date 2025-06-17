@@ -16,16 +16,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useTeamAttendanceAggregates } from "@/entities/attendance/Attendance.actions.client";
-import {
-  calculateAccuracyRate,
-  calculateAttendanceRate,
-} from "@/entities/attendance/Attendance.utils";
 import { useGetTeamsByTenantId } from "@/entities/group/Group.query";
 import {
   getDisplayAgeGroup,
   getDisplayGender,
 } from "@/entities/group/Group.schema";
+import { useTeamAttendanceAggregates } from "@/entities/old-attendance/Attendance.actions.client";
+import {
+  calculateAccuracyRate,
+  calculateAttendanceRate,
+} from "@/entities/old-attendance/Attendance.utils";
 import { useSeasonsByTenantId } from "@/entities/season/Season.query";
 import { Season } from "@/entities/season/Season.schema";
 import { format } from "date-fns";

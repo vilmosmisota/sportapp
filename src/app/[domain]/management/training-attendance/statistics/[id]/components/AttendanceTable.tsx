@@ -1,11 +1,6 @@
-import {
-  ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  getSortedRowModel,
-  SortingState,
-  useReactTable,
-} from "@tanstack/react-table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import DataTableColumnHeader from "@/components/ui/data-table/DataTableColumnHeader";
+import { Progress } from "@/components/ui/progress";
 import {
   Table,
   TableBody,
@@ -14,11 +9,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { calculateAccuracyRate } from "@/entities/old-attendance/Attendance.utils";
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  SortingState,
+  useReactTable,
+} from "@tanstack/react-table";
 import { useMemo, useState } from "react";
-import DataTableColumnHeader from "@/components/ui/data-table/DataTableColumnHeader";
-import { calculateAccuracyRate } from "@/entities/attendance/Attendance.utils";
 
 interface AttendanceTableProps {
   players: Array<{

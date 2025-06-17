@@ -58,7 +58,6 @@ export function EventCalendar<TEvent extends CalendarEvent = CalendarEvent>({
     currentDateRange
   );
 
-  // Default handlers for event actions if not provided
   const handleEditEvent = (event: CalendarEvent) => {
     if (onEditEvent) {
       onEditEvent(event as TEvent);
@@ -75,7 +74,6 @@ export function EventCalendar<TEvent extends CalendarEvent = CalendarEvent>({
     }
   };
 
-  // Handle errors
   if (isError && error) {
     return (
       <div

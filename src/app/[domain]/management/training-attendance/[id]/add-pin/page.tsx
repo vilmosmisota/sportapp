@@ -1,33 +1,32 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
-import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
-import { useAttendanceSessionById } from "@/entities/attendance/Attendance.query";
-import { usePlayersByTeamId } from "@/entities/group/Group.query";
-import {
-  Loader2,
-  ArrowLeft,
-  UserCheck,
-  Delete,
-  AlertCircle,
-  CheckCircle2,
-} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import { Player } from "@/entities/member/Member.schema";
-import { useUpdatePlayerPin } from "@/entities/member/Player.actions.client";
-import { toast } from "sonner";
-import { PlayerGender } from "@/entities/member/Member.schema";
+import { usePlayersByTeamId } from "@/entities/group/Group.query";
+import { Player, PlayerGender } from "@/entities/member/Member.schema";
+import {
+  usePlayers,
+  useUpdatePlayerPin,
+} from "@/entities/member/Player.actions.client";
+import { useAttendanceSessionById } from "@/entities/old-attendance/Attendance.query";
+import { useTenantByDomain } from "@/entities/tenant/Tenant.query";
 import { cn } from "@/libs/tailwind/utils";
-import { useQueryClient } from "@tanstack/react-query";
-import { usePlayers } from "@/entities/member/Player.actions.client";
+import {
+  AlertCircle,
+  ArrowLeft,
+  CheckCircle2,
+  Delete,
+  Loader2,
+  UserCheck,
+} from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
 
 import { BackConfirmationDialog } from "../../components/BackConfirmationDialog";
 
