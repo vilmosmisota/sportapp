@@ -1,3 +1,4 @@
+import { GroupSchema } from "@/entities/group/Group.schema";
 import { z } from "zod";
 
 export const ActiveAttendanceSessionSchema = z.object({
@@ -15,6 +16,7 @@ export const ActiveAttendanceSessionSchema = z.object({
     groupId: z.number(),
     seasonId: z.number(),
     isAggregated: z.boolean().default(false),
+    group: GroupSchema.nullable(),
   }),
 });
 

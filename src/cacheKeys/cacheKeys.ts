@@ -75,6 +75,14 @@ export const queryKeys = {
     all: ["attendance"] as const,
     activeSessions: (tenantId: string | undefined) =>
       ["attendance", "activeSessions", tenantId] as const,
+    sessionWithRecords: (
+      tenantId: string | undefined,
+      sessionId: string | undefined
+    ) => ["attendance", "sessionWithRecords", tenantId, sessionId] as const,
+    records: (tenantId: string | undefined, sessionId: string | undefined) =>
+      ["attendance", "records", tenantId, sessionId] as const,
+    detail: (tenantId: string | undefined, sessionId: string | undefined) =>
+      ["attendance", "detail", tenantId, sessionId] as const,
   },
   role: {
     all: ["role"] as const,

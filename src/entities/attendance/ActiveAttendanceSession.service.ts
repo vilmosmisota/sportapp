@@ -16,7 +16,10 @@ export const getActiveAttendanceSessions = async (
     .select(
       `
       *,
-      session:sessions(*)
+      session:sessions(
+        *,
+        group:groups(*)
+      )
     `
     )
     .eq("tenantId", Number(tenantId));
@@ -63,7 +66,10 @@ export const createActiveAttendanceSession = async (
       .select(
         `
         *,
-        session:sessions(*)
+        session:sessions(
+          *,
+          group:groups(*)
+        )
       `
       )
       .single();
@@ -109,6 +115,46 @@ export const closeActiveAttendanceSession = async (
     return true;
   } catch (error) {
     console.error("Error in closeActiveAttendanceSession:", error);
+    throw error;
+  }
+};
+
+/**
+ * Delete an active attendance session and all its records
+ */
+export const deleteActiveAttendanceSession = async (
+  client: TypedClient,
+  sessionId: number,
+  tenantId: number | string
+): Promise<boolean> => {
+  try {
+    // First delete all attendance records for this session
+    const { error: recordsError } = await client
+      .from("attendanceRecords")
+      .delete()
+      .eq("activeAttendanceSessionId", sessionId)
+      .eq("tenantId", Number(tenantId));
+
+    if (recordsError) {
+      console.error("Error deleting attendance records:", recordsError);
+      throw recordsError;
+    }
+
+    // Then delete the active attendance session
+    const { error: sessionError } = await client
+      .from("activeAttendanceSession")
+      .delete()
+      .eq("id", sessionId)
+      .eq("tenantId", Number(tenantId));
+
+    if (sessionError) {
+      console.error("Error deleting active attendance session:", sessionError);
+      throw sessionError;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error in deleteActiveAttendanceSession:", error);
     throw error;
   }
 };

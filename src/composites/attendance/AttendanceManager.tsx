@@ -57,62 +57,13 @@ export function AttendanceManager({
         (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
       ) ?? [];
 
-  // Get upcoming sessions with active sessions
-  const upcomingSessionsWithActiveSessions = upcomingSessions.filter(
-    (session) =>
-      activeSessions?.some(
-        (activeSession) => activeSession.sessionId === session.id
-      ) && !session.isAggregated
-  );
-
-  // Get upcoming sessions without active sessions
+  // Get upcoming sessions without active sessions (for the upcoming carousel)
   const upcomingSessionsWithoutActiveSessions = upcomingSessions.filter(
     (session) =>
       !activeSessions?.some(
         (activeSession) => activeSession.sessionId === session.id
       ) && !session.isAggregated
   );
-
-  // Get past sessions with active sessions
-  const pastSessionsWithActiveSessions =
-    sessions
-      ?.filter((session) => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        const sessionDate = new Date(session.date);
-        sessionDate.setHours(0, 0, 0, 0);
-
-        return (
-          sessionDate < today &&
-          activeSessions?.some(
-            (activeSession) => activeSession.sessionId === session.id
-          ) &&
-          !session.isAggregated
-        );
-      })
-      .sort(
-        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-      ) ?? [];
-
-  const allActiveSessionSessions = [
-    ...upcomingSessionsWithActiveSessions,
-    ...pastSessionsWithActiveSessions,
-  ];
-
-  const getActiveSessionId = (sessionId: number) => {
-    return activeSessions?.find(
-      (activeSession) => activeSession.sessionId === sessionId
-    )?.id;
-  };
-
-  const isPastSession = (session: SessionWithGroup) => {
-    const sessionDate = new Date(session.date);
-    sessionDate.setHours(0, 0, 0, 0);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return sessionDate < today;
-  };
 
   // Handler for starting a session
   const handleStartSession = async (
@@ -133,10 +84,10 @@ export function AttendanceManager({
   };
 
   // Handler for closing a session
-  const handleCloseSession = async (sessionId: number): Promise<void> => {
+  const handleCloseSession = async (activeSessionId: number): Promise<void> => {
     try {
       await closeSession.mutateAsync({
-        sessionId,
+        sessionId: activeSessionId,
         tenantId,
       });
       toast.success("Attendance session closed successfully");
@@ -199,30 +150,10 @@ export function AttendanceManager({
         </Card>
       )}
 
-      {/* Active sessions carousel */}
-      {isLoading ? (
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <div className="h-7 w-40 bg-muted rounded animate-pulse"></div>
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 bg-muted rounded-full animate-pulse"></div>
-              <div className="h-8 w-8 bg-muted rounded-full animate-pulse"></div>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => (
-              <div
-                key={i}
-                className="h-40 w-full bg-muted rounded animate-pulse"
-              ></div>
-            ))}
-          </div>
-        </div>
-      ) : allActiveSessionSessions.length > 0 ? (
+      {/* Active sessions carousel - show all active sessions regardless of matching */}
+      {activeSessions && activeSessions.length > 0 ? (
         <ActiveSessionsCarousel
-          sessions={allActiveSessionSessions}
-          getActiveSessionId={getActiveSessionId}
-          isPastSession={isPastSession}
+          activeSessions={activeSessions}
           onCloseSession={handleCloseSession}
           isClosingSession={closeSession.isPending}
           tenantId={tenantId}

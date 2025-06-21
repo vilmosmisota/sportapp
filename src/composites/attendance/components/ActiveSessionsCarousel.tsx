@@ -8,7 +8,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { GroupBadge } from "@/components/ui/group-badge";
-import { SessionWithGroup } from "@/entities/session/Session.schema";
+import { ActiveAttendanceSession } from "@/entities/attendance/ActiveAttendanceSession.schema";
 import { TenantGroupsConfig } from "@/entities/tenant/Tenant.schema";
 import { cn } from "@/libs/tailwind/utils";
 import { format } from "date-fns";
@@ -18,19 +18,15 @@ import Link from "next/link";
 import { useState } from "react";
 
 interface ActiveSessionsCarouselProps {
-  sessions: SessionWithGroup[];
-  getActiveSessionId: (sessionId: number) => number | undefined;
-  isPastSession: (session: SessionWithGroup) => boolean;
-  onCloseSession: (sessionId: number) => Promise<void>;
+  activeSessions: ActiveAttendanceSession[];
+  onCloseSession: (activeSessionId: number) => Promise<void>;
   isClosingSession: boolean;
   tenantId: string;
   tenantGroupsConfig?: TenantGroupsConfig;
 }
 
 export function ActiveSessionsCarousel({
-  sessions,
-  getActiveSessionId,
-  isPastSession,
+  activeSessions,
   onCloseSession,
   isClosingSession,
   tenantId,
@@ -38,15 +34,15 @@ export function ActiveSessionsCarousel({
 }: ActiveSessionsCarouselProps) {
   const [api, setApi] = useState<any>();
 
-  // Sort sessions by date and time
-  const sortedSessions = [...sessions].sort((a, b) => {
+  // Sort active sessions by date and time
+  const sortedActiveSessions = [...activeSessions].sort((a, b) => {
     // First sort by date
     const dateComparison =
-      new Date(a.date).getTime() - new Date(b.date).getTime();
+      new Date(a.session.date).getTime() - new Date(b.session.date).getTime();
     if (dateComparison !== 0) return dateComparison;
 
     // If same date, sort by start time
-    return a.startTime.localeCompare(b.startTime);
+    return a.session.startTime.localeCompare(b.session.startTime);
   });
 
   function formatTimeString(timeStr: string) {
@@ -68,7 +64,15 @@ export function ActiveSessionsCarousel({
     }
   }
 
-  if (sessions.length === 0) {
+  // Helper function to check if session is older than a day
+  const isPastSession = (sessionDate: string) => {
+    const sessionDateObj = new Date(sessionDate);
+    const now = new Date();
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    return sessionDateObj < oneDayAgo;
+  };
+
+  if (activeSessions.length === 0) {
     return (
       <Card className="mb-6 bg-muted/40">
         <CardContent className="p-6 text-center text-muted-foreground">
@@ -86,7 +90,7 @@ export function ActiveSessionsCarousel({
           <div className="flex items-center gap-2">
             <h3 className="text-lg font-medium">Active Sessions</h3>
             <div className="px-2 py-0.5 bg-green-500/10 text-green-600 text-xs rounded-full font-medium">
-              {sessions.length} Active
+              {activeSessions.length} Active
             </div>
           </div>
           <p className="text-sm text-muted-foreground">
@@ -111,13 +115,12 @@ export function ActiveSessionsCarousel({
           }}
         >
           <CarouselContent className="-ml-2 md:-ml-4">
-            {sortedSessions.map((session) => {
-              const activeSessionId = getActiveSessionId(session.id);
-              const isPast = isPastSession(session);
+            {sortedActiveSessions.map((activeSession) => {
+              const isPast = isPastSession(activeSession.session.date);
 
               return (
                 <CarouselItem
-                  key={session.id}
+                  key={activeSession.id}
                   className="pl-2 md:pl-4 basis-full xs:basis-1/2 sm:basis-1/2 md:basis-1/3 lg:basis-1/4"
                 >
                   <Card
@@ -128,17 +131,17 @@ export function ActiveSessionsCarousel({
                     )}
                   >
                     <div className="flex flex-col h-full">
-                      {session.group && (
+                      {activeSession.session.group && (
                         <div className="mb-3 flex justify-between items-start">
                           <GroupBadge
-                            group={session.group}
+                            group={activeSession.session.group}
                             size="sm"
                             tenantGroupsConfig={tenantGroupsConfig}
                           />
                           {isPast && (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
                               <AlertTriangle className="h-3 w-3 mr-1" />
-                              Past
+                              Overdue
                             </span>
                           )}
                         </div>
@@ -146,22 +149,26 @@ export function ActiveSessionsCarousel({
 
                       <div className="mb-3">
                         <div className="text-sm font-medium text-primary mb-1">
-                          {format(new Date(session.date), "EEEE, MMMM d")}
+                          {format(
+                            new Date(activeSession.session.date),
+                            "EEEE, MMMM d"
+                          )}
                         </div>
                         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                           <Clock className="h-3.5 w-3.5 flex-shrink-0" />
                           <span>
-                            {formatTimeString(session.startTime)} -{" "}
-                            {formatTimeString(session.endTime)}
+                            {formatTimeString(activeSession.session.startTime)}{" "}
+                            - {formatTimeString(activeSession.session.endTime)}
                           </span>
                         </div>
                       </div>
 
-                      {session.location && (
+                      {activeSession.session.location && (
                         <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-4">
                           <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
                           <span className="truncate">
-                            {session.location.name}, {session.location.city}
+                            {activeSession.session.location.name},{" "}
+                            {activeSession.session.location.city}
                           </span>
                         </div>
                       )}
@@ -169,7 +176,7 @@ export function ActiveSessionsCarousel({
                       <div className="mt-auto space-y-2">
                         <div className="flex gap-2">
                           <Link
-                            href={`/o/dashboard/training-attendance/${activeSessionId}`}
+                            href={`/management/attendance/${activeSession.id}`}
                             className="flex-1"
                           >
                             <Button
@@ -181,7 +188,7 @@ export function ActiveSessionsCarousel({
                             </Button>
                           </Link>
                           <Link
-                            href={`/o/dashboard/training-attendance/${activeSessionId}/check-in`}
+                            href={`/management/attendance/${activeSession.id}/check-in`}
                             className="flex-1"
                           >
                             <Button
@@ -194,21 +201,19 @@ export function ActiveSessionsCarousel({
                           </Link>
                         </div>
                         <Button
-                          variant={isPast ? "destructive" : "outline"}
+                          variant="outline"
                           className="w-full text-xs"
                           size="sm"
                           onClick={() => {
-                            // Get the active session ID and ensure it's a number
-                            const sessionId = getActiveSessionId(session.id);
-                            if (typeof sessionId === "number") {
-                              onCloseSession(sessionId);
+                            if (activeSession.id) {
+                              onCloseSession(activeSession.id);
                             }
                           }}
                           disabled={isClosingSession}
                         >
                           {isClosingSession ? (
                             <>
-                              <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
                               Closing...
                             </>
                           ) : (
@@ -222,8 +227,8 @@ export function ActiveSessionsCarousel({
               );
             })}
           </CarouselContent>
-          <CarouselPrevious className="absolute -left-4 h-8 w-8 opacity-0 group-hover/container:opacity-100 transition-opacity" />
-          <CarouselNext className="absolute -right-4 h-8 w-8 opacity-0 group-hover/container:opacity-100 transition-opacity" />
+          <CarouselPrevious className="absolute -left-4 top-1/2 -translate-y-1/2 opacity-0 group-hover/container:opacity-100 transition-opacity" />
+          <CarouselNext className="absolute -right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover/container:opacity-100 transition-opacity" />
         </Carousel>
       </div>
     </div>

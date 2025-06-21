@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   closeActiveAttendanceSession,
   createActiveAttendanceSession,
+  deleteActiveAttendanceSession,
 } from "./ActiveAttendanceSession.service";
 
 /**
@@ -73,6 +74,56 @@ export const useCloseActiveAttendanceSession = () => {
     },
     onError: (error) => {
       console.error("Error closing active attendance session:", error);
+    },
+  });
+};
+
+/**
+ * Hook to delete an active attendance session
+ */
+export const useDeleteActiveAttendanceSession = () => {
+  const client = useSupabase();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      sessionId,
+      tenantId,
+    }: {
+      sessionId: number;
+      tenantId: string;
+    }) => {
+      return deleteActiveAttendanceSession(client, sessionId, tenantId);
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate active sessions query to update the UI
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.attendance.activeSessions(variables.tenantId),
+      });
+
+      // Invalidate all attendance data
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.attendance.all,
+      });
+
+      // Invalidate session with records queries
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.attendance.sessionWithRecords(
+          variables.tenantId,
+          variables.sessionId.toString()
+        ),
+      });
+
+      // Invalidate attendance records
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.attendance.records(
+          variables.tenantId,
+          variables.sessionId.toString()
+        ),
+      });
+    },
+    onError: (error) => {
+      console.error("Error deleting active attendance session:", error);
     },
   });
 };
