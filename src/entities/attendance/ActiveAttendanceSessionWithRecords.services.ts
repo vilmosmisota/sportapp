@@ -101,8 +101,15 @@ export const createAttendanceRecord = async (
     tenantId: string;
   }
 ): Promise<AttendanceRecord> => {
-  const now = new Date().toISOString();
-  const checkInTime = data.checkInTime || now.split("T")[1].split(".")[0]; // Extract time part
+  const now = new Date();
+  const checkInTime =
+    data.checkInTime ||
+    now.toLocaleTimeString("en-GB", {
+      hour12: false,
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
   const checkInType = data.checkInType || CheckInType.INSTRUCTOR; // Default to instructor
 
   const { data: newRecord, error } = await client
@@ -308,7 +315,7 @@ export const aggregateAndCleanupAttendanceSession = async (
       {
         session_id: sessionId,
         tenant_id: Number(tenantId),
-        not_checked_in_player_ids: notCheckedInMemberIds,
+        not_checked_in_member_ids: notCheckedInMemberIds,
       }
     );
 

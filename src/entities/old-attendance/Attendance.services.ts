@@ -1,18 +1,12 @@
 import { TypedClient } from "@/libs/supabase/type";
 import {
-  AttendanceSession,
-  AttendanceRecord,
-  attendanceSessionSchema,
   attendanceRecordSchema,
-  CreateAttendanceSession,
-  CreateAttendanceRecord,
-  UpdateAttendanceSession,
-  UpdateAttendanceRecord,
-  TeamAttendanceStats,
-  PlayerAttendanceStats,
-  teamAttendanceStatsSchema,
-  playerAttendanceStatsSchema,
+  attendanceSessionSchema,
   AttendanceStatus,
+  CreateAttendanceRecord,
+  CreateAttendanceSession,
+  UpdateAttendanceRecord,
+  UpdateAttendanceSession,
 } from "./Attendance.schema";
 
 const ATTENDANCE_SESSION_QUERY_WITH_RELATIONS = `
@@ -503,7 +497,7 @@ export const closeAttendanceSession = async (
       {
         session_id: sessionId,
         tenant_id: Number(tenantId),
-        not_checked_in_player_ids: notCheckedInPlayerIds,
+        not_checked_in_member_ids: notCheckedInPlayerIds,
       }
     );
 

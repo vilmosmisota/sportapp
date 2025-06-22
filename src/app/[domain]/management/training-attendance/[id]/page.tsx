@@ -59,7 +59,7 @@ export default function AttendanceSessionPage() {
     );
   }
 
-  if (!sessionData) {
+  if (!sessionData || !tenant) {
     return (
       <div className="space-y-4">
         <PageHeader
@@ -173,7 +173,6 @@ export default function AttendanceSessionPage() {
       {/* Use the AttendanceSessionManager for all attendance functionality */}
       <AttendanceSessionManager
         sessionId={sessionId}
-        tenantId={tenant?.id?.toString() ?? ""}
         tenant={tenant}
         onClose={handleCloseSession}
         onDelete={handleDeleteSession}

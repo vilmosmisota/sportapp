@@ -33,17 +33,12 @@ export default function AttendanceSessionPage() {
     return <div>Tenant not found</div>;
   }
 
-  const isActive = true; // Active sessions are always active by definition
   const groupConfig = tenant.tenantConfigs?.groups;
 
   const handleRefreshData = async () => {
     setIsRefreshing(true);
     // Let the composite handle the actual refresh logic
     setTimeout(() => setIsRefreshing(false), 1000);
-  };
-
-  const handleClose = () => {
-    router.push(`/management/attendance`);
   };
 
   const handleDelete = () => {
@@ -113,7 +108,6 @@ export default function AttendanceSessionPage() {
 
       <AttendanceSessionManager
         sessionId={sessionId}
-        onClose={handleClose}
         onDelete={handleDelete}
         onRefreshData={handleRefreshData}
         isRefreshing={isRefreshing}

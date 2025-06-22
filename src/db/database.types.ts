@@ -822,7 +822,7 @@ export type Database = {
         Args: {
           session_id: number;
           tenant_id: number;
-          not_checked_in_player_ids: number[];
+          not_checked_in_member_ids: number[];
         };
         Returns: void;
       };
@@ -830,7 +830,7 @@ export type Database = {
         Args: {
           session_id: number;
           tenant_id: number;
-          not_checked_in_player_ids: number[];
+          not_checked_in_member_ids: number[];
         };
         Returns: boolean;
       };

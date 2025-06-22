@@ -84,10 +84,8 @@ export function AttendanceSessionManager({
     tenantId
   );
 
-  // Handlers
   const handleCloseSession = async () => {
     try {
-      // Get IDs of performers who haven't checked in
       const notCheckedInPerformerIds =
         getNotCheckedInPerformers(attendanceRows);
 
@@ -96,6 +94,21 @@ export function AttendanceSessionManager({
         notCheckedInMemberIds: notCheckedInPerformerIds,
       });
 
+      const sessionDate = session?.session?.date;
+      const sessionTime =
+        session?.session?.startTime && session?.session?.endTime
+          ? `${session.session.startTime} - ${session.session.endTime}`
+          : undefined;
+      const totalAttendees = attendanceRows.length;
+      const checkedInCount = attendanceRows.filter((row) => row.status).length;
+
+      const params = new URLSearchParams();
+      if (sessionDate) params.set("date", sessionDate);
+      if (sessionTime) params.set("time", sessionTime);
+      params.set("attendees", totalAttendees.toString());
+      params.set("checkedIn", checkedInCount.toString());
+
+      router.push(`/management/attendance/session-closed?${params.toString()}`);
       toast.success("Session closed and data aggregated successfully");
       onClose?.();
     } catch (error) {
@@ -107,7 +120,6 @@ export function AttendanceSessionManager({
         toast.error("Failed to close attendance session");
       }
 
-      // Refresh the session data to ensure UI is in sync
       queryClient.invalidateQueries({
         queryKey: queryKeys.attendance.activeSessions(tenantId),
       });
@@ -133,7 +145,6 @@ export function AttendanceSessionManager({
   };
 
   const handleGoToKiosk = () => {
-    // Navigate to kiosk mode for this session
     router.push(`/kiosk/attendance/${sessionId}`);
   };
 
@@ -142,18 +153,16 @@ export function AttendanceSessionManager({
     status: AttendanceStatus
   ) => {
     try {
-      // Create attendance record for the guest player
       await updateAttendanceStatuses.mutateAsync([
         { performerId: playerId, status },
       ]);
 
       toast.success("Guest player added successfully");
 
-      // Refresh data to show the new guest player
       await handleRefreshData();
     } catch (error) {
       console.error("Error adding guest player:", error);
-      throw error; // Re-throw to let the form handle the error
+      throw error;
     }
   };
 
