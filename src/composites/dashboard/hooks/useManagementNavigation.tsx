@@ -135,9 +135,9 @@ export function useManagementNavigation(tenant?: Tenant) {
         },
         {
           id: 16,
-          name: "Attendance Analytics",
-          href: "/management/attendance/analytics",
-          iconName: "Activity",
+          name: "Attendance Reports",
+          href: "/management/attendance/reports",
+          iconName: "BarChart3",
           description:
             "View attendance trends, participation rates, and training effectiveness",
           permissions: [

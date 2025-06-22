@@ -116,8 +116,8 @@ export function EventDetailsDialog({
             </div>
             {session?.isAggregated && (
               <div className="mt-2">
-                <Badge className="bg-blue-500 hover:bg-blue-600 text-white">
-                  Aggregated
+                <Badge className="bg-green-500 hover:bg-green-600 text-white">
+                  Completed
                 </Badge>
               </div>
             )}

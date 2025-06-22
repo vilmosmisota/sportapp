@@ -41,7 +41,7 @@ export default function SessionClosedPage() {
     <div className="space-y-6">
       <PageHeader
         title="Session Successfully Closed"
-        description="Your attendance session has been processed and aggregated"
+        description="Your attendance session has been processed and completed"
       />
 
       <div className="max-w-2xl mx-auto space-y-6">

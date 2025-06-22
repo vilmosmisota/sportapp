@@ -127,4 +127,19 @@ export const queryKeys = {
     byTenantForDays: (tenantId: string | undefined, days: number | undefined) =>
       ["session", "byTenantForDays", tenantId, days] as const,
   },
+  attendanceReports: {
+    all: ["attendanceReports"] as const,
+    sessionAggregates: ["attendanceReports", "sessionAggregates"] as const,
+    sessionAggregateByGroup: [
+      "attendanceReports",
+      "sessionAggregateByGroup",
+    ] as const,
+    memberAggregates: ["attendanceReports", "memberAggregates"] as const,
+    memberAggregatesByGroup: [
+      "attendanceReports",
+      "memberAggregatesByGroup",
+    ] as const,
+    seasonReport: ["attendanceReports", "seasonReport"] as const,
+    groupSeasonReport: ["attendanceReports", "groupSeasonReport"] as const,
+  },
 } as const;

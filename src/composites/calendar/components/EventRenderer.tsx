@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/libs/tailwind/utils";
+import { CheckCircle2 } from "lucide-react";
 import { CalendarEvent } from "../types/calendar.types";
 import { formatTime } from "../utils/date.utils";
 
@@ -32,6 +33,9 @@ export function EventRenderer<TEvent extends CalendarEvent>({
       onDoubleClick(event);
     }
   };
+
+  // Check if event has isAggregated property (for session events)
+  const isAggregated = event.data?.isAggregated || false;
 
   // Get event styling using CSS custom properties
   const getEventStyles = () => {
@@ -71,11 +75,17 @@ export function EventRenderer<TEvent extends CalendarEvent>({
         onDoubleClick={handleDoubleClick}
         title={event.metadata?.description || event.title}
       >
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 relative">
           <span className="font-medium text-xs truncate">
             {formatTime(event.startDate)}
           </span>
           <span className="truncate">{event.title}</span>
+          {isAggregated && (
+            <CheckCircle2
+              className="w-3 h-3 text-green-600 flex-shrink-0 absolute right-0 top-1/2 -translate-y-1/2"
+              strokeWidth={2}
+            />
+          )}
         </div>
       </div>
     );
@@ -96,6 +106,17 @@ export function EventRenderer<TEvent extends CalendarEvent>({
             {formatTime(event.startDate)}
           </span>
           <span className="truncate">{event.title}</span>
+          {isAggregated && (
+            <div className="flex items-center ml-auto">
+              <CheckCircle2
+                className="w-3 h-3 text-green-600 flex-shrink-0"
+                strokeWidth={2.5}
+              />
+              <span className="text-xs text-green-600 font-medium ml-0.5 hidden sm:inline">
+                Agg
+              </span>
+            </div>
+          )}
         </div>
         {event.metadata?.description && (
           <div className="text-xs text-muted-foreground mt-0.5 truncate">
@@ -126,11 +147,20 @@ export function EventRenderer<TEvent extends CalendarEvent>({
             </div>
           )}
         </div>
-        {event.metadata?.category && (
-          <div className="text-xs bg-card border border-border px-1.5 py-0.5 rounded ml-2">
-            {event.metadata.category}
-          </div>
-        )}
+        <div className="flex items-center gap-2 ml-2">
+          {event.metadata?.category && (
+            <div className="text-xs bg-card border border-border px-1.5 py-0.5 rounded">
+              {event.metadata.category}
+            </div>
+          )}
+          {isAggregated && (
+            <div className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-green-100 text-green-800 rounded-full text-xs">
+              <CheckCircle2 className="w-3 h-3" strokeWidth={2.5} />
+              <span className="font-medium hidden sm:inline">Aggregated</span>
+              <span className="font-medium sm:hidden">Agg</span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -149,7 +149,7 @@ export function ConfirmCloseDialog({
           <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
             <Database className="h-4 w-4 text-muted-foreground" />
             <span className="text-xs text-muted-foreground">
-              This action cannot be undone. All data will be aggregated and the
+              This action cannot be undone. All data will be completed and the
               session permanently closed.
             </span>
           </div>

@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -6,9 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Loader2, Clock, UserCheck, Archive, Info } from "lucide-react";
-import React from "react";
+import { Archive, Clock, Info, Loader2, UserCheck } from "lucide-react";
 
 export interface ConfirmCloseDialogProps {
   isOpen: boolean;
@@ -68,7 +67,7 @@ export function ConfirmCloseDialog({
               <h4 className="text-sm font-medium">Data Cleanup</h4>
               <p className="text-sm text-muted-foreground">
                 Individual check-in records will be removed to save storage
-                space. You&apos;ll still have access to aggregated attendance
+                space. You&apos;ll still have access to completed attendance
                 statistics.
               </p>
             </div>

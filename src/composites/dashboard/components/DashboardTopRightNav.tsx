@@ -53,9 +53,7 @@ function DashboardTopRightNav({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel className="text-xs">
-              Organization Settings
-            </DropdownMenuLabel>
+            <DropdownMenuLabel className="text-xs">Settings</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
@@ -64,7 +62,7 @@ function DashboardTopRightNav({
                   className="flex items-center"
                 >
                   <Building2 className="mr-2 h-4 w-4" />
-                  <span className="truncate flex-1">Organization Details</span>
+                  <span className="truncate flex-1">Organization</span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
