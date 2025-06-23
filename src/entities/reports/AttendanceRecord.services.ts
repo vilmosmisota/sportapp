@@ -15,7 +15,19 @@ export const getAttendanceRecordAggregatesByGroup = async (
 ): Promise<AttendanceRecordAggregate[]> => {
   let query = client
     .from("attendanceRecordAggregates")
-    .select("*")
+    .select(
+      `
+      *,
+      member:members(
+        id,
+        firstName,
+        lastName,
+        dateOfBirth,
+        gender,
+        memberType
+      )
+    `
+    )
     .eq("tenantId", tenantId)
     .eq("groupId", groupId);
 

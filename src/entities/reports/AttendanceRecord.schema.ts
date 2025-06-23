@@ -8,6 +8,16 @@ export const AttendanceMemberRecordSchema = z.object({
   checkInTime: z.string().nullable(),
 });
 
+// Member data schema for the joined member information
+export const MemberSchema = z.object({
+  id: z.number(),
+  firstName: z.string().nullable(),
+  lastName: z.string().nullable(),
+  dateOfBirth: z.string().nullable(),
+  gender: z.string().nullable(),
+  memberType: z.string(),
+});
+
 export const AttendanceRecordAggregateSchema = z.object({
   id: z.number(),
   memberId: z.number(),
@@ -20,6 +30,8 @@ export const AttendanceRecordAggregateSchema = z.object({
   attendanceRate: z.number(),
   records: z.array(AttendanceMemberRecordSchema),
   aggregatedAt: z.string().nullable(),
+  // Add member data from the join
+  member: MemberSchema,
 });
 
 export type AttendanceRecordAggregate = z.infer<
@@ -29,3 +41,5 @@ export type AttendanceRecordAggregate = z.infer<
 export type AttendanceMemberRecord = z.infer<
   typeof AttendanceMemberRecordSchema
 >;
+
+export type Member = z.infer<typeof MemberSchema>;

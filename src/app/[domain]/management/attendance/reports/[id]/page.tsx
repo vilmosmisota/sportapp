@@ -6,6 +6,8 @@ import { SeasonSelector } from "@/components/ui/season-selector";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTenantAndUserAccessContext } from "@/composites/auth/TenantAndUserAccessContext";
 import { GroupReportCard } from "@/composites/reports/components/GroupReportCard";
+import { MemberAttendanceTable } from "@/composites/reports/components/MemberAttendanceTable";
+import { MemberPerformanceOverview } from "@/composites/reports/components/MemberPerformanceOverview";
 import { StatItem } from "@/composites/reports/components/StatsItem";
 import { createGroupDisplay } from "@/entities/group/Group.utils";
 import { useAttendanceRecordAggregatesByGroup } from "@/entities/reports/AttendanceRecord.query";
@@ -265,6 +267,18 @@ export default function AttendanceReportPage() {
               </AlertDescription>
             </Alert>
           )}
+
+          {/* Member Performance Overview */}
+          <MemberPerformanceOverview
+            recordAggregates={recordAggregates}
+            data-testid="member-performance-overview"
+          />
+
+          {/* Member Attendance Table */}
+          <MemberAttendanceTable
+            recordAggregates={recordAggregates}
+            data-testid="member-attendance-table"
+          />
         </>
       )}
     </div>
