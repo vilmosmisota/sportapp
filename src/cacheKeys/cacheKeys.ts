@@ -126,6 +126,18 @@ export const queryKeys = {
       ] as const,
     byTenantForDays: (tenantId: string | undefined, days: number | undefined) =>
       ["session", "byTenantForDays", tenantId, days] as const,
+    byTenantAndSeason: (
+      tenantId: number | undefined,
+      seasonId: number | undefined,
+      dateRangeKey: string | undefined
+    ) =>
+      [
+        "session",
+        "byTenantAndSeason",
+        tenantId,
+        seasonId,
+        dateRangeKey,
+      ] as const,
   },
   attendanceReports: {
     all: ["attendanceReports"] as const,

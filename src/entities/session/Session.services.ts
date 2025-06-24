@@ -270,3 +270,45 @@ export const getSessionsByTenantForDays = async (
     throw new Error("Invalid session data received from database");
   }
 };
+
+export const getSessionsByTenantAndSeason = async (
+  client: TypedClient,
+  tenantId: number,
+  seasonId: number,
+  dateRange?: { from: string; to: string }
+): Promise<SessionWithGroup[]> => {
+  let query = client
+    .from("sessions")
+    .select(
+      `
+      *,
+      group:groups(*)
+    `
+    )
+    .eq("tenantId", tenantId)
+    .eq("seasonId", seasonId);
+
+  if (dateRange) {
+    query = query.gte("date", dateRange.from).lte("date", dateRange.to);
+  }
+
+  query = query
+    .order("date", { ascending: true })
+    .order("startTime", { ascending: true });
+
+  const { data, error } = await query;
+
+  if (error) throw error;
+
+  if (!data) return [];
+
+  try {
+    const validatedData = data.map((item) =>
+      SessionWithGroupSchema.parse(item)
+    );
+    return validatedData;
+  } catch (validationError) {
+    console.error("Session data validation failed:", validationError);
+    throw new Error("Invalid session data received from database");
+  }
+};

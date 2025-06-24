@@ -211,20 +211,20 @@ export function EventDetailsDialog({
               </Button>
             </div>
           </DialogFooter>
+
+          {/* Delete Confirmation Dialog */}
+          {isSessionEvent && session && (
+            <ConfirmDeleteDialog
+              categoryId={session.id}
+              text={`Are you sure you want to delete this session? This action cannot be undone.`}
+              isOpen={isDeleteConfirmOpen}
+              setIsOpen={setIsDeleteConfirmOpen}
+              onConfirm={executeDelete}
+              buttonText="Delete Session"
+            />
+          )}
         </DialogContent>
       </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      {isSessionEvent && session && (
-        <ConfirmDeleteDialog
-          categoryId={session.id}
-          text={`Are you sure you want to delete this session? This action cannot be undone.`}
-          isOpen={isDeleteConfirmOpen}
-          setIsOpen={setIsDeleteConfirmOpen}
-          onConfirm={executeDelete}
-          buttonText="Delete Session"
-        />
-      )}
     </>
   );
 }

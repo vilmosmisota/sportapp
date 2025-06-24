@@ -1,8 +1,8 @@
-import { useSessionsWithGroup } from "@/entities/session/Session.query";
 import {
-  SessionQueryParams,
-  SessionWithGroup,
-} from "@/entities/session/Session.schema";
+  useSessionsByTenantAndSeason,
+  useSessionsWithGroup,
+} from "@/entities/session/Session.query";
+import { SessionQueryParams } from "@/entities/session/Session.schema";
 import {
   Tenant,
   TenantGroupsConfig,
@@ -56,7 +56,6 @@ export function useEventCalendarData(
 
 /**
  * Hook for fetching events across all groups for a tenant and season
- * This would require a different query that fetches events for all groups
  */
 export function useAllGroupsEventCalendarData(
   tenantId: number,
@@ -67,31 +66,16 @@ export function useAllGroupsEventCalendarData(
 ) {
   const adapter = new SessionEventAdapter();
 
-  // Note: This would need a new query hook like useSessionsByTenantAndSeason
-  // For now, I'll show the structure assuming such a hook exists
-
-  // TODO: Create useSessionsByTenantAndSeason hook in Session.query.ts
-  // const {
-  //   data: sessions = [],
-  //   isLoading,
-  //   isError,
-  //   error,
-  //   refetch,
-  // } = useSessionsByTenantAndSeason({
-  //   tenantId,
-  //   seasonId,
-  //   dateRange: {
-  //     from: formatDate(dateRange.start),
-  //     to: formatDate(dateRange.end),
-  //   },
-  // });
-
-  // Temporary implementation - this would need the actual query hook
-  const sessions: SessionWithGroup[] = [];
-  const isLoading = false;
-  const isError = false;
-  const error = null;
-  const refetch = () => {};
+  const {
+    data: sessions = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useSessionsByTenantAndSeason(tenantId, seasonId, {
+    from: formatDate(dateRange.start),
+    to: formatDate(dateRange.end),
+  });
 
   // Transform sessions to CalendarEvents
   const events: CalendarEvent[] = sessions.map((session) =>

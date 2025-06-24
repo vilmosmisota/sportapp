@@ -1,28 +1,41 @@
 "use client";
 
 import { cn } from "@/libs/tailwind/utils";
+import { useState } from "react";
+import { Tenant } from "../../../entities/tenant/Tenant.schema";
 import { useCalendarNavigation } from "../hooks/useCalendarNavigation";
 import { useAllGroupsEventCalendarData } from "../providers/EventDataProvider";
-import { CalendarConfig, CalendarEvent } from "../types/calendar.types";
+import { EventDialogProvider } from "../providers/EventDialogProvider";
+import {
+  CalendarConfig,
+  CalendarEvent,
+  CalendarSeason,
+  DateRange,
+} from "../types/calendar.types";
 import { CalendarEventHandlers } from "../types/event.types";
+import { getMonthDateRange } from "../utils/date.utils";
 import { Calendar } from "./Calendar";
 
 interface AllGroupsEventCalendarProps<
   TEvent extends CalendarEvent = CalendarEvent
 > extends CalendarEventHandlers<TEvent> {
-  tenantId: number;
+  tenant: Tenant;
   seasonId: number;
   config: CalendarConfig<TEvent>;
+  season?: CalendarSeason;
   className?: string;
   enabled?: boolean;
+  onEditEvent?: (event: TEvent) => void;
+  onDeleteEvent?: (event: TEvent) => void;
 }
 
 export function AllGroupsEventCalendar<
   TEvent extends CalendarEvent = CalendarEvent
 >({
-  tenantId,
+  tenant,
   seasonId,
   config,
+  season,
   className,
   enabled = true,
   onEventClick,
@@ -30,7 +43,16 @@ export function AllGroupsEventCalendar<
   onDateClick,
   onDateRangeChange,
   onViewChange,
+  onAddSession,
+  onEditEvent,
+  onDeleteEvent,
 }: AllGroupsEventCalendarProps<TEvent>) {
+  const tenantId = tenant.id;
+
+  const [currentDateRange, setCurrentDateRange] = useState<DateRange>(
+    getMonthDateRange(new Date())
+  );
+
   const {
     navigation,
     goToDate,
@@ -40,7 +62,10 @@ export function AllGroupsEventCalendar<
     goToNext,
   } = useCalendarNavigation({
     defaultView: config.defaultView,
-    onDateRangeChange,
+    onDateRangeChange: (dateRange) => {
+      setCurrentDateRange(dateRange);
+      onDateRangeChange?.(dateRange);
+    },
     onViewChange,
   });
 
@@ -49,9 +74,22 @@ export function AllGroupsEventCalendar<
     useAllGroupsEventCalendarData(
       tenantId,
       seasonId,
-      navigation.dateRange,
-      enabled
+      currentDateRange,
+      enabled,
+      tenant.tenantConfigs?.groups || undefined
     );
+
+  const handleEditEvent = (event: CalendarEvent) => {
+    if (onEditEvent) {
+      onEditEvent(event as TEvent);
+    }
+  };
+
+  const handleDeleteEvent = (event: CalendarEvent) => {
+    if (onDeleteEvent) {
+      onDeleteEvent(event as TEvent);
+    }
+  };
 
   // Handle errors
   if (isError && error) {
@@ -84,16 +122,26 @@ export function AllGroupsEventCalendar<
   }
 
   return (
-    <Calendar
-      events={events as TEvent[]}
-      config={config}
-      isLoading={isLoading}
-      className={className}
-      onEventClick={onEventClick}
-      onEventDoubleClick={onEventDoubleClick}
-      onDateClick={onDateClick}
-      onDateRangeChange={onDateRangeChange}
-      onViewChange={onViewChange}
-    />
+    <EventDialogProvider
+      onEditEvent={handleEditEvent}
+      onDeleteEvent={handleDeleteEvent}
+    >
+      <Calendar
+        events={events as TEvent[]}
+        config={config}
+        season={season}
+        isLoading={isLoading}
+        className={className}
+        onEventClick={onEventClick}
+        onEventDoubleClick={onEventDoubleClick}
+        onDateClick={onDateClick}
+        onDateRangeChange={(dateRange) => {
+          setCurrentDateRange(dateRange);
+          onDateRangeChange?.(dateRange);
+        }}
+        onViewChange={onViewChange}
+        onAddSession={onAddSession}
+      />
+    </EventDialogProvider>
   );
 }

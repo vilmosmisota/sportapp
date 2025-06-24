@@ -6,6 +6,7 @@ import {
   getSessionById,
   getSessionsByGroup,
   getSessionsByTenant,
+  getSessionsByTenantAndSeason,
   getSessionsByTenantForDays,
   getSessionsWithGroup,
 } from "./Session.services";
@@ -77,5 +78,37 @@ export const useSessionsByTenantForDays = (tenantId: string, days: number) => {
     queryKey: queryKeys.session.byTenantForDays(tenantId, days),
     queryFn: () => getSessionsByTenantForDays(client, tenantId, days),
     enabled: !!tenantId && days > 0,
+  });
+};
+
+export const useSessionsByTenantAndSeason = (
+  tenantId: number,
+  seasonId: number,
+  dateRange?: { from: string; to: string }
+) => {
+  const client = useSupabase();
+
+  // Create a stable date range key for caching
+  const dateRangeKey = dateRange?.from
+    ? (() => {
+        const date = new Date(dateRange.from);
+        if (isNaN(date.getTime())) return "no-date";
+        const month = date.getMonth();
+        const year = date.getFullYear();
+        return `${year}-${month}`;
+      })()
+    : "no-date";
+
+  return useQuery({
+    queryKey: queryKeys.session.byTenantAndSeason(
+      tenantId,
+      seasonId,
+      dateRangeKey
+    ),
+    queryFn: () =>
+      getSessionsByTenantAndSeason(client, tenantId, seasonId, dateRange),
+    enabled: !!tenantId && !!seasonId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
   });
 };

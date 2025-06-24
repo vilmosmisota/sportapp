@@ -155,15 +155,15 @@ export function MonthView<TEvent extends CalendarEvent>({
             >
               <div
                 className={cn(
-                  "border-r border-b border-border p-2 min-h-[120px] cursor-pointer bg-card relative",
-                  "hover:bg-accent/50 transition-colors",
+                  "border-r border-b  border-border p-2 min-h-[120px] cursor-pointer bg-card relative",
+                  "hover:border-primary hover:border-l hover:border-t transition-colors",
                   "hover:shadow-sm transition-all duration-200",
                   !day.isCurrentMonth && "text-muted-foreground",
-                  day.isToday && "bg-primary/10 border-primary/30",
+                  day.isToday && " border-primary/30",
                   day.isInBreak && "bg-amber-50/70",
                   day.isOutsideSeason && "bg-muted/30",
-                  isSelected && "ring-2 ring-primary ring-inset bg-primary/5",
-                  index % 7 === 6 && "border-r-0" // Remove right border on last column
+                  isSelected && "ring-2 ring-primary ring-inset",
+                  index % 7 === 6 && "border-r-0"
                 )}
                 onClick={() => handleDateClick(day.date)}
                 onDoubleClick={handleDoubleClick((e) => {
