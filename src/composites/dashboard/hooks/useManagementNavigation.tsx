@@ -27,7 +27,7 @@ export function useManagementNavigation(tenant?: Tenant) {
         },
         {
           id: 2,
-          name: "Schedule",
+          name: "Calendar",
           href: "/management/calendar",
           iconName: "CalendarDays",
           description: "Manage all events and schedules",

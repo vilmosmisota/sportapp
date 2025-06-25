@@ -191,11 +191,10 @@ export const generateRecurringSessionsFromStartDate = (
   isStartDateValid: boolean;
   validationMessage?: string;
 } => {
-  // Get the start of the week for the given date
-  const weekStart = new Date(startDate);
-  weekStart.setDate(startDate.getDate() - startDate.getDay()); // Set to Sunday
+  // Start from the actual selected date, not the beginning of the week
+  const actualStartDate = new Date(startDate);
 
-  const startTime = weekStart.getTime();
+  const startTime = actualStartDate.getTime();
   const seasonStart = new Date(season.startDate).getTime();
   const seasonEnd = new Date(season.endDate).getTime();
 
@@ -208,7 +207,7 @@ export const generateRecurringSessionsFromStartDate = (
   }
 
   const sessions: Omit<Session, "id" | "tenantId">[] = [];
-  const currentDate = new Date(weekStart);
+  const currentDate = new Date(actualStartDate);
 
   while (currentDate <= season.endDate) {
     if (selectedDays.includes(currentDate.getDay())) {
@@ -220,8 +219,14 @@ export const generateRecurringSessionsFromStartDate = (
       });
 
       if (!isInBreak && currentTime >= seasonStart) {
+        // Use timezone-safe date formatting to avoid date shifting
+        const year = currentDate.getFullYear();
+        const month = String(currentDate.getMonth() + 1).padStart(2, "0");
+        const day = String(currentDate.getDate()).padStart(2, "0");
+        const dateString = `${year}-${month}-${day}`;
+
         sessions.push({
-          date: currentDate.toISOString().split("T")[0], // YYYY-MM-DD format
+          date: dateString,
           startTime: sessionTemplate.startTime,
           endTime: sessionTemplate.endTime,
           location: sessionTemplate.location || null,

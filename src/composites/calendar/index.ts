@@ -1,6 +1,7 @@
 // Types
 export * from "./types/calendar.types";
 export * from "./types/event.types";
+export * from "./types/session-form.types";
 
 // Components
 export * from "./components/AllGroupsEventCalendar";
@@ -15,6 +16,10 @@ export { EventRenderer } from "./components/EventRenderer";
 export * from "./components/views/DayView";
 export * from "./components/views/MonthView";
 
+// Forms
+export { RecurrenceSelector } from "./components/forms/RecurrenceSelector";
+export { SessionForm } from "./components/forms/SessionForm";
+
 // Loader
 export * from "./loader";
 
@@ -22,6 +27,7 @@ export * from "./loader";
 export * from "./hooks/useCalendarInteraction";
 export * from "./hooks/useCalendarNavigation";
 export { useEventDetailsDialog } from "./hooks/useEventDetailsDialog";
+export { useSessionForm } from "./hooks/useSessionForm";
 
 // Providers
 export * from "./providers/EventDataProvider";
@@ -32,6 +38,7 @@ export * from "./adapters/SessionEventAdapter";
 
 // Utils
 export * from "./utils/date.utils";
+export * from "./utils/session-form.utils";
 
 // Types
 export type {
