@@ -26,7 +26,6 @@ const GROUP_CONNECTION_QUERY = `
       dateOfBirth,
       gender,
       memberType,
-      tenantUserId,
       pin
     )
   )
@@ -78,7 +77,6 @@ export const getGroupConnections = async (
             dateOfBirth: connection.member.dateOfBirth,
             gender: connection.member.gender,
             memberType: connection.member.memberType,
-            tenantUserId: connection.member.tenantUserId,
             pin: connection.member.pin,
           },
         };
@@ -176,9 +174,9 @@ export const assignMembersToGroup = async (
 
     const result = {
       success: true,
-      added: addedCount,
-      removed: removedCount,
-      updated: updatedCount,
+      addedCount,
+      removedCount,
+      updatedCount,
     };
 
     return GroupMemberAssignmentResultSchema.parse(result);

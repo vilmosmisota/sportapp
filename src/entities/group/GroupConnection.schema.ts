@@ -9,7 +9,6 @@ export const GroupMemberSchema = z.object({
   dateOfBirth: z.string().nullable(),
   gender: z.string().nullable(),
   memberType: z.nativeEnum(MemberType),
-  tenantUserId: z.number().nullable(),
   pin: z.number().nullable(),
 });
 
@@ -48,21 +47,21 @@ export const MemberAssignmentUpdateSchema = z.object({
   isInstructor: z.boolean(),
 });
 
-// Schema for the smart diff assignment request
+// Schema for the diff-based assignment changes
 export const AssignMembersToGroupDiffSchema = z.object({
   groupId: z.number(),
   tenantId: z.number(),
   toAdd: z.array(MemberAssignmentSchema),
-  toRemove: z.array(z.number()), // memberIds to remove
+  toRemove: z.array(z.number()), // Array of member IDs to remove
   toUpdate: z.array(MemberAssignmentUpdateSchema),
 });
 
-// Schema for the assignment response
+// Schema for the assignment result
 export const GroupMemberAssignmentResultSchema = z.object({
   success: z.boolean(),
-  added: z.number(),
-  removed: z.number(),
-  updated: z.number(),
+  addedCount: z.number(),
+  removedCount: z.number(),
+  updatedCount: z.number(),
 });
 
 // Type exports

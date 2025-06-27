@@ -9,8 +9,7 @@ const PERFORMER_WITH_CONNECTION_QUERY = `
   firstName,
   lastName,
   dateOfBirth,
-  tenantUserId,
-  tenantUser:tenantUsers(
+  tenantUser:tenantUsers!memberId(
     status,
     user:users(
       id,
@@ -26,8 +25,7 @@ const PERFORMER_WITH_CONNECTION_QUERY = `
     parentMember:members!parentId(
       id,
       firstName,
-      lastName,
-      tenantUserId
+      lastName
     )
   )
 `;

@@ -77,13 +77,13 @@ export const getPinnedItemsConfig = (
 
   const configs: Record<PortalType, Omit<PinnedItemsConfig, "storageKey">> = {
     [PortalType.MANAGEMENT]: {
-      defaultPinnedItems: [],
-      requiredPinnedItems: [],
+      defaultPinnedItems: [1, 2], // Home and Calendar by default
+      requiredPinnedItems: [1], // Home is always pinned
     },
 
     [PortalType.KIOSK]: {
-      defaultPinnedItems: [],
-      requiredPinnedItems: [],
+      defaultPinnedItems: [1], // Check-in Hub by default
+      requiredPinnedItems: [1], // Check-in Hub is always pinned
     },
   };
 

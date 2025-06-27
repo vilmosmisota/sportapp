@@ -77,6 +77,7 @@ export const UserSchema = z.object({
   tenantId: z.number(),
   userId: z.string().uuid(),
   roleId: z.number().nullable(),
+  memberId: z.number(),
   status: z.nativeEnum(TenantUserStatus).default(TenantUserStatus.PENDING),
   role: RoleSchema.nullable().optional(),
   user: z
@@ -86,6 +87,12 @@ export const UserSchema = z.object({
     })
     .nullable()
     .optional(),
+  member: z.object({
+    id: z.number(),
+    firstName: z.string(),
+    lastName: z.string(),
+    memberType: z.nativeEnum(MemberType),
+  }),
 });
 
 export const UserMemberSchema = z.object({
@@ -93,6 +100,7 @@ export const UserMemberSchema = z.object({
   tenantId: z.number(),
   userId: z.string().uuid(),
   roleId: z.number().nullable(),
+  memberId: z.number(),
   status: z.nativeEnum(TenantUserStatus).default(TenantUserStatus.PENDING),
   role: RoleSchema.nullable().optional(),
   user: z
@@ -103,15 +111,12 @@ export const UserMemberSchema = z.object({
     .nullable()
     .optional(),
   member: z
-    .array(
-      z.lazy(() => {
-        const { MemberSchema } = require("../member/Member.schema");
-        return MemberSchema;
-      })
-    )
+    .lazy(() => {
+      const { MemberSchema } = require("../member/Member.schema");
+      return MemberSchema;
+    })
     .nullable()
-    .optional()
-    .transform((members) => members?.[0] || null), // Take first member or null
+    .optional(),
 });
 
 // Types

@@ -14,7 +14,6 @@ const GUARDIAN_WITH_CONNECTION_QUERY = `
   dateOfBirth,
   gender,
   memberType,
-  tenantUserId,
   tenantId,
   createdAt,
   performerConnections:familyMemberConnections!parentId(
@@ -27,8 +26,7 @@ const GUARDIAN_WITH_CONNECTION_QUERY = `
       id,
       firstName,
       lastName,
-      dateOfBirth,
-      tenantUserId
+      dateOfBirth
     )
   )
 `;

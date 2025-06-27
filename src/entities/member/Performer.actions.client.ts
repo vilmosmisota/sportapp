@@ -4,7 +4,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   addPerformer,
   deletePerformer,
-  updateMemberTenantUserId,
   updatePerformer,
   UpdatePerformerOptions,
 } from "./Performer.services";
@@ -71,36 +70,6 @@ export const useDeletePerformer = (tenantId: string) => {
       });
       queryClient.invalidateQueries({
         queryKey: queryKeys.member.list(tenantId),
-      });
-    },
-  });
-};
-
-export const useUpdateMemberTenantUserId = (tenantId: string) => {
-  const client = useSupabase();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({
-      memberId,
-      tenantUserId,
-    }: {
-      memberId: number;
-      tenantUserId: number | null;
-    }) => updateMemberTenantUserId(client, memberId, tenantId, tenantUserId),
-    onSuccess: () => {
-      // Invalidate all member-related queries
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.member.all,
-      });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.member.familyConnections(tenantId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.member.byType(tenantId, "performer"),
-      });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.member.byType(tenantId, "parent"),
       });
     },
   });

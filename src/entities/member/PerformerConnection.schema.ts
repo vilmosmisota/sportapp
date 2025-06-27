@@ -18,7 +18,6 @@ export const ParentMemberSchema = z.object({
   id: z.number(),
   firstName: z.string().nullable(),
   lastName: z.string().nullable(),
-  tenantUserId: z.number().nullable(),
 });
 
 // Schema for parent connection data from the join
@@ -37,8 +36,10 @@ export const PerformerWithConnectionSchema = z.object({
   firstName: z.string().nullable(),
   lastName: z.string().nullable(),
   dateOfBirth: z.string().nullable(),
-  tenantUserId: z.number().nullable(),
-  tenantUser: TenantUserSchema.nullable(), // Updated to match new query structure
+  tenantUser: z
+    .array(TenantUserSchema)
+    .nullable()
+    .transform((tenantUsers) => tenantUsers?.[0] || null), // Take first tenantUser or null
   parentConnections: z.array(ParentConnectionSchema),
 });
 

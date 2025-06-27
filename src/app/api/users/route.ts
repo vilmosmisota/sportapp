@@ -13,6 +13,7 @@ import { NextResponse } from "next/server";
 export async function POST(request: Request) {
   const adminClient = getAdminClient();
   let createdUserId: string | null = null;
+  let createdMemberId: number | null = null;
   let createdTenantUserId: number | null = null;
 
   try {
@@ -34,6 +35,7 @@ export async function POST(request: Request) {
 
     const validatedData: CreateUser = validationResult.data;
 
+    // Create auth user
     const { data: authData, error: authError } =
       await adminClient.auth.admin.createUser({
         email: validatedData.email,
@@ -54,6 +56,7 @@ export async function POST(request: Request) {
     const userId = authData.user!.id;
     createdUserId = userId;
 
+    // Create user profile
     const { error: profileError } = await adminClient.from("users").insert({
       id: userId,
       email: validatedData.email,
@@ -63,12 +66,36 @@ export async function POST(request: Request) {
       throw new Error(`Failed to create user profile: ${profileError.message}`);
     }
 
+    // Create member profile first (required for tenantUser)
+    const { data: memberData, error: memberError } = await adminClient
+      .from("members")
+      .insert({
+        firstName: validatedData.firstName || null,
+        lastName: validatedData.lastName || null,
+        dateOfBirth: validatedData.dateOfBirth || null,
+        gender: validatedData.gender || null,
+        memberType: validatedData.memberType || null,
+        tenantId: Number(tenantId),
+      })
+      .select("id")
+      .single();
+
+    if (memberError) {
+      throw new Error(
+        `Failed to create member profile: ${memberError.message}`
+      );
+    }
+
+    createdMemberId = memberData.id;
+
+    // Create tenantUser with memberId reference
     const { data: tenantUserData, error: tenantUserError } = await adminClient
       .from("tenantUsers")
       .insert({
         userId: userId,
         tenantId: Number(tenantId),
         roleId: validatedData.roleId,
+        memberId: memberData.id,
       })
       .select("id")
       .single();
@@ -85,25 +112,6 @@ export async function POST(request: Request) {
     }
 
     createdTenantUserId = tenantUserData.id;
-
-    // Create member profile if data provided
-    if (validatedData.firstName && validatedData.lastName) {
-      const { error: memberError } = await adminClient.from("members").insert({
-        firstName: validatedData.firstName,
-        lastName: validatedData.lastName,
-        dateOfBirth: validatedData.dateOfBirth || null,
-        gender: validatedData.gender || null,
-        memberType: validatedData.memberType || null,
-        tenantUserId: tenantUserData.id,
-        tenantId: Number(tenantId),
-      });
-
-      if (memberError) {
-        throw new Error(
-          `Failed to create member profile: ${memberError.message}`
-        );
-      }
-    }
 
     // Send welcome email if tenant domain is provided
     if (tenantDomain) {
@@ -133,14 +141,20 @@ export async function POST(request: Request) {
       success: true,
       userId,
       tenantUserId: tenantUserData.id,
+      memberId: memberData.id,
       message: "User created successfully",
     });
   } catch (error) {
+    // Cleanup in reverse order
     if (createdTenantUserId) {
       await adminClient
         .from("tenantUsers")
         .delete()
         .eq("id", createdTenantUserId);
+    }
+
+    if (createdMemberId) {
+      await adminClient.from("members").delete().eq("id", createdMemberId);
     }
 
     if (createdUserId) {
@@ -200,6 +214,18 @@ export async function PUT(request: Request) {
         throw new Error(`Failed to update user profile: ${userError.message}`);
     }
 
+    // Get the tenantUser with memberId
+    const { data: tenantUser, error: tenantUserError } = await adminClient
+      .from("tenantUsers")
+      .select("id, memberId")
+      .eq("userId", userId)
+      .eq("tenantId", Number(tenantId))
+      .single();
+
+    if (tenantUserError || !tenantUser) {
+      throw new Error("User not found in tenant");
+    }
+
     // Update role in tenantUsers if provided
     if (validatedData.roleId) {
       const { error: roleError } = await adminClient
@@ -207,34 +233,20 @@ export async function PUT(request: Request) {
         .update({
           roleId: validatedData.roleId,
         })
-        .eq("userId", userId)
-        .eq("tenantId", Number(tenantId));
+        .eq("id", tenantUser.id);
 
       if (roleError)
         throw new Error(`Failed to update user role: ${roleError.message}`);
     }
 
-    // Handle member data if provided
-    if (validatedData.firstName || validatedData.lastName) {
-      // Get the tenantUserId first
-      const { data: tenantUser } = await adminClient
-        .from("tenantUsers")
-        .select("id")
-        .eq("userId", userId)
-        .eq("tenantId", Number(tenantId))
-        .single();
-
-      if (!tenantUser) {
-        throw new Error("User not found in tenant");
-      }
-
-      // Check if member record exists
-      const { data: existingMember } = await adminClient
-        .from("members")
-        .select("id")
-        .eq("tenantUserId", tenantUser.id)
-        .maybeSingle();
-
+    // Update member data if provided - now much simpler with direct memberId
+    if (
+      validatedData.firstName ||
+      validatedData.lastName ||
+      validatedData.dateOfBirth ||
+      validatedData.gender ||
+      validatedData.memberType
+    ) {
       const memberData = {
         ...(validatedData.firstName && { firstName: validatedData.firstName }),
         ...(validatedData.lastName && { lastName: validatedData.lastName }),
@@ -247,28 +259,13 @@ export async function PUT(request: Request) {
         }),
       };
 
-      if (existingMember) {
-        // Update existing member
-        const { error: memberError } = await adminClient
-          .from("members")
-          .update(memberData)
-          .eq("id", existingMember.id);
+      const { error: memberError } = await adminClient
+        .from("members")
+        .update(memberData)
+        .eq("id", tenantUser.memberId);
 
-        if (memberError)
-          throw new Error(`Failed to update member: ${memberError.message}`);
-      } else {
-        // Create new member record
-        const { error: memberError } = await adminClient
-          .from("members")
-          .insert({
-            ...memberData,
-            tenantUserId: tenantUser.id,
-            tenantId: Number(tenantId),
-          });
-
-        if (memberError)
-          throw new Error(`Failed to create member: ${memberError.message}`);
-      }
+      if (memberError)
+        throw new Error(`Failed to update member: ${memberError.message}`);
     }
 
     return NextResponse.json({ success: true });
@@ -285,20 +282,7 @@ export async function DELETE(request: Request) {
     const { userId, tenantId } = await request.json();
     const adminClient = getAdminClient();
 
-    const { data: tenantUser } = await adminClient
-      .from("tenantUsers")
-      .select("id")
-      .eq("userId", userId)
-      .eq("tenantId", Number(tenantId))
-      .maybeSingle();
-
-    if (tenantUser) {
-      await adminClient
-        .from("members")
-        .delete()
-        .eq("tenantUserId", tenantUser.id);
-    }
-
+    // Delete tenantUser - this will CASCADE delete the member due to FK constraint
     const { error: tenantUserError } = await adminClient
       .from("tenantUsers")
       .delete()
@@ -310,6 +294,7 @@ export async function DELETE(request: Request) {
         `Failed to remove user from tenant: ${tenantUserError.message}`
       );
 
+    // Check if user has other tenant associations
     const { data: otherTenants, error: tenantsError } = await adminClient
       .from("tenantUsers")
       .select("id")
@@ -318,6 +303,7 @@ export async function DELETE(request: Request) {
     if (tenantsError)
       throw new Error(`Failed to check other tenants: ${tenantsError.message}`);
 
+    // If no other tenant associations, delete the auth user and user profile
     if (!otherTenants?.length) {
       const { error: authError } = await adminClient.auth.admin.deleteUser(
         userId

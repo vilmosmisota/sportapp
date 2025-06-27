@@ -74,7 +74,7 @@ export function DashboardMainFrame({
       className={cn(
         "flex-1 transition-all duration-300 ease-in-out relative pt-2",
         "pl-0 bg-card",
-        !isCollapsed && "md:bg-sidebar lg:pl-72"
+        !isCollapsed && "md:bg-sidebar lg:pl-64"
       )}
     >
       <DecorativeCorner isCollapsed={isCollapsed} />
@@ -88,7 +88,7 @@ export function DashboardMainFrame({
         )}
       >
         <ScrollArea className="h-full">
-          <main className="pb-6 pt-6 h-full">
+          <main className="pb-6 pt-10 h-full">
             <div className="px-4">{children}</div>
           </main>
         </ScrollArea>

@@ -245,28 +245,3 @@ export const getMembersByType = async (
 
   return data || [];
 };
-
-/**
- * Update the tenantUserId for a member (link/unlink tenant user account)
- */
-export const updateMemberTenantUserId = async (
-  client: TypedClient,
-  memberId: number,
-  tenantId: string,
-  tenantUserId: number | null
-): Promise<boolean> => {
-  try {
-    const { error } = await client
-      .from("members")
-      .update({ tenantUserId })
-      .eq("id", memberId)
-      .eq("tenantId", Number(tenantId));
-
-    if (error) throw error;
-
-    return true;
-  } catch (error) {
-    console.error("Error in updateMemberTenantUserId:", error);
-    throw error;
-  }
-};

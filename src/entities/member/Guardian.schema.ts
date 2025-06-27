@@ -7,7 +7,6 @@ export const PerformerMemberSchema = z.object({
   firstName: z.string().nullable(),
   lastName: z.string().nullable(),
   dateOfBirth: z.string().nullable(),
-  tenantUserId: z.number().nullable(),
 });
 
 // Schema for performer connection data from the join
@@ -28,7 +27,6 @@ export const GuardianWithConnectionSchema = z.object({
   dateOfBirth: z.string().nullable(),
   gender: z.enum([MemberGender.Male, MemberGender.Female]).nullable(),
   memberType: z.literal(MemberType.Guardian),
-  tenantUserId: z.number().nullable(),
   tenantId: z.number(),
   createdAt: z.string(),
   performerConnections: z.array(PerformerConnectionSchema),
@@ -47,7 +45,6 @@ export const GuardianSchema = z.object({
   dateOfBirth: z.string().nullable(),
   gender: z.enum([MemberGender.Male, MemberGender.Female]).nullable(),
   memberType: z.literal(MemberType.Guardian),
-  tenantUserId: z.number().nullable(),
   tenantId: z.number(),
 });
 
@@ -60,7 +57,6 @@ export const GuardianFormSchema = z.object({
   dateOfBirth: z.string().optional(),
   gender: z.enum([MemberGender.Male, MemberGender.Female]).optional(),
   memberType: z.literal(MemberType.Guardian),
-  tenantUserId: z.number().nullable().optional(),
   tenantId: z.number().nullable().optional(),
 });
 
