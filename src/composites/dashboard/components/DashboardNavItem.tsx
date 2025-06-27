@@ -130,7 +130,7 @@ export default function DashboardNavItem({
                 isCollapsed
                   ? "w-10 h-10 justify-center items-center"
                   : "px-3 py-1.5 items-center",
-                "text-muted-foreground/30"
+                "text-sidebar-foreground/30"
               )}
               onClick={() => setOpenTooltip(item.href)}
             >
@@ -161,7 +161,7 @@ export default function DashboardNavItem({
                   </div>
                 ) : (
                   item.description && (
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-sidebar-foreground">
                       {item.description}
                     </span>
                   )
@@ -202,7 +202,7 @@ export default function DashboardNavItem({
                   : "px-3 py-1.5 items-center",
                 isActive
                   ? "bg-accent text-accent-foreground"
-                  : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
+                  : "text-sidebar-foreground hover:bg-accent/50 hover:text-primary"
               )}
             >
               <div
@@ -236,7 +236,7 @@ export default function DashboardNavItem({
                 onClick={handleTogglePin}
                 className={cn(
                   "absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full p-1",
-                  "text-muted-foreground hover:text-primary hover:bg-accent/30 transition-colors",
+                  "text-sidebar-foreground hover:text-primary hover:bg-accent/30 transition-colors",
                   isPinned && "text-primary",
                   isRequiredPin && "cursor-default"
                 )}
@@ -258,7 +258,7 @@ export default function DashboardNavItem({
             <div className="flex flex-col gap-1">
               <span className="font-medium capitalize">{item.name}</span>
               {item.description && (
-                <span className="text-xs text-muted-foreground">
+                <span className="text-xs text-sidebar-foreground">
                   {item.description}
                 </span>
               )}
@@ -267,7 +267,7 @@ export default function DashboardNavItem({
                   onClick={handleTogglePin}
                   className={cn(
                     "mt-1 flex items-center gap-1 text-xs",
-                    "text-muted-foreground hover:text-primary transition-colors"
+                    "text-sidebar-foreground hover:text-primary transition-colors"
                   )}
                 >
                   <PinIcon className="h-3 w-3" />
@@ -275,7 +275,7 @@ export default function DashboardNavItem({
                 </button>
               )}
               {item.pinnable && isRequiredPin && (
-                <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                <div className="mt-1 flex items-center gap-1 text-xs text-sidebar-foreground">
                   <Lock className="h-3 w-3" />
                   Always pinned
                 </div>

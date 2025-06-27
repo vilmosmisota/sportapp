@@ -101,7 +101,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className={cn("pt-4 pb-2", isCollapsed ? "px-2" : "px-4")}>
             <div className="space-y-1">
               {!isCollapsed && (
-                <div className="text-xs font-medium text-muted-foreground/70 py-1">
+                <div className="text-xs font-medium text-sidebar-foreground/70 py-1">
                   Pinned
                 </div>
               )}
@@ -146,7 +146,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         value={item.section}
                         className="border-none"
                       >
-                        <AccordionTrigger className="py-1.5 text-xs font-medium text-muted-foreground/70 hover:no-underline">
+                        <AccordionTrigger className="py-1.5 text-xs font-medium text-sidebar-foreground/70 hover:no-underline">
                           {item.section}
                         </AccordionTrigger>
                         <AccordionContent className="pb-1 pt-0">

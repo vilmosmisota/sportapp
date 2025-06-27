@@ -31,7 +31,7 @@ export function AvailablePortals({
   return (
     <div className="px-4 pb-4">
       <div className="space-y-2">
-        <div className="text-xs font-medium text-muted-foreground/70 py-1">
+        <div className="text-xs font-medium text-sidebar-foreground/70 py-1">
           Portals
         </div>
         <div className="grid grid-cols-1 gap-2">
@@ -48,7 +48,7 @@ export function AvailablePortals({
                   "h-auto p-3 justify-start text-left border transition-all duration-200",
                   isActive
                     ? "border-primary bg-primary/5 text-primary ring-1 ring-primary/20"
-                    : "border-border/50 hover:border-border text-muted-foreground hover:text-foreground"
+                    : "border-border/50 hover:border-border text-sidebar-foreground hover:text-foreground"
                 )}
                 asChild
               >

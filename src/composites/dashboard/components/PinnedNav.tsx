@@ -45,7 +45,7 @@ export const PinnedNav = ({
             className={cn(
               pathname === item.href
                 ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
+                : "text-sidebar-foreground hover:bg-accent/50 hover:text-primary"
             )}
             asChild
           >

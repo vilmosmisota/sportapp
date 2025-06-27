@@ -147,7 +147,7 @@ function DynamicTopRightNav({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="smIcon">
-                  <Cog className="h-4 w-4 text-muted-foreground" />
+                  <Cog className="h-4 w-4 text-sidebar-foreground" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
@@ -176,7 +176,7 @@ function DynamicTopRightNav({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="smIcon">
-              <UserRound className="h-4 w-4 text-muted-foreground" />
+              <UserRound className="h-4 w-4 text-sidebar-foreground" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
@@ -184,7 +184,7 @@ function DynamicTopRightNav({
               <>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-xs leading-none text-muted-foreground">
+                    <p className="text-xs leading-none text-sidebar-foreground">
                       {user.email}
                     </p>
                   </div>

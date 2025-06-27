@@ -24,13 +24,33 @@
     --primary-800: var(--brand-hue) var(--brand-saturation) 25%;
     --primary-900: var(--brand-hue) var(--brand-saturation) 15%;
 
+    /* Secondary color system - Notion-inspired neutral tones */
+    --secondary-hue: 45; /* Warm neutral base */
+    --secondary-saturation: 8%; /* Very low saturation for subtle warmth */
+
+    /* Secondary color shades - neutral warm grays */
+    --secondary-50: var(--secondary-hue) var(--secondary-saturation) 98%;
+    --secondary-100: var(--secondary-hue) var(--secondary-saturation) 96%;
+    --secondary-200: var(--secondary-hue) var(--secondary-saturation) 92%;
+    --secondary-300: var(--secondary-hue) var(--secondary-saturation) 88%;
+    --secondary-400: var(--secondary-hue) var(--secondary-saturation) 82%;
+    --secondary-500: var(--secondary-hue) var(--secondary-saturation) 75%;
+    --secondary-600: var(--secondary-hue) var(--secondary-saturation) 65%;
+    --secondary-700: var(--secondary-hue) var(--secondary-saturation) 55%;
+    --secondary-800: var(--secondary-hue) var(--secondary-saturation) 45%;
+    --secondary-900: var(--secondary-hue) var(--secondary-saturation) 1%;
+
     /* UI assignments - using the primary shades */
     --background: var(--brand-hue) 20% 95%;
     --foreground: var(--black);
 
     /* Sidebar specific color */
-    --sidebar: var(--brand-hue) 25% 97%;
-    --sidebar-foreground: var(--black);
+    --sidebar: var(--secondary-200);
+    --sidebar-foreground: var(--secondary-900);
+
+    /* Secondary backgrounds - Notion-inspired */
+    --secondary-background: var(--secondary-100); /* Main secondary bg */
+    --secondary-background-subtle: var(--secondary-50); /* Even more subtle */
 
     --card: var(--white);
     --card-foreground: var(--black);
@@ -60,6 +80,7 @@
     --bar-foreground: var(--black);
 
     --border: var(--primary-100);
+    --border-secondary: var(--secondary-100);
     --input: var(--primary-100);
     --ring: var(--primary-400);
 
@@ -93,6 +114,12 @@
     /* Sidebar dark mode */
     --sidebar: var(--brand-hue) 30% 10%;
     --sidebar-foreground: 0 0% 98%;
+
+    /* Secondary backgrounds - dark mode */
+    --secondary-background: var(--secondary-800); /* Darker secondary bg */
+    --secondary-background-subtle: var(--secondary-900); /* Even darker */
+    --secondary-sidebar: var(--secondary-700); /* Secondary sidebar in dark */
+    --secondary-sidebar-foreground: 0 0% 98%;
 
     --card: 240 10% 3.9%;
     --card-foreground: 0 0% 98%;

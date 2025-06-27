@@ -138,7 +138,7 @@ export default function BaseDashboard({ children }: BaseDashboardProps) {
               variant="ghost"
               size="smIcon"
               onClick={handleToggleSidebar}
-              className="text-muted-foreground hover:text-primary"
+              className="text-sidebar-foreground hover:text-primary"
               aria-label="Toggle navigation"
             >
               {isMobile ? (
