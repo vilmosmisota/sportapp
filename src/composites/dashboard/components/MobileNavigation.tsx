@@ -10,17 +10,18 @@ import { cn } from "@/lib/utils";
 import { Cog, X } from "lucide-react";
 import Link from "next/link";
 import React from "react";
-import { NavSection } from "../hooks/useManagementNavigation";
-import { usePinnedItems } from "../hooks/usePinnedItems";
+import { usePortalPinnedItems } from "../hooks/usePortalPinnedItems";
+import { BaseNavSection, PortalConfig } from "../types/baseDashboard.types";
 import { DashboardAuthMenu } from "./DashboardAuthMenu";
 import DashboardMobileNavItems from "./DashboardMobileNavItems";
 
 interface MobileNavigationProps {
   isOpen: boolean;
   setIsOpen: (value: boolean) => void;
-  navSections: NavSection[];
+  navSections: BaseNavSection[];
   getIcon: (iconName: string) => React.ReactNode;
   pathname: string;
+  portalConfig: PortalConfig;
 }
 
 export const MobileNavigation: React.FC<MobileNavigationProps> = ({
@@ -29,8 +30,25 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
   navSections,
   getIcon,
   pathname,
+  portalConfig,
 }) => {
-  const { pinnedItemIds, togglePinItem } = usePinnedItems();
+  const { pinnedItemIds, togglePinItem } = usePortalPinnedItems(
+    portalConfig.type
+  );
+
+  // Generate settings link based on portal type
+  const getSettingsLink = () => {
+    switch (portalConfig.type) {
+      case "management":
+        return "/management/settings";
+      case "kiosk":
+        return "/kiosk/settings";
+      default:
+        return "/settings";
+    }
+  };
+
+  const settingsLink = getSettingsLink();
 
   return (
     <div className="fixed top-0 right-0 z-40 lg:hidden">
@@ -45,11 +63,11 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Link
-                        href="/management/settings"
+                        href={settingsLink}
                         className={cn(
                           "flex items-center justify-center h-9 w-9 rounded-md transition-all",
-                          pathname === "/management/settings" ||
-                            pathname.startsWith("/management/settings/")
+                          pathname === settingsLink ||
+                            pathname.startsWith(settingsLink + "/")
                             ? "bg-primary/10 text-primary"
                             : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
                         )}
@@ -59,37 +77,38 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                       </Link>
                     </TooltipTrigger>
                     <TooltipContent side="bottom" align="end">
-                      Organization Setup
+                      {portalConfig.title} Settings
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-                <div className="border-l h-8 pl-2 ml-2 flex items-center">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="px-2 hover:bg-accent/50"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
+
+                <DashboardAuthMenu collapsed={false} />
+
+                <Button
+                  variant="ghost"
+                  size="smIcon"
+                  onClick={() => setIsOpen(false)}
+                  className="text-muted-foreground hover:text-primary"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
             </div>
 
+            {/* Mobile Nav Items */}
             <DashboardMobileNavItems
-              navSections={navSections}
+              navSections={navSections.map((section) => ({
+                ...section,
+                items: section.items.map((item) => ({
+                  ...item,
+                  pinnable: item.pinnable ?? false,
+                })),
+              }))}
               getIcon={getIcon}
               setIsOpen={setIsOpen}
               pinnedItemIds={pinnedItemIds}
               onTogglePin={togglePinItem}
             />
-
-            {/* Mobile Auth Menu */}
-            <div className="h-14 border-t ">
-              <div className="px-4 h-full flex items-center">
-                <DashboardAuthMenu />
-              </div>
-            </div>
           </div>
         </DrawerContent>
       </Drawer>

@@ -11,7 +11,7 @@ function DecorativeCorner({ isCollapsed }: { isCollapsed: boolean }) {
   return (
     <div
       className={cn(
-        "fixed right-0 top-4 z-30 h-8 w-[140px] overflow-hidden transition-all duration-300 ease-in-out hidden md:block",
+        "fixed right-0 top-2 z-30 h-8 w-[140px] overflow-hidden transition-all duration-300 ease-in-out hidden md:block",
         isCollapsed
           ? "opacity-0 translate-x-8 pointer-events-none"
           : "opacity-100"
@@ -72,7 +72,7 @@ export function DashboardMainFrame({
   return (
     <div
       className={cn(
-        "flex-1 transition-all duration-300 ease-in-out relative pt-4",
+        "flex-1 transition-all duration-300 ease-in-out relative pt-2",
         "pl-0 bg-card",
         !isCollapsed && "md:bg-sidebar lg:pl-72"
       )}
@@ -81,14 +81,14 @@ export function DashboardMainFrame({
 
       <div
         className={cn(
-          "h-[calc(100dvh-1rem)] flex flex-col bg-card relative shadow-md transition-all duration-300",
+          "h-[calc(100dvh-0.5rem)] flex flex-col bg-card relative shadow-md transition-all duration-300",
           "rounded-none border-0",
           !isCollapsed &&
             "md:rounded-tl-lg md:border-l md:border-t md:border-primary-100"
         )}
       >
         <ScrollArea className="h-full">
-          <main className="pb-6 pt-12 h-full">
+          <main className="pb-6 pt-6 h-full">
             <div className="px-4">{children}</div>
           </main>
         </ScrollArea>

@@ -4,15 +4,35 @@ import {
 } from "@/entities/member/Member.utils";
 import { Permission } from "@/entities/role/Role.permissions";
 import { Tenant } from "@/entities/tenant/Tenant.schema";
-import { NavItem } from "../components/DashboardNavItem";
+import {
+  BaseNavSection,
+  PortalType,
+  UsePortalNavigationReturn,
+} from "../types/baseDashboard.types";
+import { getTopRightNavConfig } from "../utils/topRightNavConfigs";
+import { usePortalNavigation } from "./usePortalNavigation";
+
+// Legacy interface for backward compatibility
+export interface NavItem {
+  id: number;
+  name: string;
+  href: string;
+  iconName: string;
+  description: string;
+  permissions: Permission[];
+  pinnable: boolean;
+  disabled?: boolean;
+  disabledReason?: string;
+}
 
 export interface NavSection {
   section: string;
   items: NavItem[];
 }
 
-export function useManagementNavigation(tenant?: Tenant) {
-  const navSections: NavSection[] = [
+// Management specific navigation sections
+function getManagementNavSections(tenant?: Tenant): BaseNavSection[] {
+  const navSections: BaseNavSection[] = [
     {
       section: "Default",
       items: [
@@ -153,5 +173,22 @@ export function useManagementNavigation(tenant?: Tenant) {
     },
   ];
 
-  return { navSections };
+  return navSections;
+}
+
+// Management specific top right navigation config
+function getManagementTopRightNavConfig(tenant?: Tenant) {
+  const domain = "management"; // This would be dynamic in real implementation
+  return getTopRightNavConfig(PortalType.MANAGEMENT, domain);
+}
+
+// Management navigation hook using the new portal system
+export function useManagementNavigation(
+  tenant?: Tenant
+): UsePortalNavigationReturn {
+  return usePortalNavigation(
+    PortalType.MANAGEMENT,
+    getManagementNavSections,
+    getManagementTopRightNavConfig
+  );
 }
