@@ -1,6 +1,8 @@
 "use client";
 
+import { queryKeys } from "@/cacheKeys/cacheKeys";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -8,432 +10,292 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import FormButtons from "@/components/ui/form-buttons";
 import { Input } from "@/components/ui/input";
 import { useUpdatePerformer } from "@/entities/member/Performer.actions.client";
 import { usePerformers } from "@/entities/member/Performer.query";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Key } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useQueryClient } from "@tanstack/react-query";
+import { Key, Loader2 } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { z } from "zod";
 import { PerformerAttendanceRow } from "../utils/transformAttendanceData";
-
-// Zod schema for form validation
-const pinManagementSchema = z.object({
-  performerPins: z.record(
-    z.string(),
-    z.object({
-      pin: z.string().optional(),
-      hasError: z.boolean().optional(),
-      errorMessage: z.string().optional(),
-      isValidating: z.boolean().optional(),
-    })
-  ),
-});
-
-type PinManagementFormData = z.infer<typeof pinManagementSchema>;
 
 type PinManagementFormProps = {
   attendanceRecords: PerformerAttendanceRow[];
   tenantId: string;
+  groupId?: number;
   setIsOpen: (isOpen: boolean) => void;
 };
-
-type PerformerPinUpdate = {
-  performerId: number;
-  currentPin: number | null;
-  newPin: string;
-  hasError: boolean;
-  errorMessage: string;
-  isValidating: boolean;
-};
-
-// Custom debounce hook
-function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-}
 
 export function PinManagementForm({
   attendanceRecords,
   tenantId,
+  groupId,
   setIsOpen,
 }: PinManagementFormProps) {
-  const [performerPins, setPerformerPins] = useState<
-    Record<number, PerformerPinUpdate>
+  const [pinValues, setPinValues] = useState<Record<number, string>>(() => {
+    return attendanceRecords.reduce((acc, record) => {
+      acc[record.performerId] = record.performer.pin?.toString() || "";
+      return acc;
+    }, {} as Record<number, string>);
+  });
+
+  const [validationErrors, setValidationErrors] = useState<
+    Record<number, string>
   >({});
-  const [pendingValidations, setPendingValidations] = useState<Set<number>>(
-    new Set()
-  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const updatePerformer = useUpdatePerformer(tenantId);
   const { data: allPerformers } = usePerformers(tenantId);
+  const queryClient = useQueryClient();
 
-  // Initialize form
-  const form = useForm<PinManagementFormData>({
-    resolver: zodResolver(pinManagementSchema),
-    defaultValues: {
-      performerPins: attendanceRecords.reduce((acc, record) => {
-        acc[record.performerId.toString()] = {
-          pin: record.performer.pin?.toString() || "",
-          hasError: false,
-          errorMessage: "",
-          isValidating: false,
-        };
-        return acc;
-      }, {} as Record<string, any>),
-    },
-  });
-
-  const { handleSubmit: formHandleSubmit, watch, setValue } = form;
-  const { isDirty } = form.formState;
-
-  // Debounce validation triggers
-  const validationTrigger = useRef<Record<number, number>>({});
-  const debouncedValidationTrigger = useDebounce(
-    validationTrigger.current,
-    300
-  );
-
-  // Memoize initial state to prevent unnecessary re-renders
-  const initialPerformerPins = useMemo(() => {
-    return attendanceRecords.reduce((acc, record) => {
-      acc[record.performerId] = {
-        performerId: record.performerId,
-        currentPin: record.performer.pin || null,
-        newPin: record.performer.pin?.toString() || "",
-        hasError: false,
-        errorMessage: "",
-        isValidating: false,
-      };
-      return acc;
-    }, {} as Record<number, PerformerPinUpdate>);
-  }, [attendanceRecords]);
-
-  // Initialize performer pins state only once
-  useEffect(() => {
-    setPerformerPins(initialPerformerPins);
-  }, [initialPerformerPins]);
-
-  // Memoize existing PINs for fast lookup
+  // Memoize existing PINs for validation
   const existingPins = useMemo(() => {
-    if (!allPerformers) return new Map<number, number>();
-
-    const pinMap = new Map<number, number>();
-    allPerformers.forEach((performer) => {
-      if (performer.pin) {
-        pinMap.set(performer.pin, performer.id);
-      }
-    });
-    return pinMap;
+    if (!allPerformers) return new Set<number>();
+    return new Set(allPerformers.map((p) => p.pin).filter(Boolean) as number[]);
   }, [allPerformers]);
 
-  // Optimized validation function with memoization
+  // Validate PIN
   const validatePin = useCallback(
-    (pin: string, performerId: number): { isValid: boolean; error: string } => {
-      if (!pin) {
-        return { isValid: true, error: "" }; // Empty PIN is valid (removes PIN)
-      }
+    (pin: string, performerId: number): string => {
+      if (!pin) return ""; // Empty is valid (removes PIN)
 
-      // Check if it's a 4-digit number
       const pinNumber = parseInt(pin, 10);
+
       if (
         isNaN(pinNumber) ||
         pin.length !== 4 ||
         pinNumber < 1000 ||
         pinNumber > 9999
       ) {
-        return { isValid: false, error: "PIN must be exactly 4 digits" };
+        return "PIN must be exactly 4 digits";
       }
 
-      // Check for uniqueness using memoized map
-      const existingPerformerId = existingPins.get(pinNumber);
-      if (existingPerformerId && existingPerformerId !== performerId) {
-        return { isValid: false, error: "This PIN is already in use" };
-      }
-
-      return { isValid: true, error: "" };
-    },
-    [existingPins]
-  );
-
-  // Debounced validation effect
-  useEffect(() => {
-    const performersToValidate = Object.keys(debouncedValidationTrigger);
-
-    if (performersToValidate.length === 0) return;
-
-    performersToValidate.forEach((performerIdStr) => {
-      const performerId = parseInt(performerIdStr, 10);
-      const pinUpdate = performerPins[performerId];
-
-      if (!pinUpdate || !pendingValidations.has(performerId)) return;
-
-      const validation = validatePin(pinUpdate.newPin, performerId);
-
-      setPerformerPins((prev) => ({
-        ...prev,
-        [performerId]: {
-          ...prev[performerId],
-          hasError: !validation.isValid,
-          errorMessage: validation.error,
-          isValidating: false,
-        },
-      }));
-
-      // Update form state
-      setValue(`performerPins.${performerId}.hasError`, !validation.isValid);
-      setValue(`performerPins.${performerId}.errorMessage`, validation.error);
-      setValue(`performerPins.${performerId}.isValidating`, false);
-
-      setPendingValidations((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(performerId);
-        return newSet;
-      });
-    });
-
-    // Clear validation trigger
-    validationTrigger.current = {};
-  }, [
-    debouncedValidationTrigger,
-    performerPins,
-    validatePin,
-    pendingValidations,
-    setValue,
-  ]);
-
-  // Optimized pin change handler
-  const handlePinChange = useCallback(
-    (performerId: number, newPin: string) => {
-      // Only allow numeric input and limit to 4 digits
-      const numericPin = newPin.replace(/\D/g, "").slice(0, 4);
-
-      // Update the pin immediately for UI responsiveness
-      setPerformerPins((prev) => ({
-        ...prev,
-        [performerId]: {
-          ...prev[performerId],
-          newPin: numericPin,
-          isValidating: numericPin.length > 0,
-          hasError: false, // Clear error while validating
-          errorMessage: "",
-        },
-      }));
-
-      // Update form state
-      setValue(`performerPins.${performerId}.pin`, numericPin, {
-        shouldDirty: true,
-      });
-      setValue(
-        `performerPins.${performerId}.isValidating`,
-        numericPin.length > 0
+      // Check if PIN is already in use by another performer
+      const currentPerformer = attendanceRecords.find(
+        (r) => r.performerId === performerId
       );
-      setValue(`performerPins.${performerId}.hasError`, false);
-      setValue(`performerPins.${performerId}.errorMessage`, "");
+      const currentPin = currentPerformer?.performer.pin;
 
-      // Trigger debounced validation
-      if (numericPin.length > 0) {
-        setPendingValidations((prev) => new Set(prev).add(performerId));
-        validationTrigger.current = {
-          ...validationTrigger.current,
-          [performerId]: Date.now(),
-        };
+      if (existingPins.has(pinNumber) && currentPin !== pinNumber) {
+        return "This PIN is already in use";
       }
+
+      return "";
     },
-    [setValue]
+    [existingPins, attendanceRecords]
   );
 
-  // Memoize updates to prevent unnecessary recalculations
-  const updatesCount = useMemo(() => {
-    return Object.values(performerPins).filter((update) => {
-      const originalPin =
-        attendanceRecords
-          .find((r) => r.performerId === update.performerId)
-          ?.performer.pin?.toString() || "";
-      return update.newPin !== originalPin && !update.hasError;
-    }).length;
-  }, [performerPins, attendanceRecords]);
+  // Handle PIN input change
+  const handlePinChange = useCallback(
+    (performerId: number, value: string) => {
+      // Only allow numeric input and limit to 4 digits
+      const numericValue = value.replace(/\D/g, "").slice(0, 4);
 
+      setPinValues((prev) => ({
+        ...prev,
+        [performerId]: numericValue,
+      }));
+
+      // Validate and set error
+      const error = validatePin(numericValue, performerId);
+      setValidationErrors((prev) => ({
+        ...prev,
+        [performerId]: error,
+      }));
+    },
+    [validatePin]
+  );
+
+  // Check if there are changes
+  const hasChanges = useMemo(() => {
+    return attendanceRecords.some((record) => {
+      const originalPin = record.performer.pin?.toString() || "";
+      const currentPin = pinValues[record.performerId] || "";
+      return originalPin !== currentPin;
+    });
+  }, [attendanceRecords, pinValues]);
+
+  // Check if there are validation errors
   const hasErrors = useMemo(() => {
-    return Object.values(performerPins).some((update) => update.hasError);
-  }, [performerPins]);
+    return Object.values(validationErrors).some((error) => error !== "");
+  }, [validationErrors]);
 
-  const hasValidating = useMemo(() => {
-    return pendingValidations.size > 0;
-  }, [pendingValidations]);
+  // Handle form submission
+  const handleSubmit = async () => {
+    if (hasErrors) {
+      toast.error("Please fix validation errors before saving");
+      return;
+    }
 
-  const onSubmit = useCallback(
-    async (data: PinManagementFormData) => {
-      try {
-        const updates = Object.values(performerPins).filter((update) => {
-          const originalPin =
-            attendanceRecords
-              .find((r) => r.performerId === update.performerId)
-              ?.performer.pin?.toString() || "";
-          return update.newPin !== originalPin && !update.hasError;
-        });
+    if (!hasChanges) {
+      toast.info("No changes to save");
+      setIsOpen(false);
+      return;
+    }
 
-        if (updates.length === 0) {
-          toast.info("No changes to save");
-          setIsOpen(false);
-          return;
-        }
+    setIsSubmitting(true);
 
-        // Update each performer's PIN
-        await Promise.all(
-          updates.map(async (update) => {
-            const pinValue = update.newPin
-              ? parseInt(update.newPin, 10)
-              : undefined;
+    try {
+      const updates = attendanceRecords
+        .filter((record) => {
+          const originalPin = record.performer.pin?.toString() || "";
+          const currentPin = pinValues[record.performerId] || "";
+          return originalPin !== currentPin;
+        })
+        .map((record) => ({
+          performerId: record.performerId,
+          pin: pinValues[record.performerId]
+            ? parseInt(pinValues[record.performerId], 10)
+            : null,
+        }));
 
-            return updatePerformer.mutateAsync({
-              performerId: update.performerId,
-              options: {
-                memberData: { pin: pinValue },
-              },
-            });
+      // Update each performer's PIN
+      await Promise.all(
+        updates.map((update) =>
+          updatePerformer.mutateAsync({
+            performerId: update.performerId,
+            options: {
+              memberData: { pin: update.pin },
+            },
           })
-        );
+        )
+      );
 
-        toast.success(`Successfully updated ${updates.length} PIN(s)`);
-        setIsOpen(false);
-      } catch (error) {
-        console.error("Error updating PINs:", error);
-        toast.error("Failed to update PINs. Please try again.");
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.member.list(tenantId),
+      });
+
+      // Invalidate group-specific queries if groupId is available
+      if (groupId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.member.byGroup(tenantId, groupId),
+        });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.group.connections(tenantId, groupId.toString()),
+        });
       }
-    },
-    [performerPins, attendanceRecords, updatePerformer, setIsOpen]
-  );
 
-  const handleCancel = useCallback(() => {
-    setIsOpen(false);
-  }, [setIsOpen]);
+      // Also invalidate the attendance session queries to refresh the table
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.attendance.activeSessions(tenantId),
+      });
 
-  // Memoize individual performer components
-  const PerformerPinRow = useCallback(
-    ({ record }: { record: PerformerAttendanceRow }) => {
-      const pinUpdate = performerPins[record.performerId];
-      if (!pinUpdate) return null;
+      toast.success(`Successfully updated ${updates.length} PIN(s)`);
+      setIsOpen(false);
+    } catch (error) {
+      console.error("Error updating PINs:", error);
+      toast.error("Failed to update PINs. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-      return (
-        <FormField
-          key={record.performerId}
-          control={form.control}
-          name={`performerPins.${record.performerId}.pin`}
-          render={({ field }) => (
-            <FormItem>
-              <div className="flex items-center justify-between border-b pb-4 last:border-b-0">
+  return (
+    <div className="max-h-[80vh] overflow-y-auto">
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-2">
+            <Key className="h-4 w-4 text-primary" />
+            <CardTitle className="text-base">PIN Management</CardTitle>
+          </div>
+          <CardDescription>
+            Update PINs for performers. Enter a 4-digit number or leave empty to
+            remove PIN.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {attendanceRecords.map((record) => {
+            const currentPin = pinValues[record.performerId] || "";
+            const error = validationErrors[record.performerId] || "";
+            const originalPin = record.performer.pin?.toString() || "";
+            const hasChanged = currentPin !== originalPin;
+
+            return (
+              <div
+                key={record.performerId}
+                className="flex items-center justify-between border-b pb-4 last:border-b-0"
+              >
                 <div className="flex-1">
-                  <FormLabel className="text-base font-medium">
+                  <div className="text-base font-medium">
                     {record.performer.firstName} {record.performer.lastName}
-                  </FormLabel>
+                  </div>
                   <div className="flex items-center gap-2 mt-1">
                     <span className="text-sm text-muted-foreground">
                       Current PIN:
                     </span>
-                    {pinUpdate.currentPin ? (
+                    {record.performer.pin ? (
                       <Badge variant="outline" className="font-mono">
-                        {pinUpdate.currentPin.toString().padStart(4, "0")}
+                        {record.performer.pin.toString().padStart(4, "0")}
                       </Badge>
                     ) : (
                       <Badge variant="secondary">No PIN</Badge>
                     )}
+                    {hasChanged && (
+                      <Badge variant="outline" className="text-xs">
+                        Modified
+                      </Badge>
+                    )}
                   </div>
                 </div>
                 <div className="w-32">
-                  <FormControl>
-                    <Input
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      placeholder="1234"
-                      value={pinUpdate.newPin}
-                      onChange={(e) =>
-                        handlePinChange(record.performerId, e.target.value)
-                      }
-                      className={`font-mono text-center ${
-                        pinUpdate.hasError ? "border-destructive" : ""
-                      } ${
-                        pinUpdate.isValidating ? "border-muted-foreground" : ""
-                      }`}
-                      maxLength={4}
-                    />
-                  </FormControl>
-                  {pinUpdate.isValidating && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Checking...
-                    </p>
+                  <Input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    placeholder="1234"
+                    value={currentPin}
+                    onChange={(e) =>
+                      handlePinChange(record.performerId, e.target.value)
+                    }
+                    className={`font-mono text-center ${
+                      error ? "border-destructive" : ""
+                    }`}
+                    maxLength={4}
+                  />
+                  {error && (
+                    <p className="text-xs text-destructive mt-1">{error}</p>
                   )}
-                  {pinUpdate.hasError && !pinUpdate.isValidating && (
-                    <p className="text-xs text-destructive mt-1">
-                      {pinUpdate.errorMessage}
-                    </p>
-                  )}
-                  <FormMessage />
                 </div>
               </div>
-            </FormItem>
+            );
+          })}
+        </CardContent>
+      </Card>
+
+      <div className="flex gap-3 justify-end mt-6">
+        <Button
+          variant="outline"
+          onClick={() => setIsOpen(false)}
+          disabled={isSubmitting}
+        >
+          Cancel
+        </Button>
+        <Button
+          onClick={handleSubmit}
+          disabled={!hasChanges || hasErrors || isSubmitting}
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              Saving...
+            </>
+          ) : (
+            `Save Changes${
+              hasChanges
+                ? ` (${
+                    attendanceRecords.filter((record) => {
+                      const originalPin =
+                        record.performer.pin?.toString() || "";
+                      const currentPin = pinValues[record.performerId] || "";
+                      return originalPin !== currentPin;
+                    }).length
+                  })`
+                : ""
+            }`
           )}
-        />
-      );
-    },
-    [performerPins, handlePinChange, form.control]
-  );
-
-  return (
-    <div className="max-h-[80vh] overflow-y-auto">
-      <Form {...form}>
-        <form onSubmit={formHandleSubmit(onSubmit)} className="space-y-6">
-          <Card>
-            <CardHeader className="pb-4">
-              <div className="flex items-center gap-2">
-                <Key className="h-4 w-4 text-primary" />
-                <CardTitle className="text-base">PIN Management</CardTitle>
-              </div>
-              <CardDescription>
-                Update PINs for performers. Enter a 4-digit number or leave
-                empty to remove PIN.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {attendanceRecords.map((record) => (
-                <PerformerPinRow key={record.performerId} record={record} />
-              ))}
-            </CardContent>
-          </Card>
-
-          <FormButtons
-            buttonText={`Save Changes${
-              updatesCount > 0 ? ` (${updatesCount})` : ""
-            }`}
-            isLoading={updatePerformer.isPending || hasValidating}
-            isDirty={isDirty && !hasErrors && !hasValidating}
-            onCancel={handleCancel}
-          />
-        </form>
-      </Form>
+        </Button>
+      </div>
     </div>
   );
 }

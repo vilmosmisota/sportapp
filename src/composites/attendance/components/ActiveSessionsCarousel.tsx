@@ -184,7 +184,7 @@ export function ActiveSessionsCarousel({
                             </Button>
                           </Link>
                           <Link
-                            href={`/attendance/kiosk/${activeSession.id}/check-in`}
+                            href={`/attendance/live-sessions/${activeSession.id}/kiosk`}
                             className="flex-1"
                           >
                             <Button

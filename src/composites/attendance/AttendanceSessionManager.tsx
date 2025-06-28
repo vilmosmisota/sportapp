@@ -147,7 +147,7 @@ export function AttendanceSessionManager({
   };
 
   const handleGoToKiosk = () => {
-    router.push(`/attendance/attendance/${sessionId}`);
+    router.push(`/attendance/live-sessions/${sessionId}/kiosk`);
   };
 
   const handleAddGuestPlayer = async (
@@ -305,6 +305,7 @@ export function AttendanceSessionManager({
         <PinManagementForm
           attendanceRecords={attendanceRows}
           tenantId={tenantId}
+          groupId={session.session?.groupId}
           setIsOpen={setIsManagePinsOpen}
         />
       </ResponsiveSheet>
