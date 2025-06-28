@@ -15,10 +15,7 @@ import { SessionWithGroup } from "@/entities/session/Session.schema";
 import { TenantGroupsConfig } from "@/entities/tenant/Tenant.schema";
 
 // Actions
-import {
-  useCloseActiveAttendanceSession,
-  useCreateActiveAttendanceSession,
-} from "@/entities/attendance/ActiveAttendanceSession.actions.client";
+import { useCreateActiveAttendanceSession } from "@/entities/attendance/ActiveAttendanceSession.actions.client";
 
 interface AttendanceManagerProps {
   tenantId: string;
@@ -35,9 +32,8 @@ export function AttendanceManager({
 
   const { data: activeSessions } = useActiveAttendanceSessions(tenantId);
 
-  // Mutations for starting and closing sessions
+  // Mutations for starting sessions
   const createSession = useCreateActiveAttendanceSession();
-  const closeSession = useCloseActiveAttendanceSession();
 
   const isLoading = isSessionsLoading;
 
@@ -78,22 +74,6 @@ export function AttendanceManager({
     } catch (error) {
       console.error("Error starting attendance session:", error);
       toast.error("Failed to start attendance session");
-    }
-
-    return Promise.resolve();
-  };
-
-  // Handler for closing a session
-  const handleCloseSession = async (activeSessionId: number): Promise<void> => {
-    try {
-      await closeSession.mutateAsync({
-        sessionId: activeSessionId,
-        tenantId,
-      });
-      toast.success("Attendance session closed successfully");
-    } catch (error) {
-      console.error("Error closing attendance session:", error);
-      toast.error("Failed to close attendance session");
     }
 
     return Promise.resolve();
@@ -154,8 +134,6 @@ export function AttendanceManager({
       {activeSessions && activeSessions.length > 0 ? (
         <ActiveSessionsCarousel
           activeSessions={activeSessions}
-          onCloseSession={handleCloseSession}
-          isClosingSession={closeSession.isPending}
           tenantId={tenantId}
           tenantGroupsConfig={tenantGroupsConfig}
         />

@@ -20,7 +20,7 @@ export function AttendanceSummary({
   const performerDisplayName = getTenantPerformerName(tenant);
 
   return (
-    <div className="flex items-center justify-between h-9 px-4 bg-primary/5  rounded-sm border">
+    <div className="flex items-center justify-between h-9 px-4 rounded-sm border">
       {/* Left side - Total and attendance rate */}
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">

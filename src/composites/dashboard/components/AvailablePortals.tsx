@@ -30,7 +30,7 @@ export function AvailablePortals({
 
   return (
     <div className="px-4 pb-4">
-      <div className="space-y-2">
+      <div className="space-y-2 ">
         <div className="text-xs font-medium text-sidebar-foreground/70 py-1">
           Portals
         </div>

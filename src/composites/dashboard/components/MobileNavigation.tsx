@@ -41,8 +41,8 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
     switch (portalConfig.type) {
       case "management":
         return "/management/settings";
-      case "kiosk":
-        return "/kiosk/settings";
+      case "attendance":
+        return "/attendance/settings";
       default:
         return "/settings";
     }

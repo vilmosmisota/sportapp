@@ -97,7 +97,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         />
 
         {/* Pinned nav items - stored in localStorage */}
-        {pinnedItems.length > 0 && (
+        {/* {pinnedItems.length > 0 && (
           <div className={cn("pt-4 pb-2", isCollapsed ? "px-2" : "px-4")}>
             <div className="space-y-1">
               {!isCollapsed && (
@@ -118,7 +118,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <div className="h-px bg-border/50 my-4" />
             )}
           </div>
-        )}
+        )} */}
 
         {/* Nav items */}
         <ScrollArea className="flex-1 py-2">

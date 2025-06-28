@@ -81,7 +81,7 @@ export const getPinnedItemsConfig = (
       requiredPinnedItems: [1], // Home is always pinned
     },
 
-    [PortalType.KIOSK]: {
+    [PortalType.ATTENDANCE]: {
       defaultPinnedItems: [1], // Check-in Hub by default
       requiredPinnedItems: [1], // Check-in Hub is always pinned
     },
@@ -97,7 +97,7 @@ export const isNavItemActive = (
   item: BaseNavItem,
   pathname: string
 ): boolean => {
-  if (item.href.endsWith("/management") || item.href.endsWith("/kiosk")) {
+  if (item.href.endsWith("/management") || item.href.endsWith("/attendance")) {
     return pathname === item.href;
   }
 

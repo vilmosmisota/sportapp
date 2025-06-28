@@ -63,7 +63,7 @@ export function createPortalNavigationHook(
 export function useCurrentPortalNavigation(pathname: string) {
   const portalType = useMemo(() => {
     if (pathname.includes("/management")) return PortalType.MANAGEMENT;
-    if (pathname.includes("/kiosk")) return PortalType.KIOSK;
+    if (pathname.includes("/attendance")) return PortalType.ATTENDANCE;
     return null; // No portal type for home page
   }, [pathname]);
 

@@ -15,7 +15,7 @@ import DynamicTopRightNav from "./components/DynamicTopRightNav";
 import { MobileNavigation } from "./components/MobileNavigation";
 import { Sidebar } from "./components/Sidebar";
 import { DashboardContextProvider } from "./context/DashboardContext";
-import { useKioskNavigation } from "./hooks/useKioskNavigation";
+import { useAttendanceNavigation } from "./hooks/useAttendanceNavigation";
 import { useManagementNavigation } from "./hooks/useManagementNavigation";
 import {
   getIcon,
@@ -48,7 +48,8 @@ export default function BaseDashboard({ children }: BaseDashboardProps) {
 
     if (routeWithoutDomain.startsWith("/management"))
       return PortalType.MANAGEMENT;
-    if (routeWithoutDomain.startsWith("/kiosk")) return PortalType.KIOSK;
+    if (routeWithoutDomain.startsWith("/attendance"))
+      return PortalType.ATTENDANCE;
     return null; // Home page - no specific portal
   }, [pathname, domain]);
 
@@ -64,18 +65,18 @@ export default function BaseDashboard({ children }: BaseDashboardProps) {
 
   // Get navigation sections based on current portal
   const managementNav = useManagementNavigation(tenant);
-  const kioskNav = useKioskNavigation(tenant);
+  const attendanceNav = useAttendanceNavigation(tenant);
 
   const navSections: BaseNavSection[] = useMemo(() => {
     if (currentPortalType === PortalType.MANAGEMENT) {
       return managementNav.navSections;
     }
-    if (currentPortalType === PortalType.KIOSK) {
-      return kioskNav.navSections;
+    if (currentPortalType === PortalType.ATTENDANCE) {
+      return attendanceNav.navSections;
     }
     // For home page, return empty nav sections (only show portal switcher)
     return [];
-  }, [currentPortalType, managementNav.navSections, kioskNav.navSections]);
+  }, [currentPortalType, managementNav.navSections, attendanceNav.navSections]);
 
   // UI state with portal-specific storage keys
   const [isOpen, setIsOpen] = useState(false);

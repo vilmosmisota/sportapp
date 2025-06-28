@@ -62,7 +62,7 @@ export function getKioskTopRightNavConfig(domain: string): TopRightNavConfig {
   return {
     settingsLinks: [
       {
-        href: `/${domain}/kiosk/settings`,
+        href: `/${domain}/attendance/settings`,
         label: "Kiosk Settings",
         icon: Settings,
       },
@@ -86,7 +86,7 @@ export function getTopRightNavConfig(
   switch (portalType) {
     case PortalType.MANAGEMENT:
       return getManagementTopRightNavConfig(domain);
-    case PortalType.KIOSK:
+    case PortalType.ATTENDANCE:
       return getKioskTopRightNavConfig(domain);
     default:
       return getManagementTopRightNavConfig(domain); // Default fallback

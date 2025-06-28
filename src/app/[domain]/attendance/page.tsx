@@ -23,8 +23,8 @@ export default function AttendancePage() {
     <ErrorBoundary>
       <div className="space-y-6">
         <PageHeader
-          title="Attendance"
-          description="Manage attendance for training sessions"
+          title="Attendance dashboard"
+          description="Manage attendance for group sessions"
         />
 
         <AttendanceManager

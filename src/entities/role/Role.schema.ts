@@ -3,7 +3,7 @@ import { z } from "zod";
 export enum Access {
   MANAGEMENT = "management",
   SYSTEM = "system",
-  KIOSK = "kiosk",
+  ATTENDANCE = "attendance",
 }
 
 export const RoleSchema = z.object({

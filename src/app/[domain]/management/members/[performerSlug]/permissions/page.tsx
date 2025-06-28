@@ -11,14 +11,7 @@ export default function PermissionsPage() {
   const { tenant } = useTenantAndUserAccessContext();
 
   if (!tenant) {
-    return (
-      <div className="w-full h-48 flex flex-col items-center justify-center space-y-2">
-        <h3 className="text-lg font-medium">Organization not found</h3>
-        <p className="text-sm text-muted-foreground">
-          The organization you&apos;re looking for does not exist.
-        </p>
-      </div>
-    );
+    return null;
   }
 
   const displayName = getTenantPerformerName(tenant);

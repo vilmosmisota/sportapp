@@ -37,7 +37,7 @@ export function RoleItem({ role, onDelete, tenantId }: RoleItemProps) {
     switch (accessType) {
       case Access.MANAGEMENT:
         return "bg-blue-50 text-blue-700 hover:bg-blue-100";
-      case Access.KIOSK:
+      case Access.ATTENDANCE:
         return "bg-green-50 text-green-700 hover:bg-green-100";
       case Access.SYSTEM:
         return "bg-purple-50 text-purple-700 hover:bg-purple-100";

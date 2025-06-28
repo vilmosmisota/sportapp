@@ -23,7 +23,7 @@ export interface BaseNavSection {
 // Portal types enum
 export enum PortalType {
   MANAGEMENT = "management",
-  KIOSK = "kiosk",
+  ATTENDANCE = "attendance",
 }
 
 // Portal configuration interface

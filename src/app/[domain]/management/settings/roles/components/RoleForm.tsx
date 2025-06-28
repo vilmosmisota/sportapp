@@ -225,8 +225,8 @@ export function RoleForm({
                                     <FormDescription>
                                       {accessType === Access.MANAGEMENT &&
                                         "Access to management interface"}
-                                      {accessType === Access.KIOSK &&
-                                        "Access to kiosk interface"}
+                                      {accessType === Access.ATTENDANCE &&
+                                        "Access to attendance interface"}
                                       {accessType === Access.SYSTEM &&
                                         "System-level access"}
                                     </FormDescription>

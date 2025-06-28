@@ -1,6 +1,5 @@
 "use client";
 
-import { ConfirmCloseDialog } from "@/app/[domain]/management/attendance/components/ConfirmCloseDialog";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { useQueryClient } from "@tanstack/react-query";
@@ -26,6 +25,7 @@ import { ManageAttendanceForm } from "./components/ActiveSessionManagingForm";
 import { AttendanceSessionTable } from "./components/ActiveSessionTable";
 import { AddGuestPlayerForm } from "./components/AddGuestPlayerForm";
 import { AttendanceSummary } from "./components/AttendanceSummary";
+import { ConfirmCloseDialog } from "./components/ConfirmCloseDialog";
 import { PinManagementForm } from "./components/PinManagementForm";
 
 interface AttendanceSessionManagerProps {
@@ -108,7 +108,9 @@ export function AttendanceSessionManager({
       params.set("attendees", totalAttendees.toString());
       params.set("checkedIn", checkedInCount.toString());
 
-      router.push(`/management/attendance/session-closed?${params.toString()}`);
+      router.push(
+        `/attendance/live-sessions/session-closed?${params.toString()}`
+      );
       toast.success("Session closed and data aggregated successfully");
       onClose?.();
     } catch (error) {
@@ -145,7 +147,7 @@ export function AttendanceSessionManager({
   };
 
   const handleGoToKiosk = () => {
-    router.push(`/kiosk/attendance/${sessionId}`);
+    router.push(`/attendance/attendance/${sessionId}`);
   };
 
   const handleAddGuestPlayer = async (

@@ -80,10 +80,10 @@ const DEFAULT_PORTAL_CONFIGS: Record<PortalType, TopRightNavConfig> = {
     ],
     showNotifications: true,
   },
-  [PortalType.KIOSK]: {
+  [PortalType.ATTENDANCE]: {
     settingsLinks: [
       {
-        href: "/kiosk/settings",
+        href: "/attendance/settings",
         label: "Kiosk Settings",
         icon: Settings,
       },

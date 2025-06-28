@@ -34,7 +34,7 @@ export interface NavSection {
 function getManagementNavSections(tenant?: Tenant): BaseNavSection[] {
   const navSections: BaseNavSection[] = [
     {
-      section: "Default",
+      section: "",
       items: [
         {
           id: 1,
@@ -58,7 +58,7 @@ function getManagementNavSections(tenant?: Tenant): BaseNavSection[] {
     },
 
     {
-      section: "Management",
+      section: "",
       items: [
         {
           id: 12,
@@ -127,39 +127,6 @@ function getManagementNavSections(tenant?: Tenant): BaseNavSection[] {
           description:
             "Manage coaches, staff, managers, and administrative personnel",
           permissions: [Permission.VIEW_MEMBERS, Permission.MANAGE_MEMBERS],
-          pinnable: true,
-        },
-      ],
-    },
-    {
-      section: "Attendance",
-      items: [
-        {
-          id: 15,
-          name: "Attendance Manager",
-          href: "/management/attendance",
-          iconName: "ClipboardList",
-          description: "Monitor live attendance and session participation",
-          permissions: [
-            Permission.VIEW_ATTENDANCE,
-            Permission.MANAGE_ATTENDANCE,
-          ],
-          pinnable: true,
-        },
-        {
-          id: 16,
-          name: "Attendance Reports",
-          href: "/management/attendance/reports",
-          iconName: "BarChart3",
-          description:
-            "View attendance trends, participation rates, and training effectiveness",
-          permissions: [
-            Permission.VIEW_ATTENDANCE,
-            Permission.MANAGE_ATTENDANCE,
-          ],
-          disabled: false,
-          disabledReason:
-            "Add at least one training location in Organization settings first",
           pinnable: true,
         },
       ],

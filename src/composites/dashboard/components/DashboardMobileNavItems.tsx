@@ -69,7 +69,8 @@ export default function DashboardMobileNavItems({
             </div>
             <div className="space-y-1">
               {pinnedItems.map((item) => {
-                const isHome = item.href === "/management";
+                const isHome =
+                  item.href === "/management" || item.href === "/attendance";
                 const isActive = isHome
                   ? pathname === item.href
                   : pathname === item.href ||
@@ -146,7 +147,9 @@ export default function DashboardMobileNavItems({
                   <AccordionContent className="pb-1 pt-0">
                     <div className="space-y-1">
                       {section.items.map((item) => {
-                        const isHome = item.href === "/management";
+                        const isHome =
+                          item.href === "/management" ||
+                          item.href === "/attendance";
                         const isActive = isHome
                           ? pathname === item.href
                           : pathname === item.href ||
@@ -216,7 +219,8 @@ export default function DashboardMobileNavItems({
             ) : (
               <div className="space-y-1">
                 {section.items.map((item) => {
-                  const isHome = item.href === "/management";
+                  const isHome =
+                    item.href === "/management" || item.href === "/attendance";
                   const isActive = isHome
                     ? pathname === item.href
                     : pathname === item.href ||

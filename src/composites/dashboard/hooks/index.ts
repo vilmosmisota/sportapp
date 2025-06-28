@@ -6,7 +6,7 @@ export {
 } from "./usePortalNavigation";
 
 // Portal-specific navigation hooks
-export { useKioskNavigation } from "./useKioskNavigation";
+export { useKioskNavigation } from "./useAttendanceNavigation";
 export { useManagementNavigation } from "./useManagementNavigation";
 
 // Portal-specific pinned items hook

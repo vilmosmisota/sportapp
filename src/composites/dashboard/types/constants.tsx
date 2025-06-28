@@ -22,8 +22,11 @@ import {
   LayoutDashboard,
   LibraryBig,
   LineChart,
+  Monitor,
   Newspaper,
   PlayCircle,
+  Settings,
+  Settings2,
   Shield,
   ShieldCheck,
   Signal,
@@ -71,6 +74,9 @@ export const ICON_MAP = {
   Archive,
   LibraryBig,
   DumbbellIcon,
+  Monitor,
+  Settings,
+  Settings2,
 };
 
 export const getIcon = (iconName: string): React.ReactNode => {

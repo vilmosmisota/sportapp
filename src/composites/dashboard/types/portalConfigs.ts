@@ -10,12 +10,12 @@ export const PORTAL_CONFIGS: Record<PortalType, PortalConfig> = {
     icon: NotebookTabs,
     requiredAccess: [Access.MANAGEMENT, Access.SYSTEM],
   },
-  [PortalType.KIOSK]: {
-    type: PortalType.KIOSK,
-    title: "Check-in Hub",
-    description: "Quick and efficient attendance tracking for all activities",
+  [PortalType.ATTENDANCE]: {
+    type: PortalType.ATTENDANCE,
+    title: "Attendance",
+    description: "Attendance tracking for all activities",
     icon: ClipboardCheck,
-    requiredAccess: [Access.KIOSK, Access.SYSTEM],
+    requiredAccess: [Access.ATTENDANCE, Access.SYSTEM],
   },
 };
 
@@ -25,7 +25,7 @@ export const getPortalConfig = (portalType: PortalType): PortalConfig => {
 
 export const getPortalTypeFromPath = (pathname: string) => {
   if (pathname.startsWith("/management")) return PortalType.MANAGEMENT;
-  if (pathname.startsWith("/kiosk")) return PortalType.KIOSK;
+  if (pathname.startsWith("/attendance")) return PortalType.ATTENDANCE;
 };
 
 export const PORTAL_STORAGE_KEYS = {
@@ -34,8 +34,8 @@ export const PORTAL_STORAGE_KEYS = {
     pinnedItems: "dashboard.management.pinnedItems",
   },
 
-  [PortalType.KIOSK]: {
-    sidebarCollapsed: "dashboard.kiosk.sidebar.collapsed",
-    pinnedItems: "dashboard.kiosk.pinnedItems",
+  [PortalType.ATTENDANCE]: {
+    sidebarCollapsed: "dashboard.attendance.sidebar.collapsed",
+    pinnedItems: "dashboard.attendance.pinnedItems",
   },
 } as const;

@@ -259,7 +259,7 @@ export function AttendanceSessionTable({
           <div className="flex gap-2">
             {isSessionActive && onCloseSession && (
               <Button
-                variant="secondary"
+                variant="default"
                 size="sm"
                 onClick={onCloseSession}
                 className="gap-2"

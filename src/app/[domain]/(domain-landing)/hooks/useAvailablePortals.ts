@@ -59,18 +59,18 @@ export function useAvailablePortals() {
       });
     }
 
-    // Check-in Hub - requires kiosk access OR system admin
-    const hasKioskAccess =
-      isSystemAdmin || tenantUser.role?.access?.includes(Access.KIOSK);
+    // Check-in Hub - requires attendance access OR system admin
+    const hasAttendanceAccess =
+      isSystemAdmin || tenantUser.role?.access?.includes(Access.ATTENDANCE);
 
-    if (hasKioskAccess) {
+    if (hasAttendanceAccess) {
       portals.push({
         id: "checkin",
         title: "Check-in Hub",
         description:
           "Quick and efficient attendance tracking for all activities.",
         icon: ClipboardCheck,
-        href: `/kiosk`,
+        href: `/attendance`,
         color: "green",
         features: [
           "Self-service check-in",

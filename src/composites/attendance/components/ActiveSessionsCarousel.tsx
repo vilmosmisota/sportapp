@@ -13,22 +13,18 @@ import { TenantGroupsConfig } from "@/entities/tenant/Tenant.schema";
 import { cn } from "@/libs/tailwind/utils";
 import { format } from "date-fns";
 import Autoplay from "embla-carousel-autoplay";
-import { AlertTriangle, Calendar, Clock, Loader2, MapPin } from "lucide-react";
+import { AlertTriangle, Calendar, Clock, MapPin } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
 interface ActiveSessionsCarouselProps {
   activeSessions: ActiveAttendanceSession[];
-  onCloseSession: (activeSessionId: number) => Promise<void>;
-  isClosingSession: boolean;
   tenantId: string;
   tenantGroupsConfig?: TenantGroupsConfig;
 }
 
 export function ActiveSessionsCarousel({
   activeSessions,
-  onCloseSession,
-  isClosingSession,
   tenantId,
   tenantGroupsConfig,
 }: ActiveSessionsCarouselProps) {
@@ -173,22 +169,22 @@ export function ActiveSessionsCarousel({
                         </div>
                       )}
 
-                      <div className="mt-auto space-y-2">
+                      <div className="mt-auto">
                         <div className="flex gap-2">
                           <Link
-                            href={`/management/attendance/${activeSession.id}`}
+                            href={`/attendance/live-sessions/${activeSession.id}`}
                             className="flex-1"
                           >
                             <Button
-                              variant="secondary"
+                              variant="default"
                               className="w-full text-xs"
                               size="sm"
                             >
-                              View Session
+                              Manage
                             </Button>
                           </Link>
                           <Link
-                            href={`/management/attendance/${activeSession.id}/check-in`}
+                            href={`/attendance/kiosk/${activeSession.id}/check-in`}
                             className="flex-1"
                           >
                             <Button
@@ -196,30 +192,10 @@ export function ActiveSessionsCarousel({
                               className="w-full text-xs"
                               size="sm"
                             >
-                              Check In
+                              Kiosk
                             </Button>
                           </Link>
                         </div>
-                        <Button
-                          variant="outline"
-                          className="w-full text-xs"
-                          size="sm"
-                          onClick={() => {
-                            if (activeSession.id) {
-                              onCloseSession(activeSession.id);
-                            }
-                          }}
-                          disabled={isClosingSession}
-                        >
-                          {isClosingSession ? (
-                            <>
-                              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                              Closing...
-                            </>
-                          ) : (
-                            "Close Session"
-                          )}
-                        </Button>
                       </div>
                     </div>
                   </Card>

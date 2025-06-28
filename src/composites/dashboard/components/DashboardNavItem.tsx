@@ -52,7 +52,7 @@ export default function DashboardNavItem({
   const currentPathname = useNextPathname();
   const Icon = ICON_MAP[item.iconName as keyof typeof ICON_MAP];
 
-  const isHome = item.href === "/management";
+  const isHome = item.href === "/management" || item.href === "/attendance";
   const isActive = isHome
     ? pathname === item.href
     : pathname === item.href ||
@@ -201,7 +201,7 @@ export default function DashboardNavItem({
                   ? "w-10 h-10 justify-center items-center"
                   : "px-3 py-1.5 items-center",
                 isActive
-                  ? "bg-accent text-accent-foreground"
+                  ? "text-primary"
                   : "text-sidebar-foreground hover:bg-accent/50 hover:text-primary"
               )}
             >
