@@ -150,10 +150,8 @@ export const updateAttendanceRecord = async (
   },
   tenantId: string
 ): Promise<AttendanceRecord> => {
-  // If updating status and no checkInType is provided, default to instructor
-  if (updates.status && !updates.checkInType) {
-    updates.checkInType = CheckInType.INSTRUCTOR;
-  }
+  // Only set checkInType if explicitly provided in updates
+  // This allows us to preserve existing checkInType when not specified
 
   const { data: updatedRecord, error } = await client
     .from("activeAttendanceRecords")
@@ -220,12 +218,32 @@ export const updateOrCreateAttendanceRecords = async (
           `Updating existing record ${existingRecord.id} with status:`,
           record.status
         );
+
+        // Get the full existing record to check current status
+        const { data: fullExistingRecord, error: getError } = await client
+          .from("activeAttendanceRecords")
+          .select("*")
+          .eq("id", existingRecord.id)
+          .eq("tenantId", Number(tenantId))
+          .single();
+
+        if (getError) {
+          console.error("Error getting full existing record:", getError);
+          throw getError;
+        }
+
+        // Only update checkInType to INSTRUCTOR if the status is actually changing
+        const shouldUpdateCheckInType =
+          fullExistingRecord.status !== record.status;
+
         const updated = await updateAttendanceRecord(
           client,
           existingRecord.id,
           {
             status: record.status,
-            checkInType: CheckInType.INSTRUCTOR, // Always instructor when updating from manager
+            ...(shouldUpdateCheckInType && {
+              checkInType: CheckInType.INSTRUCTOR,
+            }),
           },
           tenantId
         );

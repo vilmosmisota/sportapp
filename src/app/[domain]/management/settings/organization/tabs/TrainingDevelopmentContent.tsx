@@ -71,15 +71,10 @@ export default function TrainingDevelopmentContent({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-3">
-                <div className="flex justify-between items-center py-2">
-                  <span className="text-sm font-medium text-muted-foreground">
-                    Late Threshold
-                  </span>
-                  <span className="text-sm font-semibold text-foreground">
-                    {developmentConfig?.lateThreshold || 5} minutes
-                  </span>
-                </div>
+              <div className="text-center py-8 text-muted-foreground">
+                <p className="text-sm">
+                  Training settings have been moved to the Attendance section.
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -158,7 +153,7 @@ export default function TrainingDevelopmentContent({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6">
               <div className="text-center p-4 bg-muted/30 rounded-lg">
                 <MapPin className="h-5 w-5 text-muted-foreground mx-auto mb-2" />
                 <p className="text-xs text-muted-foreground mb-1">
@@ -166,15 +161,6 @@ export default function TrainingDevelopmentContent({
                 </p>
                 <p className="text-lg font-bold text-foreground">
                   {developmentConfig?.trainingLocations?.length || 0}
-                </p>
-              </div>
-              <div className="text-center p-4 bg-muted/30 rounded-lg">
-                <Clock className="h-5 w-5 text-muted-foreground mx-auto mb-2" />
-                <p className="text-xs text-muted-foreground mb-1">
-                  Late Threshold
-                </p>
-                <p className="text-sm font-medium text-foreground">
-                  {developmentConfig?.lateThreshold || 5} min
                 </p>
               </div>
             </div>

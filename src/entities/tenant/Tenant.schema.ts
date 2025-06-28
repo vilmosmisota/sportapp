@@ -22,6 +22,17 @@ export enum Sport {
   OTHER = "Other",
 }
 
+export enum CheckInMode {
+  PIN_4_DIGIT = "pin_4_digit",
+  FACE_ID = "face_id",
+}
+
+export enum KioskTheme {
+  LIGHT = "light",
+  DARK = "dark",
+  AUTO = "auto",
+}
+
 export const TenantGeneralConfigSchema = z.object({
   sport: z.nativeEnum(Sport).optional(),
   logo: z.string().url("Must be a valid URL").optional(),
@@ -30,8 +41,16 @@ export const TenantGeneralConfigSchema = z.object({
 });
 
 export const TenantDevelopmentConfigSchema = z.object({
-  lateThreshold: z.number().default(5),
   trainingLocations: z.array(LocationSchema).optional(),
+});
+
+export const TenantAttendanceConfigSchema = z.object({
+  lateThreshold: z.number().min(0).max(60).default(5),
+  checkInMode: z.nativeEnum(CheckInMode).default(CheckInMode.PIN_4_DIGIT),
+  kioskStyling: z.object({
+    primaryColor: z.string().optional(),
+    backgroundColor: z.string().optional(),
+  }),
 });
 
 export const TenantPerformersConfigSchema = z
@@ -87,6 +106,7 @@ export const TenantConfigSchema = z.object({
   development: TenantDevelopmentConfigSchema.nullable().optional(),
   performers: TenantPerformersConfigSchema.nullable().optional(),
   groups: TenantGroupsConfigSchema.nullable().optional(),
+  attendance: TenantAttendanceConfigSchema.nullable().optional(),
   competition: z.any().nullable().optional(), // Adding competition field from DB
 });
 
@@ -113,6 +133,7 @@ export const TenantFormSchema = z.object({
       development: TenantDevelopmentConfigSchema.optional(),
       performers: TenantPerformersConfigSchema.optional(),
       groups: TenantGroupsConfigSchema.optional(),
+      attendance: TenantAttendanceConfigSchema.optional(),
       competition: z.any().optional(),
     })
     .optional(),
@@ -125,6 +146,9 @@ export type TenantForm = z.infer<typeof TenantFormSchema>;
 export type TenantGeneralConfig = z.infer<typeof TenantGeneralConfigSchema>;
 export type TenantDevelopmentConfig = z.infer<
   typeof TenantDevelopmentConfigSchema
+>;
+export type TenantAttendanceConfig = z.infer<
+  typeof TenantAttendanceConfigSchema
 >;
 export type TenantPerformersConfig = z.infer<
   typeof TenantPerformersConfigSchema

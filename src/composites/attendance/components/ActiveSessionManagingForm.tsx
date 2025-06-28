@@ -104,13 +104,39 @@ export function ManageAttendanceForm({
 
   const onSubmit = async (data: ManageAttendanceFormData) => {
     try {
-      // Convert the form data to the expected format
-      const recordsToUpdate = Object.entries(data.attendanceRecords).map(
-        ([performerIdStr, status]) => ({
-          performerId: Number(performerIdStr),
-          status,
+      // Only send records that actually changed
+      const recordsToUpdate = Object.entries(data.attendanceRecords)
+        .map(([performerIdStr, newStatus]) => {
+          const performerId = Number(performerIdStr);
+          const originalRecord = attendanceRecords.find(
+            (r) => r.id === performerId
+          );
+          const originalStatus = originalRecord?.status || null;
+
+          // Only include records where the status actually changed
+          if (originalStatus !== newStatus) {
+            return {
+              performerId,
+              status: newStatus,
+            };
+          }
+          return null;
         })
-      );
+        .filter(
+          (
+            record
+          ): record is {
+            performerId: number;
+            status: AttendanceStatus | null;
+          } => record !== null
+        );
+
+      // Only proceed if there are actual changes
+      if (recordsToUpdate.length === 0) {
+        toast.info("No changes to save");
+        setIsOpen(false);
+        return;
+      }
 
       await onUpdateAttendance(recordsToUpdate);
       toast.success("Attendance records updated successfully");

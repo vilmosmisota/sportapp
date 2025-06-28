@@ -120,7 +120,7 @@ function NumericKeypad({
   };
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center ">
       {/* PIN Display */}
       <div className="">
         <div className="flex justify-center gap-4 mb-2">
@@ -179,13 +179,13 @@ function NumericKeypad({
       </div>
 
       {/* Keypad */}
-      <div className="w-[400px] p-8 border border-border rounded-2xl">
+      <div className="w-[400px] p-8 border border-border rounded-2xl bg-secondary-100/50">
         <div className="grid grid-cols-3 place-items-center gap-6 mb-6">
           {numbers.slice(0, 9).map((num) => (
             <Button
               key={num}
               variant="outline"
-              className="w-20 h-20 text-3xl rounded-full border hover:bg-accent/10 active:bg-accent/30 transition-colors duration-200"
+              className="w-20 h-20 bg-white text-3xl rounded-full border hover:bg-accent/10 active:bg-accent/30 transition-colors duration-200"
               onClick={() => handleKeyPress(num)}
             >
               {num}
@@ -195,14 +195,14 @@ function NumericKeypad({
         <div className="grid grid-cols-3 place-items-center gap-6 mb-6">
           <Button
             variant="outline"
-            className="w-20 h-20 rounded-full border hover:bg-accent/10 active:bg-accent/30 transition-colors duration-200"
+            className="w-20 h-20 bg-white rounded-full border hover:bg-accent/10 active:bg-accent/30 transition-colors duration-200"
             onClick={() => handleKeyPress("delete")}
           >
             <Delete className="h-8 w-8" />
           </Button>
           <Button
             variant="outline"
-            className="w-20 h-20 text-3xl rounded-full border hover:bg-accent/10 active:bg-accent/30 transition-colors duration-200"
+            className="w-20 h-20 bg-white text-3xl rounded-full border hover:bg-accent/10 active:bg-accent/30 transition-colors duration-200"
             onClick={() => handleKeyPress("0")}
           >
             0
@@ -306,7 +306,7 @@ function CheckInMode({
     const status = calculateAttendanceStatus(
       session.session.startTime,
       checkInTime,
-      tenant?.tenantConfigs?.development?.lateThreshold || 15
+      tenant?.tenantConfigs?.attendance?.lateThreshold || 5
     );
 
     setCheckInConfirmation({
@@ -733,7 +733,7 @@ export default function KioskPage() {
   }
 
   return (
-    <div className="w-screen h-screen bg-background fixed top-0 left-0 flex flex-col z-50">
+    <div className="w-screen h-screen bg-white fixed top-0 left-0 flex flex-col z-50">
       {/* Navigation */}
       <div className="flex justify-between items-center border-b border-border px-4 h-12 shrink-0">
         <Button variant="ghost" className="p-2" onClick={handleBackNavigation}>

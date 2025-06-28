@@ -41,7 +41,6 @@ export default function EditTrainingDevelopmentForm({
       type: tenant.type,
       tenantConfig: {
         development: {
-          lateThreshold: tenant.tenantConfigs?.development?.lateThreshold ?? 5,
           trainingLocations:
             tenant.tenantConfigs?.development?.trainingLocations ?? [],
         },
@@ -112,29 +111,10 @@ export default function EditTrainingDevelopmentForm({
               </h4>
             </div>
 
-            <div className="grid gap-4">
-              <FormField
-                control={form.control}
-                name="tenantConfig.development.lateThreshold"
-                render={({ field }) => (
-                  <FormItem className="w-full">
-                    <FormLabel>Late Threshold (minutes)</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="number"
-                        placeholder="5"
-                        min="1"
-                        max="60"
-                        onChange={(e) =>
-                          field.onChange(parseInt(e.target.value) || 5)
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <div className="text-center py-8 text-muted-foreground">
+              <p className="text-sm">
+                Training settings have been moved to the Attendance section.
+              </p>
             </div>
           </div>
 
