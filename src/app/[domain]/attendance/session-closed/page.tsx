@@ -26,11 +26,11 @@ export default function SessionClosedPage() {
   const checkedInCount = searchParams.get("checkedIn");
 
   const handleGoToAttendance = () => {
-    router.push("/management/attendance");
+    router.push("/attendance");
   };
 
   const handleViewReports = () => {
-    router.push("/management/training-analytics");
+    router.push("/attendance/reports");
   };
 
   if (!tenant) {

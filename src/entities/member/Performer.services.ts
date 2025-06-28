@@ -10,12 +10,7 @@ const PERFORMER_LIST_QUERY = `
   *,
   groupConnections:memberGroupConnections!left(
     *,
-    group:groups(
-      id,
-      ageRange,
-      level,
-      gender
-    )
+    group:groups(*)
   )
 `;
 

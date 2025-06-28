@@ -1,12 +1,6 @@
 import { z } from "zod";
+import { GroupSchema } from "../group/Group.schema";
 import { MemberGender, MemberType } from "./Member.schema";
-
-export const GroupSchema = z.object({
-  id: z.number(),
-  ageRange: z.string(),
-  level: z.string().nullable(),
-  gender: z.string().nullable(),
-});
 
 export const MemberGroupConnectionSchema = z.object({
   id: z.number(),

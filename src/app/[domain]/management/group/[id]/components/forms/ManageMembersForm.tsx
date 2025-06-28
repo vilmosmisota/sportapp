@@ -233,7 +233,7 @@ export default function ManageMembersForm({
         dateOfBirth: performer.dateOfBirth,
         gender: performer.gender,
         memberType: performer.memberType,
-        tenantUserId: performer.tenantUserId,
+        pin: performer.pin,
         tenantId: performer.tenantId || Number(tenantId), // Handle nullable tenantId
         createdAt: performer.createdAt,
       }));

@@ -798,8 +798,7 @@ export default function KioskPage() {
             <DialogTitle>Exit Kiosk?</DialogTitle>
           </DialogHeader>
           <p className="text-muted-foreground mb-6">
-            Are you sure you want to exit the kiosk? Any unsaved changes will be
-            lost.
+            Are you sure you want to exit the kiosk?
           </p>
           <div className="flex gap-3 justify-end">
             <Button

@@ -108,9 +108,7 @@ export function AttendanceSessionManager({
       params.set("attendees", totalAttendees.toString());
       params.set("checkedIn", checkedInCount.toString());
 
-      router.push(
-        `/attendance/live-sessions/session-closed?${params.toString()}`
-      );
+      router.push(`/attendance/session-closed?${params.toString()}`);
       toast.success("Session closed and data aggregated successfully");
       onClose?.();
     } catch (error) {

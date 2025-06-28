@@ -1,10 +1,11 @@
 "use client";
 
 import { MarsIcon, VenusIcon } from "@/components/icons/icons";
-import { Badge } from "@/components/ui/badge";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-alert";
 import DataTableColumnHeader from "@/components/ui/data-table/DataTableColumnHeader";
+import { GroupBadge } from "@/components/ui/group-badge";
 import { PermissionDropdownMenu } from "@/composites/auth/PermissionDropdownMenu";
+import { useTenantAndUserAccessContext } from "@/composites/auth/TenantAndUserAccessContext";
 import { Group, Performer } from "@/entities/member/Performer.schema";
 import { Permission } from "@/entities/role/Role.permissions";
 import { ColumnDef } from "@tanstack/react-table";
@@ -13,6 +14,8 @@ import { SquarePen, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 const GroupsCell = ({ member }: { member: Performer }) => {
+  const { tenant } = useTenantAndUserAccessContext();
+
   if (!member.groupConnections?.length) {
     return <div className="text-muted-foreground text-sm">No groups</div>;
   }
@@ -27,14 +30,21 @@ const GroupsCell = ({ member }: { member: Performer }) => {
     );
   }
 
+  const tenantGroupsConfig = tenant?.tenantConfigs?.groups || undefined;
+
   return (
     <div className="flex flex-wrap gap-1">
-      {groups.map((group) => (
-        <Badge key={group.id} variant="secondary" className="text-xs">
-          {group.ageRange || `Group ${group.id}`}{" "}
-          {group.gender && `(${group.gender})`}
-        </Badge>
-      ))}
+      {groups.map((group) => {
+        return (
+          <GroupBadge
+            key={group.id}
+            group={group}
+            tenantGroupsConfig={tenantGroupsConfig}
+            size="sm"
+            variant="secondary"
+          />
+        );
+      })}
     </div>
   );
 };
