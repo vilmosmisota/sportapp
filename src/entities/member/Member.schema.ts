@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 export enum MemberGender {
-  Male = "Male",
-  Female = "Female",
+  Male = "male",
+  Female = "female",
 }
 
 export enum MemberType {

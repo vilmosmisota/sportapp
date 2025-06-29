@@ -7,8 +7,8 @@ export enum CurrencyTypes {
 }
 
 export enum Gender {
-  Male = "Male",
-  Female = "Female",
+  Male = "male",
+  Female = "female",
 }
 
 export type BaseMember = {

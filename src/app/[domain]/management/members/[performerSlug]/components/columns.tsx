@@ -6,6 +6,7 @@ import DataTableColumnHeader from "@/components/ui/data-table/DataTableColumnHea
 import { GroupBadge } from "@/components/ui/group-badge";
 import { PermissionDropdownMenu } from "@/composites/auth/PermissionDropdownMenu";
 import { useTenantAndUserAccessContext } from "@/composites/auth/TenantAndUserAccessContext";
+import { MemberGender } from "@/entities/member/Member.schema";
 import { Group, Performer } from "@/entities/member/Performer.schema";
 import { Permission } from "@/entities/role/Role.permissions";
 import { ColumnDef } from "@tanstack/react-table";
@@ -199,9 +200,9 @@ export const columns = ({
 
       return (
         <div className="flex items-center gap-2">
-          {gender === "Male" ? (
+          {gender === MemberGender.Male ? (
             <MarsIcon className="h-4 w-4 text-blue-500" />
-          ) : gender === "Female" ? (
+          ) : gender === MemberGender.Female ? (
             <VenusIcon className="h-4 w-4 text-pink-500" />
           ) : null}
           <span>{gender}</span>
