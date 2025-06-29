@@ -90,7 +90,7 @@ export default function ManageConnectionsForm({
         promises.push(
           updateMemberTenantUserId.mutateAsync({
             memberId: performer.id,
-            tenantUserId: data.userId ? Number(data.userId) : null,
+            userId: data.userId || null,
           })
         );
       }

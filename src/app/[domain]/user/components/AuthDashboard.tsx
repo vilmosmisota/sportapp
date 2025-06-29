@@ -18,8 +18,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useTenantAndUserAccessContext } from "@/composites/auth/TenantAndUserAccessContext";
 import { useLogOut } from "@/entities/user/User.actions.client";
-import { useCurrentUser } from "@/entities/user/User.query";
 import { cn } from "@/libs/tailwind/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -66,7 +66,7 @@ export default function AuthDashboard({ items, children }: AuthDashboardProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [openTooltip, setOpenTooltip] = useState<string | null>(null);
   const pathname = usePathname();
-  const { data: user, isLoading } = useCurrentUser();
+  const { tenantUser, isLoading } = useTenantAndUserAccessContext();
   const router = useRouter();
   const queryClient = useQueryClient();
   const logOutMutation = useLogOut();
@@ -80,7 +80,7 @@ export default function AuthDashboard({ items, children }: AuthDashboardProps) {
     try {
       await logOutMutation.mutateAsync();
       queryClient.clear();
-      router.push("/login");
+      router.push("/auth/login");
       router.refresh();
     } catch (error) {
       console.error("Sign out error:", error);
@@ -92,20 +92,21 @@ export default function AuthDashboard({ items, children }: AuthDashboardProps) {
     return Icon ? <Icon className="h-4 w-4" /> : null;
   };
 
-  if (isLoading || !user) return null;
+  if (isLoading || !tenantUser) return null;
 
-  const initials = user.email
-    ? user.email
-        .split("@")[0]
-        .split(".")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-    : "N/A";
+  const userEmail = tenantUser.user?.email || "N/A";
+  const initials =
+    userEmail !== "N/A"
+      ? userEmail
+          .split("@")[0]
+          .split(".")
+          .map((n: string) => n[0])
+          .join("")
+          .toUpperCase()
+      : "N/A";
 
-  // Get primary role or fall back to first role
-  const primaryRole = user.roles?.find((role) => role.isPrimary);
-  const displayRole = primaryRole || user.roles?.[0];
+  // Get the role from tenantUser
+  const displayRole = tenantUser.role;
 
   return (
     <div className="flex min-h-screen">
@@ -135,10 +136,10 @@ export default function AuthDashboard({ items, children }: AuthDashboardProps) {
                     </Avatar>
                     <div className="flex flex-col">
                       <span className="text-sm font-medium truncate">
-                        {user.email}
+                        {userEmail}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        {displayRole?.role?.name || "Member"}
+                        {displayRole?.name || "Member"}
                       </span>
                     </div>
                   </div>
@@ -157,10 +158,10 @@ export default function AuthDashboard({ items, children }: AuthDashboardProps) {
                         <DropdownMenuLabel className="font-normal">
                           <div className="flex flex-col space-y-1">
                             <p className="text-sm font-medium leading-none">
-                              {user.email}
+                              {userEmail}
                             </p>
                             <p className="text-xs leading-none text-muted-foreground">
-                              {displayRole?.role?.name || "Member"}
+                              {displayRole?.name || "Member"}
                             </p>
                           </div>
                         </DropdownMenuLabel>
@@ -179,10 +180,10 @@ export default function AuthDashboard({ items, children }: AuthDashboardProps) {
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
                           <Link
-                            href=/management"
+                            href="./management"
                             className={cn(
                               "flex items-center",
-                              pathname.includes(/management") && "bg-accent"
+                              pathname.includes("/management") && "bg-accent"
                             )}
                           >
                             <LayoutDashboard className="mr-2 h-4 w-4" />
@@ -208,10 +209,10 @@ export default function AuthDashboard({ items, children }: AuthDashboardProps) {
                     <DropdownMenuLabel className="font-normal">
                       <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium leading-none">
-                          {user.email}
+                          {userEmail}
                         </p>
                         <p className="text-xs leading-none text-muted-foreground">
-                          {displayRole?.role?.name || "Member"}
+                          {displayRole?.name || "Member"}
                         </p>
                       </div>
                     </DropdownMenuLabel>
@@ -230,10 +231,10 @@ export default function AuthDashboard({ items, children }: AuthDashboardProps) {
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link
-                        href=/management"
+                        href="./management"
                         className={cn(
                           "flex items-center",
-                          pathname.includes(/management") && "bg-accent"
+                          pathname.includes("/management") && "bg-accent"
                         )}
                       >
                         <LayoutDashboard className="mr-2 h-4 w-4" />
@@ -398,10 +399,10 @@ export default function AuthDashboard({ items, children }: AuthDashboardProps) {
                   </Avatar>
                   <div className="flex flex-col">
                     <span className="text-sm font-medium truncate">
-                      {user.email}
+                      {userEmail}
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {displayRole?.role?.name || "Member"}
+                      {displayRole?.name || "Member"}
                     </span>
                   </div>
                 </div>

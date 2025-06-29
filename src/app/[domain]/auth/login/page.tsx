@@ -6,10 +6,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { getTenantByDomain } from "@/entities/tenant/Tenant.services";
-import LoginForm from "./components/LoginForm";
-import Image from "next/image";
 import { getServerClient } from "@/libs/supabase/server";
-import { baseUrl } from "@/utils/url.config";
+import Image from "next/image";
+import LoginForm from "./components/LoginForm";
 
 export default async function LoginPage({
   params,
@@ -31,10 +30,10 @@ export default async function LoginPage({
       <div className="w-full max-w-md relative">
         <Card className="border-none shadow-2xl bg-white/95 backdrop-blur">
           <CardHeader className="space-y-4 text-center">
-            {tenant?.logo && (
+            {tenant?.tenantConfigs?.general?.logo && (
               <div className="flex justify-center mb-4">
                 <Image
-                  src={tenant.logo}
+                  src={tenant.tenantConfigs.general.logo}
                   alt={`${tenant.name} logo`}
                   width={80}
                   height={80}

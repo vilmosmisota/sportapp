@@ -16,39 +16,39 @@ export function getManagementTopRightNavConfig(
   return {
     settingsLinks: [
       {
-        href: `/${domain}/management/settings/organization`,
+        href: `/management/settings/organization`,
         label: "Organization",
         icon: Building2,
       },
       {
-        href: `/${domain}/management/settings/users`,
+        href: `/management/settings/users`,
         label: "Users",
         icon: Users,
       },
       {
-        href: `/${domain}/management/settings/roles`,
+        href: `/management/settings/roles`,
         label: "Roles & Permissions",
         icon: ShieldCheck,
       },
     ],
     userProfileLinks: [
       {
-        href: `/${domain}/profile`,
+        href: `/user/profile`,
         label: "My Profile",
         icon: CircleUser,
       },
       {
-        href: `/${domain}/notifications`,
+        href: `/user/notifications`,
         label: "Notifications",
         icon: Bell,
       },
       {
-        href: `/${domain}/settings`,
+        href: `/user/settings`,
         label: "Account Settings",
         icon: Settings,
       },
       {
-        href: `/${domain}/help`,
+        href: `/user/help`,
         label: "Help & Support",
         icon: HelpCircle,
       },
@@ -62,14 +62,14 @@ export function getKioskTopRightNavConfig(domain: string): TopRightNavConfig {
   return {
     settingsLinks: [
       {
-        href: `/${domain}/attendance/settings`,
+        href: `/attendance/settings`,
         label: "Kiosk Settings",
         icon: Settings,
       },
     ],
     userProfileLinks: [
       {
-        href: `/${domain}/help`,
+        href: `/user/help`,
         label: "Help & Support",
         icon: HelpCircle,
       },

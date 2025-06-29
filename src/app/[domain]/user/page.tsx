@@ -1,22 +1,22 @@
 "use client";
 
-import { useCurrentUser } from "@/entities/user/User.query";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import Link from "next/link";
 import { Bell, HelpCircle, Settings, UserRound } from "lucide-react";
+import Link from "next/link";
+import { useTenantAndUserAccessContext } from "../../../composites/auth/TenantAndUserAccessContext";
 
-export default function AuthPage() {
-  const { data: user, isLoading } = useCurrentUser();
+export default function UserPage() {
+  const { tenantUser, isLoading } = useTenantAndUserAccessContext();
 
   if (isLoading) {
     return null;
   }
 
-  const initials = user?.email
-    ? user.email
+  const initials = tenantUser?.user?.email
+    ? tenantUser.user.email
         .split("@")[0]
         .split(".")
         .map((n) => n[0])
@@ -24,9 +24,8 @@ export default function AuthPage() {
         .toUpperCase()
     : "N/A";
 
-  // Get primary role or fall back to first role
-  const primaryRole = user?.roles?.find((role) => role.isPrimary);
-  const displayRole = primaryRole || user?.roles?.[0];
+  // Get the role from tenantUser
+  const displayRole = tenantUser?.role;
 
   return (
     <div className="space-y-6">
@@ -49,14 +48,14 @@ export default function AuthPage() {
                 </AvatarFallback>
               </Avatar>
               <div className="space-y-1">
-                <p className="text-sm font-medium">{user?.email}</p>
+                <p className="text-sm font-medium">{tenantUser?.user?.email}</p>
                 <p className="text-xs text-muted-foreground">
-                  {displayRole?.role?.name || "Member"}
+                  {displayRole?.name || "Member"}
                 </p>
               </div>
             </div>
             <Button asChild className="w-full mt-4" variant="outline">
-              <Link href="/auth/profile">View Profile</Link>
+              <Link href="./user/profile">View Profile</Link>
             </Button>
           </CardContent>
         </Card>
@@ -74,7 +73,7 @@ export default function AuthPage() {
               </p>
             </div>
             <Button asChild className="w-full mt-4" variant="outline">
-              <Link href="/auth/settings">View Settings</Link>
+              <Link href="./user/settings">View Settings</Link>
             </Button>
           </CardContent>
         </Card>
@@ -92,7 +91,7 @@ export default function AuthPage() {
               </p>
             </div>
             <Button asChild className="w-full mt-4" variant="outline">
-              <Link href="/auth/notifications">View Notifications</Link>
+              <Link href="./user/notifications">View Notifications</Link>
             </Button>
           </CardContent>
         </Card>
@@ -112,7 +111,7 @@ export default function AuthPage() {
               </p>
             </div>
             <Button asChild className="w-full mt-4" variant="outline">
-              <Link href="/auth/help">View Help</Link>
+              <Link href="./user/help">View Help</Link>
             </Button>
           </CardContent>
         </Card>

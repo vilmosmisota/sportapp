@@ -3,6 +3,7 @@
 import { Form } from "@/components/ui/form";
 import FormButtons from "@/components/ui/form-buttons";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useGroups } from "@/entities/group/Group.query";
 import { getTenantPerformerSingularName } from "@/entities/member/Member.utils";
 import { useUpdatePerformer } from "@/entities/member/Performer.actions.client";
 import { PerformerData } from "@/entities/member/Performer.data";
@@ -31,6 +32,9 @@ export default function EditPerformerForm({
   tenant,
   setIsParentModalOpen,
 }: EditPerformerFormProps) {
+  const { data: groups, isLoading: groupsLoading } = useGroups(
+    tenant.id.toString()
+  );
   const [activeTab, setActiveTab] = useState("details");
 
   const singularDisplayName = getTenantPerformerSingularName(tenant);
@@ -125,7 +129,13 @@ export default function EditPerformerForm({
 
             <TabsContent value="groups" className="space-y-6 mt-6">
               <EditGroupAssignmentTab
+                control={control}
+                groups={groups || []}
+                isGroupsLoading={groupsLoading}
+                tenant={tenant}
                 singularDisplayName={singularDisplayName}
+                errors={errors}
+                member={member}
               />
             </TabsContent>
           </Tabs>

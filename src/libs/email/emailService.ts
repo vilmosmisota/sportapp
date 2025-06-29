@@ -191,7 +191,7 @@ class MultitenantEmailService {
   private validateAndGetEmailConfig(
     tenant: Tenant
   ): Required<Pick<TenantEmailConfig, "senderEmail" | "senderName">> {
-    const emailConfig = tenant.tenantConfigs?.email;
+    const emailConfig = tenant.tenantConfigs?.emailConfig;
 
     const senderEmail =
       emailConfig?.senderEmail ||
@@ -274,7 +274,7 @@ class MultitenantEmailService {
       // Validate inputs
       const validatedOptions = this.validateEmailOptions(options);
 
-      const emailConfig = tenant.tenantConfigs?.email;
+      const emailConfig = tenant.tenantConfigs?.emailConfig;
 
       // Check if email type is enabled for this tenant
       const isEnabled =

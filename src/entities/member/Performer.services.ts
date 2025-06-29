@@ -240,3 +240,56 @@ export const getMembersByType = async (
 
   return data || [];
 };
+
+export interface UpdateMemberTenantUserIdOptions {
+  memberId: number;
+  userId: string | null;
+}
+
+/**
+ * Update tenant user association for a member
+ * This function either creates a new tenantUser record or removes an existing one
+ */
+export const updateMemberTenantUserId = async (
+  client: TypedClient,
+  tenantId: string,
+  options: UpdateMemberTenantUserIdOptions
+): Promise<boolean> => {
+  const { memberId, userId } = options;
+
+  try {
+    // First, remove any existing tenantUser record for this member
+    const { error: deleteError } = await client
+      .from("tenantUsers")
+      .delete()
+      .eq("memberId", memberId)
+      .eq("tenantId", Number(tenantId));
+
+    if (deleteError) throw deleteError;
+
+    // If userId is provided, create a new tenantUser record
+    if (userId) {
+      const { error: insertError } = await client.from("tenantUsers").insert({
+        userId: userId,
+        tenantId: Number(tenantId),
+        memberId: memberId,
+        status: "active",
+      });
+
+      if (insertError) {
+        // Handle unique constraint violation
+        if (insertError.code === "23505") {
+          throw new Error(
+            "User is already associated with another member in this tenant"
+          );
+        }
+        throw insertError;
+      }
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error in updateMemberTenantUserId:", error);
+    throw error;
+  }
+};

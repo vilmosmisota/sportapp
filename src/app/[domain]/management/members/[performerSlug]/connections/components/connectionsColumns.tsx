@@ -22,7 +22,7 @@ const ParentsCell = ({ performer }: { performer: PerformerWithConnection }) => {
 
   const parents = performer.parentConnections
     .map((c) => c.parentMember)
-    .filter((parent) => parent !== null);
+    .filter((parent): parent is NonNullable<typeof parent> => parent !== null);
 
   if (!parents.length) {
     return "-";
@@ -205,7 +205,9 @@ export const connectionsColumns = ({
       const searchValue = filterValue.toLowerCase();
       const parents = row.original.parentConnections
         ?.map((c) => c.parentMember)
-        .filter((parent) => parent !== null);
+        .filter(
+          (parent): parent is NonNullable<typeof parent> => parent !== null
+        );
 
       if (!parents?.length) return false;
 
@@ -213,9 +215,7 @@ export const connectionsColumns = ({
         const firstName = (parent.firstName || "").toLowerCase();
         const lastName = (parent.lastName || "").toLowerCase();
         const fullName = `${firstName} ${lastName}`.toLowerCase();
-        const tenantUserId = (
-          parent.tenantUserId?.toString() || ""
-        ).toLowerCase();
+        const tenantUserId = (parent.id?.toString() || "").toLowerCase();
         return (
           fullName.includes(searchValue) ||
           firstName.includes(searchValue) ||

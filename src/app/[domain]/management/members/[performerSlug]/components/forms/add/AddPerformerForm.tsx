@@ -1,10 +1,11 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 import FormButtons from "@/components/ui/form-buttons";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useTenantAndUserAccessContext } from "@/composites/auth/TenantAndUserAccessContext";
+import { useGroups } from "@/entities/group/Group.query";
 import { useAddPerformer } from "@/entities/member/Performer.actions.client";
 import { PerformerData } from "@/entities/member/Performer.data";
 import {
@@ -16,6 +17,7 @@ import { PlusCircle, User, UsersRound } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import GroupAssignmentTab from "./GroupAssignmentTab";
 import PerformerDetailsTab from "./PerformerDetailsTab";
 
 type AddPerformerFormProps = {
@@ -33,6 +35,8 @@ export default function AddPerformerForm({
   singularDisplayName,
   setIsParentModalOpen,
 }: AddPerformerFormProps) {
+  const { tenant } = useTenantAndUserAccessContext();
+  const { data: groups, isLoading: groupsLoading } = useGroups(tenantId);
   const [formKey, setFormKey] = useState(0);
 
   const addPerformer = useAddPerformer(tenantId);
@@ -128,25 +132,14 @@ export default function AddPerformerForm({
             </TabsContent>
 
             <TabsContent value="groups" className="space-y-6 mt-6">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base font-medium flex items-center gap-2">
-                    <UsersRound className="h-4 w-4" />
-                    Group Assignment
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8">
-                    <UsersRound className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-muted-foreground">
-                      Group Assignment
-                    </h3>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Group assignment functionality will be implemented here.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+              <GroupAssignmentTab
+                control={form.control}
+                groups={groups || []}
+                isGroupsLoading={groupsLoading}
+                tenant={tenant}
+                singularDisplayName={singularDisplayName}
+                errors={form.formState.errors}
+              />
             </TabsContent>
           </Tabs>
         </div>

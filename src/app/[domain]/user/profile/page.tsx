@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Card,
   CardContent,
@@ -5,15 +7,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { getServerClient } from "@/libs/supabase/server";
+import { useTenantAndUserAccessContext } from "@/composites/auth/TenantAndUserAccessContext";
 
-export default async function ProfilePage() {
-  const supabase = getServerClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+export default function ProfilePage() {
+  const { tenantUser: user, isLoading } = useTenantAndUserAccessContext();
 
-  const user = session!.user;
+  if (isLoading || !user) return <div>Loading...</div>;
 
   return (
     <div className="min-h-[calc(100vh-3rem)] p-4 bg-muted/40">
@@ -28,12 +27,8 @@ export default async function ProfilePage() {
           <CardContent className="space-y-4">
             <div className="grid gap-1">
               <p className="text-sm font-medium">Email</p>
-              <p className="text-sm text-muted-foreground">{user.email}</p>
-            </div>
-            <div className="grid gap-1">
-              <p className="text-sm font-medium">Last Sign In</p>
               <p className="text-sm text-muted-foreground">
-                {new Date(user.last_sign_in_at || "").toLocaleString()}
+                {user?.user?.email}
               </p>
             </div>
           </CardContent>
@@ -47,12 +42,6 @@ export default async function ProfilePage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid gap-1">
-              <p className="text-sm font-medium">Account Created</p>
-              <p className="text-sm text-muted-foreground">
-                {new Date(user.created_at).toLocaleString()}
-              </p>
-            </div>
             <div className="grid gap-1">
               <p className="text-sm font-medium">Account ID</p>
               <p className="text-sm font-mono text-muted-foreground">

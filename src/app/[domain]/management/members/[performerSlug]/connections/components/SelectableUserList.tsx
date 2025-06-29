@@ -8,11 +8,6 @@ import { cn } from "@/lib/utils";
 import { AlertCircle, Check, Search, X } from "lucide-react";
 import { useState } from "react";
 
-interface User {
-  id: string;
-  email: string | null;
-}
-
 interface SelectableUserListProps {
   tenantId: string;
   selectedUserId?: string;
@@ -42,7 +37,8 @@ export default function SelectableUserList({
 
   const filteredUsers = availableUsers.filter(
     (user) =>
-      user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false
+      user.user?.email?.toLowerCase().includes(searchQuery.toLowerCase()) ??
+      false
   );
 
   const handleUserClick = (userId: string) => {
@@ -110,8 +106,8 @@ export default function SelectableUserList({
             <Check className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium">
               Selected:{" "}
-              {availableUsers.find((u) => u.id === selectedUserId)?.email ||
-                "No email"}
+              {availableUsers.find((u) => u.userId === selectedUserId)?.user
+                ?.email || "No email"}
             </span>
           </div>
           <Button
@@ -167,31 +163,31 @@ export default function SelectableUserList({
 
             {filteredUsers.map((user) => (
               <div
-                key={user.id}
+                key={user.userId}
                 className={cn(
                   "flex items-center space-x-3 p-3 hover:bg-muted/50 cursor-pointer transition-colors",
-                  selectedUserId === user.id &&
+                  selectedUserId === user.userId &&
                     "bg-primary/5 border-l-2 border-l-primary"
                 )}
-                onClick={() => handleUserClick(user.id)}
+                onClick={() => handleUserClick(user.userId)}
               >
                 <div className="flex-shrink-0">
                   <div
                     className={cn(
                       "w-4 h-4 rounded border-2 flex items-center justify-center",
-                      selectedUserId === user.id
+                      selectedUserId === user.userId
                         ? "bg-primary border-primary"
                         : "border-muted-foreground/30"
                     )}
                   >
-                    {selectedUserId === user.id && (
+                    {selectedUserId === user.userId && (
                       <Check className="h-3 w-3 text-primary-foreground" />
                     )}
                   </div>
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-medium">
-                    {user.email || "No email"}
+                    {user.user?.email || "No email"}
                   </p>
                 </div>
               </div>

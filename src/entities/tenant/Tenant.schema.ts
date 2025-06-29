@@ -107,6 +107,7 @@ export const TenantConfigSchema = z.object({
   performers: TenantPerformersConfigSchema.nullable().optional(),
   groups: TenantGroupsConfigSchema.nullable().optional(),
   attendance: TenantAttendanceConfigSchema.nullable().optional(),
+  emailConfig: TenantEmailConfigSchema.nullable().optional(),
   competition: z.any().nullable().optional(), // Adding competition field from DB
 });
 

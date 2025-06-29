@@ -31,7 +31,7 @@ const leftQuickActions = [
   {
     icon: Bell,
     label: "Notifications",
-    href: "/auth/notifications",
+    href: "/user/notifications",
   },
 ];
 
@@ -39,7 +39,7 @@ const rightQuickActions = [
   {
     icon: HelpCircle,
     label: "Help",
-    href: "/auth/help",
+    href: "/user/help",
   },
 ];
 
@@ -56,7 +56,7 @@ export function DashboardAuthMenu({
     try {
       await logOutMutation.mutateAsync();
       queryClient.clear();
-      router.push("/login");
+      router.push("/auth/login");
       router.refresh();
     } catch (error) {
       console.error("Sign out error:", error);
@@ -96,19 +96,19 @@ export function DashboardAuthMenu({
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
-            <Link href="/auth/profile" className="flex items-center">
+            <Link href="/user/profile" className="flex items-center">
               <UserRound className="mr-2 h-4 w-4" />
               Profile
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/auth/notifications" className="flex items-center">
+            <Link href="/user/notifications" className="flex items-center">
               <Bell className="mr-2 h-4 w-4" />
               Notifications
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/auth/help" className="flex items-center">
+            <Link href="/user/help" className="flex items-center">
               <HelpCircle className="mr-2 h-4 w-4" />
               Help & Support
             </Link>
@@ -146,7 +146,7 @@ export function DashboardAuthMenu({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href="/auth/profile" className="flex items-center">
+              <Link href="/user/profile" className="flex items-center">
                 <UserRound className="mr-2 h-4 w-4" />
                 Profile
               </Link>
