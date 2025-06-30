@@ -10,7 +10,7 @@ interface GlobalPinnedNavProps {
   managementNavSections: BaseNavSection[];
   schedulingNavSections: BaseNavSection[];
   attendanceNavSections: BaseNavSection[];
-  membersNavSections: BaseNavSection[];
+  usersNavSections: BaseNavSection[];
   pathname: string;
   domain: string;
 }
@@ -20,7 +20,7 @@ export function GlobalPinnedNav({
   managementNavSections,
   schedulingNavSections,
   attendanceNavSections,
-  membersNavSections,
+  usersNavSections,
   pathname,
   domain,
 }: GlobalPinnedNavProps) {
@@ -30,7 +30,7 @@ export function GlobalPinnedNav({
     managementNavSections,
     schedulingNavSections,
     attendanceNavSections,
-    membersNavSections
+    usersNavSections
   );
 
   // Only show when sidebar is collapsed and we have pinned items

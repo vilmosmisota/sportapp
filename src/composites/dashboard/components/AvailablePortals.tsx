@@ -10,8 +10,10 @@ import { useTenantAndUserAccessContext } from "@/composites/auth/TenantAndUserAc
 import { getPortalTypeFromPath } from "@/composites/dashboard/types/portalConfigs";
 import { getAvailablePortals } from "@/composites/dashboard/utils/dashboardUtils";
 import { cn } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
 import Link from "next/link";
-import React from "react";
+import { usePathname as useNextPathname, useRouter } from "next/navigation";
+import React, { useEffect, useRef, useState } from "react";
 
 interface AvailablePortalsProps {
   domain: string;
@@ -28,6 +30,13 @@ export function AvailablePortals({
   const [accordionValue, setAccordionValue] = React.useState<string[]>([
     "portals",
   ]);
+  const [loadingPortals, setLoadingPortals] = useState<Set<string>>(new Set());
+  const loadingTimeoutRefs = useRef<Map<string, NodeJS.Timeout>>(new Map());
+  const isMountedRef = useRef(false);
+  const LOADING_THRESHOLD = 100;
+
+  const router = useRouter();
+  const currentPathname = useNextPathname();
 
   const availablePortals = React.useMemo(() => {
     if (!tenantUser?.role?.access) return [];
@@ -49,6 +58,56 @@ export function AvailablePortals({
       (portal) => portal.type === detectedPortalType
     );
   }, [detectedPortalType, availablePortals]);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    return () => {
+      isMountedRef.current = false;
+      // Clear all timeouts on unmount
+      loadingTimeoutRefs.current.forEach((timeout) => {
+        clearTimeout(timeout);
+      });
+      loadingTimeoutRefs.current.clear();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isMountedRef.current) {
+      setLoadingPortals(new Set());
+    }
+
+    // Clear all timeouts on pathname change
+    loadingTimeoutRefs.current.forEach((timeout) => {
+      clearTimeout(timeout);
+    });
+    loadingTimeoutRefs.current.clear();
+  }, [currentPathname]);
+
+  const handlePortalNavigation =
+    (portalHref: string) => (e: React.MouseEvent) => {
+      if (pathname === portalHref) return;
+
+      e.preventDefault();
+
+      // Clear existing timeout for this portal
+      const existingTimeout = loadingTimeoutRefs.current.get(portalHref);
+      if (existingTimeout) {
+        clearTimeout(existingTimeout);
+      }
+
+      router.push(portalHref);
+
+      // Set timeout to show loading after threshold
+      const timeoutId = setTimeout(() => {
+        if (isMountedRef.current && currentPathname === pathname) {
+          setLoadingPortals((prev) => new Set(prev).add(portalHref));
+        }
+        loadingTimeoutRefs.current.delete(portalHref);
+      }, LOADING_THRESHOLD);
+
+      loadingTimeoutRefs.current.set(portalHref, timeoutId);
+    };
 
   const isLoading = !tenantUser?.role?.access;
   const isAccordionOpen = accordionValue.includes("portals");
@@ -106,9 +165,11 @@ export function AvailablePortals({
               <div className="grid grid-cols-1 gap-2">
                 {availablePortals.map((portal) => {
                   const Icon = portal.icon;
+                  const portalHref = `/${portal.type}`;
                   const isActive =
                     detectedPortalType === portal.type &&
                     detectedPortalType !== null;
+                  const isPortalLoading = loadingPortals.has(portalHref);
 
                   return (
                     <Button
@@ -122,7 +183,10 @@ export function AvailablePortals({
                       )}
                       asChild
                     >
-                      <Link href={`/${portal.type}`}>
+                      <Link
+                        href={portalHref}
+                        onClick={handlePortalNavigation(portalHref)}
+                      >
                         <div className="flex items-center gap-3 w-full">
                           <div
                             className={cn(
@@ -130,7 +194,11 @@ export function AvailablePortals({
                               isActive ? "bg-primary/10" : "bg-muted/50"
                             )}
                           >
-                            <Icon className="h-4 w-4" />
+                            {isPortalLoading ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Icon className="h-4 w-4" />
+                            )}
                           </div>
                           <div className="font-medium text-sm leading-tight">
                             {portal.title}

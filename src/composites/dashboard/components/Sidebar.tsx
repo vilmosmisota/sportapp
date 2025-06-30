@@ -5,6 +5,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tenant } from "@/entities/tenant/Tenant.schema";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import React from "react";
@@ -13,6 +14,7 @@ import { useGlobalPinnedItems } from "../hooks/useGlobalPinnedItems";
 import { BaseNavSection, PortalConfig } from "../types/baseDashboard.types";
 import { AvailablePortals } from "./AvailablePortals";
 import NavItems from "./DashboardNavItems";
+import { TenantBranding } from "./TenantBranding";
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -23,7 +25,7 @@ interface SidebarProps {
   pathname: string;
   getIcon: (iconName: string) => React.ReactNode;
   domain: string;
-  tenant: any;
+  tenant: Tenant | undefined;
   tenantId?: number;
   isTenantLoading: boolean;
   portalConfig: PortalConfig;
@@ -167,9 +169,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </ScrollArea>
 
         {/* Tenant branding at the bottom */}
-        {/* <div className="mt-auto">
+        <div className="mt-auto">
           <TenantBranding tenant={tenant} isLoading={isTenantLoading} />
-        </div> */}
+        </div>
       </div>
     </div>
   );

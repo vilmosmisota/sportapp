@@ -8,7 +8,7 @@ import { getTopRightNavConfig } from "../utils/topRightNavConfigs";
 import { usePortalNavigation } from "./usePortalNavigation";
 
 // Members specific navigation sections
-function getMembersNavSections(tenant?: Tenant): BaseNavSection[] {
+function getUsersNavSections(tenant?: Tenant): BaseNavSection[] {
   return [
     {
       section: "",
@@ -55,18 +55,16 @@ function getMembersNavSections(tenant?: Tenant): BaseNavSection[] {
 }
 
 // Members specific top right navigation config
-function getMembersTopRightNavConfig(tenant?: Tenant) {
+function getUsersTopRightNavConfig(tenant?: Tenant) {
   const domain = "members"; // This would be dynamic in real implementation
-  return getTopRightNavConfig(PortalType.MEMBERS, domain);
+  return getTopRightNavConfig(PortalType.USERS, domain);
 }
 
 // Members navigation hook
-export function useMembersNavigation(
-  tenant?: Tenant
-): UsePortalNavigationReturn {
+export function useUsersNavigation(tenant?: Tenant): UsePortalNavigationReturn {
   return usePortalNavigation(
-    PortalType.MEMBERS,
-    getMembersNavSections,
-    getMembersTopRightNavConfig
+    PortalType.USERS,
+    getUsersNavSections,
+    getUsersTopRightNavConfig
   );
 }

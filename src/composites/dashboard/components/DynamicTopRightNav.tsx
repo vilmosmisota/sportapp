@@ -119,10 +119,10 @@ const DEFAULT_PORTAL_CONFIGS: Record<PortalType, TopRightNavConfig> = {
     ],
     showNotifications: false,
   },
-  [PortalType.MEMBERS]: {
+  [PortalType.USERS]: {
     settingsLinks: [
       {
-        href: "/members/settings",
+        href: "/users/settings",
         label: "Member Settings",
         icon: Settings,
       },

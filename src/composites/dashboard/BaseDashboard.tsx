@@ -19,8 +19,8 @@ import { Sidebar } from "./components/Sidebar";
 import { DashboardContextProvider } from "./context/DashboardContext";
 import { useAttendanceNavigation } from "./hooks/useAttendanceNavigation";
 import { useManagementNavigation } from "./hooks/useManagementNavigation";
-import { useMembersNavigation } from "./hooks/useMembersNavigation";
 import { useSchedulingNavigation } from "./hooks/useSchedulingNavigation";
+import { useUsersNavigation } from "./hooks/useUsersNavigation";
 import {
   getIcon,
   getPortalConfig,
@@ -55,7 +55,7 @@ export default function BaseDashboard({ children }: BaseDashboardProps) {
       return PortalType.SCHEDULING;
     if (routeWithoutDomain.startsWith("/attendance"))
       return PortalType.ATTENDANCE;
-    if (routeWithoutDomain.startsWith("/members")) return PortalType.MEMBERS;
+    if (routeWithoutDomain.startsWith("/users")) return PortalType.USERS;
     return null; // Home page - no specific portal
   }, [pathname, domain]);
 
@@ -68,7 +68,7 @@ export default function BaseDashboard({ children }: BaseDashboardProps) {
   const managementNav = useManagementNavigation(tenant);
   const schedulingNav = useSchedulingNavigation(tenant);
   const attendanceNav = useAttendanceNavigation(tenant);
-  const membersNav = useMembersNavigation(tenant);
+  const usersNav = useUsersNavigation(tenant);
 
   const navSections: BaseNavSection[] = useMemo(() => {
     if (currentPortalType === PortalType.MANAGEMENT) {
@@ -80,8 +80,8 @@ export default function BaseDashboard({ children }: BaseDashboardProps) {
     if (currentPortalType === PortalType.ATTENDANCE) {
       return attendanceNav.navSections;
     }
-    if (currentPortalType === PortalType.MEMBERS) {
-      return membersNav.navSections;
+    if (currentPortalType === PortalType.USERS) {
+      return usersNav.navSections;
     }
     // For home page, return empty nav sections (only show portal switcher)
     return [];
@@ -90,7 +90,7 @@ export default function BaseDashboard({ children }: BaseDashboardProps) {
     managementNav.navSections,
     schedulingNav.navSections,
     attendanceNav.navSections,
-    membersNav.navSections,
+    usersNav.navSections,
   ]);
 
   // Global UI state - no longer portal-specific
@@ -182,7 +182,7 @@ export default function BaseDashboard({ children }: BaseDashboardProps) {
               managementNavSections={managementNav.navSections}
               schedulingNavSections={schedulingNav.navSections}
               attendanceNavSections={attendanceNav.navSections}
-              membersNavSections={membersNav.navSections}
+              usersNavSections={usersNav.navSections}
               pathname={pathname}
               domain={domain}
             />

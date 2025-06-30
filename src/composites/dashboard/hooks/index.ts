@@ -8,8 +8,8 @@ export {
 // Portal-specific navigation hooks
 export { useAttendanceNavigation } from "./useAttendanceNavigation";
 export { useManagementNavigation } from "./useManagementNavigation";
-export { useMembersNavigation } from "./useMembersNavigation";
 export { useSchedulingNavigation } from "./useSchedulingNavigation";
+export { useUsersNavigation } from "./useUsersNavigation";
 
 // Global pinned items hook
 export { useGlobalPinnedItems } from "./useGlobalPinnedItems";

@@ -1,4 +1,5 @@
 import { Permission } from "@/entities/role/Role.permissions";
+import { Tenant } from "@/entities/tenant/Tenant.schema";
 import { LucideIcon } from "lucide-react";
 
 // Base navigation item interface
@@ -25,7 +26,7 @@ export enum PortalType {
   MANAGEMENT = "management",
   SCHEDULING = "scheduling",
   ATTENDANCE = "attendance",
-  MEMBERS = "members",
+  USERS = "users",
 }
 
 // Portal configuration interface
@@ -93,7 +94,7 @@ export interface BaseSidebarProps {
   pathname: string;
   getIcon: (iconName: string) => React.ReactNode;
   domain: string;
-  tenant: any;
+  tenant: Tenant | undefined;
   tenantId?: number;
   isTenantLoading: boolean;
   portalConfig: PortalConfig;
@@ -107,7 +108,7 @@ export interface DashboardContextValue {
   isMobile: boolean;
   pathname: string;
   domain: string;
-  tenant: any;
+  tenant: Tenant | undefined;
 }
 
 // Legacy interface for backward compatibility

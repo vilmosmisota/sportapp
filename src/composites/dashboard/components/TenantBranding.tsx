@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Tenant } from "@/entities/tenant/Tenant.schema";
 
 interface TenantBrandingProps {
@@ -10,13 +10,14 @@ export function TenantBranding({
   tenant,
   isLoading = false,
 }: TenantBrandingProps) {
+  console.log("tenant", tenant);
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center gap-4 animate-pulse p-4">
-        <div className="w-10 h-10 rounded-full bg-muted"></div>
-        <div className="space-y-2">
-          <div className="h-4 w-24 bg-muted rounded"></div>
-          <div className="h-3 w-16 bg-muted rounded"></div>
+      <div className="flex flex-col items-center text-center gap-3 p-4 border-t border-primary-100/20 animate-pulse">
+        <div className="h-12 w-12 rounded-full bg-muted"></div>
+        <div className="flex flex-col items-center">
+          <div className="h-3 w-24 bg-muted rounded"></div>
         </div>
       </div>
     );
@@ -24,14 +25,12 @@ export function TenantBranding({
 
   return (
     <div className="flex flex-col items-center text-center gap-3 p-4 border-t border-primary-100/20">
-      <Avatar className="h-12 w-12">
-        <AvatarImage src={tenant?.tenantConfigs?.general?.logo || ""} />
-        <AvatarFallback className="bg-primary/10 text-primary">
-          {tenant?.name ? tenant?.name.slice(0, 2).toUpperCase() : "N/A"}
-        </AvatarFallback>
-      </Avatar>
+      {tenant?.tenantConfigs?.general?.logo && (
+        <Avatar className="h-12 w-12">
+          <AvatarImage src={tenant.tenantConfigs.general.logo} />
+        </Avatar>
+      )}
       <div className="flex flex-col items-center">
-        <span className="font-medium text-sm">{tenant?.name}</span>
         <span className="text-xs text-muted-foreground">
           Powered by SportWise
         </span>

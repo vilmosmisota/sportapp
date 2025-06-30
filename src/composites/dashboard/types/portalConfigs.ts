@@ -24,10 +24,10 @@ export const PORTAL_CONFIGS: Record<PortalType, PortalConfig> = {
     icon: ClipboardCheck,
     requiredAccess: [Access.ATTENDANCE, Access.SYSTEM],
   },
-  [PortalType.MEMBERS]: {
-    type: PortalType.MEMBERS,
-    title: "Platform Members",
-    description: "Manage your members",
+  [PortalType.USERS]: {
+    type: PortalType.USERS,
+    title: "Users",
+    description: "Manage your users",
     icon: Users,
     requiredAccess: [],
   },
@@ -41,5 +41,5 @@ export const getPortalTypeFromPath = (pathname: string) => {
   if (pathname.startsWith("/management")) return PortalType.MANAGEMENT;
   if (pathname.startsWith("/scheduling")) return PortalType.SCHEDULING;
   if (pathname.startsWith("/attendance")) return PortalType.ATTENDANCE;
-  if (pathname.startsWith("/members")) return PortalType.MEMBERS;
+  if (pathname.startsWith("/users")) return PortalType.USERS;
 };
