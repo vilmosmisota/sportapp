@@ -98,7 +98,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         />
 
         {/* Nav items */}
-        <ScrollArea className="flex-1 py-2">
+        <ScrollArea className="flex-1 py-2 mt-2">
           <div className={cn("space-y-6", isCollapsed ? "px-2" : "px-4")}>
             {filteredNavItems.map((item) => (
               <div key={item.section}>

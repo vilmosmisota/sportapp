@@ -8,7 +8,9 @@ import { getIcon } from "../types/constants";
 interface GlobalPinnedNavProps {
   isCollapsed: boolean;
   managementNavSections: BaseNavSection[];
+  schedulingNavSections: BaseNavSection[];
   attendanceNavSections: BaseNavSection[];
+  membersNavSections: BaseNavSection[];
   pathname: string;
   domain: string;
 }
@@ -16,7 +18,9 @@ interface GlobalPinnedNavProps {
 export function GlobalPinnedNav({
   isCollapsed,
   managementNavSections,
+  schedulingNavSections,
   attendanceNavSections,
+  membersNavSections,
   pathname,
   domain,
 }: GlobalPinnedNavProps) {
@@ -24,7 +28,9 @@ export function GlobalPinnedNav({
 
   const pinnedItems = getPinnedItems(
     managementNavSections,
-    attendanceNavSections
+    schedulingNavSections,
+    attendanceNavSections,
+    membersNavSections
   );
 
   // Only show when sidebar is collapsed and we have pinned items

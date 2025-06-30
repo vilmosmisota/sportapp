@@ -80,6 +80,28 @@ const DEFAULT_PORTAL_CONFIGS: Record<PortalType, TopRightNavConfig> = {
     ],
     showNotifications: true,
   },
+  [PortalType.SCHEDULING]: {
+    settingsLinks: [
+      {
+        href: "/scheduling/settings",
+        label: "Scheduling Settings",
+        icon: Settings,
+      },
+    ],
+    userProfileLinks: [
+      {
+        href: "/profile",
+        label: "My Profile",
+        icon: CircleUser,
+      },
+      {
+        href: "/help",
+        label: "Help & Support",
+        icon: HelpCircle,
+      },
+    ],
+    showNotifications: false,
+  },
   [PortalType.ATTENDANCE]: {
     settingsLinks: [
       {

@@ -19,42 +19,6 @@ function getManagementNavSections(tenant?: Tenant): BaseNavSection[] {
       section: "",
       items: [
         {
-          id: 1,
-          name: "Dashboard",
-          href: "/management",
-          iconName: "LayoutDashboard",
-          description: "Organization overview and quick insights",
-          permissions: [Permission.VIEW_DASHBOARD],
-          pinnable: true,
-        },
-        {
-          id: 2,
-          name: "Calendar",
-          href: "/management/calendar",
-          iconName: "CalendarDays",
-          description: "Manage all events and schedules",
-          permissions: [Permission.VIEW_DASHBOARD],
-          pinnable: true,
-        },
-      ],
-    },
-
-    {
-      section: "",
-      items: [
-        {
-          id: 12,
-          name: "Seasons",
-          href: "/management/seasons",
-          iconName: "SunSnow",
-          description: "Manage seasons and programs",
-          permissions: [Permission.VIEW_SEASONS, Permission.MANAGE_SEASONS],
-          disabled: false,
-          disabledReason:
-            "Configure age groups, skill levels, and player positions in Organization settings first",
-          pinnable: true,
-        },
-        {
           id: 4,
           name: tenant ? getTenantPerformerName(tenant) : "Performers",
           href: tenant
@@ -85,30 +49,6 @@ function getManagementNavSections(tenant?: Tenant): BaseNavSection[] {
           iconName: "Settings2",
           description: "Manage organization settings",
           permissions: [Permission.VIEW_EVENTS, Permission.MANAGE_EVENTS],
-          pinnable: true,
-        },
-      ],
-    },
-    {
-      section: "Members",
-      items: [
-        {
-          id: 3,
-          name: "Guardians",
-          href: "/management/members/guardians",
-          iconName: "Shield",
-          description: "Manage guardians and parent contacts",
-          permissions: [Permission.VIEW_MEMBERS, Permission.MANAGE_MEMBERS],
-          pinnable: true,
-        },
-        {
-          id: 10,
-          name: "Staff",
-          href: "/management/members/staff",
-          iconName: "UserRound",
-          description:
-            "Manage coaches, staff, managers, and administrative personnel",
-          permissions: [Permission.VIEW_MEMBERS, Permission.MANAGE_MEMBERS],
           pinnable: true,
         },
       ],

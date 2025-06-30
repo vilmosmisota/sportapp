@@ -75,9 +75,9 @@ export function AvailablePortals({
 
   return (
     <div
-      className={`px-4 pb-4  bg-secondary-500/20 ${cn(
-        isAccordionOpen ? "pb-4" : "pb-0"
-      )}`}
+      className={`px-4 mx-4 pb-4  ${cn(
+        isAccordionOpen ? "pb-4 bg-secondary-500/20" : "pb-0"
+      )}  transition-all duration-100 rounded-lg`}
     >
       <Accordion
         type="multiple"

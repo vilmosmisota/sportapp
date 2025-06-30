@@ -1,11 +1,13 @@
-import { Tenant } from "../../../entities/tenant/Tenant.schema";
+import { Tenant } from "@/entities/tenant/Tenant.schema";
 import {
   BaseNavSection,
   PortalType,
   UsePortalNavigationReturn,
 } from "../types/baseDashboard.types";
+import { getTopRightNavConfig } from "../utils/topRightNavConfigs";
 import { usePortalNavigation } from "./usePortalNavigation";
 
+// Members specific navigation sections
 function getMembersNavSections(tenant?: Tenant): BaseNavSection[] {
   return [
     {
@@ -52,10 +54,13 @@ function getMembersNavSections(tenant?: Tenant): BaseNavSection[] {
   ];
 }
 
+// Members specific top right navigation config
 function getMembersTopRightNavConfig(tenant?: Tenant) {
-  return [];
+  const domain = "members"; // This would be dynamic in real implementation
+  return getTopRightNavConfig(PortalType.MEMBERS, domain);
 }
 
+// Members navigation hook
 export function useMembersNavigation(
   tenant?: Tenant
 ): UsePortalNavigationReturn {

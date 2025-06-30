@@ -1,17 +1,17 @@
-import React, {
-  useState,
-  Dispatch,
-  SetStateAction,
-  useCallback,
-  useRef,
-} from "react";
-import { format, addDays, isAfter } from "date-fns";
+import { addDays, format, isAfter } from "date-fns";
+import { Dispatch, SetStateAction, useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { DateRange } from "@/components/ui/date-range";
-import { Plus, Edit2, X } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { DateRange } from "@/components/ui/date-range";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Table,
   TableBody,
@@ -20,15 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Label } from "@/components/ui/label";
+import { Edit2, Plus, X } from "lucide-react";
 
 type Break = {
   id: number;

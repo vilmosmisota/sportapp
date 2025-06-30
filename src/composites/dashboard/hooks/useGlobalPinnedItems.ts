@@ -79,7 +79,9 @@ export function useGlobalPinnedItems() {
 
   const getPinnedItems = (
     managementNavSections: BaseNavSection[],
-    attendanceNavSections: BaseNavSection[]
+    schedulingNavSections: BaseNavSection[],
+    attendanceNavSections: BaseNavSection[],
+    membersNavSections: BaseNavSection[]
   ): GlobalPinnedItem[] => {
     const allItems: GlobalPinnedItem[] = [];
 
@@ -93,12 +95,32 @@ export function useGlobalPinnedItems() {
       });
     });
 
+    // Add scheduling items
+    schedulingNavSections.forEach((section) => {
+      section.items.forEach((item) => {
+        allItems.push({
+          ...item,
+          portalType: "scheduling",
+        });
+      });
+    });
+
     // Add attendance items
     attendanceNavSections.forEach((section) => {
       section.items.forEach((item) => {
         allItems.push({
           ...item,
           portalType: "attendance",
+        });
+      });
+    });
+
+    // Add members items
+    membersNavSections.forEach((section) => {
+      section.items.forEach((item) => {
+        allItems.push({
+          ...item,
+          portalType: "members",
         });
       });
     });

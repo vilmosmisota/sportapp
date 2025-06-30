@@ -23,6 +23,7 @@ export interface BaseNavSection {
 // Portal types enum
 export enum PortalType {
   MANAGEMENT = "management",
+  SCHEDULING = "scheduling",
   ATTENDANCE = "attendance",
   MEMBERS = "members",
 }
