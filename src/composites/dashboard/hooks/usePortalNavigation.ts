@@ -61,7 +61,7 @@ export function useCurrentPortalNavigation(pathname: string) {
   const portalType = useMemo(() => {
     if (pathname.includes("/management")) return PortalType.MANAGEMENT;
     if (pathname.includes("/attendance")) return PortalType.ATTENDANCE;
-    if (pathname.includes("/members")) return PortalType.MEMBERS;
+    if (pathname.includes("/users")) return PortalType.USERS;
     return null; // No portal type for home page
   }, [pathname]);
 
