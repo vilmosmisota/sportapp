@@ -10,8 +10,10 @@ import { useUIState } from "@/browserStorage/localStorage/ui-storage";
 import { useTenantAndUserAccessContext } from "@/composites/auth/TenantAndUserAccessContext";
 import { useMediaQuery } from "@/utils/hooks";
 
+import { CollapsedPortalDropdown } from "./components/CollapsedPortalDropdown";
 import { DashboardMainFrame } from "./components/DashboardMainFrame";
 import DynamicTopRightNav from "./components/DynamicTopRightNav";
+import { GlobalPinnedNav } from "./components/GlobalPinnedNav";
 import { MobileNavigation } from "./components/MobileNavigation";
 import { Sidebar } from "./components/Sidebar";
 import { DashboardContextProvider } from "./context/DashboardContext";
@@ -21,7 +23,6 @@ import {
   getIcon,
   getPortalConfig,
   getTopRightNavConfig,
-  PORTAL_STORAGE_KEYS,
   PortalType,
 } from "./types";
 import {
@@ -58,11 +59,6 @@ export default function BaseDashboard({ children }: BaseDashboardProps) {
     return currentPortalType ? getPortalConfig(currentPortalType) : null;
   }, [currentPortalType]);
 
-  // Get storage keys based on current portal (default to management if on home)
-  const storageKeys = useMemo(() => {
-    return PORTAL_STORAGE_KEYS[currentPortalType || PortalType.MANAGEMENT];
-  }, [currentPortalType]);
-
   // Get navigation sections based on current portal
   const managementNav = useManagementNavigation(tenant);
   const attendanceNav = useAttendanceNavigation(tenant);
@@ -78,10 +74,10 @@ export default function BaseDashboard({ children }: BaseDashboardProps) {
     return [];
   }, [currentPortalType, managementNav.navSections, attendanceNav.navSections]);
 
-  // UI state with portal-specific storage keys
+  // Global UI state - no longer portal-specific
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useUIState({
-    key: storageKeys.sidebarCollapsed,
+    key: "dashboard.global.sidebar.collapsed",
     defaultValue: false,
   });
   const [openSections, setOpenSections] = useState<string[]>([]);
@@ -153,7 +149,25 @@ export default function BaseDashboard({ children }: BaseDashboardProps) {
                 />
               )}
             </Button>
+
+            {/* Fixed portal dropdown when it is collapsed */}
+            <CollapsedPortalDropdown
+              isCollapsed={isCollapsed}
+              domain={domain}
+              currentPortalType={currentPortalType}
+              pathname={pathname}
+            />
+
+            <GlobalPinnedNav
+              isCollapsed={isCollapsed}
+              managementNavSections={managementNav.navSections}
+              attendanceNavSections={attendanceNav.navSections}
+              pathname={pathname}
+              domain={domain}
+            />
           </div>
+
+          {/* Global Pinned Items Navigation */}
         </div>
 
         {/* Top-right navigation */}

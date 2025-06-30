@@ -97,6 +97,28 @@ const DEFAULT_PORTAL_CONFIGS: Record<PortalType, TopRightNavConfig> = {
     ],
     showNotifications: false,
   },
+  [PortalType.MEMBERS]: {
+    settingsLinks: [
+      {
+        href: "/members/settings",
+        label: "Member Settings",
+        icon: Settings,
+      },
+    ],
+    userProfileLinks: [
+      {
+        href: "/profile",
+        label: "My Profile",
+        icon: CircleUser,
+      },
+      {
+        href: "/help",
+        label: "Help & Support",
+        icon: HelpCircle,
+      },
+    ],
+    showNotifications: false,
+  },
 };
 
 function DynamicTopRightNav({

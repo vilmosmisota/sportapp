@@ -6,7 +6,6 @@ export type {
   BaseSidebarProps,
   DashboardContextValue,
   MobileNavigationProps,
-  PinnedItemsConfig,
   PortalConfig,
   PortalNavigationHook,
   TopRightNavConfig,
@@ -18,7 +17,6 @@ export { PortalType } from "./baseDashboard.types";
 // Portal configurations
 export {
   PORTAL_CONFIGS,
-  PORTAL_STORAGE_KEYS,
   getPortalConfig,
   getPortalTypeFromPath,
 } from "./portalConfigs";
@@ -27,7 +25,6 @@ export {
 export {
   filterNavItemsByPermissions,
   getAvailablePortals,
-  getPinnedItemsConfig,
   hasPortalAccess,
   isNavItemActive,
   validateNavSections,

@@ -7,7 +7,6 @@ import {
 } from "../types/baseDashboard.types";
 import { getPortalConfig } from "../types/portalConfigs";
 
-// Base hook for portal navigation
 export function usePortalNavigation(
   portalType: PortalType,
   getNavSections: (tenant?: any) => BaseNavSection[],
@@ -24,7 +23,6 @@ export function usePortalNavigation(
   }, [tenant, getNavSections]);
 
   const navSections = useMemo(() => {
-    // Filter navigation based on user permissions
     const userPermissions = tenantUser?.role?.permissions;
 
     return rawNavSections;
@@ -44,7 +42,6 @@ export function usePortalNavigation(
   };
 }
 
-// Hook factory for creating portal-specific navigation hooks
 export function createPortalNavigationHook(
   portalType: PortalType,
   getNavSections: (tenant?: any) => BaseNavSection[],
@@ -64,6 +61,7 @@ export function useCurrentPortalNavigation(pathname: string) {
   const portalType = useMemo(() => {
     if (pathname.includes("/management")) return PortalType.MANAGEMENT;
     if (pathname.includes("/attendance")) return PortalType.ATTENDANCE;
+    if (pathname.includes("/members")) return PortalType.MEMBERS;
     return null; // No portal type for home page
   }, [pathname]);
 

@@ -148,6 +148,17 @@ export const columns = ({
     minSize: 150,
     size: 200,
     maxSize: 300,
+    sortingFn: (rowA, rowB) => {
+      const firstNameA = (rowA.original.firstName || "").toLowerCase();
+      const lastNameA = (rowA.original.lastName || "").toLowerCase();
+      const fullNameA = `${firstNameA} ${lastNameA}`.trim();
+
+      const firstNameB = (rowB.original.firstName || "").toLowerCase();
+      const lastNameB = (rowB.original.lastName || "").toLowerCase();
+      const fullNameB = `${firstNameB} ${lastNameB}`.trim();
+
+      return fullNameA.localeCompare(fullNameB);
+    },
     filterFn: (row, id, filterValue) => {
       const searchValue = filterValue.toLowerCase();
       const firstName = (row.original.firstName || "").toLowerCase();

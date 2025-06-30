@@ -24,6 +24,7 @@ export interface BaseNavSection {
 export enum PortalType {
   MANAGEMENT = "management",
   ATTENDANCE = "attendance",
+  MEMBERS = "members",
 }
 
 // Portal configuration interface
@@ -71,13 +72,6 @@ export interface UsePortalNavigationReturn {
 // Portal navigation hook factory type
 export type PortalNavigationHook = (tenant?: any) => UsePortalNavigationReturn;
 
-// Pinned items configuration
-export interface PinnedItemsConfig {
-  storageKey: string;
-  defaultPinnedItems: number[];
-  requiredPinnedItems: number[];
-}
-
 // Mobile navigation props
 export interface MobileNavigationProps {
   isOpen: boolean;
@@ -102,7 +96,6 @@ export interface BaseSidebarProps {
   tenantId?: number;
   isTenantLoading: boolean;
   portalConfig: PortalConfig;
-  pinnedItemsConfig?: PinnedItemsConfig;
 }
 
 // Dashboard context interface for sharing state between components
@@ -114,4 +107,22 @@ export interface DashboardContextValue {
   pathname: string;
   domain: string;
   tenant: any;
+}
+
+// Legacy interface for backward compatibility
+export interface NavItem {
+  id: number;
+  name: string;
+  href: string;
+  iconName: string;
+  description: string;
+  permissions: Permission[];
+  pinnable: boolean;
+  disabled?: boolean;
+  disabledReason?: string;
+}
+
+export interface NavSection {
+  section: string;
+  items: NavItem[];
 }

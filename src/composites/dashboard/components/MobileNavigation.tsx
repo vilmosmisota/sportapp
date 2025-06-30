@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { Cog, X } from "lucide-react";
 import Link from "next/link";
 import React from "react";
-import { usePortalPinnedItems } from "../hooks/usePortalPinnedItems";
+import { useGlobalPinnedItems } from "../hooks/useGlobalPinnedItems";
 import { BaseNavSection, PortalConfig } from "../types/baseDashboard.types";
 import { DashboardAuthMenu } from "./DashboardAuthMenu";
 import DashboardMobileNavItems from "./DashboardMobileNavItems";
@@ -32,9 +32,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
   pathname,
   portalConfig,
 }) => {
-  const { pinnedItemIds, togglePinItem } = usePortalPinnedItems(
-    portalConfig.type
-  );
+  const { isPinned, togglePinItem } = useGlobalPinnedItems();
 
   // Generate settings link based on portal type
   const getSettingsLink = () => {
@@ -49,6 +47,21 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
   };
 
   const settingsLink = getSettingsLink();
+
+  // Create a function to handle pin toggling with portal context
+  const handleTogglePin = (itemId: number) => {
+    const allItems = navSections.flatMap((section) => section.items);
+    const item = allItems.find((item) => item.id === itemId);
+    if (item) {
+      togglePinItem(item, portalConfig.type);
+    }
+  };
+
+  // Get pinned item IDs for the current portal
+  const pinnedItemIds = navSections
+    .flatMap((section) => section.items)
+    .filter((item) => isPinned(item.id, portalConfig.type))
+    .map((item) => item.id);
 
   return (
     <div className="fixed top-0 right-0 z-40 lg:hidden">
@@ -107,7 +120,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
               getIcon={getIcon}
               setIsOpen={setIsOpen}
               pinnedItemIds={pinnedItemIds}
-              onTogglePin={togglePinItem}
+              onTogglePin={handleTogglePin}
             />
           </div>
         </DrawerContent>

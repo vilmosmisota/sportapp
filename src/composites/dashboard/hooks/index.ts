@@ -9,8 +9,8 @@ export {
 export { useAttendanceNavigation } from "./useAttendanceNavigation";
 export { useManagementNavigation } from "./useManagementNavigation";
 
-// Portal-specific pinned items hook
-export { usePortalPinnedItems } from "./usePortalPinnedItems";
+// Global pinned items hook
+export { useGlobalPinnedItems } from "./useGlobalPinnedItems";
 
 // Legacy exports for backward compatibility
-export type { NavItem, NavSection } from "./useManagementNavigation";
+export type { NavItem, NavSection } from "../types/baseDashboard.types";

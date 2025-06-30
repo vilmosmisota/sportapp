@@ -1,5 +1,5 @@
 import { Access } from "@/entities/role/Role.schema";
-import { ClipboardCheck, NotebookTabs } from "lucide-react";
+import { ClipboardCheck, NotebookTabs, Users } from "lucide-react";
 import { PortalConfig, PortalType } from "./baseDashboard.types";
 
 export const PORTAL_CONFIGS: Record<PortalType, PortalConfig> = {
@@ -17,6 +17,13 @@ export const PORTAL_CONFIGS: Record<PortalType, PortalConfig> = {
     icon: ClipboardCheck,
     requiredAccess: [Access.ATTENDANCE, Access.SYSTEM],
   },
+  [PortalType.MEMBERS]: {
+    type: PortalType.MEMBERS,
+    title: "Platform Members",
+    description: "Manage your members",
+    icon: Users,
+    requiredAccess: [],
+  },
 };
 
 export const getPortalConfig = (portalType: PortalType): PortalConfig => {
@@ -26,16 +33,5 @@ export const getPortalConfig = (portalType: PortalType): PortalConfig => {
 export const getPortalTypeFromPath = (pathname: string) => {
   if (pathname.startsWith("/management")) return PortalType.MANAGEMENT;
   if (pathname.startsWith("/attendance")) return PortalType.ATTENDANCE;
+  if (pathname.startsWith("/members")) return PortalType.MEMBERS;
 };
-
-export const PORTAL_STORAGE_KEYS = {
-  [PortalType.MANAGEMENT]: {
-    sidebarCollapsed: "dashboard.management.sidebar.collapsed",
-    pinnedItems: "dashboard.management.pinnedItems",
-  },
-
-  [PortalType.ATTENDANCE]: {
-    sidebarCollapsed: "dashboard.attendance.sidebar.collapsed",
-    pinnedItems: "dashboard.attendance.pinnedItems",
-  },
-} as const;

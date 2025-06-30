@@ -6,9 +6,10 @@ import {
 } from "@/components/ui/accordion";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 import React from "react";
 import { Skeleton } from "../../../components/ui/skeleton";
-import { usePortalPinnedItems } from "../hooks/usePortalPinnedItems";
+import { useGlobalPinnedItems } from "../hooks/useGlobalPinnedItems";
 import { BaseNavSection, PortalConfig } from "../types/baseDashboard.types";
 import { AvailablePortals } from "./AvailablePortals";
 import NavItems from "./DashboardNavItems";
@@ -32,7 +33,7 @@ interface SidebarProps {
 /**
  * Sidebar component for the dashboard
  * Uses localStorage for persisting:
- * - Pinned items (via usePortalPinnedItems hook)
+ * - Pinned items (via useGlobalPinnedItems hook - global across all portals)
  * - Open sections (via parent component with useUIState)
  */
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -48,22 +49,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
   portalConfig,
   currentPortalType,
 }) => {
-  const { pinnedItemIds, togglePinItem, config } = usePortalPinnedItems(
-    portalConfig.type
-  );
+  const { isPinned, togglePinItem } = useGlobalPinnedItems();
 
   const filteredNavItems = navSections.filter(
     (section) => section.section !== "Default"
   );
-  const allNavItems = filteredNavItems.flatMap((section) => section.items);
 
-  const defaultItems =
-    navSections.find((navSection) => navSection.section === "Default")?.items ||
-    [];
-
-  const pinnedItems = [...defaultItems, ...allNavItems].filter((item) =>
-    pinnedItemIds.includes(item.id)
-  );
+  // Create a function to handle pin toggling with portal context
+  const handleTogglePin = (itemId: number) => {
+    const allItems = navSections.flatMap((section) => section.items);
+    const item = allItems.find((item) => item.id === itemId);
+    if (item) {
+      togglePinItem(item, portalConfig.type);
+    }
+  };
 
   return (
     <div
@@ -80,9 +79,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="flex items-center justify-center pt-1">
             <div className="flex items-center justify-center">
               {tenant?.name ? (
-                <p className="text-sm font-semibold text-foreground capitalize min-h-6 flex items-center max-w-[200px] text-center">
-                  {tenant.name}
-                </p>
+                <Link href="/">
+                  <p className="text-sm font-semibold text-foreground capitalize min-h-6 flex items-center max-w-[200px] text-center hover:text-primary transition-colors">
+                    {tenant.name}
+                  </p>
+                </Link>
               ) : (
                 <Skeleton className="h-6 w-[120px] rounded" />
               )}
@@ -96,30 +97,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           pathname={pathname}
         />
 
-        {/* Pinned nav items - stored in localStorage */}
-        {/* {pinnedItems.length > 0 && (
-          <div className={cn("pt-4 pb-2", isCollapsed ? "px-2" : "px-4")}>
-            <div className="space-y-1">
-              {!isCollapsed && (
-                <div className="text-xs font-medium text-sidebar-foreground/70 py-1">
-                  Pinned
-                </div>
-              )}
-              <NavItems
-                items={pinnedItems}
-                isCollapsed={isCollapsed}
-                pathname={pathname}
-                pinnedItemIds={pinnedItemIds}
-                onTogglePin={togglePinItem}
-                requiredPinnedItems={config.requiredPinnedItems}
-              />
-            </div>
-            {!isCollapsed && pinnedItems.length > 0 && (
-              <div className="h-px bg-border/50 my-4" />
-            )}
-          </div>
-        )} */}
-
         {/* Nav items */}
         <ScrollArea className="flex-1 py-2">
           <div className={cn("space-y-6", isCollapsed ? "px-2" : "px-4")}>
@@ -131,9 +108,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       items={item.items}
                       isCollapsed={isCollapsed}
                       pathname={pathname}
-                      pinnedItemIds={pinnedItemIds}
-                      onTogglePin={togglePinItem}
-                      requiredPinnedItems={config.requiredPinnedItems}
+                      pinnedItemIds={item.items
+                        .filter((navItem) =>
+                          isPinned(navItem.id, portalConfig.type)
+                        )
+                        .map((navItem) => navItem.id)}
+                      onTogglePin={handleTogglePin}
+                      requiredPinnedItems={[]} // No required pinned items in global system
                     />
                   ) : (
                     <Accordion
@@ -154,9 +135,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             items={item.items}
                             isCollapsed={isCollapsed}
                             pathname={pathname}
-                            pinnedItemIds={pinnedItemIds}
-                            onTogglePin={togglePinItem}
-                            requiredPinnedItems={config.requiredPinnedItems}
+                            pinnedItemIds={item.items
+                              .filter((navItem) =>
+                                isPinned(navItem.id, portalConfig.type)
+                              )
+                              .map((navItem) => navItem.id)}
+                            onTogglePin={handleTogglePin}
+                            requiredPinnedItems={[]} // No required pinned items in global system
                           />
                         </AccordionContent>
                       </AccordionItem>
@@ -167,9 +152,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     items={item.items}
                     isCollapsed={isCollapsed}
                     pathname={pathname}
-                    pinnedItemIds={pinnedItemIds}
-                    onTogglePin={togglePinItem}
-                    requiredPinnedItems={config.requiredPinnedItems}
+                    pinnedItemIds={item.items
+                      .filter((navItem) =>
+                        isPinned(navItem.id, portalConfig.type)
+                      )
+                      .map((navItem) => navItem.id)}
+                    onTogglePin={handleTogglePin}
+                    requiredPinnedItems={[]} // No required pinned items in global system
                   />
                 )}
               </div>

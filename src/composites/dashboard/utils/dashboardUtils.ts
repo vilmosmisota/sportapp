@@ -2,11 +2,9 @@ import { Access } from "@/entities/role/Role.schema";
 import {
   BaseNavItem,
   BaseNavSection,
-  PinnedItemsConfig,
   PortalConfig,
-  PortalType,
 } from "../types/baseDashboard.types";
-import { PORTAL_CONFIGS, PORTAL_STORAGE_KEYS } from "../types/portalConfigs";
+import { PORTAL_CONFIGS } from "../types/portalConfigs";
 
 export const hasPortalAccess = (
   userAccess: string[] | undefined,
@@ -68,29 +66,6 @@ export const filterNavItemsByPermissions = (
       }),
     }))
     .filter((section) => section.items.length > 0);
-};
-
-export const getPinnedItemsConfig = (
-  portalType: PortalType
-): PinnedItemsConfig => {
-  const storageKeys = PORTAL_STORAGE_KEYS[portalType];
-
-  const configs: Record<PortalType, Omit<PinnedItemsConfig, "storageKey">> = {
-    [PortalType.MANAGEMENT]: {
-      defaultPinnedItems: [1, 2], // Home and Calendar by default
-      requiredPinnedItems: [1], // Home is always pinned
-    },
-
-    [PortalType.ATTENDANCE]: {
-      defaultPinnedItems: [1], // Check-in Hub by default
-      requiredPinnedItems: [1], // Check-in Hub is always pinned
-    },
-  };
-
-  return {
-    storageKey: storageKeys.pinnedItems,
-    ...configs[portalType],
-  };
 };
 
 export const isNavItemActive = (

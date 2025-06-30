@@ -54,7 +54,7 @@ export const updateTenant = async (
     .eq("id", id)
     .select(
       `
-      id,
+      id
     `
     )
     .single();

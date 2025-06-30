@@ -12,24 +12,6 @@ import {
 import { getTopRightNavConfig } from "../utils/topRightNavConfigs";
 import { usePortalNavigation } from "./usePortalNavigation";
 
-// Legacy interface for backward compatibility
-export interface NavItem {
-  id: number;
-  name: string;
-  href: string;
-  iconName: string;
-  description: string;
-  permissions: Permission[];
-  pinnable: boolean;
-  disabled?: boolean;
-  disabledReason?: string;
-}
-
-export interface NavSection {
-  section: string;
-  items: NavItem[];
-}
-
 // Management specific navigation sections
 function getManagementNavSections(tenant?: Tenant): BaseNavSection[] {
   const navSections: BaseNavSection[] = [
@@ -98,10 +80,10 @@ function getManagementNavSections(tenant?: Tenant): BaseNavSection[] {
         },
         {
           id: 14,
-          name: "Sessions",
-          href: "/management/sessions",
-          iconName: "DumbbellIcon",
-          description: "Schedule and manage training sessions",
+          name: "Settings",
+          href: "/management/settings",
+          iconName: "Settings2",
+          description: "Manage organization settings",
           permissions: [Permission.VIEW_EVENTS, Permission.MANAGE_EVENTS],
           pinnable: true,
         },

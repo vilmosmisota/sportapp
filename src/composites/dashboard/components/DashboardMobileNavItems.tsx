@@ -10,7 +10,7 @@ import { Lock, Pin, PinOff } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useState } from "react";
-import { NavSection } from "../hooks/useManagementNavigation";
+import { NavSection } from "../types/baseDashboard.types";
 
 interface DashboardMobileNavItemsProps {
   navSections: NavSection[];

@@ -1,0 +1,67 @@
+import { Tenant } from "../../../entities/tenant/Tenant.schema";
+import {
+  BaseNavSection,
+  PortalType,
+  UsePortalNavigationReturn,
+} from "../types/baseDashboard.types";
+import { usePortalNavigation } from "./usePortalNavigation";
+
+function getMembersNavSections(tenant?: Tenant): BaseNavSection[] {
+  return [
+    {
+      section: "",
+      items: [
+        {
+          id: 1,
+          name: "Roles",
+          href: "/members/roles",
+          iconName: "Users",
+          description: "Manage roles",
+          permissions: [],
+          pinnable: true,
+        },
+        {
+          id: 2,
+          name: "Staff",
+          href: "/members/staff",
+          iconName: "Users",
+          description: "Manage staff",
+          permissions: [],
+          pinnable: true,
+        },
+        {
+          id: 3,
+          name: "Guardians",
+          href: "/members/guardians",
+          iconName: "Shield",
+          description: "Manage guardians",
+          permissions: [],
+          pinnable: true,
+        },
+        {
+          id: 4,
+          name: "Performer Users",
+          href: "/members/performer-users",
+          iconName: "Users",
+          description: "Manage performer users",
+          permissions: [],
+          pinnable: true,
+        },
+      ],
+    },
+  ];
+}
+
+function getMembersTopRightNavConfig(tenant?: Tenant) {
+  return [];
+}
+
+export function useMembersNavigation(
+  tenant?: Tenant
+): UsePortalNavigationReturn {
+  return usePortalNavigation(
+    PortalType.MEMBERS,
+    getMembersNavSections,
+    getMembersTopRightNavConfig
+  );
+}
