@@ -29,6 +29,7 @@ import {
   Settings2,
   Shield,
   ShieldCheck,
+  ShieldUser,
   Signal,
   SunSnow,
   Swords,
@@ -77,6 +78,7 @@ export const ICON_MAP = {
   Monitor,
   Settings,
   Settings2,
+  ShieldUser,
 };
 
 export const getIcon = (iconName: string): React.ReactNode => {

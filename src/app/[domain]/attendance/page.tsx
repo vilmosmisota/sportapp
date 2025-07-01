@@ -6,9 +6,9 @@ import { AttendanceManager } from "@/composites/attendance/AttendanceManager";
 import { useTenantAndUserAccessContext } from "@/composites/auth/TenantAndUserAccessContext";
 
 export default function AttendancePage() {
-  const { tenant } = useTenantAndUserAccessContext();
+  const { tenant, error, isLoading } = useTenantAndUserAccessContext();
 
-  if (!tenant) {
+  if (error) {
     return (
       <div className="w-full h-48 flex flex-col items-center justify-center space-y-2">
         <h3 className="text-lg font-medium">Organization not found</h3>
@@ -17,6 +17,10 @@ export default function AttendancePage() {
         </p>
       </div>
     );
+  }
+
+  if (isLoading || !tenant) {
+    return <div>Loading...</div>;
   }
 
   return (

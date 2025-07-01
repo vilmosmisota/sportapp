@@ -24,7 +24,7 @@ function getManagementNavSections(tenant?: Tenant): BaseNavSection[] {
           href: tenant
             ? `/management/members/${getTenantPerformerSlug(tenant)}`
             : "/management/performers",
-          iconName: "Users",
+          iconName: "ShieldUser",
           description: tenant
             ? `Manage your organization's ${getTenantPerformerName(
                 tenant
@@ -37,7 +37,7 @@ function getManagementNavSections(tenant?: Tenant): BaseNavSection[] {
           id: 13,
           name: "Groups",
           href: "/management/groups",
-          iconName: "Users2",
+          iconName: "Shield",
           description: "Organize and manage team groups",
           permissions: [Permission.VIEW_GROUP, Permission.MANAGE_GROUP],
           pinnable: true,
