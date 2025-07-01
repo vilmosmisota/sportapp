@@ -36,6 +36,7 @@ export interface PortalConfig {
   description: string;
   icon: LucideIcon;
   requiredAccess?: string[]; // Access levels required for this portal
+  color?: string;
 }
 
 // Top right navigation configuration

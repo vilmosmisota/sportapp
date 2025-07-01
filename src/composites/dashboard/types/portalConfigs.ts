@@ -6,9 +6,11 @@ export const PORTAL_CONFIGS: Record<PortalType, PortalConfig> = {
   [PortalType.MANAGEMENT]: {
     type: PortalType.MANAGEMENT,
     title: "Management",
-    description: "Comprehensive management tools for your organization",
+    description:
+      "Comprehensive management tool for your organization's members and groups",
     icon: NotebookTabs,
     requiredAccess: [Access.MANAGEMENT, Access.SYSTEM],
+    color: "#0ea5e9", // Bright blue - represents organization and structure
   },
   [PortalType.SCHEDULING]: {
     type: PortalType.SCHEDULING,
@@ -16,6 +18,7 @@ export const PORTAL_CONFIGS: Record<PortalType, PortalConfig> = {
     description: "Manage seasons, calendar, and scheduling settings",
     icon: Calendar,
     requiredAccess: [Access.MANAGEMENT, Access.SYSTEM],
+    color: "#10b981", // Emerald green - represents time and planning
   },
   [PortalType.ATTENDANCE]: {
     type: PortalType.ATTENDANCE,
@@ -23,6 +26,7 @@ export const PORTAL_CONFIGS: Record<PortalType, PortalConfig> = {
     description: "Attendance tracking for all activities",
     icon: ClipboardCheck,
     requiredAccess: [Access.ATTENDANCE, Access.SYSTEM],
+    color: "#f59e0b", // Amber - represents activity and engagement
   },
   [PortalType.USERS]: {
     type: PortalType.USERS,
@@ -30,6 +34,7 @@ export const PORTAL_CONFIGS: Record<PortalType, PortalConfig> = {
     description: "Manage your users",
     icon: Users,
     requiredAccess: [],
+    color: "#6366f1", // Indigo - represents people and community
   },
 };
 
