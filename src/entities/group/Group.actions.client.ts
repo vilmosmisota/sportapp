@@ -18,6 +18,10 @@ export const useCreateGroup = (tenantId: string) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.group.all,
       });
+      // Invalidate management dashboard when groups change
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.managementDashboard.byTenant(tenantId),
+      });
     },
   });
 };
@@ -44,6 +48,10 @@ export const useUpdateGroup = (tenantId: string) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.group.all,
       });
+      // Invalidate management dashboard when groups change
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.managementDashboard.byTenant(tenantId),
+      });
     },
   });
 };
@@ -67,6 +75,10 @@ export const useDeleteGroup = (tenantId: string) => {
 
       queryClient.invalidateQueries({
         queryKey: queryKeys.member.byGroup(tenantId, groupId),
+      });
+      // Invalidate management dashboard when groups change
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.managementDashboard.byTenant(tenantId),
       });
     },
   });

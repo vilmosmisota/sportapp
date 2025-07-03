@@ -19,6 +19,15 @@ function getManagementNavSections(tenant?: Tenant): BaseNavSection[] {
       section: "",
       items: [
         {
+          id: 0,
+          name: "Overview",
+          href: "/management",
+          iconName: "LayoutDashboard",
+          description: "Management overview and dashboard",
+          permissions: [],
+          pinnable: false,
+        },
+        {
           id: 4,
           name: tenant ? getTenantPerformerName(tenant) : "Performers",
           href: tenant

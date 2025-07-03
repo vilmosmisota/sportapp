@@ -31,6 +31,7 @@ interface NavItemProps {
   isPinned?: boolean;
   isRequiredPin?: boolean;
   onTogglePin?: (itemId: number) => void;
+  portalColor?: string;
 }
 
 export default function DashboardNavItem({
@@ -40,6 +41,7 @@ export default function DashboardNavItem({
   isPinned = false,
   isRequiredPin = false,
   onTogglePin,
+  portalColor,
 }: NavItemProps) {
   const [openTooltip, setOpenTooltip] = useState<string | null>(null);
   const [showPinIcon, setShowPinIcon] = useState(false);
@@ -201,9 +203,14 @@ export default function DashboardNavItem({
                   ? "w-10 h-10 justify-center items-center"
                   : "px-3 py-1.5 items-center",
                 isActive
-                  ? "text-primary"
+                  ? portalColor
+                    ? ""
+                    : "text-primary"
                   : "text-sidebar-foreground hover:bg-accent/50 hover:text-primary"
               )}
+              style={
+                isActive && portalColor ? { color: portalColor } : undefined
+              }
             >
               <div
                 className={cn(
@@ -226,7 +233,15 @@ export default function DashboardNavItem({
               {pathname === item.href &&
                 !isCollapsed &&
                 (!showPinIcon || !item.pinnable) && (
-                  <div className="ml-auto h-1 w-1 rounded-full bg-primary" />
+                  <div
+                    className={cn(
+                      "ml-auto h-1 w-1 rounded-full",
+                      portalColor ? "" : "bg-primary"
+                    )}
+                    style={
+                      portalColor ? { backgroundColor: portalColor } : undefined
+                    }
+                  />
                 )}
             </Link>
 
@@ -236,10 +251,24 @@ export default function DashboardNavItem({
                 onClick={handleTogglePin}
                 className={cn(
                   "absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full p-1",
-                  "text-sidebar-foreground hover:text-primary hover:bg-accent/30 transition-colors",
-                  isPinned && "text-primary",
+                  "text-sidebar-foreground hover:bg-accent/30 transition-colors",
+                  portalColor ? "" : "hover:text-primary",
+                  isPinned && (portalColor ? "" : "text-primary"),
                   isRequiredPin && "cursor-default"
                 )}
+                style={
+                  isPinned && portalColor ? { color: portalColor } : undefined
+                }
+                onMouseEnter={(e) => {
+                  if (portalColor && !isPinned) {
+                    e.currentTarget.style.color = portalColor;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (portalColor && !isPinned) {
+                    e.currentTarget.style.color = "";
+                  }
+                }}
                 aria-label={
                   isRequiredPin
                     ? "Always pinned"
@@ -267,8 +296,20 @@ export default function DashboardNavItem({
                   onClick={handleTogglePin}
                   className={cn(
                     "mt-1 flex items-center gap-1 text-xs",
-                    "text-sidebar-foreground hover:text-primary transition-colors"
+                    "text-sidebar-foreground transition-colors",
+                    portalColor ? "" : "hover:text-primary"
                   )}
+                  style={portalColor ? undefined : undefined}
+                  onMouseEnter={(e) => {
+                    if (portalColor) {
+                      e.currentTarget.style.color = portalColor;
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (portalColor) {
+                      e.currentTarget.style.color = "";
+                    }
+                  }}
                 >
                   <PinIcon className="h-3 w-3" />
                   {isPinned ? "Unpin from dashboard" : "Pin to dashboard"}

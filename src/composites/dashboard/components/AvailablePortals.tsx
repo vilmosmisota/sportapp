@@ -176,11 +176,17 @@ export function AvailablePortals({
                       key={portal.type}
                       variant="ghost"
                       className={cn(
-                        "h-auto p-2 justify-start text-left border transition-all duration-200",
-                        isActive
-                          ? "border-primary bg-primary/5 text-primary ring-1 ring-primary/20"
-                          : "border-border/50 hover:border-border text-sidebar-foreground hover:text-foreground"
+                        "h-auto p-2 justify-start text-left transition-all duration-200",
+                        isActive ? "border" : "border-0"
                       )}
+                      style={
+                        isActive
+                          ? {
+                              borderColor: portal.color,
+                              backgroundColor: `${portal.color}05`,
+                            }
+                          : undefined
+                      }
                       asChild
                     >
                       <Link
@@ -189,15 +195,20 @@ export function AvailablePortals({
                       >
                         <div className="flex items-center gap-3 w-full">
                           <div
-                            className={cn(
-                              "p-1.5 rounded-md shrink-0 mt-0.5",
-                              isActive ? "bg-primary/10" : "bg-muted/50"
-                            )}
+                            className="p-1.5 rounded-md shrink-0 mt-0.5"
+                            style={{
+                              backgroundColor: isActive
+                                ? `${portal.color}15`
+                                : undefined,
+                            }}
                           >
                             {isPortalLoading ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
-                              <Icon className="h-4 w-4" />
+                              <Icon
+                                className="h-4 w-4"
+                                style={{ color: portal.color }}
+                              />
                             )}
                           </div>
                           <div className="font-medium text-sm leading-tight">

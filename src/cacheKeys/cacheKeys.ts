@@ -154,4 +154,9 @@ export const queryKeys = {
     seasonReport: ["attendanceReports", "seasonReport"] as const,
     groupSeasonReport: ["attendanceReports", "groupSeasonReport"] as const,
   },
+  managementDashboard: {
+    all: ["managementDashboard"] as const,
+    byTenant: (tenantId: string | undefined) =>
+      ["managementDashboard", "byTenant", tenantId] as const,
+  },
 } as const;

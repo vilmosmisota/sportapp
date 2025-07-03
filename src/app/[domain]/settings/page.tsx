@@ -1,5 +1,6 @@
 "use client";
 
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -9,8 +10,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { useTenantAndUserAccessContext } from "@/composites/auth/TenantAndUserAccessContext";
 import { Building2, Globe, Mail, MapPin, Trophy } from "lucide-react";
-import { useTenantAndUserAccessContext } from "../../../composites/auth/TenantAndUserAccessContext";
 
 export default function GlobalSettingsPage() {
   const { tenant, isLoading, error } = useTenantAndUserAccessContext();
@@ -244,11 +245,9 @@ export default function GlobalSettingsPage() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center space-x-4">
-              <img
-                src={generalConfig.logo}
-                alt="Organization Logo"
-                className="h-16 w-16 object-contain rounded-lg border"
-              />
+              <Avatar className="h-16 w-16">
+                <AvatarImage src={generalConfig.logo} />
+              </Avatar>
               <div>
                 <p className="text-sm font-medium">Logo URL</p>
                 <p className="text-xs text-muted-foreground truncate max-w-md">

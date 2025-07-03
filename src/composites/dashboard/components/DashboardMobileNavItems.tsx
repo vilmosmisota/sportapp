@@ -18,6 +18,7 @@ interface DashboardMobileNavItemsProps {
   setIsOpen: (isOpen: boolean) => void;
   pinnedItemIds?: number[];
   onTogglePin?: (itemId: number) => void;
+  portalColor?: string;
 }
 
 export default function DashboardMobileNavItems({
@@ -26,6 +27,7 @@ export default function DashboardMobileNavItems({
   setIsOpen,
   pinnedItemIds = [],
   onTogglePin,
+  portalColor,
 }: DashboardMobileNavItemsProps) {
   const pathname = usePathname();
   const [openSections, setOpenSections] = useState<string[]>([]);
@@ -88,10 +90,17 @@ export default function DashboardMobileNavItems({
                       className={cn(
                         "group flex items-center justify-between rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200",
                         isActive
-                          ? "bg-accent text-accent-foreground"
+                          ? portalColor
+                            ? "bg-accent"
+                            : "bg-accent text-accent-foreground"
                           : "text-muted-foreground hover:bg-accent/50 hover:text-primary",
                         item.disabled && "opacity-50 cursor-not-allowed"
                       )}
+                      style={
+                        isActive && portalColor
+                          ? { color: portalColor }
+                          : undefined
+                      }
                     >
                       <div className="flex items-center gap-x-3">
                         {getIcon(item.iconName)}
@@ -100,7 +109,17 @@ export default function DashboardMobileNavItems({
                       <div className="flex items-center">
                         {pathname === item.href &&
                           hoveredItem !== item.href && (
-                            <div className="h-1 w-1 rounded-full bg-primary mr-2" />
+                            <div
+                              className={cn(
+                                "h-1 w-1 rounded-full mr-2",
+                                portalColor ? "" : "bg-primary"
+                              )}
+                              style={
+                                portalColor
+                                  ? { backgroundColor: portalColor }
+                                  : undefined
+                              }
+                            />
                           )}
                         {item.pinnable &&
                           !item.disabled &&
@@ -110,9 +129,16 @@ export default function DashboardMobileNavItems({
                               onClick={(e) => handlePinToggle(e, item.id)}
                               className={cn(
                                 requiredPinnedItems.includes(item.id)
-                                  ? "text-primary cursor-default"
+                                  ? portalColor
+                                    ? "cursor-default"
+                                    : "text-primary cursor-default"
+                                  : portalColor
+                                  ? ""
                                   : "text-primary"
                               )}
+                              style={
+                                portalColor ? { color: portalColor } : undefined
+                              }
                             >
                               {requiredPinnedItems.includes(item.id) ? (
                                 <Lock className="h-3.5 w-3.5" />
@@ -168,10 +194,17 @@ export default function DashboardMobileNavItems({
                               className={cn(
                                 "group flex items-center justify-between rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200",
                                 isActive
-                                  ? "bg-accent text-accent-foreground"
+                                  ? portalColor
+                                    ? "bg-accent"
+                                    : "bg-accent text-accent-foreground"
                                   : "text-muted-foreground hover:bg-accent/50 hover:text-primary",
                                 item.disabled && "opacity-50 cursor-not-allowed"
                               )}
+                              style={
+                                isActive && portalColor
+                                  ? { color: portalColor }
+                                  : undefined
+                              }
                             >
                               <div className="flex items-center gap-x-3">
                                 {getIcon(item.iconName)}
@@ -180,7 +213,17 @@ export default function DashboardMobileNavItems({
                               <div className="flex items-center">
                                 {pathname === item.href &&
                                   hoveredItem !== item.href && (
-                                    <div className="h-1 w-1 rounded-full bg-primary mr-2" />
+                                    <div
+                                      className={cn(
+                                        "h-1 w-1 rounded-full mr-2",
+                                        portalColor ? "" : "bg-primary"
+                                      )}
+                                      style={
+                                        portalColor
+                                          ? { backgroundColor: portalColor }
+                                          : undefined
+                                      }
+                                    />
                                   )}
                                 {item.pinnable &&
                                   !item.disabled &&
@@ -192,11 +235,24 @@ export default function DashboardMobileNavItems({
                                       }
                                       className={cn(
                                         requiredPinnedItems.includes(item.id)
-                                          ? "text-primary cursor-default"
+                                          ? portalColor
+                                            ? "cursor-default"
+                                            : "text-primary cursor-default"
                                           : pinnedItemIds.includes(item.id)
-                                          ? "text-primary"
+                                          ? portalColor
+                                            ? ""
+                                            : "text-primary"
                                           : "text-muted-foreground"
                                       )}
+                                      style={
+                                        (requiredPinnedItems.includes(
+                                          item.id
+                                        ) ||
+                                          pinnedItemIds.includes(item.id)) &&
+                                        portalColor
+                                          ? { color: portalColor }
+                                          : undefined
+                                      }
                                     >
                                       {requiredPinnedItems.includes(item.id) ? (
                                         <Lock className="h-3.5 w-3.5" />
@@ -239,10 +295,17 @@ export default function DashboardMobileNavItems({
                         className={cn(
                           "group flex items-center justify-between rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200",
                           isActive
-                            ? "bg-accent text-accent-foreground"
+                            ? portalColor
+                              ? "bg-accent"
+                              : "bg-accent text-accent-foreground"
                             : "text-muted-foreground hover:bg-accent/50 hover:text-primary",
                           item.disabled && "opacity-50 cursor-not-allowed"
                         )}
+                        style={
+                          isActive && portalColor
+                            ? { color: portalColor }
+                            : undefined
+                        }
                       >
                         <div className="flex items-center gap-x-3">
                           {getIcon(item.iconName)}
@@ -251,7 +314,17 @@ export default function DashboardMobileNavItems({
                         <div className="flex items-center">
                           {pathname === item.href &&
                             hoveredItem !== item.href && (
-                              <div className="h-1 w-1 rounded-full bg-primary mr-2" />
+                              <div
+                                className={cn(
+                                  "h-1 w-1 rounded-full mr-2",
+                                  portalColor ? "" : "bg-primary"
+                                )}
+                                style={
+                                  portalColor
+                                    ? { backgroundColor: portalColor }
+                                    : undefined
+                                }
+                              />
                             )}
                           {item.pinnable &&
                             !item.disabled &&
@@ -261,11 +334,22 @@ export default function DashboardMobileNavItems({
                                 onClick={(e) => handlePinToggle(e, item.id)}
                                 className={cn(
                                   requiredPinnedItems.includes(item.id)
-                                    ? "text-primary cursor-default"
+                                    ? portalColor
+                                      ? "cursor-default"
+                                      : "text-primary cursor-default"
                                     : pinnedItemIds.includes(item.id)
-                                    ? "text-primary"
+                                    ? portalColor
+                                      ? ""
+                                      : "text-primary"
                                     : "text-muted-foreground"
                                 )}
+                                style={
+                                  (requiredPinnedItems.includes(item.id) ||
+                                    pinnedItemIds.includes(item.id)) &&
+                                  portalColor
+                                    ? { color: portalColor }
+                                    : undefined
+                                }
                               >
                                 {requiredPinnedItems.includes(item.id) ? (
                                   <Lock className="h-3.5 w-3.5" />

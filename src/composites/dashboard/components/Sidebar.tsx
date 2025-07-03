@@ -117,6 +117,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         .map((navItem) => navItem.id)}
                       onTogglePin={handleTogglePin}
                       requiredPinnedItems={[]} // No required pinned items in global system
+                      portalColor={portalConfig.color}
                     />
                   ) : (
                     <Accordion
@@ -144,6 +145,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                               .map((navItem) => navItem.id)}
                             onTogglePin={handleTogglePin}
                             requiredPinnedItems={[]} // No required pinned items in global system
+                            portalColor={portalConfig.color}
                           />
                         </AccordionContent>
                       </AccordionItem>
@@ -161,6 +163,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       .map((navItem) => navItem.id)}
                     onTogglePin={handleTogglePin}
                     requiredPinnedItems={[]} // No required pinned items in global system
+                    portalColor={portalConfig.color}
                   />
                 )}
               </div>

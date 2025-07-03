@@ -14,6 +14,15 @@ function getSchedulingNavSections(tenant?: Tenant): BaseNavSection[] {
       section: "",
       items: [
         {
+          id: 0,
+          name: "Overview",
+          href: "/scheduling",
+          iconName: "LayoutDashboard",
+          description: "Scheduling overview and dashboard",
+          permissions: [],
+          pinnable: false,
+        },
+        {
           id: 1,
           name: "Seasons",
           href: "/scheduling/seasons",

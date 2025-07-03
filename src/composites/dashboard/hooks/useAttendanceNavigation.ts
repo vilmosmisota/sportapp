@@ -14,6 +14,15 @@ function getAttendanceNavSections(tenant?: Tenant): BaseNavSection[] {
       section: "",
       items: [
         {
+          id: 0,
+          name: "Overview",
+          href: "/attendance",
+          iconName: "LayoutDashboard",
+          description: "Attendance overview and dashboard",
+          permissions: [],
+          pinnable: false,
+        },
+        {
           id: 1,
           name: "Live sessions",
           href: "/attendance/live-sessions",

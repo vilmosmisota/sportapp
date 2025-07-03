@@ -71,6 +71,10 @@ export function useAssignMembersToGroup(tenantId: string) {
           queryKey: queryKeys.member.detail(tenantId, memberId.toString()),
         });
       });
+
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.managementDashboard.byTenant(tenantId),
+      });
     },
     onError: (error) => {
       console.error("Error assigning members to group:", error);

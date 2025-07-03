@@ -1,0 +1,78 @@
+# .github/workflows/daily-backup.yml
+name: Daily Supabase Backup
+
+on:
+  schedule:
+    - cron: "0 2 * * *" # Run at 2 AM UTC daily
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Install AWS CLI
+        run: |
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install
+
+      - name: Create backup
+        run: |
+          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+          BACKUP_FILE="supabase_backup_${TIMESTAMP}.sql"
+
+          # Create database dump
+          pg_dump "${{ secrets.SUPABASE_DB_URL }}" > $BACKUP_FILE
+
+          # Compress the backup
+          gzip $BACKUP_FILE
+
+          echo "BACKUP_FILE=${BACKUP_FILE}.gz" >> $GITHUB_ENV
+
+      - name: Upload to Cloudflare R2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+        run: |
+          # Upload new backup
+          aws s3 cp $BACKUP_FILE s3://${{ secrets.R2_BACKUP_BUCKET_NAME }}/ \
+            --endpoint-url ${{ secrets.R2_ENDPOINT_URL }}
+
+      - name: Clean up old backups
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+        run: |
+          # List all backup files
+          aws s3 ls s3://${{ secrets.R2_BACKUP_BUCKET_NAME }}/ \
+            --endpoint-url ${{ secrets.R2_ENDPOINT_URL }} \
+            --recursive > backup_list.txt
+
+          # Delete files older than 7 days
+          CUTOFF_DATE=$(date -d '7 days ago' +%Y-%m-%d)
+
+          while IFS= read -r line; do
+            if [[ $line == *"supabase_backup_"* ]]; then
+              FILE_DATE=$(echo $line | grep -o '[0-9]\{8\}' | head -1)
+              if [[ ! -z "$FILE_DATE" ]]; then
+                FORMATTED_DATE=$(date -d "${FILE_DATE:0:4}-${FILE_DATE:4:2}-${FILE_DATE:6:2}" +%Y-%m-%d)
+                if [[ "$FORMATTED_DATE" < "$CUTOFF_DATE" ]]; then
+                  FILE_PATH=$(echo $line | awk '{print $4}')
+                  echo "Deleting old backup: $FILE_PATH"
+                  aws s3 rm s3://${{ secrets.R2_BACKUP_BUCKET_NAME }}/$FILE_PATH \
+                    --endpoint-url ${{ secrets.R2_ENDPOINT_URL }}
+                fi
+              fi
+            fi
+          done < backup_list.txt

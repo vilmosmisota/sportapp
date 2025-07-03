@@ -7,6 +7,7 @@ interface NavItemsProps {
   pinnedItemIds?: number[];
   onTogglePin?: (itemId: number) => void;
   requiredPinnedItems?: number[];
+  portalColor?: string;
 }
 
 export default function NavItems({
@@ -16,6 +17,7 @@ export default function NavItems({
   pinnedItemIds = [],
   onTogglePin,
   requiredPinnedItems = [1, 2], // Default to Home and Schedule
+  portalColor,
 }: NavItemsProps) {
   return (
     <div className="space-y-1">
@@ -28,6 +30,7 @@ export default function NavItems({
           isPinned={pinnedItemIds.includes(item.id)}
           isRequiredPin={requiredPinnedItems.includes(item.id)}
           onTogglePin={onTogglePin}
+          portalColor={portalColor}
         />
       ))}
     </div>

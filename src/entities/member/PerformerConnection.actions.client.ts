@@ -38,6 +38,10 @@ export const useUpdatePerformerFamilyConnections = (tenantId: string) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.member.all,
       });
+
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.managementDashboard.byTenant(tenantId),
+      });
     },
   });
 };

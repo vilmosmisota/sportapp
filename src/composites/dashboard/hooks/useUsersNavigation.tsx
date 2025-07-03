@@ -14,6 +14,15 @@ function getUsersNavSections(tenant?: Tenant): BaseNavSection[] {
       section: "",
       items: [
         {
+          id: 0,
+          name: "Overview",
+          href: "/users",
+          iconName: "LayoutDashboard",
+          description: "Users overview and dashboard",
+          permissions: [],
+          pinnable: false,
+        },
+        {
           id: 1,
           name: "Roles",
           href: "/members/roles",

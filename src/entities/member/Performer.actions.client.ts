@@ -32,6 +32,9 @@ export const useAddPerformer = (tenantId: string) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.member.list(tenantId),
       });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.managementDashboard.byTenant(tenantId),
+      });
     },
   });
 };
@@ -55,6 +58,11 @@ export const useUpdatePerformer = (tenantId: string) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.member.list(tenantId),
       });
+
+      // Invalidate management dashboard when performers change
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.managementDashboard.byTenant(tenantId),
+      });
     },
   });
 };
@@ -72,6 +80,11 @@ export const useDeletePerformer = (tenantId: string) => {
       });
       queryClient.invalidateQueries({
         queryKey: queryKeys.member.list(tenantId),
+      });
+
+      // Invalidate management dashboard when performers change
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.managementDashboard.byTenant(tenantId),
       });
     },
   });

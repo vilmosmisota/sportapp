@@ -33,6 +33,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
   portalConfig,
 }) => {
   const { isPinned, togglePinItem } = useGlobalPinnedItems();
+  const portalColor = portalConfig.color;
 
   // Generate settings link based on portal type
   const getSettingsLink = () => {
@@ -81,9 +82,18 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                           "flex items-center justify-center h-9 w-9 rounded-md transition-all",
                           pathname === settingsLink ||
                             pathname.startsWith(settingsLink + "/")
-                            ? "bg-primary/10 text-primary"
+                            ? portalColor
+                              ? "bg-primary/10"
+                              : "bg-primary/10 text-primary"
                             : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
                         )}
+                        style={
+                          (pathname === settingsLink ||
+                            pathname.startsWith(settingsLink + "/")) &&
+                          portalColor
+                            ? { color: portalColor }
+                            : undefined
+                        }
                         onClick={() => setIsOpen(false)}
                       >
                         <Cog className="h-4 w-4" />
@@ -121,6 +131,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
               setIsOpen={setIsOpen}
               pinnedItemIds={pinnedItemIds}
               onTogglePin={handleTogglePin}
+              portalColor={portalConfig.color}
             />
           </div>
         </DrawerContent>
