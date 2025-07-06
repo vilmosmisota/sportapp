@@ -1,3 +1,4 @@
+import { R2_PUBLIC_BASE_URL } from "@/libs/upload/constants";
 import {
   DeleteObjectCommand,
   PutObjectCommand,
@@ -17,6 +18,10 @@ export interface FileUploadOptions {
   contentType: string;
   folder?: string;
   tenantId?: string | number;
+}
+
+function extractR2KeyFromUrl(url: string): string {
+  return url.replace(R2_PUBLIC_BASE_URL + "/", "");
 }
 
 class R2FileUploadService {
@@ -48,26 +53,17 @@ class R2FileUploadService {
     return base;
   }
 
-  private simpleSlug(str: string): string {
-    return str
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "");
-  }
-
   private generateKey(
     fileName: string,
     folder?: string,
-    tenantId?: string | number,
-    tenantName?: string
+    tenantId?: string | number
   ): string {
     const timestamp = Date.now();
     const random = Math.random().toString(36).slice(2, 10);
     const sanitized = this.sanitizeFileName(fileName);
     let key = "";
     if (tenantId) {
-      let slug = tenantName ? this.simpleSlug(tenantName) : undefined;
-      key += `tenants/${tenantId}${slug ? `-${slug}` : ""}/`;
+      key += `${tenantId}/`;
     }
     if (folder) key += `${folder}/`;
     key += `${timestamp}_${random}_${sanitized}`;
@@ -104,7 +100,7 @@ class R2FileUploadService {
       return { success: false, error: "File too large. Max 5MB." };
     }
     try {
-      const key = this.generateKey(fileName, folder, tenantId, tenantName);
+      const key = this.generateKey(fileName, folder, tenantId);
       const body =
         file instanceof File ? Buffer.from(await file.arrayBuffer()) : file;
       const command = new PutObjectCommand({
@@ -127,8 +123,14 @@ class R2FileUploadService {
     }
   }
 
-  async deleteFile(key: string): Promise<FileUploadResult> {
+  async deleteFile(keyOrUrl: string): Promise<FileUploadResult> {
+    // Accept either a key or a full public URL
+    let key = keyOrUrl;
+    if (keyOrUrl.startsWith(R2_PUBLIC_BASE_URL)) {
+      key = extractR2KeyFromUrl(keyOrUrl);
+    }
     if (!key) return { success: false, error: "Missing key." };
+
     try {
       const command = new DeleteObjectCommand({
         Bucket: this.bucketName,

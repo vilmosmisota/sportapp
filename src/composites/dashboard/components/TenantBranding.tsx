@@ -10,8 +10,6 @@ export function TenantBranding({
   tenant,
   isLoading = false,
 }: TenantBrandingProps) {
-  console.log("tenant", tenant);
-
   if (isLoading) {
     return (
       <div className="flex flex-col items-center text-center gap-3 p-4 border-t border-primary-100/20 animate-pulse">

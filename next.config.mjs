@@ -8,7 +8,7 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "pub-1d033076402741d08db8c16cbd780fb8.r2.dev",
+        hostname: "sportwise.net",
       },
     ],
   },

@@ -25,6 +25,8 @@ export type UploaderProps = {
   className?: string;
   error?: string;
   helperText?: string;
+  initialUrl?: string;
+  onRemove?: () => void;
 };
 
 const DEFAULT_ACCEPT = "image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt";
@@ -42,21 +44,27 @@ export const Uploader: React.FC<UploaderProps> = ({
   className,
   error,
   helperText,
+  initialUrl,
+  onRemove,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
   const [internalError, setInternalError] = useState<string | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(
+    initialUrl || null
+  );
 
   React.useEffect(() => {
     if (value && value.type.startsWith("image/") && showPreview) {
       const url = URL.createObjectURL(value);
       setPreviewUrl(url);
       return () => URL.revokeObjectURL(url);
-    } else {
+    } else if (!value && initialUrl) {
+      setPreviewUrl(initialUrl);
+    } else if (!value) {
       setPreviewUrl(null);
     }
-  }, [value, showPreview]);
+  }, [value, showPreview, initialUrl]);
 
   const handleFile = (file: File | null) => {
     setInternalError(null);
@@ -102,13 +110,15 @@ export const Uploader: React.FC<UploaderProps> = ({
 
   const handleRemove = () => {
     setInternalError(null);
-    setPreviewUrl(null);
+    setPreviewUrl(initialUrl || null);
     onChange(null);
+    if (onRemove) onRemove();
     if (inputRef.current) inputRef.current.value = "";
   };
 
   const showImagePreview =
-    value && value.type.startsWith("image/") && previewUrl && showPreview;
+    (value && value.type.startsWith("image/") && previewUrl && showPreview) ||
+    (!value && previewUrl && showPreview);
   const showFileIcon = value && !showImagePreview;
 
   return (

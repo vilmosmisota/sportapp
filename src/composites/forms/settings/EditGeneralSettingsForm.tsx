@@ -16,6 +16,7 @@ import {
   TenantForm,
   TenantFormSchema,
 } from "@/entities/tenant/Tenant.schema";
+import { R2_PUBLIC_BASE_URL } from "@/libs/upload/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as React from "react";
 import { useForm } from "react-hook-form";
@@ -27,7 +28,7 @@ interface EditGlobalSettingsFormProps {
   setIsParentModalOpen?: (open: boolean) => void;
 }
 
-export default function EditGlobalSettingsForm({
+export default function EditGeneralSettingsForm({
   tenant,
   setSheetOpen,
   setIsParentModalOpen,
@@ -40,6 +41,7 @@ export default function EditGlobalSettingsForm({
   const [logoFile, setLogoFile] = React.useState<File | null>(null);
   const [logoUploading, setLogoUploading] = React.useState(false);
   const [logoError, setLogoError] = React.useState<string | null>(null);
+  const [oldLogoKey, setOldLogoKey] = React.useState<string | null>(null);
 
   const form = useForm<TenantForm>({
     resolver: zodResolver(TenantFormSchema),
@@ -71,6 +73,10 @@ export default function EditGlobalSettingsForm({
   const handleLogoChange = (file: File | null) => {
     setLogoFile(file);
     setLogoError(null);
+    if (logoUrl) {
+      const key = logoUrl.replace(R2_PUBLIC_BASE_URL + "/", "");
+      setOldLogoKey(key || null);
+    }
   };
 
   const onSubmit = async (data: TenantForm) => {
@@ -82,6 +88,9 @@ export default function EditGlobalSettingsForm({
         formData.append("file", logoFile);
         formData.append("tenantId", tenant.id.toString());
         formData.append("uploadType", "logo");
+        if (oldLogoKey) {
+          formData.append("oldFileKey", oldLogoKey);
+        }
         const res = await fetch("/api/upload", {
           method: "POST",
           body: formData,
@@ -94,6 +103,7 @@ export default function EditGlobalSettingsForm({
           return;
         }
         finalLogoUrl = result.url;
+        setOldLogoKey(null);
       }
       const submitData: TenantForm = {
         ...data,

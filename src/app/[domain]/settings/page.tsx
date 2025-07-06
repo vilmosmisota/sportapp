@@ -12,7 +12,7 @@ import {
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { Separator } from "@/components/ui/separator";
 import { useTenantAndUserAccessContext } from "@/composites/auth/TenantAndUserAccessContext";
-import EditGlobalSettingsForm from "@/composites/forms/settings/EditGlobalSettingsForm";
+import EditGlobalSettingsForm from "@/composites/forms/settings/EditGeneralSettingsForm";
 import { Building2, Globe, MapPin, Trophy } from "lucide-react";
 import { useState } from "react";
 import { Button } from "../../../components/ui/button";

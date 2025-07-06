@@ -9,13 +9,16 @@ import {
 import FormButtons from "@/components/ui/form-buttons";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Uploader } from "@/components/ui/uploader";
 import { useUpdateTenant } from "@/entities/tenant/Tenant.actions.client";
 import {
   Tenant,
   TenantForm,
   TenantFormSchema,
 } from "@/entities/tenant/Tenant.schema";
+import { R2_PUBLIC_BASE_URL } from "@/libs/upload/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
+import React from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -61,18 +64,94 @@ export default function EditGeneralForm({
   const { handleSubmit } = form;
   const { isDirty, isLoading } = form.formState;
 
-  const onSubmit = (data: TenantForm) => {
-    tenantUpdate.mutate(data, {
-      onSuccess: () => {
-        toast.success("General settings updated");
-        setSheetOpen(false);
-        form.reset();
-      },
-      onError: () => {
-        toast.error("Failed to update general settings");
-        console.error("Failed to update general settings");
-      },
-    });
+  const [logoFile, setLogoFile] = React.useState<File | null>(null);
+  const [logoUploading, setLogoUploading] = React.useState(false);
+  const [logoError, setLogoError] = React.useState<string | null>(null);
+  const [oldLogoKey, setOldLogoKey] = React.useState<string | null>(null);
+
+  // Get current logo URL from tenant
+  const currentLogoUrl = tenant.tenantConfigs?.general?.logo ?? undefined;
+
+  // Watch logo in form
+  const logoUrl = form.watch("tenantConfig.general.logo");
+
+  const handleLogoChange = (file: File | null) => {
+    setLogoFile(file);
+    setLogoError(null);
+    if (logoUrl) {
+      const key = logoUrl.replace(R2_PUBLIC_BASE_URL + "/", "");
+      setOldLogoKey(key || null);
+    }
+  };
+
+  const handleLogoRemove = () => {
+    setLogoFile(null);
+    setLogoError(null);
+    if (logoUrl) {
+      const key = logoUrl.replace(R2_PUBLIC_BASE_URL + "/", "");
+      setOldLogoKey(key || null);
+    }
+    form.setValue("tenantConfig.general.logo", "");
+  };
+
+  const onSubmit = async (data: TenantForm) => {
+    console.log("oldLogoKey", oldLogoKey);
+    console.log("logoFile", logoFile);
+
+    try {
+      let finalLogoUrl = data.tenantConfig?.general?.logo;
+      if (logoFile) {
+        setLogoUploading(true);
+        const formData = new FormData();
+        formData.append("file", logoFile);
+        formData.append("tenantId", tenant.id.toString());
+        formData.append("tenantName", tenant.name);
+        formData.append("uploadType", "logo");
+        if (oldLogoKey) {
+          formData.append("oldFileKey", oldLogoKey);
+        }
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+        const result = await res.json();
+        setLogoUploading(false);
+        if (!res.ok || !result.url) {
+          setLogoError(result.error || "Upload failed");
+          toast.error(result.error || "Logo upload failed");
+          return;
+        }
+        finalLogoUrl = result.url;
+        form.setValue("tenantConfig.general.logo", finalLogoUrl);
+        setOldLogoKey(null);
+      }
+      const submitData: TenantForm = {
+        ...data,
+        tenantConfig: {
+          ...data.tenantConfig,
+          general: {
+            ...data.tenantConfig?.general,
+            logo: finalLogoUrl,
+          },
+        },
+      };
+      tenantUpdate.mutate(submitData, {
+        onSuccess: () => {
+          toast.success("General settings updated");
+          setSheetOpen(false);
+          form.reset();
+          setLogoFile(null);
+        },
+        onError: () => {
+          toast.error("Failed to update general settings");
+          console.error("Failed to update general settings");
+        },
+      });
+    } catch (err: any) {
+      setLogoUploading(false);
+      setLogoError(err.message || "Upload failed");
+      toast.error(err.message || "Logo upload failed");
+    }
   };
 
   const onCancel = () => {
@@ -138,6 +217,34 @@ export default function EditGeneralForm({
                 )}
               />
             </div>
+          </div>
+
+          {/* Logo Upload */}
+          <div className="space-y-4">
+            <div className="border-b pb-2">
+              <h4 className="text-sm font-medium text-muted-foreground">
+                Organization Logo
+              </h4>
+            </div>
+            <Uploader
+              value={logoFile}
+              onChange={handleLogoChange}
+              onRemove={handleLogoRemove}
+              accept="image/*"
+              maxSize={5 * 1024 * 1024}
+              showPreview
+              label="Logo"
+              description="PNG, JPG, GIF, or WebP. Max 5MB."
+              error={logoError || undefined}
+              helperText={
+                logoUrl ? "Current logo will be replaced." : undefined
+              }
+              disabled={logoUploading}
+              initialUrl={logoUrl || currentLogoUrl}
+            />
+            {logoUploading && (
+              <div className="text-xs text-muted-foreground">Uploading...</div>
+            )}
           </div>
 
           {/* Location Information */}
@@ -237,8 +344,8 @@ export default function EditGeneralForm({
 
         <FormButtons
           buttonText="Save Changes"
-          isLoading={isLoading}
-          isDirty={isDirty}
+          isLoading={isLoading || logoUploading}
+          isDirty={isDirty || !!logoFile}
           onCancel={onCancel}
         />
       </form>

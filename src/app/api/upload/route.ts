@@ -10,12 +10,18 @@ export async function POST(request: NextRequest) {
     const file = formData.get("file") as File | null;
     const tenantId = formData.get("tenantId") as string | null;
     const uploadType = formData.get("uploadType") as string | null;
+    const oldFileKey = formData.get("oldFileKey") as string | null;
+    const tenantName = formData.get("tenantName") as string | null;
 
     if (!file || !tenantId || !uploadType) {
       return NextResponse.json(
         { error: "Missing required fields: file, tenantId, uploadType" },
         { status: 400 }
       );
+    }
+
+    if (oldFileKey) {
+      await r2FileUploadService.deleteFile(oldFileKey);
     }
 
     // Validate file type and size
@@ -89,6 +95,7 @@ export async function POST(request: NextRequest) {
       contentType: uploadContentType,
       folder,
       tenantId,
+      tenantName: tenantName || undefined,
     });
 
     if (!uploadResult.success) {
@@ -98,10 +105,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Construct the public URL using the custom domain
+    const key = uploadResult.key;
+    const publicBaseUrl = "https://www.sportwise.net";
+    const publicUrl = `${publicBaseUrl}/${key}`;
+
     return NextResponse.json({
       success: true,
-      url: uploadResult.url,
-      key: uploadResult.key,
+      url: publicUrl,
+      key,
       tenantId,
     });
   } catch (error) {
