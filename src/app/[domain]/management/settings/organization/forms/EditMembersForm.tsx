@@ -29,7 +29,11 @@ export default function EditMembersForm({
   setSheetOpen,
   setIsParentModalOpen,
 }: EditMembersFormProps) {
-  const tenantUpdate = useUpdateTenant(tenant.id.toString(), tenant.domain);
+  const tenantUpdate = useUpdateTenant(
+    tenant.id.toString(),
+    tenant.domain,
+    tenant.tenantConfigId ?? tenant.tenantConfigs?.id
+  );
 
   const form = useForm<TenantForm>({
     resolver: zodResolver(TenantFormSchema),

@@ -9,12 +9,18 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { Separator } from "@/components/ui/separator";
 import { useTenantAndUserAccessContext } from "@/composites/auth/TenantAndUserAccessContext";
-import { Building2, Globe, Mail, MapPin, Trophy } from "lucide-react";
+import EditGlobalSettingsForm from "@/composites/forms/settings/EditGlobalSettingsForm";
+import { Building2, Globe, MapPin, Trophy } from "lucide-react";
+import { useState } from "react";
+import { Button } from "../../../components/ui/button";
+import { PageHeader } from "../../../components/ui/page-header";
 
 export default function GlobalSettingsPage() {
   const { tenant, isLoading, error } = useTenantAndUserAccessContext();
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -61,12 +67,25 @@ export default function GlobalSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">General Settings</h1>
-        <p className="text-muted-foreground">
-          Manage your organization&apos;s general settings and information.
-        </p>
-      </div>
+      <PageHeader
+        title="General Settings"
+        description="Manage your organization's general settings and information."
+        actions={
+          <Button onClick={() => setIsEditOpen(true)}>Edit Settings</Button>
+        }
+      />
+
+      <ResponsiveSheet
+        isOpen={isEditOpen}
+        setIsOpen={setIsEditOpen}
+        title="Edit Global Settings"
+      >
+        <EditGlobalSettingsForm
+          tenant={tenant}
+          setSheetOpen={setIsEditOpen}
+          setIsParentModalOpen={setIsEditOpen}
+        />
+      </ResponsiveSheet>
 
       {/* Organization Information */}
       <Card>
@@ -159,77 +178,6 @@ export default function GlobalSettingsPage() {
                 {generalConfig.location.postcode && (
                   <span>{generalConfig.location.postcode}</span>
                 )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Email Configuration */}
-      {tenant.tenantConfigs?.emailConfig && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Mail className="h-5 w-5" />
-              Email Configuration
-            </CardTitle>
-            <CardDescription>
-              Email settings for your organization
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {tenant.tenantConfigs.emailConfig.senderEmail && (
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Sender Email
-                  </label>
-                  <p className="text-sm font-medium">
-                    {tenant.tenantConfigs.emailConfig.senderEmail}
-                  </p>
-                </div>
-              )}
-              {tenant.tenantConfigs.emailConfig.senderName && (
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Sender Name
-                  </label>
-                  <p className="text-sm font-medium">
-                    {tenant.tenantConfigs.emailConfig.senderName}
-                  </p>
-                </div>
-              )}
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Transactional Emails
-                </label>
-                <Badge
-                  variant={
-                    tenant.tenantConfigs.emailConfig.enableTransactional
-                      ? "default"
-                      : "secondary"
-                  }
-                >
-                  {tenant.tenantConfigs.emailConfig.enableTransactional
-                    ? "Enabled"
-                    : "Disabled"}
-                </Badge>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Marketing Emails
-                </label>
-                <Badge
-                  variant={
-                    tenant.tenantConfigs.emailConfig.enableMarketing
-                      ? "default"
-                      : "secondary"
-                  }
-                >
-                  {tenant.tenantConfigs.emailConfig.enableMarketing
-                    ? "Enabled"
-                    : "Disabled"}
-                </Badge>
               </div>
             </div>
           </CardContent>

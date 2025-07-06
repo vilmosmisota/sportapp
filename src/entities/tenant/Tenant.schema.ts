@@ -35,7 +35,7 @@ export enum KioskTheme {
 
 export const TenantGeneralConfigSchema = z.object({
   sport: z.nativeEnum(Sport).optional(),
-  logo: z.string().url("Must be a valid URL").optional(),
+  logo: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   description: z.string().optional(),
   location: LocationSchema.optional(),
 });
