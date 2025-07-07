@@ -10,10 +10,16 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useTenantAndUserAccessContext } from "@/composites/auth/TenantAndUserAccessContext";
-import { Settings, Tag, Users2 } from "lucide-react";
+import { Tag, Users2 } from "lucide-react";
+import { useState } from "react";
+import { Button } from "../../../../components/ui/button";
+import { PageHeader } from "../../../../components/ui/page-header";
+import { ResponsiveSheet } from "../../../../components/ui/responsive-sheet";
+import EditManagementSettingsForm from "../../../../composites/forms/settings/EditManagementSettingsForm";
 
 export default function ManagementSettingsPage() {
   const { tenant, isLoading, error } = useTenantAndUserAccessContext();
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -61,14 +67,23 @@ export default function ManagementSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          Management Settings
-        </h1>
-        <p className="text-muted-foreground">
-          Configure performers and groups settings for your organization.
-        </p>
-      </div>
+      <PageHeader
+        title="Management Settings"
+        description="Configure performers and groups settings for your organization."
+        actions={<Button onClick={() => setIsEditOpen(true)}>Edit</Button>}
+      />
+
+      <ResponsiveSheet
+        isOpen={isEditOpen}
+        setIsOpen={setIsEditOpen}
+        title="Edit Management Settings"
+      >
+        <EditManagementSettingsForm
+          tenant={tenant}
+          onCancel={() => setIsEditOpen(false)}
+          onSuccess={() => setIsEditOpen(false)}
+        />
+      </ResponsiveSheet>
 
       {/* Performers Configuration */}
       <Card>
@@ -171,50 +186,6 @@ export default function ManagementSettingsPage() {
             )}
         </CardContent>
       </Card>
-
-      {/* Development Configuration */}
-      {tenant.tenantConfigs?.development?.trainingLocations && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Settings className="h-5 w-5" />
-              Development Configuration
-            </CardTitle>
-            <CardDescription>
-              Training locations and development settings
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">
-                Training Locations
-              </label>
-              <div className="space-y-3 mt-2">
-                {tenant.tenantConfigs.development.trainingLocations.map(
-                  (location, index) => (
-                    <div key={index} className="p-3 border rounded-lg">
-                      <div className="font-medium text-sm">
-                        {location.name || "Unnamed Location"}
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {location.streetAddress && (
-                          <div>{location.streetAddress}</div>
-                        )}
-                        <div className="flex gap-2">
-                          {location.city && <span>{location.city}</span>}
-                          {location.postcode && (
-                            <span>{location.postcode}</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

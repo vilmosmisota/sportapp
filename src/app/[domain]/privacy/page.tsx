@@ -37,7 +37,7 @@ export default function PrivacyPage() {
           <p className="text-muted-foreground max-w-2xl mx-auto">
             We are committed to protecting your privacy and ensuring the
             security of your personal information, especially when it comes to
-            children's data.
+            children&apos;s data.
           </p>
           <Badge variant="outline" className="text-sm">
             Last updated: {new Date().toLocaleDateString()}
@@ -56,21 +56,24 @@ export default function PrivacyPage() {
             <p>
               This privacy policy complies with the UK General Data Protection
               Regulation (UK GDPR) and the Data Protection Act 2018. We take
-              special care when processing children's data.
+              special care when processing children&apos;s data.
             </p>
             <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg">
-              <h4 className="font-medium mb-2">Children's Data Protection</h4>
+              <h4 className="font-medium mb-2">
+                Children&apos;s Data Protection
+              </h4>
               <ul className="text-sm space-y-1">
                 <li>
                   • Children under 13 require parental consent for data
                   processing
                 </li>
                 <li>
-                  • Parents/guardians can manage their child's data and privacy
-                  settings
+                  • Parents/guardians can manage their child&apos;s data and
+                  privacy settings
                 </li>
                 <li>
-                  • We apply enhanced security measures for all children's data
+                  • We apply enhanced security measures for all children&apos;s
+                  data
                 </li>
                 <li>
                   • Data is processed only for legitimate sports and educational
@@ -207,8 +210,8 @@ export default function PrivacyPage() {
               <h4 className="font-medium mb-2">Data Retention</h4>
               <p className="text-sm text-muted-foreground">
                 We retain personal data only as long as necessary for the
-                purposes outlined in this policy. Children's data is subject to
-                enhanced retention controls and regular review.
+                purposes outlined in this policy. Children&apos;s data is
+                subject to enhanced retention controls and regular review.
               </p>
             </div>
           </CardContent>
@@ -244,7 +247,7 @@ export default function PrivacyPage() {
                 <p>
                   <strong>Data Protection Officer:</strong> If you have concerns
                   about how we handle your data, you can also contact the
-                  Information Commissioner's Office (ICO) at ico.org.uk
+                  Information Commissioner&apos;s Office (ICO) at ico.org.uk
                 </p>
               </div>
             </div>
